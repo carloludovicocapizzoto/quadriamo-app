@@ -5,15 +5,17 @@ export interface AppData {
   version: 1
   settings: Settings
   transactions: Transaction[]
-  demo?: boolean              // dati di esempio: l'app propone di ripartire da zero
+  demo?: boolean                      // dati di esempio: l'app propone di ripartire da zero, non si sincronizzano
+  settingsUpdatedAt?: string          // ISO, ultima modifica delle impostazioni
+  deleted?: Record<string, string>    // id movimento eliminato -> quando (per non farlo "risorgere" da un altro dispositivo)
 }
 
 export type Action =
   | { type: 'load'; data: AppData | null }
-  | { type: 'addTx'; tx: Transaction }
-  | { type: 'updateTx'; tx: Transaction }
-  | { type: 'deleteTx'; id: string }
-  | { type: 'setSettings'; settings: Settings }
+  | { type: 'addTx'; tx: Transaction; at?: string }
+  | { type: 'updateTx'; tx: Transaction; at?: string }
+  | { type: 'deleteTx'; id: string; at?: string }
+  | { type: 'setSettings'; settings: Settings; at?: string }
   | { type: 'replace'; data: AppData | null }
 
 export interface State { loaded: boolean; data: AppData | null }
@@ -33,16 +35,22 @@ export function reducer(state: State, a: Action): State {
   if (a.type === 'replace') return { ...state, data: a.data }
   const d = state.data
   if (!d) return state
+  const at = a.at ?? new Date().toISOString()
   switch (a.type) {
-    case 'addTx':
-      return { ...state, data: { ...d, settings: widenFirstMonth(d.settings, a.tx), transactions: [...d.transactions, a.tx] } }
-    case 'updateTx':
-      return { ...state, data: { ...d, settings: widenFirstMonth(d.settings, a.tx),
-                                 transactions: d.transactions.map(t => t.id === a.tx.id ? a.tx : t) } }
+    case 'addTx': {
+      const tx = { ...a.tx, updatedAt: at }
+      return { ...state, data: { ...d, settings: widenFirstMonth(d.settings, tx), transactions: [...d.transactions, tx] } }
+    }
+    case 'updateTx': {
+      const tx = { ...a.tx, updatedAt: at }
+      return { ...state, data: { ...d, settings: widenFirstMonth(d.settings, tx),
+                                 transactions: d.transactions.map(t => t.id === tx.id ? tx : t) } }
+    }
     case 'deleteTx':
-      return { ...state, data: { ...d, transactions: d.transactions.filter(t => t.id !== a.id) } }
+      return { ...state, data: { ...d, transactions: d.transactions.filter(t => t.id !== a.id),
+                                 deleted: { ...d.deleted, [a.id]: at } } }
     case 'setSettings':
-      return { ...state, data: { ...d, settings: a.settings } }
+      return { ...state, data: { ...d, settings: a.settings, settingsUpdatedAt: at } }
   }
 }
 
@@ -75,7 +83,8 @@ export function parseBackup(text: string): AppData {
     typeof d.settings.currency === 'string' && d.settings.firstMonth &&
     d.transactions.every((t: Transaction) => typeof t.id === 'string' && typeof t.description === 'string')
   if (!ok) throw new Error('invalid backup')
-  return { version: 1, settings: { fxRates: {}, ...d.settings }, transactions: d.transactions }
+  return { version: 1, settings: { fxRates: {}, ...d.settings }, transactions: d.transactions,
+           deleted: d.deleted ?? {}, settingsUpdatedAt: d.settingsUpdatedAt }
 }
 
 /** Parse di un importo scritto dall'utente: accetta "12,50", "12.50", "1.234,56", "1,234.56". */
@@ -91,4 +100,44 @@ export function parseAmount(raw: string): number | null {
   }
   const n = Number(s)
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : null
+}
+
+/**
+ * Unisce i dati di due dispositivi: per ogni movimento vince la modifica più recente,
+ * le eliminazioni più recenti della modifica vincono, per le impostazioni vince la versione più recente.
+ */
+export function mergeData(a: AppData, b: AppData): AppData {
+  const deleted: Record<string, string> = { ...a.deleted }
+  for (const [id, at] of Object.entries(b.deleted ?? {})) if (!deleted[id] || at > deleted[id]) deleted[id] = at
+
+  const byId = new Map<string, Transaction>()
+  for (const tx of [...a.transactions, ...b.transactions]) {
+    const prev = byId.get(tx.id)
+    if (!prev || (tx.updatedAt ?? '') > (prev.updatedAt ?? '')) byId.set(tx.id, tx)
+  }
+  const transactions = [...byId.values()].filter(tx => !(deleted[tx.id] && deleted[tx.id] >= (tx.updatedAt ?? '')))
+
+  const newerSettings = (b.settingsUpdatedAt ?? '') > (a.settingsUpdatedAt ?? '')
+  let settings = newerSettings ? b.settings : a.settings
+  for (const tx of transactions) settings = widenFirstMonth(settings, tx)
+
+  return {
+    version: 1, settings, transactions, deleted,
+    settingsUpdatedAt: newerSettings ? b.settingsUpdatedAt : a.settingsUpdatedAt,
+  }
+}
+
+/** Esporta i movimenti in CSV (separatore ";" e virgola decimale non servono: Excel/Sheets leggono il punto se indicato). */
+export function toCsv(d: AppData, names: { category: (id: string | null) => string; bucket: (id: string | null) => string }): string {
+  const esc = (v: unknown) => {
+    const s = v == null ? '' : String(v)
+    return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  const rows = [['date', 'description', 'category', 'amount', 'currency', 'paid_from'].join(',')]
+  const sorted = [...d.transactions].sort((x, y) => (x.date ?? '').localeCompare(y.date ?? ''))
+  for (const t of sorted) {
+    rows.push([t.date, t.description, names.category(t.category), t.amount, t.currency || d.settings.currency,
+               t.paidFrom ? names.bucket(t.paidFrom) : ''].map(esc).join(','))
+  }
+  return rows.join('\n') + '\n'
 }

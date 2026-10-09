@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createInitial, parseAmount, parseBackup, reducer, validateSettings, type State } from './state'
+import { createInitial, mergeData, parseAmount, parseBackup, reducer, toCsv, validateSettings, type State } from './state'
 
 const base = (): State => ({ loaded: true, data: createInitial('EUR', '2026-10-09') })
 
@@ -54,4 +54,58 @@ describe('backup', () => {
 describe('parseAmount', () => {
   it.each([['12,50', 12.5], ['12.50', 12.5], ['1.234,56', 1234.56], ['1,234.56', 1234.56], ['€ 7', 7], ['', null], ['abc', null]])(
     '%s -> %s', (raw, n) => { expect(parseAmount(raw)).toBe(n) })
+})
+
+describe('sync merge between two devices', () => {
+  const base2 = () => createInitial('EUR', '2026-10-09')
+  const tx = (id: string, amount: number, updatedAt: string) =>
+    ({ id, date: '2026-10-09', description: id, category: 'groceries', amount, updatedAt })
+
+  it('keeps transactions added on both devices', () => {
+    const a = { ...base2(), transactions: [tx('a', 10, '2026-10-09T10:00:00Z')] }
+    const b = { ...base2(), transactions: [tx('b', 20, '2026-10-09T11:00:00Z')] }
+    expect(mergeData(a, b).transactions.map(t => t.id).sort()).toEqual(['a', 'b'])
+  })
+  it('the most recent edit wins', () => {
+    const a = { ...base2(), transactions: [tx('a', 10, '2026-10-09T10:00:00Z')] }
+    const b = { ...base2(), transactions: [tx('a', 15, '2026-10-09T12:00:00Z')] }
+    expect(mergeData(a, b).transactions[0].amount).toBe(15)
+    expect(mergeData(b, a).transactions[0].amount).toBe(15)
+  })
+  it('a deletion is not undone by the other device', () => {
+    const a = { ...base2(), transactions: [], deleted: { a: '2026-10-09T13:00:00Z' } }
+    const b = { ...base2(), transactions: [tx('a', 10, '2026-10-09T10:00:00Z')] }
+    expect(mergeData(a, b).transactions).toHaveLength(0)
+    expect(mergeData(b, a).transactions).toHaveLength(0)
+  })
+  it('an edit made after the deletion brings it back', () => {
+    const a = { ...base2(), transactions: [], deleted: { a: '2026-10-09T13:00:00Z' } }
+    const b = { ...base2(), transactions: [tx('a', 10, '2026-10-09T14:00:00Z')] }
+    expect(mergeData(a, b).transactions).toHaveLength(1)
+  })
+  it('newer settings win and the first month covers every transaction', () => {
+    const a = { ...base2(), settingsUpdatedAt: '2026-10-09T10:00:00Z' }
+    const b = { ...base2(), settingsUpdatedAt: '2026-10-09T12:00:00Z',
+                transactions: [{ ...tx('old', 5, '2026-10-09T12:00:00Z'), date: '2026-07-03' }] }
+    b.settings = { ...b.settings, currency: 'CHF' }
+    const m = mergeData(a, b)
+    expect(m.settings.currency).toBe('CHF')
+    expect(m.settings.firstMonth).toEqual({ year: 2026, month: 7 })
+  })
+  it('reducer stamps edits and records deletions', () => {
+    let s = base()
+    s = reducer(s, { type: 'addTx', tx: tx('x', 1, ''), at: '2026-10-09T09:00:00Z' })
+    expect(s.data!.transactions[0].updatedAt).toBe('2026-10-09T09:00:00Z')
+    s = reducer(s, { type: 'deleteTx', id: 'x', at: '2026-10-09T09:30:00Z' })
+    expect(s.data!.deleted).toEqual({ x: '2026-10-09T09:30:00Z' })
+  })
+})
+
+describe('csv export', () => {
+  it('writes one row per transaction, quoting when needed', () => {
+    const d = { ...createInitial('EUR', '2026-10-09'),
+      transactions: [{ id: 'a', date: '2026-10-01', description: 'Pizza, beer', category: 'eatingOut', amount: 12.5 }] }
+    const csv = toCsv(d, { category: id => id ?? '', bucket: id => id ?? '' })
+    expect(csv.split('\n')[1]).toBe('2026-10-01,"Pizza, beer",eatingOut,12.5,EUR,')
+  })
 })

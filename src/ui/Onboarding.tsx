@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { useI18n } from '../i18n/core'
+import { useSync } from '../sync/context'
+import { AccountSection } from './AccountSection'
 import { CURRENCIES, guessCurrency } from './names'
 
 export function Onboarding({ onStart, onDemo }: { onStart: (currency: string, startDay: number) => void; onDemo: () => void }) {
   const { t } = useI18n()
   const [currency, setCurrency] = useState(guessCurrency)
   const [startDay, setStartDay] = useState(1)
+  const [signIn, setSignIn] = useState(false)
+  const sync = useSync()
   return (
     <section className="card onboarding">
       <h1>{t('onb.title')}</h1>
@@ -28,6 +32,9 @@ export function Onboarding({ onStart, onDemo }: { onStart: (currency: string, st
         <button className="btn" onClick={onDemo}>{t('onb.demo')}</button>
       </div>
       <p className="muted small">🔒 {t('onb.privacy')}</p>
+      {sync.enabled && !sync.user && (signIn
+        ? <AccountSection compact />
+        : <button className="link-btn" onClick={() => setSignIn(true)}>{t('sync.haveAccount')}</button>)}
     </section>
   )
 }

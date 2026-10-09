@@ -2,7 +2,8 @@ import { useRef, useState, type ChangeEvent } from 'react'
 import { DEFAULT_CATEGORIES, type CategoryType, type Settings } from '../engine'
 import { LANGS, useI18n, type Lang } from '../i18n/core'
 import { useStore } from '../store/context'
-import { newId, parseAmount, parseBackup, validateSettings, type AppData } from '../store/state'
+import { newId, parseAmount, parseBackup, toCsv, validateSettings, type AppData } from '../store/state'
+import { AccountSection } from './AccountSection'
 import { BUCKET_COLORS, CURRENCIES, bucketName, categoryName } from './names'
 
 const TYPES: CategoryType[] = ['expense', 'income', 'saving']
@@ -36,14 +37,18 @@ export function SettingsView() {
     }
   }
 
-  function exportBackup() {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  function download(content: string, type: string, name: string) {
     const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `quadriamo-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.href = URL.createObjectURL(new Blob([content], { type }))
+    a.download = `${name}-${new Date().toISOString().slice(0, 10)}.${type.includes('csv') ? 'csv' : 'json'}`
     a.click()
     URL.revokeObjectURL(a.href)
   }
+  const exportBackup = () => download(JSON.stringify(data, null, 2), 'application/json', 'quadriamo-backup')
+  const exportCsv = () => download('\ufeff' + toCsv(data, {
+    category: id => categoryName(data.settings.categories.find(c => c.id === id), t),
+    bucket: id => { const b = data.settings.buckets.find(x => x.id === id); return b ? bucketName(b, t) : (id ?? '') },
+  }), 'text/csv;charset=utf-8', 'quadriamo-transactions')
 
   async function importBackup(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -69,6 +74,7 @@ export function SettingsView() {
 
   return (
     <div className="settings">
+      <AccountSection />
       <section className="card">
         <h3 className="h-plain">{t('settings.general')}</h3>
         <label className="field">
@@ -188,6 +194,7 @@ export function SettingsView() {
         <p className="muted small">🔒 {t('settings.dataHint')}</p>
         <div className="stack-row">
           <button className="btn" onClick={exportBackup}>{t('settings.export')}</button>
+          <button className="btn" onClick={exportCsv}>{t('settings.exportCsv')}</button>
           <label className="btn">{t('settings.import')}
             <input type="file" accept="application/json,.json" hidden onChange={importBackup} /></label>
           <button className="btn danger" onClick={() => { if (confirm(t('settings.resetConfirm'))) dispatch({ type: 'replace', data: null }) }}>

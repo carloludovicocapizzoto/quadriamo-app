@@ -44,6 +44,7 @@ export interface Transaction {
   amount: number | null
   currency?: string | null          // vuota = valuta dell'utente
   paidFrom?: string | null          // id bucket, oppure SPLIT per le entrate (vuoto = default)
+  updatedAt?: string                // ISO, ultima modifica: serve alla sincronizzazione tra dispositivi
 }
 
 export interface YearMonth { year: number; month: number }   // month 1..12

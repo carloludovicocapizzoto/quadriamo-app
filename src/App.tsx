@@ -4,6 +4,7 @@ import { computeMonth, monthOf, todayIso, undated, type ClassifiedTx, type Trans
 import { LANGS, useI18n, type Lang } from './i18n/core'
 import { useStore } from './store/context'
 import { createInitial } from './store/state'
+import { useSync } from './sync/context'
 import { MonthNav } from './ui/MonthNav'
 import { MonthView } from './ui/MonthView'
 import { Onboarding } from './ui/Onboarding'
@@ -17,6 +18,7 @@ type Tab = 'month' | 'transactions' | 'year' | 'settings'
 export default function App() {
   const { t, lang, setLang } = useI18n()
   const { state, dispatch } = useStore()
+  const sync = useSync()
   const today = todayIso()
   const [tab, setTab] = useState<Tab>('month')
   const [ym, setYm] = useState<YearMonth | null>(null)
@@ -35,6 +37,12 @@ export default function App() {
   const header = (
     <header className="top">
       <div className="logo">Quadriamo<span>.</span></div>
+      {sync.user && (
+        <button className="sync-pill" onClick={() => void sync.syncNow()} title={t('sync.now')}>
+          <span className={`dot ${sync.status}`} aria-hidden="true" />
+          {sync.status === 'syncing' ? t('sync.syncing') : sync.status === 'error' ? '!' : sync.status === 'offline' ? 'offline' : t('sync.ok')}
+        </button>
+      )}
       {!data && (
         <select className="lang" value={lang} onChange={e => setLang(e.target.value as Lang)} aria-label={t('lang.label')}>
           {Object.entries(LANGS).map(([c, n]) => <option key={c} value={c}>{n}</option>)}

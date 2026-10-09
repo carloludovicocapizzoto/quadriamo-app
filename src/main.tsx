@@ -4,12 +4,15 @@ import './index.css'
 import App from './App.tsx'
 import { I18nProvider } from './i18n'
 import { StoreProvider } from './store/StoreProvider'
+import { SyncProvider } from './sync/SyncProvider'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <I18nProvider>
       <StoreProvider>
-        <App />
+        <SyncProvider>
+          <App />
+        </SyncProvider>
       </StoreProvider>
     </I18nProvider>
   </StrictMode>,

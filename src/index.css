@@ -207,3 +207,15 @@ table.data thead th { color: var(--muted); font-weight: 600; font-size: 12px; }
 table.data tfoot th, table.data tfoot td { font-weight: 700; }
 table.data tr.on th, table.data tr.on td { background: var(--good-bg); }
 table.data .link-btn { padding: 0; }
+
+/* ---------- sincronizzazione ---------- */
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--b4); vertical-align: 1px; }
+.dot.ok { background: var(--good); }
+.dot.syncing { background: var(--accent); animation: pulse 1s infinite alternate; }
+.dot.error { background: var(--bad); }
+@keyframes pulse { to { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .dot.syncing { animation: none; } }
+.sync-pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 99px; padding: 4px 10px; font-size: 13px; min-height: 32px; cursor: pointer; margin-left: auto; margin-right: 8px; }
+.inline-form { display: grid; gap: 4px; }
+.account-compact { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
