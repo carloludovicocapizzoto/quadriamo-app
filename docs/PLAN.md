@@ -1,0 +1,24 @@
+# Piano di Quadriamo web app
+
+Obiettivo: una web app installabile (PWA) con Free e Pro, prima di valutare gli store.
+Si costruisce una piccola base di utenti, poi si decide come monetizzare.
+
+## Fasi
+
+| Fase | Contenuto | Stato |
+|---|---|---|
+| 0 | Repo, motore di calcolo con test (stessi numeri dell'Excel), 4 lingue, stile, PWA installabile | **fatto** |
+| 1 | Versione Free locale: inserimento rapido da telefono, elenco movimenti, bucket, controlli, ricorrenti, impostazioni (regola, categorie, giorno di inizio). Dati sul dispositivo (IndexedDB), funziona offline | da fare |
+| 2 | Account (login via email) e sincronizzazione PC ↔ telefono (Supabase, server UE); esportazione Excel/CSV; cancellazione account | da fare |
+| 3 | Pro: storico di più mesi e riepilogo annuale, valute con cambi automatici (BCE), investimenti e PAC | da fare |
+| 4 | Beta con un gruppo ristretto; test "primo stipendio + 5 spese" con persone nuove | da fare |
+| 5 | Monetizzazione: abbonamento (Stripe), accesso Pro | quando ci sono utenti |
+
+Dopo: import dell'estratto conto (CSV), collegamento con le banche (open banking, PSD2) solo se richiesto.
+
+## Principi
+
+- I calcoli stanno nel motore (`src/engine`), mai nell'interfaccia; ogni regola ha un test.
+- Privacy dal primo giorno: dati in UE, esportazione e cancellazione, nessun tracciamento invasivo.
+- Telefono prima di tutto: una spesa si registra in pochi secondi.
+- Quattro lingue sempre allineate: una chiave nuova va aggiunta in tutti i dizionari.

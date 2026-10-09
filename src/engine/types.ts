@@ -1,0 +1,87 @@
+// Modello dati di Quadriamo. Le date sono stringhe ISO "YYYY-MM-DD" (niente fusi orari).
+
+export type CategoryType = 'income' | 'expense' | 'saving'
+
+export interface Bucket {
+  id: string
+  name: string
+  share: number            // quota delle entrate, 0..1 (le quattro sommano 1)
+  startingBalance: number  // saldo iniziale nel primo mese tracciato
+}
+
+export interface Category {
+  id: string
+  name: string
+  type: CategoryType
+  defaultBucket: string | null   // id del bucket; null per le entrate
+}
+
+export interface Recurring {
+  name: string
+  amount: number
+  category: string         // id categoria
+  day: number | null       // giorno del mese; null = primo giorno del periodo
+  active: boolean
+}
+
+export interface Settings {
+  currency: string                  // valuta dell'utente, es. "EUR"
+  monthStartDay: number             // 1..28: il periodo "maggio" va dal giorno X di aprile al giorno X-1 di maggio
+  firstMonth: YearMonth             // primo mese tracciato: qui si applicano i saldi iniziali
+  buckets: Bucket[]
+  categories: Category[]
+  recurring: Recurring[]
+  fxRates: Record<string, number>   // 1 unità della valuta = rate unità della tua valuta
+}
+
+export const SPLIT = 'split' as const   // entrata divisa secondo la regola
+
+export interface Transaction {
+  id: string
+  date: string | null
+  description: string
+  category: string | null           // id categoria
+  amount: number | null
+  currency?: string | null          // vuota = valuta dell'utente
+  paidFrom?: string | null          // id bucket, oppure SPLIT per le entrate (vuoto = default)
+}
+
+export interface YearMonth { year: number; month: number }   // month 1..12
+
+export type TxType = CategoryType | 'unknown'
+
+/** Movimento con i campi calcolati (come le colonne grigie dell'Excel). */
+export interface ClassifiedTx extends Transaction {
+  type: TxType | null               // null = senza categoria
+  bucket: string | null             // id bucket, SPLIT per le entrate divise, null se non determinabile
+  amountIn: number | null           // importo nella valuta dell'utente; null se manca il cambio o l'importo
+  recurring?: boolean
+  upcoming?: boolean                // ricorrente del mese non ancora arrivato al suo giorno
+}
+
+export type CheckKind =
+  | 'missingDate' | 'missingAmount' | 'missingCategory' | 'unknownCategory'
+  | 'missingFx' | 'recurringDuplicate'
+
+export interface BucketRow {
+  bucket: Bucket
+  carriedOver: number
+  fromIncome: number
+  spent: number
+  remaining: number
+  available: number
+}
+
+export interface MonthResult {
+  ym: YearMonth
+  period: { start: string; end: string }
+  transactions: ClassifiedTx[]      // ricorrenti generati + movimenti del periodo, in ordine di data
+  income: number
+  spent: number
+  saved: number
+  leftOver: number
+  buckets: BucketRow[]
+  byCategory: { category: Category; amount: number; share: number }[]
+  checks: Record<CheckKind, number>
+  spendingByBucket: Record<string, ClassifiedTx[]>
+}
