@@ -1,7 +1,7 @@
 // Stessi casi del test dell'Excel (budget-planner/test_calc.py): i numeri devono coincidere.
 import { describe, expect, it } from 'vitest'
 import {
-  DEFAULT_RECURRING, SPLIT, addDays, computeMonth, computeYear, defaultSettings, depositInterest,
+  DEFAULT_RECURRING, SPLIT, addDays, computeMonth, computeYear, computeYears, defaultSettings, depositInterest, yearsRange,
   monthOf, pacFutureValue, periodOf, rowIssues, undated, valueHolding, type Transaction,
 } from './index'
 
@@ -130,5 +130,39 @@ describe('investments', () => {
   })
   it('PAC 120/month, 6%, 10 years', () => {
     expect(pacFutureValue(120, 0.06, 10)).toBeCloseTo(19665.52, 1)
+  })
+})
+
+describe('years go on over time', () => {
+  const s2 = defaultSettings({ firstMonth: { year: 2026, month: 11 } })
+  const txs: Transaction[] = [
+    tx('2026-11-01', 'Salary', 'salary', 1000),
+    tx('2026-11-05', 'Food', 'groceries', 100),
+    tx('2026-12-01', 'Salary', 'salary', 1000),
+    tx('2027-01-01', 'Salary', 'salary', 1200),
+    tx('2027-01-10', 'Trip', 'funShopping', 300),
+    tx('2027-02-02', 'ETF', 'investmentsSaving', 100),
+  ]
+  const today = '2027-02-15'
+  it('January 2027 starts from December 2026', () => {
+    const y26 = computeYear(2026, txs, s2, today)
+    const y27 = computeYear(2027, txs, s2, today)
+    y26.buckets.forEach((b, i) => expect(y27.buckets[i].startOfYear).toBeCloseTo(b.endOfYear))
+    expect(y26.buckets[0].endOfYear).toBeCloseTo(550 * 2 - 100)        // essenziali: 2 stipendi al 55% meno la spesa
+  })
+  it('year totals and categories', () => {
+    const y27 = computeYear(2027, txs, s2, today)
+    expect(y27.total.income).toBeCloseTo(1200)
+    expect(y27.total.spent).toBeCloseTo(300)
+    expect(y27.total.savingsRate).toBeCloseTo(100 / 1200)
+    expect(y27.byCategory[0].category.id).toBe('funShopping')
+  })
+  it('lists every year from the first month to today', () => {
+    const ys = computeYears(txs, s2, today)
+    expect(ys.map(y => y.year)).toEqual([2026, 2027])
+    expect(ys[1].endBalance).toBeCloseTo(2000 - 100 + 1200 - 300 - 100)   // il saldo complessivo continua
+  })
+  it('includes future years when there are future transactions', () => {
+    expect(yearsRange([...txs, tx('2029-01-01', 'Plan', 'other', 1)], s2, today)).toEqual([2026, 2027, 2028, 2029])
   })
 })

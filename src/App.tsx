@@ -10,8 +10,9 @@ import { Onboarding } from './ui/Onboarding'
 import { SettingsView } from './ui/SettingsView'
 import { TransactionsView } from './ui/TransactionsView'
 import { TxForm } from './ui/TxForm'
+import { YearNav, YearView } from './ui/YearView'
 
-type Tab = 'month' | 'transactions' | 'settings'
+type Tab = 'month' | 'transactions' | 'year' | 'settings'
 
 export default function App() {
   const { t, lang, setLang } = useI18n()
@@ -19,6 +20,7 @@ export default function App() {
   const today = todayIso()
   const [tab, setTab] = useState<Tab>('month')
   const [ym, setYm] = useState<YearMonth | null>(null)
+  const [year, setYear] = useState(() => Number(todayIso().slice(0, 4)))
   const [form, setForm] = useState<{ tx?: Transaction } | null>(null)
   const [note, setNote] = useState('')
   const data = state.data
@@ -75,7 +77,10 @@ export default function App() {
       )}
 
       <main>
-        {tab !== 'settings' && <MonthNav ym={current} onChange={setYm} />}
+        {(tab === 'month' || tab === 'transactions') && <MonthNav ym={current} onChange={setYm} />}
+        {tab === 'year' && <YearNav year={year} onChange={setYear} />}
+        {tab === 'year' && <YearView year={year} transactions={data.transactions} settings={data.settings} today={today}
+                                     onYear={setYear} onOpenMonth={m => { setYm(m); setTab('month'); window.scrollTo(0, 0) }} />}
         {tab === 'month' && <MonthView r={result} settings={data.settings} onOpen={openTx} />}
         {tab === 'transactions' &&
           <TransactionsView r={result} settings={data.settings} undated={undated(data.transactions)} onOpen={openTx} />}
@@ -84,14 +89,15 @@ export default function App() {
 
       {note && <div className="toast" role="status">{note}</div>}
 
-      {tab !== 'settings' && (
+      {(tab === 'month' || tab === 'transactions') && (
         <button className="fab" onClick={() => setForm({})} aria-label={t('action.add')}>+</button>
       )}
 
       <nav className="bottom-nav" aria-label="Quadriamo">
-        {(['month', 'transactions', 'settings'] as Tab[]).map(k => (
-          <button key={k} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined} onClick={() => setTab(k)}>
-            <span aria-hidden="true">{k === 'month' ? '◧' : k === 'transactions' ? '☰' : '⚙'}</span>
+        {(['month', 'transactions', 'year', 'settings'] as Tab[]).map(k => (
+          <button key={k} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}
+                  onClick={() => { setTab(k); if (k === 'year' && current) setYear(current.year) }}>
+            <span aria-hidden="true">{{ month: '◧', transactions: '☰', year: '▥', settings: '⚙' }[k]}</span>
             {t(`nav.${k}`)}
           </button>
         ))}
