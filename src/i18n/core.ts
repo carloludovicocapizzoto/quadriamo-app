@@ -21,8 +21,9 @@ export function detectLang(preferred: readonly string[] = navigator.languages ??
 export interface I18n {
   lang: Lang
   setLang: (l: Lang) => void
-  t: (key: keyof Dict) => string
+  t: (key: keyof Dict, vars?: Record<string, string | number>) => string
   money: (n: number, currency: string) => string
+  date: (iso: string, opts?: Intl.DateTimeFormatOptions) => string
 }
 
 export const I18nContext = createContext<I18n | null>(null)

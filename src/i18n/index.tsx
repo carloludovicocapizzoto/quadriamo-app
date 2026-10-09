@@ -19,8 +19,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       setLangState(l)
       try { localStorage.setItem(LANG_KEY, l) } catch { /* ignora */ }
     },
-    t: key => DICTS[lang][key] ?? en[key],
+    t: (key, vars) => {
+      let s: string = DICTS[lang][key] ?? en[key] ?? ''
+      for (const [k, v] of Object.entries(vars ?? {})) s = s.replaceAll(`{${k}}`, String(v))
+      return s
+    },
     money: (n, currency) => new Intl.NumberFormat(lang, { style: 'currency', currency }).format(n),
+    date: (iso, opts = { day: 'numeric', month: 'short' }) =>
+      new Intl.DateTimeFormat(lang, { ...opts, timeZone: 'UTC' }).format(new Date(iso + 'T00:00:00Z')),
   }), [lang])
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
 }

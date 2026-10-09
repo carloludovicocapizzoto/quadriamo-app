@@ -8,7 +8,7 @@ Si costruisce una piccola base di utenti, poi si decide come monetizzare.
 | Fase | Contenuto | Stato |
 |---|---|---|
 | 0 | Repo, motore di calcolo con test (stessi numeri dell'Excel), 4 lingue, stile, PWA installabile | **fatto** |
-| 1 | Versione Free locale: inserimento rapido da telefono, elenco movimenti, bucket, controlli, ricorrenti, impostazioni (regola, categorie, giorno di inizio). Dati sul dispositivo (IndexedDB), funziona offline | da fare |
+| 1 | Versione Free locale: inserimento rapido da telefono, elenco movimenti, bucket, controlli, ricorrenti, impostazioni (regola, categorie, giorno di inizio). Dati sul dispositivo (IndexedDB), funziona offline | **fatto** |
 | 2 | Account (login via email) e sincronizzazione PC ↔ telefono (Supabase, server UE); esportazione Excel/CSV; cancellazione account | da fare |
 | 3 | Pro: storico di più mesi e riepilogo annuale, valute con cambi automatici (BCE), investimenti e PAC | da fare |
 | 4 | Beta con un gruppo ristretto; test "primo stipendio + 5 spese" con persone nuove | da fare |
@@ -22,3 +22,9 @@ Dopo: import dell'estratto conto (CSV), collegamento con le banche (open banking
 - Privacy dal primo giorno: dati in UE, esportazione e cancellazione, nessun tracciamento invasivo.
 - Telefono prima di tutto: una spesa si registra in pochi secondi.
 - Quattro lingue sempre allineate: una chiave nuova va aggiunta in tutti i dizionari.
+
+## Da fare oltre alle fasi
+
+- Campagna social per la web app (immagini, caroselli, reel), come quella fatta per l'Excel.
+- Logo come asset vero: versione vettoriale (SVG) e PDF del marchio Quadriamo (scritta + icona a quattro blocchi).
+- Rendere pubblico questo repository per mostrarlo sul profilo GitHub.

@@ -20,7 +20,9 @@ npm run build      # build di produzione in dist/ (con service worker per l'offl
   casi di `budget-planner/test_calc.py`, quindi i numeri coincidono.
 - `src/i18n/` — dizionari `it`, `en`, `fr`, `es` (stesse chiavi, controllate da TypeScript e dai test).
   La lingua si sceglie dal browser e si può cambiare a mano; fallback inglese.
-- `src/App.tsx` — per ora un'anteprima con dati di esempio (`src/demo.ts`).
+- `src/store/` — stato dell'app (reducer puro e testato), salvataggio su IndexedDB, backup JSON.
+- `src/ui/` — schermate: benvenuto, Mese, Movimenti, Impostazioni, modulo di inserimento rapido.
+- `src/demo.ts` — dati di esempio per provare l'app senza inserire niente.
 - `public/` — icone, caratteri DM Sans / DM Serif Display (licenza OFL), favicon.
 
 ## Scelte di progetto
