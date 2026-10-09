@@ -31,7 +31,9 @@ export interface Settings {
   buckets: Bucket[]
   categories: Category[]
   recurring: Recurring[]
-  fxRates: Record<string, number>   // 1 unità della valuta = rate unità della tua valuta
+  fxRates: Record<string, number>   // 1 unità della valuta = rate unità della tua valuta (automatici, BCE)
+  fxManual?: Record<string, number> // cambi scritti a mano: hanno la precedenza su quelli automatici
+  fxDate?: string                   // data dei cambi automatici
 }
 
 export const SPLIT = 'split' as const   // entrata divisa secondo la regola
@@ -45,6 +47,7 @@ export interface Transaction {
   currency?: string | null          // vuota = valuta dell'utente
   paidFrom?: string | null          // id bucket, oppure SPLIT per le entrate (vuoto = default)
   updatedAt?: string                // ISO, ultima modifica: serve alla sincronizzazione tra dispositivi
+  fxRate?: number | null            // cambio del giorno in cui è stato registrato (1 unità = fxRate della tua valuta)
 }
 
 export interface YearMonth { year: number; month: number }   // month 1..12

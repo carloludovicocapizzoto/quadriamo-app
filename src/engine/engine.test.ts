@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_RECURRING, SPLIT, addDays, computeMonth, computeYear, computeYears, defaultSettings, depositInterest, yearsRange,
-  monthOf, pacFutureValue, periodOf, rowIssues, undated, valueHolding, type Transaction,
+  classify, emptyInvestments, monthOf, pacFutureValue, pacTracker, periodOf, portfolioSummary, rowIssues, undated, valueHolding, type Transaction,
 } from './index'
 
 const TODAY = '2026-10-09'
@@ -114,18 +114,18 @@ describe('periods', () => {
 
 describe('investments', () => {
   it('holding in your currency', () => {
-    const h = valueHolding({ name: 'World ETF', units: 10, avgPrice: 100, manualPrice: 110 }, s)
+    const h = valueHolding({ id: 'h1', name: 'World ETF', units: 10, avgPrice: 100, manualPrice: 110 }, s)
     expect(h.value).toBeCloseTo(1100); expect(h.gain).toBeCloseTo(100); expect(h.return).toBeCloseTo(0.1)
   })
   it('holding in USD is converted', () => {
-    const h = valueHolding({ name: 'US stock', currency: 'USD', units: 2, avgPrice: 100, manualPrice: 150 }, s)
+    const h = valueHolding({ id: 'h2', name: 'US stock', currency: 'USD', units: 2, avgPrice: 100, manualPrice: 150 }, s)
     expect(h.invested).toBeCloseTo(180); expect(h.value).toBeCloseTo(270)
   })
   it('holding without rate is flagged', () => {
-    expect(valueHolding({ name: 'X', currency: 'JPY', units: 1, avgPrice: 1, manualPrice: 1 }, s).missingValue).toBe(true)
+    expect(valueHolding({ id: 'h3', name: 'X', currency: 'JPY', units: 1, avgPrice: 1, manualPrice: 1 }, s).missingValue).toBe(true)
   })
   it('deposit interest, 1 year at 3%', () => {
-    expect(depositInterest({ name: 'D', amount: 1000, yearlyRate: 0.03, start: addDays(TODAY, -365) }, TODAY).interest)
+    expect(depositInterest({ id: 'd1', name: 'D', amount: 1000, yearlyRate: 0.03, start: addDays(TODAY, -365) }, TODAY).interest)
       .toBeCloseTo(30)
   })
   it('PAC 120/month, 6%, 10 years', () => {
@@ -164,5 +164,35 @@ describe('years go on over time', () => {
   })
   it('includes future years when there are future transactions', () => {
     expect(yearsRange([...txs, tx('2029-01-01', 'Plan', 'other', 1)], s2, today)).toEqual([2026, 2027, 2028, 2029])
+  })
+})
+
+describe('currencies', () => {
+  it('a transaction keeps the rate of the day it was logged', () => {
+    const t1 = classify({ id: 'x', date: '2026-01-01', description: 'NY', category: 'eatingOut', amount: 100, currency: 'USD', fxRate: 0.8 }, s)
+    expect(t1.amountIn).toBeCloseTo(80)                       // non il cambio attuale (0,9)
+  })
+  it('a manual rate wins over the automatic one', () => {
+    const s3 = { ...s, fxManual: { USD: 0.95 } }
+    expect(classify({ id: 'y', date: '2026-01-01', description: 'NY', category: 'eatingOut', amount: 100, currency: 'USD' }, s3).amountIn)
+      .toBeCloseTo(95)
+  })
+})
+
+describe('investments overview and PAC tracker (same numbers as the Excel test)', () => {
+  it('overview with a USD stock and a deposit', () => {
+    const inv = { ...emptyInvestments(),
+      holdings: [{ id: 'a', name: 'World ETF', units: 10, avgPrice: 100, manualPrice: 110 },
+                 { id: 'b', name: 'US stock', currency: 'USD', units: 2, avgPrice: 100, manualPrice: 150 }],
+      deposits: [{ id: 'd', name: 'Deposit', amount: 1000, yearlyRate: 0.03, start: addDays(TODAY, -365) }] }
+    const o = portfolioSummary(inv, s, TODAY)
+    expect(o.invested).toBeCloseTo(2180)
+    expect(o.value).toBeCloseTo(2400, 0)
+  })
+  it('tracker: January invested from the log, gain from the value you enter', () => {
+    const y = computeYear(2026, all, s, TODAY)
+    const rows = pacTracker(y.months, { monthly: 120, yearlyReturn: 0.06, years: 10 }, { '2026-01': 95 })
+    expect(rows[0].invested).toBeCloseTo(100)
+    expect(rows[0].gain).toBeCloseTo(-5)
   })
 })

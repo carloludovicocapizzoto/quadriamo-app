@@ -219,3 +219,23 @@ table.data .link-btn { padding: 0; }
   border-radius: 99px; padding: 4px 10px; font-size: 13px; min-height: 32px; cursor: pointer; margin-left: auto; margin-right: 8px; }
 .inline-form { display: grid; gap: 4px; }
 .account-compact { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
+.amount-row { display: grid; grid-template-columns: 1fr 110px; gap: 10px; align-items: end; }
+.amount-row .field { margin-bottom: 4px; }
+.currency-field select { min-height: 60px; font-weight: 700; }
+.edit-list.fx-list li { grid-template-columns: 80px 1fr 110px 40px; }
+.fx-code { font-weight: 700; font-variant-numeric: tabular-nums; }
+@media (max-width: 560px) { .edit-list.fx-list li { grid-template-columns: 70px 1fr 90px 36px; } .edit-list.fx-list li > :first-child { grid-column: auto; } }
+.stack-row select { width: auto; }
+
+/* ---------- investimenti ---------- */
+.bottom-nav { grid-template-columns: repeat(5, 1fr); }
+.bottom-nav button { font-size: 11px; }
+.inv-list { display: grid; gap: 12px; margin: 10px 0 12px; }
+.inv-card { border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 10px; align-items: end; }
+.inv-grid .field { margin: 6px 0; }
+.inv-grid .wide { grid-column: 1 / -1; }
+@media (max-width: 560px) { .inv-grid { grid-template-columns: repeat(2, 1fr); } }
+.danger-link { color: var(--bad); }
+.pac-chart { width: 100%; height: 120px; margin: 12px 0 6px; }
+.cell-input { min-height: 36px; padding: 4px 8px; width: 110px; text-align: right; }

@@ -1,5 +1,5 @@
 // Stato dell'app e sue modifiche: funzioni pure, testate in state.test.ts.
-import { compareYm, defaultSettings, monthOf, type Settings, type Transaction, type YearMonth } from '../engine'
+import { compareYm, defaultSettings, monthOf, type Investments, type Settings, type Transaction, type YearMonth } from '../engine'
 
 export interface AppData {
   version: 1
@@ -8,6 +8,8 @@ export interface AppData {
   demo?: boolean                      // dati di esempio: l'app propone di ripartire da zero, non si sincronizzano
   settingsUpdatedAt?: string          // ISO, ultima modifica delle impostazioni
   deleted?: Record<string, string>    // id movimento eliminato -> quando (per non farlo "risorgere" da un altro dispositivo)
+  investments?: Investments
+  investmentsUpdatedAt?: string
 }
 
 export type Action =
@@ -16,6 +18,7 @@ export type Action =
   | { type: 'updateTx'; tx: Transaction; at?: string }
   | { type: 'deleteTx'; id: string; at?: string }
   | { type: 'setSettings'; settings: Settings; at?: string }
+  | { type: 'setInvestments'; investments: Investments; at?: string }
   | { type: 'replace'; data: AppData | null }
 
 export interface State { loaded: boolean; data: AppData | null }
@@ -51,6 +54,8 @@ export function reducer(state: State, a: Action): State {
                                  deleted: { ...d.deleted, [a.id]: at } } }
     case 'setSettings':
       return { ...state, data: { ...d, settings: a.settings, settingsUpdatedAt: at } }
+    case 'setInvestments':
+      return { ...state, data: { ...d, investments: a.investments, investmentsUpdatedAt: at } }
   }
 }
 
@@ -84,7 +89,8 @@ export function parseBackup(text: string): AppData {
     d.transactions.every((t: Transaction) => typeof t.id === 'string' && typeof t.description === 'string')
   if (!ok) throw new Error('invalid backup')
   return { version: 1, settings: { fxRates: {}, ...d.settings }, transactions: d.transactions,
-           deleted: d.deleted ?? {}, settingsUpdatedAt: d.settingsUpdatedAt }
+           deleted: d.deleted ?? {}, settingsUpdatedAt: d.settingsUpdatedAt,
+           ...(d.investments ? { investments: d.investments, investmentsUpdatedAt: d.investmentsUpdatedAt } : {}) }
 }
 
 /** Parse di un importo scritto dall'utente: accetta "12,50", "12.50", "1.234,56", "1,234.56". */
@@ -121,9 +127,12 @@ export function mergeData(a: AppData, b: AppData): AppData {
   let settings = newerSettings ? b.settings : a.settings
   for (const tx of transactions) settings = widenFirstMonth(settings, tx)
 
+  const newerInv = (b.investmentsUpdatedAt ?? '') > (a.investmentsUpdatedAt ?? '')
+  const investments = newerInv ? b.investments : (a.investments ?? b.investments)
   return {
     version: 1, settings, transactions, deleted,
     settingsUpdatedAt: newerSettings ? b.settingsUpdatedAt : a.settingsUpdatedAt,
+    ...(investments ? { investments, investmentsUpdatedAt: newerInv ? b.investmentsUpdatedAt : a.investmentsUpdatedAt } : {}),
   }
 }
 

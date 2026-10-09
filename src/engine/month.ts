@@ -6,6 +6,12 @@ import {
   type Transaction, type YearMonth,
 } from './types'
 
+/** Cambio attuale verso la tua valuta: quello scritto a mano se c'è, altrimenti quello automatico. */
+export function fxRate(currency: string | null | undefined, s: Settings): number | null {
+  if (!currency || currency === s.currency) return 1
+  return s.fxManual?.[currency] ?? s.fxRates[currency] ?? null
+}
+
 /** Colonne calcolate di una riga: tipo, bucket, importo nella tua valuta. */
 export function classify(tx: Transaction, s: Settings): ClassifiedTx {
   let type: ClassifiedTx['type'] = null
@@ -20,7 +26,10 @@ export function classify(tx: Transaction, s: Settings): ClassifiedTx {
   let amountIn: number | null = null
   if (tx.amount != null) {
     if (!tx.currency || tx.currency === s.currency) amountIn = tx.amount
-    else if (s.fxRates[tx.currency] != null) amountIn = tx.amount * s.fxRates[tx.currency]
+    else {
+      const rate = tx.fxRate ?? fxRate(tx.currency, s)
+      if (rate != null) amountIn = tx.amount * rate
+    }
   }
   return { ...tx, type, bucket, amountIn }
 }

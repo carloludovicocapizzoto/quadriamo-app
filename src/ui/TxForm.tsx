@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import type { CategoryType, Settings, Transaction } from '../engine'
+import { fxRate, type CategoryType, type Settings, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { newId, parseAmount } from '../store/state'
-import { bucketName, categoryName } from './names'
+import { CURRENCIES, bucketName, categoryName } from './names'
 
 const GROUPS: CategoryType[] = ['expense', 'income', 'saving']
 
@@ -22,6 +22,7 @@ export function TxForm({ settings, initial, defaultDate, onSave, onDelete, onClo
   const [description, setDescription] = useState(initial?.description ?? '')
   const [date, setDate] = useState(initial?.date ?? defaultDate)
   const [paidFrom, setPaidFrom] = useState(initial?.paidFrom ?? '')
+  const [currency, setCurrency] = useState(initial?.currency || settings.currency)
   const [errors, setErrors] = useState<string[]>([])
 
   useEffect(() => {
@@ -32,6 +33,10 @@ export function TxForm({ settings, initial, defaultDate, onSave, onDelete, onClo
   const cat = settings.categories.find(c => c.id === category)
   const isIncome = cat?.type === 'income'
   const parsed = parseAmount(amount)
+  const foreign = currency !== settings.currency
+  // un movimento già registrato tiene il suo cambio, a meno che non si cambi valuta
+  const rate = foreign ? (initial?.currency === currency && initial?.fxRate ? initial.fxRate : fxRate(currency, settings)) : 1
+  const currencies = [...new Set([settings.currency, ...CURRENCIES, ...Object.keys(settings.fxRates)])]
 
   function submit(e: FormEvent) {
     e.preventDefault()
@@ -43,7 +48,7 @@ export function TxForm({ settings, initial, defaultDate, onSave, onDelete, onClo
     if (errs.length) return
     onSave({
       id: initial?.id ?? newId(), date, description: description.trim(), category, amount: parsed,
-      currency: initial?.currency ?? null, paidFrom: paidFrom || null,
+      currency: foreign ? currency : null, fxRate: foreign ? rate : null, paidFrom: paidFrom || null,
     })
   }
 
@@ -55,12 +60,26 @@ export function TxForm({ settings, initial, defaultDate, onSave, onDelete, onClo
           <button type="button" className="icon-btn" onClick={() => ref.current?.close()} aria-label={t('action.close')}>×</button>
         </div>
 
-        <label className="field">
-          <span>{t('tx.amount')} ({settings.currency})</span>
-          <input className="amount-input" inputMode="decimal" autoComplete="off" placeholder="0,00" autoFocus={!initial}
-                 value={amount} onChange={e => setAmount(e.target.value)} aria-invalid={errors.length > 0 && (parsed == null || parsed <= 0)} />
-          {parsed != null && parsed > 0 && <small className="muted">{money(parsed, settings.currency)}</small>}
-        </label>
+        <div className="amount-row">
+          <label className="field">
+            <span>{t('tx.amount')}</span>
+            <input className="amount-input" inputMode="decimal" autoComplete="off" placeholder="0,00" autoFocus={!initial}
+                   value={amount} onChange={e => setAmount(e.target.value)} aria-invalid={errors.length > 0 && (parsed == null || parsed <= 0)} />
+          </label>
+          <label className="field currency-field">
+            <span>{t('tx.currency')}</span>
+            <select value={currency} onChange={e => setCurrency(e.target.value)}>
+              {currencies.map(c => <option key={c}>{c}</option>)}
+            </select>
+          </label>
+        </div>
+        {parsed != null && parsed > 0 && (
+          <small className={foreign && rate == null ? 'bad-text' : 'muted'}>
+            {!foreign ? money(parsed, settings.currency)
+              : rate == null ? t('tx.noRate', { cur: currency })
+              : t('tx.converted', { amount: money(parsed * rate, settings.currency), rate: String(rate).replace('.', ',') })}
+          </small>
+        )}
 
         <fieldset className="field">
           <legend>{t('tx.category')}</legend>

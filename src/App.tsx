@@ -12,8 +12,10 @@ import { SettingsView } from './ui/SettingsView'
 import { TransactionsView } from './ui/TransactionsView'
 import { TxForm } from './ui/TxForm'
 import { YearNav, YearView } from './ui/YearView'
+import { InvestmentsView } from './ui/InvestmentsView'
+import { FxAutoUpdate } from './ui/FxAutoUpdate'
 
-type Tab = 'month' | 'transactions' | 'year' | 'settings'
+type Tab = 'month' | 'transactions' | 'year' | 'investments' | 'settings'
 
 export default function App() {
   const { t, lang, setLang } = useI18n()
@@ -92,7 +94,10 @@ export default function App() {
         {tab === 'month' && <MonthView r={result} settings={data.settings} onOpen={openTx} />}
         {tab === 'transactions' &&
           <TransactionsView r={result} settings={data.settings} undated={undated(data.transactions)} onOpen={openTx} />}
+        {tab === 'investments' && <InvestmentsView settings={data.settings} transactions={data.transactions} today={today}
+                                                   year={year} onYear={setYear} />}
         {tab === 'settings' && <SettingsView />}
+        <FxAutoUpdate today={today} />
       </main>
 
       {note && <div className="toast" role="status">{note}</div>}
@@ -102,10 +107,10 @@ export default function App() {
       )}
 
       <nav className="bottom-nav" aria-label="Quadriamo">
-        {(['month', 'transactions', 'year', 'settings'] as Tab[]).map(k => (
+        {(['month', 'transactions', 'year', 'investments', 'settings'] as Tab[]).map(k => (
           <button key={k} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}
-                  onClick={() => { setTab(k); if (k === 'year' && current) setYear(current.year) }}>
-            <span aria-hidden="true">{{ month: '◧', transactions: '☰', year: '▥', settings: '⚙' }[k]}</span>
+                  onClick={() => { setTab(k); if ((k === 'year' || k === 'investments') && current) setYear(current.year); window.scrollTo(0, 0) }}>
+            <span aria-hidden="true">{{ month: '◧', transactions: '☰', year: '▥', investments: '↗', settings: '⚙' }[k]}</span>
             {t(`nav.${k}`)}
           </button>
         ))}

@@ -1,8 +1,9 @@
 import { useRef, useState, type ChangeEvent } from 'react'
-import { DEFAULT_CATEGORIES, type CategoryType, type Settings } from '../engine'
+import { DEFAULT_CATEGORIES, todayIso, type CategoryType, type Settings } from '../engine'
 import { LANGS, useI18n, type Lang } from '../i18n/core'
 import { useStore } from '../store/context'
 import { newId, parseAmount, parseBackup, toCsv, validateSettings, type AppData } from '../store/state'
+import { fetchRates, FX_SUPPORTED, neededCurrencies } from '../fx'
 import { AccountSection } from './AccountSection'
 import { BUCKET_COLORS, CURRENCIES, bucketName, categoryName } from './names'
 
@@ -11,7 +12,7 @@ const DEFAULT_IDS = new Set(DEFAULT_CATEGORIES.map(c => c.id))
 const pct = (share: number) => String(Math.round(share * 1000) / 10).replace('.', ',')
 
 export function SettingsView() {
-  const { t, lang, setLang } = useI18n()
+  const { t, lang, setLang, date } = useI18n()
   const { state, dispatch } = useStore()
   const data = state.data!
   const [draft, setDraft] = useState<Settings>(() => structuredClone(data.settings))
@@ -27,8 +28,11 @@ export function SettingsView() {
   const total = Math.round(draft.buckets.reduce((a, b) => a + b.share, 0) * 1000) / 10
 
   // salvataggio automatico: ogni modifica valida viene salvata subito (niente modifiche perse cambiando scheda)
+  const [extraFx, setExtraFx] = useState<string[]>([])
+  const [fxBusy, setFxBusy] = useState(false)
   const edit = (fn: (s: Settings) => void) => {
-    const next = structuredClone(draft)
+    // i cambi automatici possono essere stati aggiornati nel frattempo: si parte sempre dagli ultimi
+    const next = structuredClone({ ...draft, fxRates: data.settings.fxRates, fxDate: data.settings.fxDate })
     fn(next)
     setDraft(next)
     if (!validateSettings(next).length) {
@@ -63,6 +67,16 @@ export function SettingsView() {
     flash(t('settings.importOk'))
   }
 
+  async function updateRates(extra: string[] = []) {
+    setFxBusy(true)
+    try {
+      const { rates, date: d } = await fetchRates(draft.currency, [...neededCurrencies(data), ...extraFx, ...extra])
+      edit(s => { s.fxRates = { ...s.fxRates, ...rates }; if (d) s.fxDate = todayIso() })
+    } catch { flash(t('settings.fxError'), true) } finally { setFxBusy(false) }
+  }
+  const fxList = [...new Set([...neededCurrencies(data), ...Object.keys(draft.fxManual ?? {}), ...extraFx])]
+    .filter(c => c !== draft.currency).sort()
+
   function deleteCategory(id: string) {
     const used = data.transactions.filter(tx => tx.category === id).length
     if (used && !confirm(t('settings.deleteCategoryUsed', { n: used }))) return
@@ -96,6 +110,41 @@ export function SettingsView() {
                  onChange={e => edit(s => { s.monthStartDay = Number(e.target.value) })} />
           <small className="muted">{t('settings.startDayHint')}</small>
         </label>
+      </section>
+
+      <section className="card">
+        <h3 className="h-plain">{t('settings.fx')}</h3>
+        <p className="muted small">{t('settings.fxHint')}</p>
+        <p className="small">{data.settings.fxDate ? t('settings.fxDate', { date: date(data.settings.fxDate, { day: 'numeric', month: 'short', year: 'numeric' }) }) : t('settings.fxNever')}</p>
+        <ul className="edit-list fx-list">
+          {fxList.map(c => (
+            <li key={c}>
+              <span className="fx-code">1 {c} =</span>
+              <span className="muted small">{t('settings.fxAuto')}: {data.settings.fxRates[c] != null ? String(data.settings.fxRates[c]).replace('.', ',') : '—'}</span>
+              <input aria-label={`${t('settings.fxManual')} ${c}`} placeholder={t('settings.fxManual')} inputMode="decimal"
+                     defaultValue={draft.fxManual?.[c] != null ? String(draft.fxManual[c]).replace('.', ',') : ''}
+                     onChange={e => edit(s => {
+                       const v = parseAmount(e.target.value)
+                       const m = { ...(s.fxManual ?? {}) }
+                       if (v && v > 0) m[c] = v; else delete m[c]
+                       s.fxManual = m
+                     })} />
+              <span className="muted small">{draft.currency}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="stack-row">
+          <button className="btn" disabled={fxBusy} onClick={() => void updateRates()}>{t('settings.fxUpdate')}</button>
+          <select aria-label={t('settings.fxAdd')} value="" onChange={e => {
+            const c = e.target.value
+            if (!c) return
+            setExtraFx(x => [...x, c])
+            void updateRates([c])
+          }}>
+            <option value="">+ {t('settings.fxAdd')}</option>
+            {FX_SUPPORTED.filter(c => c !== draft.currency && !fxList.includes(c)).map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
       </section>
 
       <section className="card">

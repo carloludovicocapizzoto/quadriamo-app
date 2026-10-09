@@ -109,3 +109,14 @@ describe('csv export', () => {
     expect(csv.split('\n')[1]).toBe('2026-10-01,"Pizza, beer",eatingOut,12.5,EUR,')
   })
 })
+
+describe('investments sync', () => {
+  it('the most recent investments win', () => {
+    const inv = (m: number) => ({ holdings: [], deposits: [], pac: { monthly: m, yearlyReturn: 0.05, years: 5 }, portfolioValues: {} })
+    const a = { ...createInitial('EUR', '2026-10-09'), investments: inv(100), investmentsUpdatedAt: '2026-10-09T10:00:00Z' }
+    const b = { ...createInitial('EUR', '2026-10-09'), investments: inv(200), investmentsUpdatedAt: '2026-10-09T11:00:00Z' }
+    expect(mergeData(a, b).investments!.pac.monthly).toBe(200)
+    expect(mergeData(b, a).investments!.pac.monthly).toBe(200)
+    expect(mergeData(a, createInitial('EUR', '2026-10-09')).investments!.pac.monthly).toBe(100)
+  })
+})

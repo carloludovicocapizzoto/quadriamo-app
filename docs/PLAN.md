@@ -9,8 +9,8 @@ Si costruisce una piccola base di utenti, poi si decide come monetizzare.
 |---|---|---|
 | 0 | Repo, motore di calcolo con test (stessi numeri dell'Excel), 4 lingue, stile, PWA installabile | **fatto** |
 | 1 | Versione Free locale: inserimento rapido da telefono, elenco movimenti, bucket, controlli, ricorrenti, impostazioni (regola, categorie, giorno di inizio). Dati sul dispositivo (IndexedDB), funziona offline | **fatto** |
-| 2 | Account (login via email) e sincronizzazione PC ↔ telefono (Supabase, server UE); esportazione Excel/CSV; cancellazione account | da fare |
-| 3 | Pro: storico di più mesi e riepilogo annuale, valute con cambi automatici (BCE), investimenti e PAC | da fare |
+| 2 | Account (login via email) e sincronizzazione PC ↔ telefono (Supabase, server UE); esportazione CSV; cancellazione account | **fatto** (manca il codice nell'email: vedi sotto) |
+| 3 | Pro: storico di più mesi e riepilogo annuale (scheda Anno), valute con cambi automatici BCE e cambio salvato su ogni movimento, investimenti (portafoglio, conti deposito, PAC, piano e realtà) | **fatto** (divisione Free/Pro con la fase 5) |
 | 4 | Beta con un gruppo ristretto; test "primo stipendio + 5 spese" con persone nuove | da fare |
 | 5 | Monetizzazione: abbonamento (Stripe), accesso Pro | quando ci sono utenti |
 
