@@ -139,7 +139,7 @@ const en = {
   'sync.haveAccount': 'Already using Quadriamo on another device? Sign in',
   'sync.email': 'Email',
   'sync.sendCode': 'Send me a code',
-  'sync.codeSent': 'We sent a 6-digit code to {email}. It can take a minute: check the spam folder too.',
+  'sync.codeSent': 'We sent an email to {email}: open the sign-in link in it (on this device), or type the code if the email has one. It can take a minute: check the spam folder too.',
   'sync.code': 'Code',
   'sync.verify': 'Sign in',
   'sync.changeEmail': 'Use another email',

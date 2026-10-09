@@ -139,7 +139,7 @@ const es: Dict = {
   'sync.haveAccount': '¿Ya usas Quadriamo en otro dispositivo? Inicia sesión',
   'sync.email': 'Correo',
   'sync.sendCode': 'Envíame un código',
-  'sync.codeSent': 'Hemos enviado un código de 6 cifras a {email}. Puede tardar un minuto: revisa también el spam.',
+  'sync.codeSent': 'Hemos enviado un correo a {email}: abre el enlace de acceso (en este dispositivo) o escribe el código si el correo lo incluye. Puede tardar un minuto: revisa también el spam.',
   'sync.code': 'Código',
   'sync.verify': 'Iniciar sesión',
   'sync.changeEmail': 'Usar otro correo',

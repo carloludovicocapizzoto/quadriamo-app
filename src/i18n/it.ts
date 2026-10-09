@@ -139,7 +139,7 @@ const it: Dict = {
   'sync.haveAccount': 'Usi già Quadriamo su un altro dispositivo? Accedi',
   'sync.email': 'Email',
   'sync.sendCode': 'Mandami un codice',
-  'sync.codeSent': 'Abbiamo inviato un codice di 6 cifre a {email}. Può volerci un minuto: controlla anche lo spam.',
+  'sync.codeSent': 'Abbiamo inviato un’email a {email}: apri il link di accesso (da questo dispositivo), oppure scrivi qui il codice se l’email lo contiene. Può volerci un minuto: controlla anche lo spam.',
   'sync.code': 'Codice',
   'sync.verify': 'Accedi',
   'sync.changeEmail': 'Usa un’altra email',
