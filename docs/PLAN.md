@@ -25,6 +25,10 @@ Dopo: import dell'estratto conto (CSV), collegamento con le banche (open banking
 
 ## Da fare oltre alle fasi
 
+- Prima del lancio: dominio `quadriamo.com` verificato su Resend, SMTP personalizzato in Supabase
+  (Authentication → Emails → SMTP Settings: host smtp.resend.com, porta 465, utente `resend`), modelli
+  "Magic link or OTP" e "Confirm sign up" con il codice `{{ .Token }}`, Site URL e Redirect URLs dell'indirizzo pubblico.
+
 - Campagna social per la web app (immagini, caroselli, reel), come quella fatta per l'Excel.
 - Logo come asset vero: versione vettoriale (SVG) e PDF del marchio Quadriamo (scritta + icona a quattro blocchi).
 - Rendere pubblico questo repository per mostrarlo sul profilo GitHub.
