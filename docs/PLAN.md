@@ -25,6 +25,9 @@ Dopo: import dell'estratto conto (CSV), collegamento con le banche (open banking
 
 ## Da fare oltre alle fasi
 
+- Quando prende il dominio: dati del titolare in `public/owner.js` (oggi persona fisica; aggiornare se nasce una ditta o una SRL)
+  e casella email dedicata (es. ciao@quadriamo.com) come contatto di privacy, termini e pulsante feedback (`FEEDBACK_EMAIL` in `src/config.ts`).
+
 - Prima del lancio: dominio `quadriamo.com` verificato su Resend, SMTP personalizzato in Supabase
   (Authentication → Emails → SMTP Settings: host smtp.resend.com, porta 465, utente `resend`), modelli
   "Magic link or OTP" e "Confirm sign up" con il codice `{{ .Token }}`, Site URL e Redirect URLs dell'indirizzo pubblico.
