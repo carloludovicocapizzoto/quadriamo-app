@@ -33,9 +33,9 @@ export default defineConfig({
           { src: 'icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,ttf}'], navigateFallback: null },
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,ttf}'], navigateFallback: null, importScripts: ['push-sw.js'] },
     }),
   ],
   build: { rollupOptions: { input: { home: 'index.html', app: 'app/index.html' } } },
-  test: { include: ['src/**/*.test.ts'] },
+  test: { include: ['src/**/*.test.ts', 'src/**/*.test.tsx'] },
 })

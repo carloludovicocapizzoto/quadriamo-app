@@ -14,6 +14,12 @@ import { TxForm } from './ui/TxForm'
 import { YearNav, YearView } from './ui/YearView'
 import { InvestmentsView } from './ui/InvestmentsView'
 import { FxAutoUpdate } from './ui/FxAutoUpdate'
+import { feedbackDue, firstOpenToday, statsConsent } from './beta/device'
+import { track } from './beta/telemetry'
+import { AdminView } from './ui/beta/AdminView'
+import { BetaSection } from './ui/beta/BetaSection'
+import { ConsentCard } from './ui/beta/ConsentCard'
+import { FeedbackCard } from './ui/beta/FeedbackCard'
 
 type Tab = 'month' | 'transactions' | 'year' | 'investments' | 'settings'
 
@@ -32,8 +38,15 @@ export default function App() {
     if (q.get('add') !== '1') return null
     return { prefill: { amount: q.get('amount') ?? undefined, description: q.get('desc') ?? undefined, category: q.get('cat') ?? undefined } }
   })
+  // beta: richiesta di feedback (dal link della notifica, o ogni 10 giorni) e dashboard (?admin=1)
+  const [showFeedback, setShowFeedback] = useState(() =>
+    new URLSearchParams(window.location.search).get('feedback') === '1' || feedbackDue())
+  const [showAdmin, setShowAdmin] = useState(() => new URLSearchParams(window.location.search).get('admin') === '1')
   useEffect(() => {
     if (window.location.search) window.history.replaceState(null, '', window.location.pathname)
+    const onInstalled = () => { void track('install') }
+    window.addEventListener('appinstalled', onInstalled)
+    return () => window.removeEventListener('appinstalled', onInstalled)
   }, [])
   const [note, setNote] = useState('')
   const data = state.data
@@ -42,6 +55,15 @@ export default function App() {
   const result = useMemo(
     () => data && current ? computeMonth(current, data.transactions, data.settings, today) : null,
     [data, current, today])
+
+  // statistiche anonime (solo con consenso): una "fotografia" al giorno con soli conteggi
+  const ping = (yes = statsConsent() === 'yes') => {
+    if (!yes || !data || data.demo || !firstOpenToday(today)) return
+    const months = new Set(data.transactions.map(t => t.date?.slice(0, 7)).filter(Boolean))
+    void track('open', { txCount: data.transactions.length, monthsUsed: months.size, signedIn: !!sync.user, lang })
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- una volta per caricamento dei dati
+  useEffect(() => { if (state.loaded) ping() }, [state.loaded, !!data])
 
   if (!state.loaded) return <div className="app"><p className="muted top-gap">{t('app.loading')}</p></div>
 
@@ -96,6 +118,10 @@ export default function App() {
       )}
 
       <main>
+        {showAdmin && <AdminView onClose={() => setShowAdmin(false)} />}
+        {!showAdmin && tab === 'month' && <ConsentCard onAnswer={yes => ping(yes)} />}
+        {!showAdmin && tab === 'month' && showFeedback && <FeedbackCard onClose={() => setShowFeedback(false)} />}
+        {!showAdmin && <>
         {(tab === 'month' || tab === 'transactions') && <MonthNav ym={current} onChange={setYm} />}
         {tab === 'year' && <YearNav year={year} onChange={setYear} />}
         {tab === 'year' && <YearView year={year} transactions={data.transactions} settings={data.settings} today={today}
@@ -105,7 +131,10 @@ export default function App() {
           <TransactionsView r={result} settings={data.settings} undated={undated(data.transactions)} onOpen={openTx} />}
         {tab === 'investments' && <InvestmentsView settings={data.settings} transactions={data.transactions} today={today}
                                                    year={year} onYear={setYear} />}
+        {tab === 'settings' && <BetaSection onFeedback={() => { setShowFeedback(true); setTab('month'); window.scrollTo(0, 0) }}
+                                            onAdmin={() => { setShowAdmin(true); window.scrollTo(0, 0) }} />}
         {tab === 'settings' && <SettingsView />}
+        </>}
         <FxAutoUpdate today={today} />
       </main>
 

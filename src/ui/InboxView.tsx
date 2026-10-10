@@ -3,6 +3,7 @@ import { keywordFor, readStatement, type Settings, type Transaction } from '../e
 import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
 import { duplicateCandidates, newId, planImport, type InboxItem } from '../store/state'
+import { track } from '../beta/telemetry'
 import { bucketName, categoryName } from './names'
 
 /** Importa un estratto conto e mostra la casella "Da confermare": tutto si può cambiare prima di confermare. */
@@ -22,6 +23,7 @@ export function InboxView({ settings }: { settings: Settings }) {
     const { items, duplicates } = planImport(state.data, rows)
     items.forEach(i => suggested.set(i.id, i.category))
     dispatch({ type: 'addInbox', items })
+    void track('import')
     setMsg({ text: t('imp.result', { n: items.length, d: duplicates }) })
   }
 
