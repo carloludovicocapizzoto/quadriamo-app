@@ -82,7 +82,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const api = useMemo<SyncApi>(() => ({
     enabled: !!supabase, user, status, lastSync, syncNow,
     sendCode: async email => {
-      const { error } = await supabase!.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin } })
+      const { error } = await supabase!.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + import.meta.env.BASE_URL } })
       if (error) throw error
     },
     verifyCode: async (email, code) => {

@@ -2,7 +2,11 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
+// In produzione su GitHub Pages l'app vive in /quadriamo-app/ (BASE_PATH dalla GitHub Action); in sviluppo in /.
+const base = process.env.BASE_PATH ?? '/'
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -13,8 +17,8 @@ export default defineConfig({
         short_name: 'Quadriamo',
         description: 'Your money, in four: the 55-20-15-10 budget planner.',
         lang: 'en',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#FAF7F2',

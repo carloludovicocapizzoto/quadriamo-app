@@ -4,6 +4,9 @@ Il budget planner 55-20-15-10 come web app installabile: una sola piattaforma pe
 in italiano, inglese, francese e spagnolo. Il file Excel (repo `budget-planner`) resta solo come
 versione di prova gratuita per amici e tester.
 
+**Online:** https://carloludovicocapizzoto.github.io/quadriamo-app/ — si aggiorna da sola a ogni push su `main`
+(GitHub Action `.github/workflows/deploy.yml`: test, build, pubblicazione su GitHub Pages).
+
 ## Comandi
 
 ```bash

@@ -31,4 +31,4 @@ Dopo: import dell'estratto conto (CSV), collegamento con le banche (open banking
 
 - Campagna social per la web app (immagini, caroselli, reel), come quella fatta per l'Excel.
 - Logo come asset vero: versione vettoriale (SVG) e PDF del marchio Quadriamo (scritta + icona a quattro blocchi).
-- Rendere pubblico questo repository per mostrarlo sul profilo GitHub.
+- Prima di far pagare il Pro: spostare l'hosting da GitHub Pages (non adatto a servizi commerciali) a un hosting adatto, es. Cloudflare Pages, con `app.quadriamo.com`.
