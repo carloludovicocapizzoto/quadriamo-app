@@ -10,7 +10,7 @@ export function Onboarding({ onStart, onDemo }: { onStart: (currency: string, st
   const { t } = useI18n()
   const [currency, setCurrency] = useState(guessCurrency)
   const [startDay, setStartDay] = useState(1)
-  const [signIn, setSignIn] = useState(false)
+  const [signIn, setSignIn] = useState(() => new URLSearchParams(window.location.search).get('login') === '1')
   const sync = useSync()
   return (
     <section className="card onboarding">

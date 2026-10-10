@@ -17,14 +17,14 @@ export default defineConfig({
         short_name: 'Quadriamo',
         description: 'Your money, in four: the 55-20-15-10 budget planner.',
         lang: 'en',
-        start_url: base,
+        start_url: `${base}app/`,
         scope: base,
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#FAF7F2',
         theme_color: '#1F2328',
         shortcuts: [
-          { name: 'Aggiungi spesa · Add expense', short_name: '+', url: `${base}?add=1`,
+          { name: 'Aggiungi spesa · Add expense', short_name: '+', url: `${base}app/?add=1`,
             icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
         ],
         icons: [
@@ -33,8 +33,9 @@ export default defineConfig({
           { src: 'icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,ttf}'] },
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,ttf}'], navigateFallback: null },
     }),
   ],
+  build: { rollupOptions: { input: { home: 'index.html', app: 'app/index.html' } } },
   test: { include: ['src/**/*.test.ts'] },
 })

@@ -22,7 +22,8 @@ export default function App() {
   const { state, dispatch } = useStore()
   const sync = useSync()
   const today = todayIso()
-  const [tab, setTab] = useState<Tab>('month')
+  // ?login=1 (pulsante "Accedi" del sito): si apre direttamente l'area account
+  const [tab, setTab] = useState<Tab>(() => new URLSearchParams(window.location.search).get('login') === '1' ? 'settings' : 'month')
   const [ym, setYm] = useState<YearMonth | null>(null)
   const [year, setYear] = useState(() => Number(todayIso().slice(0, 4)))
   // link di inserimento rapido: ?add=1&amount=12,50&desc=Pizza&cat=eatingOut (scorciatoia sull'icona, Comandi Rapidi)
@@ -46,7 +47,7 @@ export default function App() {
 
   const header = (
     <header className="top">
-      <div className="logo">Quadriamo<span>.</span> <small className="beta">{t('beta.badge')}</small></div>
+      <a className="logo" href={import.meta.env.BASE_URL}>Quadriamo<span>.</span> <small className="beta">{t('beta.badge')}</small></a>
       {sync.user && (
         <button className="sync-pill" onClick={() => void sync.syncNow()} title={t('sync.now')}>
           <span className={`dot ${sync.status}`} aria-hidden="true" />

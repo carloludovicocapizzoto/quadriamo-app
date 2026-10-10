@@ -12,7 +12,7 @@
   }
   var q = new URLSearchParams(location.search).get('lang')
   var saved = null
-  try { saved = localStorage.getItem('quadriamo.lang') } catch (e) { /* storage non disponibile */ }
+  try { saved = localStorage.getItem('quadriamo.lang') } catch { /* storage non disponibile */ }
   show(q || saved || (navigator.language || 'en').slice(0, 2))
   var owner = window.QUADRIAMO_OWNER || {}
   document.querySelectorAll('[data-owner]').forEach(function (el) {

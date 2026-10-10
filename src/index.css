@@ -271,3 +271,4 @@ table.data .link-btn { padding: 0; }
 .legal { margin-top: 14px; }
 .legal a { color: inherit; }
 a.btn { text-decoration: none; color: var(--text); }
+.top a.logo { text-decoration: none; color: inherit; }

@@ -1,18 +1,197 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Quadriamo</title>
-    <meta name="description" content="Your money, in four: the 55-20-15-10 budget planner." />
-    <meta name="theme-color" content="#1F2328" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Quadriamo" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quadriamo — I tuoi soldi, in quattro</title>
+  <meta name="description" content="Dividi lo stipendio in 4 parti con la regola 55-20-15-10, registra una spesa in 5 secondi e sai sempre quanto puoi ancora spendere. Gratis durante la beta.">
+  <meta name="theme-color" content="#1F2328">
+  <meta property="og:title" content="Quadriamo — I tuoi soldi, in quattro">
+  <meta property="og:description" content="Il budget con la regola 55-20-15-10: semplice, europeo, rispettoso della privacy.">
+  <meta property="og:image" content="/icons/icon-512.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="/pages.css">
+  <link rel="stylesheet" href="/home.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="site-wrap head-row">
+    <a class="logo" href="./">Quadriamo<span>.</span></a>
+    <nav class="site-nav" aria-label="Menu">
+      <a href="#come" data-i18n="nav.how"></a>
+      <a href="#funzioni" data-i18n="nav.features"></a>
+      <a href="#prezzi" data-i18n="nav.pricing"></a>
+      <a href="#faq" data-i18n="nav.faq"></a>
+    </nav>
+    <div class="head-actions">
+      <select class="lang-select" aria-label="Lingua / Language">
+        <option value="it">IT</option><option value="en">EN</option><option value="fr">FR</option><option value="es">ES</option>
+      </select>
+      <a class="link-login" href="app/?login=1" data-i18n="nav.login"></a>
+      <a class="btn btn-small" href="app/" data-i18n="nav.open"></a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero site-wrap">
+    <div class="hero-text">
+      <p class="eyebrow" data-i18n="hero.eyebrow"></p>
+      <h1 data-i18n-html="hero.title"></h1>
+      <p class="lead" data-i18n="hero.lead"></p>
+      <div class="cta-row">
+        <a class="btn" href="app/" data-i18n="hero.cta"></a>
+        <a class="btn btn-ghost" href="#scarica" data-i18n="hero.install"></a>
+      </div>
+      <p class="muted small" data-i18n="hero.note"></p>
+    </div>
+    <div class="phone" aria-hidden="true">
+      <div class="phone-screen">
+        <div class="ph-logo">Quadriamo<span>.</span></div>
+        <div class="ph-safe">
+          <div class="ph-label" data-i18n="mock.safe"></div>
+          <div class="ph-row"><i class="c1"></i><span data-i18n="b.essentials"></span></div>
+          <div class="ph-big" data-i18n="mock.perDay1"></div>
+          <div class="ph-row"><i class="c2"></i><span data-i18n="b.qualityOfLife"></span></div>
+          <div class="ph-big" data-i18n="mock.perDay2"></div>
+        </div>
+        <div class="ph-card">
+          <div class="ph-bar"><span class="c1" style="width:55%"></span><span class="c2" style="width:20%"></span><span class="c3" style="width:15%"></span><span class="c4" style="width:10%"></span></div>
+          <div class="ph-line"><span data-i18n="b.safetyFund"></span><b>250 €</b></div>
+          <div class="ph-line"><span data-i18n="b.investments"></span><b>590 €</b></div>
+        </div>
+        <div class="ph-fab">+</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="rule site-wrap" aria-labelledby="rule-title">
+    <h2 id="rule-title" data-i18n="rule.title"></h2>
+    <p class="muted" data-i18n="rule.text"></p>
+    <div class="rule-grid">
+      <div class="rule-item"><b class="c1t">55%</b><span data-i18n="b.essentials"></span><small data-i18n="rule.e"></small></div>
+      <div class="rule-item"><b class="c2t">20%</b><span data-i18n="b.qualityOfLife"></span><small data-i18n="rule.q"></small></div>
+      <div class="rule-item"><b class="c3t">15%</b><span data-i18n="b.safetyFund"></span><small data-i18n="rule.s"></small></div>
+      <div class="rule-item"><b class="c4t">10%</b><span data-i18n="b.investments"></span><small data-i18n="rule.i"></small></div>
+    </div>
+  </section>
+
+  <section id="come" class="alt">
+    <div class="site-wrap">
+      <h2 data-i18n="how.title"></h2>
+      <ol class="steps">
+        <li><b data-i18n="how.1t"></b><span data-i18n="how.1"></span></li>
+        <li><b data-i18n="how.2t"></b><span data-i18n="how.2"></span></li>
+        <li><b data-i18n="how.3t"></b><span data-i18n="how.3"></span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="funzioni" class="site-wrap">
+    <h2 data-i18n="feat.title"></h2>
+    <div class="feat-grid">
+      <article><span class="ico">◎</span><h3 data-i18n="feat.safeT"></h3><p data-i18n="feat.safe"></p></article>
+      <article><span class="ico">⇄</span><h3 data-i18n="feat.payT"></h3><p data-i18n="feat.pay"></p></article>
+      <article><span class="ico">⇪</span><h3 data-i18n="feat.importT"></h3><p data-i18n="feat.import"></p></article>
+      <article><span class="ico">↻</span><h3 data-i18n="feat.carryT"></h3><p data-i18n="feat.carry"></p></article>
+      <article><span class="ico">▥</span><h3 data-i18n="feat.yearT"></h3><p data-i18n="feat.year"></p></article>
+      <article><span class="ico">↗</span><h3 data-i18n="feat.invT"></h3><p data-i18n="feat.inv"></p></article>
+      <article><span class="ico">€</span><h3 data-i18n="feat.fxT"></h3><p data-i18n="feat.fx"></p></article>
+      <article><span class="ico">⚡</span><h3 data-i18n="feat.fastT"></h3><p data-i18n="feat.fast"></p></article>
+    </div>
+  </section>
+
+  <section class="alt">
+    <div class="site-wrap privacy-band">
+      <div>
+        <h2 data-i18n="priv.title"></h2>
+        <p data-i18n="priv.text"></p>
+      </div>
+      <ul class="checks-list">
+        <li data-i18n="priv.1"></li><li data-i18n="priv.2"></li><li data-i18n="priv.3"></li><li data-i18n="priv.4"></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="scarica" class="site-wrap">
+    <h2 data-i18n="dl.title"></h2>
+    <p class="muted" data-i18n="dl.text"></p>
+    <div class="dl-grid">
+      <div class="card">
+        <h3>iPhone</h3>
+        <ol><li data-i18n="dl.ios1"></li><li data-i18n="dl.ios2"></li><li data-i18n="dl.ios3"></li></ol>
+      </div>
+      <div class="card">
+        <h3>Android</h3>
+        <ol><li data-i18n="dl.and1"></li><li data-i18n="dl.and2"></li><li data-i18n="dl.and3"></li></ol>
+      </div>
+      <div class="card qr-card">
+        <img src="/qr.svg" alt="QR" width="140" height="140">
+        <p data-i18n="dl.qr"></p>
+      </div>
+    </div>
+    <p class="cta-row"><a class="btn" href="app/" data-i18n="nav.open"></a><a class="btn btn-ghost" href="install.html" data-i18n="dl.guide"></a></p>
+  </section>
+
+  <section id="accedi" class="alt">
+    <div class="site-wrap login-band">
+      <div>
+        <h2 data-i18n="acc.title"></h2>
+        <p data-i18n="acc.text"></p>
+        <ul class="checks-list"><li data-i18n="acc.1"></li><li data-i18n="acc.2"></li><li data-i18n="acc.3"></li></ul>
+      </div>
+      <div class="card login-card">
+        <h3 data-i18n="acc.cardT"></h3>
+        <p class="muted small" data-i18n="acc.card"></p>
+        <a class="btn" href="app/?login=1" data-i18n="nav.login"></a>
+        <a class="small" href="app/" data-i18n="acc.noAccount"></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="prezzi" class="site-wrap">
+    <h2 data-i18n="price.title"></h2>
+    <div class="price-grid">
+      <div class="card price">
+        <h3 data-i18n="price.betaT"></h3>
+        <p class="price-tag" data-i18n="price.betaP"></p>
+        <p data-i18n="price.beta"></p>
+        <a class="btn" href="app/" data-i18n="hero.cta"></a>
+      </div>
+      <div class="card price soon">
+        <h3 data-i18n="price.proT"></h3>
+        <p class="price-tag" data-i18n="price.proP"></p>
+        <p data-i18n="price.pro"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="alt">
+    <div class="site-wrap">
+      <h2 data-i18n="faq.title"></h2>
+      <details><summary data-i18n="faq.q1"></summary><p data-i18n="faq.a1"></p></details>
+      <details><summary data-i18n="faq.q2"></summary><p data-i18n="faq.a2"></p></details>
+      <details><summary data-i18n="faq.q3"></summary><p data-i18n="faq.a3"></p></details>
+      <details><summary data-i18n="faq.q4"></summary><p data-i18n="faq.a4"></p></details>
+      <details><summary data-i18n="faq.q5"></summary><p data-i18n="faq.a5"></p></details>
+      <details><summary data-i18n="faq.q6"></summary><p data-i18n="faq.a6"></p></details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="site-wrap foot-row">
+    <div><a class="logo" href="./">Quadriamo<span>.</span></a><p class="muted small" data-i18n="foot.tag"></p></div>
+    <nav class="foot-links">
+      <a href="app/" data-i18n="nav.open"></a>
+      <a href="install.html" data-i18n="dl.guide"></a>
+      <a href="privacy.html" data-i18n="foot.privacy"></a>
+      <a href="terms.html" data-i18n="foot.terms"></a>
+    </nav>
+  </div>
+  <p class="site-wrap muted small" data-i18n="foot.legal"></p>
+</footer>
+<script src="/home.js"></script>
+</body>
 </html>
