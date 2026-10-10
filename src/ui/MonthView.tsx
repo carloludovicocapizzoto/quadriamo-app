@@ -1,18 +1,68 @@
 import { useState } from 'react'
-import type { ClassifiedTx, MonthResult, Settings } from '../engine'
+import { paydayPlan, safeToSpend, ymKey, type ClassifiedTx, type MonthResult, type Settings } from '../engine'
+import { useStore } from '../store/context'
 import { useI18n } from '../i18n/core'
 import { Checks } from './Checks'
 import { BUCKET_COLORS, bucketName, categoryName } from './names'
 import { TxRow } from './TxRow'
 
-export function MonthView({ r, settings, onOpen }: { r: MonthResult; settings: Settings; onOpen: (tx: ClassifiedTx) => void }) {
-  const { t, money } = useI18n()
+export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; settings: Settings; onOpen: (tx: ClassifiedTx) => void; today: string }) {
+  const { t, money, date } = useI18n()
+  const { state, dispatch } = useStore()
+  const safe = safeToSpend(r, settings, today)
+  const plan = paydayPlan(r)
+  const monthKey = ymKey(r.ym)
+  const moved = state.data?.payday?.[monthKey] ?? []
+  const bucketOf = (id: string) => settings.buckets.find(b => b.id === id)!
+  const colorOf = (id: string) => BUCKET_COLORS[settings.buckets.findIndex(b => b.id === id)]
   const [open, setOpen] = useState<string | null>(null)
   const cur = settings.currency
   const cats = r.byCategory.filter(c => c.amount !== 0)
 
   return (
     <>
+      {safe.length > 0 && (
+        <section className="card safe">
+          <h3 className="h-plain">{t('safe.title')}</h3>
+          <div className="safe-grid">
+            {safe.map(x => (
+              <div key={x.bucketId} className="safe-item">
+                <span className="safe-name"><i style={{ background: colorOf(x.bucketId) }} />{bucketName(bucketOf(x.bucketId), t)}</span>
+                {x.free >= 0
+                  ? <strong className="safe-amount">{t('safe.perDay', { amount: money(x.perDay, settings.currency) })}</strong>
+                  : <strong className="safe-amount bad-text">{t('safe.over', { amount: money(-x.free, settings.currency) })}</strong>}
+                <span className="muted small">{t('safe.detail', { free: money(Math.max(0, x.free), settings.currency),
+                  end: date(r.period.end), days: x.daysLeft })}</span>
+                {x.reserved > 0 && <span className="muted small">{t('safe.reserved', { amount: money(x.reserved, settings.currency) })}</span>}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {plan.length > 0 && (
+        <section className="card">
+          <div className="card-head">
+            <h3 className="h-plain">{t('pay.title')}</h3>
+            {plan.every(p => moved.includes(p.bucketId)) && <span className="pill good">{t('pay.done')}</span>}
+          </div>
+          <p className="muted small">{t('pay.hint')}</p>
+          <ul className="pay-list">
+            {plan.map(p => (
+              <li key={p.bucketId}>
+                <label className="check">
+                  <input type="checkbox" checked={moved.includes(p.bucketId)}
+                         onChange={() => dispatch({ type: 'togglePayday', month: monthKey, bucketId: p.bucketId })} />
+                  <i style={{ background: colorOf(p.bucketId) }} />
+                  <span className={moved.includes(p.bucketId) ? 'done' : ''}>
+                    {t('pay.move', { amount: money(p.amount, settings.currency), bucket: bucketName(bucketOf(p.bucketId), t) })}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="card">
         <div className="card-head">
           <h3 className="h-plain">{t('month.title')}</h3>

@@ -1,0 +1,38 @@
+/* Stile delle pagine statiche (installazione, privacy, termini): lo stesso dell'app. */
+@font-face { font-family: "DM Sans"; src: url("fonts/DMSans.ttf") format("truetype"); font-weight: 100 1000; font-display: swap; }
+@font-face { font-family: "DM Serif Display"; src: url("fonts/DMSerifDisplay-Regular.ttf") format("truetype"); font-display: swap; }
+:root { --bg: #FAF7F2; --surface: #FFFDF9; --text: #1F2328; --muted: #5B6068; --line: #E6DFD3; --accent: #C2410C; color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #14171B; --surface: #1F2328; --text: #F1ECE4; --muted: #B5B0A8; --line: #2E333A; --accent: #F07A42; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #14171B; --surface: #1F2328; --text: #F1ECE4; --muted: #B5B0A8; --line: #2E333A; --accent: #F07A42; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 "DM Sans", system-ui, -apple-system, sans-serif; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.logo { font-family: "DM Serif Display", Georgia, serif; font-size: 26px; text-decoration: none; color: inherit; }
+.logo span { color: var(--accent); }
+h1, h2 { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; }
+h1 { font-size: clamp(32px, 7vw, 46px); line-height: 1.1; margin: 28px 0 10px; }
+h2 { font-size: 24px; margin: 32px 0 8px; }
+h3 { font-size: 18px; margin: 20px 0 6px; }
+a { color: var(--accent); }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+.card h2 { margin-top: 0; }
+ol, ul { padding-left: 22px; }
+li { margin: 8px 0; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 20px; border-radius: 10px;
+  background: var(--accent); color: #fff; font-weight: 700; text-decoration: none; }
+.langs { display: flex; gap: 6px; flex-wrap: wrap; }
+.langs button { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--text);
+  border-radius: 99px; padding: 4px 12px; min-height: 36px; cursor: pointer; }
+.langs button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.qr { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.qr img { width: 150px; height: 150px; background: #fff; border-radius: 12px; padding: 8px; }
+kbd { font: inherit; font-weight: 700; border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; background: var(--surface); }
+code { font-size: 14px; word-break: break-all; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
+[data-lang] { display: none; }
+[data-lang].on { display: block; }
+footer { margin-top: 40px; font-size: 14px; color: var(--muted); }

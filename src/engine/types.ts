@@ -1,4 +1,5 @@
 // Modello dati di Quadriamo. Le date sono stringhe ISO "YYYY-MM-DD" (niente fusi orari).
+import type { Rule } from './rules'
 
 export type CategoryType = 'income' | 'expense' | 'saving'
 
@@ -34,6 +35,7 @@ export interface Settings {
   fxRates: Record<string, number>   // 1 unità della valuta = rate unità della tua valuta (automatici, BCE)
   fxManual?: Record<string, number> // cambi scritti a mano: hanno la precedenza su quelli automatici
   fxDate?: string                   // data dei cambi automatici
+  rules?: Rule[]                    // regole a parole chiave per riconoscere le transazioni importate
 }
 
 export const SPLIT = 'split' as const   // entrata divisa secondo la regola

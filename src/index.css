@@ -239,3 +239,35 @@ table.data .link-btn { padding: 0; }
 .danger-link { color: var(--bad); }
 .pac-chart { width: 100%; height: 120px; margin: 12px 0 6px; }
 .cell-input { min-height: 36px; padding: 4px 8px; width: 110px; text-align: right; }
+
+/* ---------- casella da confermare e regole ---------- */
+.card-inbox { border-color: var(--accent); }
+.inbox-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 10px; }
+.inbox-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: grid; gap: 8px; }
+.inbox-item.needs { border-color: var(--bad); }
+.inbox-top { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.inbox-top .tx-desc { white-space: normal; overflow-wrap: anywhere; font-size: 15px; }
+.inbox-edit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.inbox-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.remember { flex-wrap: wrap; white-space: normal; }
+.kw-input { min-height: 34px; padding: 4px 8px; width: auto; flex: 1; min-width: 120px; }
+.edit-list.rules-list li { grid-template-columns: 1.2fr 1fr auto 44px; }
+@media (max-width: 560px) { .edit-list.rules-list li { grid-template-columns: 1fr 1fr 44px; } .edit-list.rules-list li > :first-child { grid-column: auto; } }
+
+/* ---------- spendibile oggi e giorno di paga ---------- */
+.safe { background: var(--text); color: var(--bg); border-color: var(--text); }
+.safe .muted { color: inherit; opacity: .75; }
+.safe-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-top: 10px; }
+.safe-item { display: grid; gap: 2px; }
+.safe-name { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.safe-name i, .pay-list i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+.safe-amount { font-size: 24px; font-variant-numeric: tabular-nums; }
+.safe .bad-text { color: #FCA5A5; }
+.pay-list { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px; }
+.pay-list .check { white-space: normal; font-size: 15px; gap: 10px; }
+.pay-list .done { text-decoration: line-through; opacity: .6; }
+.beta { font-family: "DM Sans", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 99px; padding: 1px 7px; vertical-align: 5px; }
+.legal { margin-top: 14px; }
+.legal a { color: inherit; }
+a.btn { text-decoration: none; color: var(--text); }

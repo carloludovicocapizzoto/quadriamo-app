@@ -1,6 +1,7 @@
 import { classify, type ClassifiedTx, type MonthResult, type Settings, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { Checks } from './Checks'
+import { InboxView } from './InboxView'
 import { TxRow } from './TxRow'
 
 export function TransactionsView({ r, settings, undated, onOpen }: {
@@ -10,6 +11,7 @@ export function TransactionsView({ r, settings, undated, onOpen }: {
   const rows = [...r.transactions].reverse()     // i più recenti in alto
   return (
     <>
+      <InboxView settings={settings} />
       {undated.length > 0 && (
         <section className="card card-bad">
           <h3 className="h-plain">{t('tx.undated')}</h3>

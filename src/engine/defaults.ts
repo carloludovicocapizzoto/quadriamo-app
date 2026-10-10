@@ -1,3 +1,4 @@
+import { seedRules } from './rules'
 import type { Category, Recurring, Settings } from './types'
 
 /** Regola consigliata 55-20-15-10. Gli id non cambiano mai; i nomi si traducono o si rinominano. */
@@ -45,5 +46,6 @@ export function defaultSettings(opts: {
     categories: DEFAULT_CATEGORIES.map(c => ({ ...c, name: name(c.id) })),
     recurring: opts.recurring ?? [],
     fxRates: {},
+    rules: seedRules(),
   }
 }

@@ -1,10 +1,12 @@
 import { useRef, useState, type ChangeEvent } from 'react'
-import { DEFAULT_CATEGORIES, todayIso, type CategoryType, type Settings } from '../engine'
+import { DEFAULT_CATEGORIES, seedRules, todayIso, type CategoryType, type Settings } from '../engine'
 import { LANGS, useI18n, type Lang } from '../i18n/core'
 import { useStore } from '../store/context'
 import { newId, parseAmount, parseBackup, toCsv, validateSettings, type AppData } from '../store/state'
 import { fetchRates, FX_SUPPORTED, neededCurrencies } from '../fx'
 import { AccountSection } from './AccountSection'
+import { InstallButton } from './InstallButton'
+import { LegalLinks } from './LegalLinks'
 import { BUCKET_COLORS, CURRENCIES, bucketName, categoryName } from './names'
 
 const TYPES: CategoryType[] = ['expense', 'income', 'saving']
@@ -30,6 +32,8 @@ export function SettingsView() {
   // salvataggio automatico: ogni modifica valida viene salvata subito (niente modifiche perse cambiando scheda)
   const [extraFx, setExtraFx] = useState<string[]>([])
   const [fxBusy, setFxBusy] = useState(false)
+  const [showRules, setShowRules] = useState(false)
+  const rules = draft.rules ?? seedRules()
   const edit = (fn: (s: Settings) => void) => {
     // i cambi automatici possono essere stati aggiornati nel frattempo: si parte sempre dagli ultimi
     const next = structuredClone({ ...draft, fxRates: data.settings.fxRates, fxDate: data.settings.fxDate })
@@ -209,6 +213,34 @@ export function SettingsView() {
       </section>
 
       <section className="card">
+        <h3 className="h-plain">{t('rules.title')}</h3>
+        <p className="muted small">{t('rules.hint')}</p>
+        <button className="link-btn" aria-expanded={showRules} onClick={() => setShowRules(!showRules)}>
+          {showRules ? t('rules.hide') : t('rules.show', { n: rules.length })}</button>
+        {showRules && (
+          <ul className="edit-list rules-list">
+            {rules.map((r, i) => (
+              <li key={r.id}>
+                <input aria-label={t('rules.keyword')} value={r.keyword} aria-invalid={!r.keyword.trim()}
+                       onChange={e => edit(s => { s.rules = structuredClone(rules); s.rules[i].keyword = e.target.value })} />
+                <select aria-label={t('tx.category')} value={r.category}
+                        onChange={e => edit(s => { s.rules = structuredClone(rules); s.rules[i].category = e.target.value })}>
+                  {draft.categories.map(c => <option key={c.id} value={c.id}>{categoryName(c, t)}</option>)}
+                </select>
+                <label className="check"><input type="checkbox" checked={r.enabled}
+                       onChange={e => edit(s => { s.rules = structuredClone(rules); s.rules[i].enabled = e.target.checked })} /> {t('settings.active')}</label>
+                <button className="icon-btn" aria-label={t('action.delete')}
+                        onClick={() => edit(s => { s.rules = rules.filter((_, j) => j !== i) })}>×</button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <button className="btn" onClick={() => { setShowRules(true); edit(s => {
+          s.rules = [{ id: newId(), keyword: '', category: draft.categories.find(c => c.type === 'expense')?.id ?? '', paidFrom: null, enabled: true }, ...rules]
+        }) }}>+ {t('rules.add')}</button>
+      </section>
+
+      <section className="card">
         <h3 className="h-plain">{t('settings.recurring')}</h3>
         <p className="muted small">{t('settings.recurringHint')}</p>
         <ul className="edit-list recurring">
@@ -250,6 +282,8 @@ export function SettingsView() {
             {t('settings.reset')}</button>
         </div>
         <p className="muted small top-gap">{t('settings.install')}</p>
+        <InstallButton />
+        <LegalLinks />
       </section>
 
       {(errors.length > 0 || msg) && (

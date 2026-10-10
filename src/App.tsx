@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { demoAppData } from './demo'
 import { computeMonth, monthOf, todayIso, undated, type ClassifiedTx, type Transaction, type YearMonth } from './engine'
 import { LANGS, useI18n, type Lang } from './i18n/core'
@@ -25,7 +25,15 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('month')
   const [ym, setYm] = useState<YearMonth | null>(null)
   const [year, setYear] = useState(() => Number(todayIso().slice(0, 4)))
-  const [form, setForm] = useState<{ tx?: Transaction } | null>(null)
+  // link di inserimento rapido: ?add=1&amount=12,50&desc=Pizza&cat=eatingOut (scorciatoia sull'icona, Comandi Rapidi)
+  const [form, setForm] = useState<{ tx?: Transaction; prefill?: { amount?: string; description?: string; category?: string } } | null>(() => {
+    const q = new URLSearchParams(window.location.search)
+    if (q.get('add') !== '1') return null
+    return { prefill: { amount: q.get('amount') ?? undefined, description: q.get('desc') ?? undefined, category: q.get('cat') ?? undefined } }
+  })
+  useEffect(() => {
+    if (window.location.search) window.history.replaceState(null, '', window.location.pathname)
+  }, [])
   const [note, setNote] = useState('')
   const data = state.data
 
@@ -38,7 +46,7 @@ export default function App() {
 
   const header = (
     <header className="top">
-      <div className="logo">Quadriamo<span>.</span></div>
+      <div className="logo">Quadriamo<span>.</span> <small className="beta">{t('beta.badge')}</small></div>
       {sync.user && (
         <button className="sync-pill" onClick={() => void sync.syncNow()} title={t('sync.now')}>
           <span className={`dot ${sync.status}`} aria-hidden="true" />
@@ -91,7 +99,7 @@ export default function App() {
         {tab === 'year' && <YearNav year={year} onChange={setYear} />}
         {tab === 'year' && <YearView year={year} transactions={data.transactions} settings={data.settings} today={today}
                                      onYear={setYear} onOpenMonth={m => { setYm(m); setTab('month'); window.scrollTo(0, 0) }} />}
-        {tab === 'month' && <MonthView r={result} settings={data.settings} onOpen={openTx} />}
+        {tab === 'month' && <MonthView r={result} settings={data.settings} onOpen={openTx} today={today} />}
         {tab === 'transactions' &&
           <TransactionsView r={result} settings={data.settings} undated={undated(data.transactions)} onOpen={openTx} />}
         {tab === 'investments' && <InvestmentsView settings={data.settings} transactions={data.transactions} today={today}
@@ -120,6 +128,7 @@ export default function App() {
         <TxForm
           settings={data.settings}
           initial={form.tx}
+          prefill={form.prefill}
           defaultDate={defaultDate}
           onClose={() => setForm(null)}
           onSave={tx => { dispatch({ type: form.tx ? 'updateTx' : 'addTx', tx }); setForm(null) }}

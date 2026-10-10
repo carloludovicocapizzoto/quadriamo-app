@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useI18n } from '../i18n/core'
 import { useSync } from '../sync/context'
 import { AccountSection } from './AccountSection'
+import { InstallButton } from './InstallButton'
+import { LegalLinks } from './LegalLinks'
 import { CURRENCIES, guessCurrency } from './names'
 
 export function Onboarding({ onStart, onDemo }: { onStart: (currency: string, startDay: number) => void; onDemo: () => void }) {
@@ -32,6 +34,8 @@ export function Onboarding({ onStart, onDemo }: { onStart: (currency: string, st
         <button className="btn" onClick={onDemo}>{t('onb.demo')}</button>
       </div>
       <p className="muted small">🔒 {t('onb.privacy')}</p>
+      <InstallButton />
+      <LegalLinks notice />
       {sync.enabled && !sync.user && (signIn
         ? <AccountSection compact />
         : <button className="link-btn" onClick={() => setSignIn(true)}>{t('sync.haveAccount')}</button>)}

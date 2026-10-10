@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { fxRate, type CategoryType, type Settings, type Transaction } from '../engine'
+import { fxRate, suggest, type CategoryType, type Settings, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { newId, parseAmount } from '../store/state'
 import { CURRENCIES, bucketName, categoryName } from './names'
@@ -7,9 +7,10 @@ import { CURRENCIES, bucketName, categoryName } from './names'
 const GROUPS: CategoryType[] = ['expense', 'income', 'saving']
 
 /** Inserimento rapido: importo, categoria, (descrizione), data di oggi già pronta. */
-export function TxForm({ settings, initial, defaultDate, onSave, onDelete, onClose }: {
+export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDelete, onClose }: {
   settings: Settings
   initial?: Transaction
+  prefill?: { amount?: string; description?: string; category?: string }
   defaultDate: string
   onSave: (tx: Transaction) => void
   onDelete?: (id: string) => void
@@ -17,9 +18,28 @@ export function TxForm({ settings, initial, defaultDate, onSave, onDelete, onClo
 }) {
   const { t, money } = useI18n()
   const ref = useRef<HTMLDialogElement>(null)
-  const [amount, setAmount] = useState(initial?.amount != null ? String(initial.amount).replace('.', ',') : '')
-  const [category, setCategory] = useState<string | null>(initial?.category ?? null)
-  const [description, setDescription] = useState(initial?.description ?? '')
+  const [amount, setAmount] = useState(initial?.amount != null ? String(initial.amount).replace('.', ',') : (prefill?.amount ?? ''))
+  const [category, setCategory] = useState<string | null>(() => {
+    if (initial) return initial.category
+    if (prefill?.category && settings.categories.some(c => c.id === prefill.category)) return prefill.category
+    if (prefill?.description) {        // link rapido con descrizione: la categoria arriva dalle regole
+      const hit = suggest(prefill.description, -1, settings)
+      if (hit.ruleId) return hit.category
+    }
+    return null
+  })
+  const [description, setDescription] = useState(initial?.description ?? prefill?.description ?? '')
+  const [catTouched, setCatTouched] = useState(!!initial)
+  const [fromRule, setFromRule] = useState(false)
+  // mentre si scrive la descrizione, le regole propongono la categoria (finché l'utente non ne sceglie una)
+  const onDescription = (v: string) => {
+    setDescription(v)
+    if (catTouched) return
+    const out = suggest(v, -1, settings), inc = suggest(v, 1, settings)
+    const hit = out.ruleId ? out : inc.ruleId ? inc : null
+    setFromRule(!!hit)
+    if (hit) { setCategory(hit.category); if (hit.paidFrom) setPaidFrom(hit.paidFrom) }
+  }
   const [date, setDate] = useState(initial?.date ?? defaultDate)
   const [paidFrom, setPaidFrom] = useState(initial?.paidFrom ?? '')
   const [currency, setCurrency] = useState(initial?.currency || settings.currency)
@@ -92,7 +112,7 @@ export function TxForm({ settings, initial, defaultDate, onSave, onDelete, onClo
                 <div className="chips">
                   {cats.map(c => (
                     <button type="button" key={c.id} className={`chip${category === c.id ? ' on' : ''}`}
-                            aria-pressed={category === c.id} onClick={() => setCategory(c.id)}>
+                            aria-pressed={category === c.id} onClick={() => { setCategory(c.id); setCatTouched(true); setFromRule(false) }}>
                       {categoryName(c, t)}
                     </button>
                   ))}
@@ -104,7 +124,8 @@ export function TxForm({ settings, initial, defaultDate, onSave, onDelete, onClo
 
         <label className="field">
           <span>{t('tx.description')}</span>
-          <input value={description} onChange={e => setDescription(e.target.value)} placeholder={t('tx.descriptionPlaceholder')} />
+          <input value={description} onChange={e => onDescription(e.target.value)} placeholder={t('tx.descriptionPlaceholder')} />
+          {fromRule && category && <small className="good-text">✓ {t('tx.fromRule')}</small>}
         </label>
 
         <label className="field">

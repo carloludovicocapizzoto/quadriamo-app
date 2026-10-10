@@ -1,5 +1,5 @@
 // Stato dell'app e sue modifiche: funzioni pure, testate in state.test.ts.
-import { compareYm, defaultSettings, monthOf, type Investments, type Settings, type Transaction, type YearMonth } from '../engine'
+import { compareYm, defaultSettings, monthOf, normalize, seedRules, suggest, type ImportRow, type Investments, type Rule, type Settings, type Transaction, type YearMonth } from '../engine'
 
 export interface AppData {
   version: 1
@@ -10,6 +10,42 @@ export interface AppData {
   deleted?: Record<string, string>    // id movimento eliminato -> quando (per non farlo "risorgere" da un altro dispositivo)
   investments?: Investments
   investmentsUpdatedAt?: string
+  inbox?: InboxItem[]                 // transazioni importate da confermare
+  importDone?: Record<string, string> // impronta -> quando è stata confermata o ignorata (niente doppioni)
+  payday?: Record<string, string[]>   // "YYYY-MM" -> bucket già trasferiti nel piano del giorno di paga
+}
+
+/** Transazione importata (estratto conto o, in futuro, carta collegata) in attesa di conferma. */
+export interface InboxItem {
+  id: string
+  fingerprint: string
+  date: string
+  description: string
+  amount: number            // con segno: negativo = uscita
+  currency: string | null
+  category: string | null   // proposta (modificabile)
+  paidFrom: string | null
+  source: string            // es. "csv"
+}
+
+export const fingerprintOf = (r: { date: string; amount: number; description: string }) =>
+  `${r.date}|${r.amount.toFixed(2)}|${normalize(r.description)}`
+
+/** Prepara l'import: scarta le righe già viste (in casella, confermate o ignorate) e propone categoria e bucket. */
+export function planImport(d: AppData, rows: ImportRow[], source = 'csv'): { items: InboxItem[]; duplicates: number } {
+  const seen = new Set([...(d.inbox ?? []).map(i => i.fingerprint), ...Object.keys(d.importDone ?? {})])
+  const items: InboxItem[] = []
+  let duplicates = 0
+  for (const r of rows) {
+    const fp = fingerprintOf(r)
+    if (seen.has(fp)) { duplicates++; continue }
+    seen.add(fp)
+    const sug = suggest(r.description, r.amount, d.settings)
+    items.push({ id: newId(), fingerprint: fp, date: r.date, description: r.description, amount: r.amount,
+                 currency: r.currency && r.currency !== d.settings.currency ? r.currency : null,
+                 category: sug.category, paidFrom: sug.paidFrom, source })
+  }
+  return { items, duplicates }
 }
 
 export type Action =
@@ -19,6 +55,11 @@ export type Action =
   | { type: 'deleteTx'; id: string; at?: string }
   | { type: 'setSettings'; settings: Settings; at?: string }
   | { type: 'setInvestments'; investments: Investments; at?: string }
+  | { type: 'addInbox'; items: InboxItem[] }
+  | { type: 'updateInbox'; item: InboxItem }
+  | { type: 'confirmInbox'; ids: string[]; txs: Transaction[]; rule?: Rule; at?: string }
+  | { type: 'ignoreInbox'; ids: string[]; at?: string }
+  | { type: 'togglePayday'; month: string; bucketId: string }
   | { type: 'replace'; data: AppData | null }
 
 export interface State { loaded: boolean; data: AppData | null }
@@ -33,12 +74,18 @@ function widenFirstMonth(s: Settings, tx: Transaction): Settings {
   return compareYm(ym, s.firstMonth) < 0 ? { ...s, firstMonth: ym } : s
 }
 
+/** Aggiorna dati salvati con versioni precedenti dell'app (es. regole di partenza mancanti). */
+export function migrate(d: AppData | null): AppData | null {
+  if (!d || d.settings.rules) return d
+  return { ...d, settings: { ...d.settings, rules: seedRules() } }
+}
+
 export function reducer(state: State, a: Action): State {
-  if (a.type === 'load') return { loaded: true, data: a.data }
-  if (a.type === 'replace') return { ...state, data: a.data }
+  if (a.type === 'load') return { loaded: true, data: migrate(a.data) }
+  if (a.type === 'replace') return { ...state, data: migrate(a.data) }
   const d = state.data
   if (!d) return state
-  const at = a.at ?? new Date().toISOString()
+  const at = ('at' in a && a.at) || new Date().toISOString()
   switch (a.type) {
     case 'addTx': {
       const tx = { ...a.tx, updatedAt: at }
@@ -56,6 +103,30 @@ export function reducer(state: State, a: Action): State {
       return { ...state, data: { ...d, settings: a.settings, settingsUpdatedAt: at } }
     case 'setInvestments':
       return { ...state, data: { ...d, investments: a.investments, investmentsUpdatedAt: at } }
+    case 'addInbox':
+      return { ...state, data: { ...d, inbox: [...(d.inbox ?? []), ...a.items] } }
+    case 'updateInbox':
+      return { ...state, data: { ...d, inbox: (d.inbox ?? []).map(i => i.id === a.item.id ? a.item : i) } }
+    case 'confirmInbox':
+    case 'ignoreInbox': {
+      const done = { ...d.importDone }
+      for (const i of d.inbox ?? []) if (a.ids.includes(i.id)) done[i.fingerprint] = at
+      let settings = d.settings, settingsUpdatedAt = d.settingsUpdatedAt
+      let transactions = d.transactions
+      if (a.type === 'confirmInbox') {
+        const txs = a.txs.map(tx => ({ ...tx, updatedAt: at }))
+        transactions = [...transactions, ...txs]
+        for (const tx of txs) settings = widenFirstMonth(settings, tx)
+        if (a.rule) { settings = { ...settings, rules: [...(settings.rules ?? seedRules()), a.rule] }; settingsUpdatedAt = at }
+      }
+      return { ...state, data: { ...d, settings, settingsUpdatedAt, transactions, importDone: done,
+                                 inbox: (d.inbox ?? []).filter(i => !a.ids.includes(i.id)) } }
+    }
+    case 'togglePayday': {
+      const cur = d.payday?.[a.month] ?? []
+      const next = cur.includes(a.bucketId) ? cur.filter(b => b !== a.bucketId) : [...cur, a.bucketId]
+      return { ...state, data: { ...d, payday: { ...d.payday, [a.month]: next } } }
+    }
   }
 }
 
@@ -90,7 +161,8 @@ export function parseBackup(text: string): AppData {
   if (!ok) throw new Error('invalid backup')
   return { version: 1, settings: { fxRates: {}, ...d.settings }, transactions: d.transactions,
            deleted: d.deleted ?? {}, settingsUpdatedAt: d.settingsUpdatedAt,
-           ...(d.investments ? { investments: d.investments, investmentsUpdatedAt: d.investmentsUpdatedAt } : {}) }
+           ...(d.investments ? { investments: d.investments, investmentsUpdatedAt: d.investmentsUpdatedAt } : {}),
+           inbox: d.inbox ?? [], importDone: d.importDone ?? {}, payday: d.payday ?? {} }
 }
 
 /** Parse di un importo scritto dall'utente: accetta "12,50", "12.50", "1.234,56", "1,234.56". */
@@ -127,12 +199,20 @@ export function mergeData(a: AppData, b: AppData): AppData {
   let settings = newerSettings ? b.settings : a.settings
   for (const tx of transactions) settings = widenFirstMonth(settings, tx)
 
+  const importDone: Record<string, string> = { ...a.importDone }
+  for (const [fp, at] of Object.entries(b.importDone ?? {})) if (!importDone[fp] || at > importDone[fp]) importDone[fp] = at
+  const inboxById = new Map<string, InboxItem>()
+  for (const i of [...(a.inbox ?? []), ...(b.inbox ?? [])]) if (!importDone[i.fingerprint]) inboxById.set(i.id, i)
+  const inboxFp = new Set<string>()
+  const inbox = [...inboxById.values()].filter(i => !inboxFp.has(i.fingerprint) && inboxFp.add(i.fingerprint))
+  const payday: Record<string, string[]> = { ...b.payday, ...a.payday }
   const newerInv = (b.investmentsUpdatedAt ?? '') > (a.investmentsUpdatedAt ?? '')
   const investments = newerInv ? b.investments : (a.investments ?? b.investments)
   return {
     version: 1, settings, transactions, deleted,
     settingsUpdatedAt: newerSettings ? b.settingsUpdatedAt : a.settingsUpdatedAt,
     ...(investments ? { investments, investmentsUpdatedAt: newerInv ? b.investmentsUpdatedAt : a.investmentsUpdatedAt } : {}),
+    inbox, importDone, payday,
   }
 }
 

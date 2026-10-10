@@ -1,0 +1,28 @@
+import { useEffect, useState } from 'react'
+import { PAGES } from '../config'
+import { useI18n } from '../i18n/core'
+
+interface InstallEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
+
+const standalone = () => window.matchMedia?.('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone
+
+/** Installa l'app: su Chrome/Android con il pulsante del browser, altrove (iPhone) con la guida. Nascosto se è già installata. */
+export function InstallButton() {
+  const { t, lang } = useI18n()
+  const [evt, setEvt] = useState<InstallEvent | null>(null)
+  const [installed, setInstalled] = useState(standalone)
+  useEffect(() => {
+    const onPrompt = (e: Event) => { e.preventDefault(); setEvt(e as InstallEvent) }
+    const onInstalled = () => setInstalled(true)
+    window.addEventListener('beforeinstallprompt', onPrompt)
+    window.addEventListener('appinstalled', onInstalled)
+    return () => { window.removeEventListener('beforeinstallprompt', onPrompt); window.removeEventListener('appinstalled', onInstalled) }
+  }, [])
+  if (installed) return null
+  return (
+    <div className="stack-row">
+      {evt && <button className="btn primary" onClick={async () => { await evt.prompt(); setEvt(null) }}>⤓ {t('install.button')}</button>}
+      <a className="btn" href={`${PAGES.install}?lang=${lang}`} target="_blank" rel="noopener">{t('install.how')}</a>
+    </div>
+  )
+}
