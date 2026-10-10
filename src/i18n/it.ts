@@ -259,6 +259,13 @@ const it: Dict = {
   'beta.feedback': 'Invia un feedback',
   'tx.fromRule': 'Categoria dalle tue regole',
 
+  'inbox.dup': 'Forse l’hai già inserita: {desc}, {amount}, {date}',
+  'inbox.same': 'È la stessa, ignora',
+  'inbox.addAnyway': 'Aggiungi comunque',
+  'imp.dups': '{n} potrebbero essere già tra i tuoi movimenti: controllale prima di confermare.',
+
+  'imp.dupsOne': '1 potrebbe essere già tra i tuoi movimenti: controllala prima di confermare.',
+
   'b.essentials': 'Essenziali',
   'b.qualityOfLife': 'Qualità della vita',
   'b.safetyFund': 'Fondo di sicurezza',

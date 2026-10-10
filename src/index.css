@@ -272,3 +272,6 @@ table.data .link-btn { padding: 0; }
 .legal a { color: inherit; }
 a.btn { text-decoration: none; color: var(--text); }
 .top a.logo { text-decoration: none; color: inherit; }
+.dup-note { background: #FEF3C7; color: #92400E; border-radius: 8px; padding: 6px 10px; margin: 6px 0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .dup-note { background: #3A2E12; color: #FCD34D; } }
+.inbox-item.dup { border-color: #D97706; }

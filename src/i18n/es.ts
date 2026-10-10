@@ -259,6 +259,13 @@ const es: Dict = {
   'beta.feedback': 'Enviar opinión',
   'tx.fromRule': 'Categoría según tus reglas',
 
+  'inbox.dup': 'Quizá ya lo apuntaste: {desc}, {amount}, {date}',
+  'inbox.same': 'Es el mismo, ignorar',
+  'inbox.addAnyway': 'Añadir igualmente',
+  'imp.dups': '{n} podrían estar ya en tus movimientos: revísalos antes de confirmar.',
+
+  'imp.dupsOne': '1 podría estar ya en tus movimientos: revísalo antes de confirmar.',
+
   'b.essentials': 'Esenciales',
   'b.qualityOfLife': 'Calidad de vida',
   'b.safetyFund': 'Fondo de seguridad',

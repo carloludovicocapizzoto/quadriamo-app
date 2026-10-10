@@ -1,5 +1,5 @@
 // Stato dell'app e sue modifiche: funzioni pure, testate in state.test.ts.
-import { compareYm, defaultSettings, monthOf, normalize, seedRules, suggest, type ImportRow, type Investments, type Rule, type Settings, type Transaction, type YearMonth } from '../engine'
+import { compareYm, daysBetween, defaultSettings, monthOf, normalize, seedRules, suggest, type ImportRow, type Investments, type Rule, type Settings, type Transaction, type YearMonth } from '../engine'
 
 export interface AppData {
   version: 1
@@ -46,6 +46,31 @@ export function planImport(d: AppData, rows: ImportRow[], source = 'csv'): { ite
                  category: sug.category, paidFrom: sug.paidFrom, source })
   }
   return { items, duplicates }
+}
+
+/**
+ * Righe importate che forse sono già tra i movimenti (es. inserite a mano): stesso importo, stessa direzione,
+ * stessa valuta, data entro ±3 giorni (le carte contabilizzano spesso dopo). Ogni movimento copre al massimo una riga.
+ */
+export function duplicateCandidates(d: AppData, maxDays = 3): Map<string, Transaction> {
+  const out = new Map<string, Transaction>()
+  const used = new Set<string>()
+  const base = d.settings.currency
+  const isIncome = (t: Transaction) => d.settings.categories.find(c => c.id === t.category)?.type === 'income'
+  const items = [...(d.inbox ?? [])].sort((a, b) => a.date.localeCompare(b.date))
+  for (const i of items) {
+    let best: Transaction | null = null, bestGap = Infinity
+    for (const t of d.transactions) {
+      if (used.has(t.id) || t.amount == null || !t.date) continue
+      if (Math.abs(t.amount - Math.abs(i.amount)) > 0.005) continue
+      if ((t.currency || base) !== (i.currency || base)) continue
+      if (t.category && isIncome(t) !== i.amount > 0) continue
+      const gap = Math.abs(daysBetween(t.date, i.date))
+      if (gap <= maxDays && gap < bestGap) { best = t; bestGap = gap }
+    }
+    if (best) { out.set(i.id, best); used.add(best.id) }
+  }
+  return out
 }
 
 export type Action =

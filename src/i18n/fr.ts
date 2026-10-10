@@ -259,6 +259,13 @@ const fr: Dict = {
   'beta.feedback': 'Envoyer un avis',
   'tx.fromRule': 'Catégorie selon vos règles',
 
+  'inbox.dup': 'Peut-être déjà saisie : {desc}, {amount}, {date}',
+  'inbox.same': 'C’est la même, ignorer',
+  'inbox.addAnyway': 'Ajouter quand même',
+  'imp.dups': '{n} sont peut-être déjà dans vos opérations : vérifiez avant de confirmer.',
+
+  'imp.dupsOne': '1 est peut-être déjà dans vos opérations : vérifiez avant de confirmer.',
+
   'b.essentials': 'Essentiels',
   'b.qualityOfLife': 'Qualité de vie',
   'b.safetyFund': 'Fonds de sécurité',

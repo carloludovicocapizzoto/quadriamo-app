@@ -259,6 +259,13 @@ const en = {
   'beta.feedback': 'Send feedback',
   'tx.fromRule': 'Category from your rules',
 
+  'inbox.dup': 'Maybe you already logged it: {desc}, {amount}, {date}',
+  'inbox.same': 'It’s the same, ignore',
+  'inbox.addAnyway': 'Add anyway',
+  'imp.dups': '{n} may already be in your transactions: check them before confirming.',
+
+  'imp.dupsOne': '1 may already be in your transactions: check it before confirming.',
+
   'b.essentials': 'Essentials',
   'b.qualityOfLife': 'Quality of Life',
   'b.safetyFund': 'Safety Fund',

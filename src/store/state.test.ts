@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createInitial, mergeData, planImport, parseAmount, parseBackup, reducer, toCsv, validateSettings, type State } from './state'
+import { createInitial, duplicateCandidates, mergeData, planImport, parseAmount, parseBackup, reducer, toCsv, validateSettings, type State } from './state'
 
 const base = (): State => ({ loaded: true, data: createInitial('EUR', '2026-10-09') })
 
@@ -165,5 +165,39 @@ describe('rules migration', () => {
     const rules = st.data!.settings.rules!
     expect(rules.some(r => r.keyword === 'esselunga')).toBe(true)
     expect(rules.some(r => r.keyword === 'bar centrale')).toBe(true)
+  })
+})
+
+describe('duplicates between imported rows and transactions logged by hand', () => {
+  const withManual = () => {
+    const d = createInitial('EUR', '2026-10-09')
+    d.transactions = [
+      { id: 'm1', date: '2026-10-08', description: 'Pizza', category: 'eatingOut', amount: 12.5 },
+      { id: 'm2', date: '2026-10-05', description: 'Caffè', category: 'eatingOut', amount: 1.2 },
+      { id: 'm3', date: '2026-10-01', description: 'Stipendio', category: 'salary', amount: 1500 },
+    ]
+    return d
+  }
+  const rowsOf = (...r: [string, string, number][]) => r.map(([date, description, amount]) => ({ date, description, amount, currency: 'EUR' }))
+
+  it('flags a card payment booked a couple of days later', () => {
+    const d = withManual()
+    d.inbox = planImport(d, rowsOf(['2026-10-10', 'POS PIZZERIA DA MARIO', -12.5])).items
+    expect(duplicateCandidates(d).get(d.inbox[0].id)?.id).toBe('m1')
+  })
+  it('does not flag different amounts, far dates or the opposite direction', () => {
+    const d = withManual()
+    d.inbox = planImport(d, rowsOf(['2026-10-08', 'Pizza', -12.0], ['2026-10-20', 'Pizza', -12.5], ['2026-10-08', 'Rimborso', 12.5])).items
+    expect(duplicateCandidates(d).size).toBe(0)
+  })
+  it('matches incomes with incomes', () => {
+    const d = withManual()
+    d.inbox = planImport(d, rowsOf(['2026-10-01', 'STIPENDIO OTTOBRE', 1500])).items
+    expect(duplicateCandidates(d).get(d.inbox[0].id)?.id).toBe('m3')
+  })
+  it('one transaction covers only one row: two identical coffees, only one logged by hand', () => {
+    const d = withManual()
+    d.inbox = planImport(d, rowsOf(['2026-10-05', 'BAR', -1.2], ['2026-10-06', 'BAR 2', -1.2])).items
+    expect(duplicateCandidates(d).size).toBe(1)
   })
 })

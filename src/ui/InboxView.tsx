@@ -1,8 +1,8 @@
 import { useState, type ChangeEvent } from 'react'
-import { keywordFor, readStatement, type Settings } from '../engine'
+import { keywordFor, readStatement, type Settings, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
-import { newId, planImport, type InboxItem } from '../store/state'
+import { duplicateCandidates, newId, planImport, type InboxItem } from '../store/state'
 import { bucketName, categoryName } from './names'
 
 /** Importa un estratto conto e mostra la casella "Da confermare": tutto si può cambiare prima di confermare. */
@@ -27,7 +27,8 @@ export function InboxView({ settings }: { settings: Settings }) {
 
   const toTx = (i: InboxItem) => ({ id: newId(), date: i.date, description: i.description, category: i.category,
     amount: Math.abs(i.amount), currency: i.currency, fxRate: null, paidFrom: i.paidFrom })
-  const ready = inbox.filter(i => i.category)
+  const dups = state.data ? duplicateCandidates(state.data) : new Map<string, Transaction>()
+  const ready = inbox.filter(i => i.category && !dups.has(i.id))      // "conferma tutti" salta i possibili doppioni
 
   return (
     <section className={`card${inbox.length ? ' card-inbox' : ''}`}>
@@ -38,6 +39,7 @@ export function InboxView({ settings }: { settings: Settings }) {
       </div>
       <p className="muted small">{inbox.length ? t('inbox.hint') : t('imp.hint')}</p>
       {msg && <p className={msg.bad ? 'bad-text small' : 'good-text small'} role="status">{msg.text}</p>}
+      {dups.size > 0 && <p className="dup-note small">⚠ {dups.size === 1 ? t('imp.dupsOne') : t('imp.dups', { n: dups.size })}</p>}
 
       {ready.length > 1 && (
         <button className="btn" onClick={() => dispatch({ type: 'confirmInbox', ids: ready.map(i => i.id), txs: ready.map(toTx) })}>
@@ -47,6 +49,7 @@ export function InboxView({ settings }: { settings: Settings }) {
 
       <ul className="inbox-list">
         {inbox.map(i => <InboxRow key={i.id} item={i} settings={settings} suggestedCategory={suggested.get(i.id) ?? null}
+          duplicateOf={dups.get(i.id) ?? null}
           onChange={item => dispatch({ type: 'updateInbox', item })}
           onConfirm={(item, keyword) => dispatch({ type: 'confirmInbox', ids: [item.id], txs: [toTx(item)],
             rule: keyword ? { id: newId(), keyword, category: item.category!, paidFrom: item.paidFrom, enabled: true } : undefined })}
@@ -57,8 +60,8 @@ export function InboxView({ settings }: { settings: Settings }) {
   )
 }
 
-function InboxRow({ item, settings, suggestedCategory, onChange, onConfirm, onIgnore, money, date, t }: {
-  item: InboxItem; settings: Settings; suggestedCategory: string | null
+function InboxRow({ item, settings, suggestedCategory, duplicateOf, onChange, onConfirm, onIgnore, money, date, t }: {
+  item: InboxItem; settings: Settings; suggestedCategory: string | null; duplicateOf: Transaction | null
   onChange: (i: InboxItem) => void; onConfirm: (i: InboxItem, keyword?: string) => void; onIgnore: (i: InboxItem) => void
   money: (n: number, c: string) => string; date: (iso: string) => string; t: ReturnType<typeof useI18n>['t']
 }) {
@@ -68,7 +71,7 @@ function InboxRow({ item, settings, suggestedCategory, onChange, onConfirm, onIg
   const income = item.amount > 0
   const cats = settings.categories.filter(c => (c.type === 'income') === income)
   return (
-    <li className={`inbox-item${item.category ? '' : ' needs'}`}>
+    <li className={`inbox-item${duplicateOf ? ' dup' : item.category ? '' : ' needs'}`}>
       <div className="inbox-top">
         <span className="tx-date">{date(item.date)}</span>
         <span className="tx-desc" title={item.description}>{item.description}</span>
@@ -92,11 +95,25 @@ function InboxRow({ item, settings, suggestedCategory, onChange, onConfirm, onIg
           <input className="kw-input" value={keyword} onChange={e => setKeyword(e.target.value)} aria-label={t('rules.keyword')} />
         </label>
       )}
+      {duplicateOf && (
+        <p className="dup-note small" role="note">⚠ {t('inbox.dup', { desc: duplicateOf.description || '—',
+          amount: money(duplicateOf.amount ?? 0, duplicateOf.currency || settings.currency), date: duplicateOf.date ? date(duplicateOf.date) : '—' })}</p>
+      )}
       <div className="inbox-actions">
-        <button className="btn small-btn" onClick={() => onIgnore(item)}>{t('inbox.ignore')}</button>
-        <button className="btn small-btn primary" disabled={!item.category}
-                onClick={() => onConfirm(item, item.category && changed && remember && keyword.trim() ? keyword.trim() : undefined)}>
-          ✓ {t('inbox.confirm')}</button>
+        {duplicateOf ? (
+          <>
+            <button className="btn small-btn" disabled={!item.category}
+                    onClick={() => onConfirm(item)}>{t('inbox.addAnyway')}</button>
+            <button className="btn small-btn primary" onClick={() => onIgnore(item)}>✓ {t('inbox.same')}</button>
+          </>
+        ) : (
+          <>
+            <button className="btn small-btn" onClick={() => onIgnore(item)}>{t('inbox.ignore')}</button>
+            <button className="btn small-btn primary" disabled={!item.category}
+                    onClick={() => onConfirm(item, item.category && changed && remember && keyword.trim() ? keyword.trim() : undefined)}>
+              ✓ {t('inbox.confirm')}</button>
+          </>
+        )}
       </div>
     </li>
   )
