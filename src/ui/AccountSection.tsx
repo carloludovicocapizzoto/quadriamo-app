@@ -1,24 +1,38 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { PAGES } from '../config'
 import { ENTRY } from '../entry'
 import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
 import { useSync } from '../sync/context'
-import { profilePrompt } from '../sync/profile'
+import { profilePrompt, setupPending } from '../sync/profile'
 import { ProfileForm } from './ProfileForm'
 import { StepHeader, StepNav } from './Steps'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 type Msg = { text: string; bad?: boolean } | null
 
-/** Account: accesso o registrazione (nome, cognome, email, password), profilo facoltativo, sincronizzazione. */
-export function AccountSection({ compact = false }: { compact?: boolean }) {
+/** Riquadro account nelle Impostazioni: stato dell'accesso; se non hai fatto l'accesso, un pulsante che apre la schermata di accesso. */
+export function AccountSection({ onLogin }: { onLogin?: () => void }) {
   const { t } = useI18n()
   const sync = useSync()
   if (!sync.enabled) return null
-  const body = sync.recovery ? <NewPassword /> : sync.user ? <SignedIn /> : <SignInOrUp />
-  return compact ? <div className="account-compact">{body}</div>
-    : <section className="card" id="account"><h3 className="h-plain">{t('sync.title')}</h3>{body}</section>
+  const body = sync.recovery ? <NewPassword /> : sync.user ? <SignedIn /> : (
+    <><p className="muted small">{t('auth.intro')}</p>
+      <button className="btn primary" onClick={onLogin}>👤 {t('onb.account')}</button></>)
+  return <section className="card" id="account"><h3 className="h-plain">{t('sync.title')}</h3>{body}</section>
+}
+
+/** Schermata di accesso: solo "Accedi / Crea account" (con password dimenticata). Niente impostazioni qui. */
+export function LoginScreen({ footer }: { footer?: ReactNode }) {
+  const { t } = useI18n()
+  const sync = useSync()
+  return (
+    <section className="card login-screen">
+      <h1>{t('onb.accountTitle')}</h1>
+      {sync.recovery ? <NewPassword /> : <SignInOrUp />}
+      {footer && <div className="login-foot">{footer}</div>}
+    </section>
+  )
 }
 
 function useRun() {
@@ -45,6 +59,7 @@ function PasswordInput({ value, onChange, autoComplete, autoFocus }: { value: st
 function SignInOrUp() {
   const { t, lang } = useI18n()
   const sync = useSync()
+  const hasData = !!useStore().state.data
   // ?signup=1 ("Crea il tuo account" sul sito) apre direttamente la registrazione
   const [tab, setTab] = useState<'in' | 'up' | 'link'>(ENTRY.get('signup') === '1' ? 'up' : 'in')
   const [step, setStep] = useState(1)
@@ -71,7 +86,8 @@ function SignInOrUp() {
     if (!accept) return bad(t('auth.errAccept'))
     void run(async () => {
       const r = await sync.signUp({ firstName: first.trim(), lastName: last.trim(), email: em, password })
-      profilePrompt.set()
+      // nuovo account: configurazione iniziale a passaggi (se su questo dispositivo non c'è già un budget) e profilo
+      if (!hasData) setupPending.set(); else profilePrompt.set()
       if (r.needsConfirm) setMsg({ text: t('auth.confirmSent', { email: em }) })
     }, e => (e.code === 'user_already_exists' ? t('auth.errExists') : e.code === 'weak_password' ? t('auth.errPassword') : t('auth.errGeneric')))
   }

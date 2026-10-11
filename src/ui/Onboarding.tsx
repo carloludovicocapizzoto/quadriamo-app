@@ -1,56 +1,52 @@
 import { useState } from 'react'
-import { fromSiteAccount } from '../entry'
 import { useI18n } from '../i18n/core'
 import { useSync } from '../sync/context'
-import { AccountSection } from './AccountSection'
+import { setupPending } from '../sync/profile'
+import { LoginScreen } from './AccountSection'
 import { InstallButton } from './InstallButton'
 import { LegalLinks } from './LegalLinks'
-import { CURRENCIES, guessCurrency } from './names'
+import { guessCurrency } from './names'
 
-
+/** Primo avvio: solo accesso / creazione account. Le impostazioni arrivano dopo, come passaggi (SetupWizard). */
 export function Onboarding({ onStart, onDemo }: { onStart: (currency: string, startDay: number) => void; onDemo: () => void }) {
   const { t } = useI18n()
-  const [currency, setCurrency] = useState(guessCurrency)
-  const [startDay, setStartDay] = useState(1)
   const sync = useSync()
-  // dal sito ("Accedi o registrati", "Crea il tuo account"): prima il modulo dell'account, poi l'impostazione del budget
-  const [account, setAccount] = useState(() => sync.enabled && fromSiteAccount)
+  const [local, setLocal] = useState(false)
+  const start = () => { setupPending.set(); onStart(guessCurrency(), 1) }
 
-  if (account && sync.enabled && !sync.user) {
+  // con l'account ma senza dati su questo dispositivo: o arrivano dal server, o si configura un budget nuovo
+  if (sync.user) {
     return (
       <section className="card onboarding">
-        <h1>{t('onb.accountTitle')}</h1>
-        <AccountSection compact />
-        <button className="link-btn top-gap" onClick={() => setAccount(false)}>{t('onb.skipAccount')} →</button>
+        <h1>{sync.user.firstName ? t('auth.hello', { name: sync.user.firstName }) : t('onb.title')}</h1>
+        <p className="lead">{sync.status === 'syncing' ? t('sync.syncing') : t('setup.intro')}</p>
+        <button className="btn primary big-btn" onClick={start}>{t('setup.title')} →</button>
+      </section>
+    )
+  }
+
+  if (!sync.enabled || local) {
+    return (
+      <section className="card onboarding">
+        <h1>{t('onb.title')}</h1>
+        <p className="lead">{t('onb.text')}</p>
+        <p className="muted small">🔒 {t('onb.privacy')}</p>
+        <div className="stack">
+          <button className="btn primary big-btn" onClick={start}>{t('onb.start')} →</button>
+          <button className="btn" onClick={onDemo}>{t('onb.demo')}</button>
+        </div>
+        {sync.enabled && <button className="link-btn top-gap" onClick={() => setLocal(false)}>👤 {t('onb.account')}</button>}
+        <InstallButton />
+        <LegalLinks notice />
       </section>
     )
   }
 
   return (
-    <section className="card onboarding">
-      <h1>{t('onb.title')}</h1>
-      {sync.user?.firstName ? <p className="lead">{t('onb.hello', { name: sync.user.firstName })}</p> : <p className="lead">{t('onb.text')}</p>}
-      <p className="muted small">{t('app.rule')}</p>
-      <label className="field">
-        <span>{t('settings.currency')}</span>
-        <select value={currency} onChange={e => setCurrency(e.target.value)}>
-          {CURRENCIES.map(c => <option key={c}>{c}</option>)}
-        </select>
-      </label>
-      <label className="field">
-        <span>{t('settings.startDay')}</span>
-        <input type="number" inputMode="numeric" min={1} max={28} value={startDay}
-               onChange={e => setStartDay(Math.min(28, Math.max(1, Number(e.target.value) || 1)))} />
-        <small className="muted">{t('settings.startDayHint')}</small>
-      </label>
-      <div className="stack">
-        <button className="btn primary big-btn" onClick={() => onStart(currency, startDay)}>{t('onb.start')}</button>
-        <button className="btn" onClick={onDemo}>{t('onb.demo')}</button>
-      </div>
-      {!sync.user && <p className="muted small">🔒 {t('onb.privacy')}</p>}
-      {sync.enabled && !sync.user && <button className="btn" onClick={() => setAccount(true)}>👤 {t('onb.account')}</button>}
-      <InstallButton />
+    <LoginScreen footer={<>
+      <button className="link-btn" onClick={() => setLocal(true)}>{t('onb.noAccount')} →</button>
+      <small className="muted">{t('onb.noAccountHint')}</small>
       <LegalLinks notice />
-    </section>
+    </>} />
   )
 }

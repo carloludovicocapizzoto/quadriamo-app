@@ -11,7 +11,8 @@ const PRESETS = [[55, 20, 15, 10], [50, 25, 15, 10], [60, 15, 15, 10], [50, 20, 
 const num = (s: string) => { const n = Number(s.replace(/\./g, '').replace(',', '.')); return Number.isFinite(n) ? n : NaN }
 
 /** Profilo facoltativo: entrate, obiettivi, carte, investimenti e divisione delle entrate tra i quattro portafogli. */
-export function ProfileForm({ onDone }: { onDone: () => void }) {
+/** `withShares=false`: senza il passaggio sulla divisione (già scelta nella configurazione iniziale). */
+export function ProfileForm({ onDone, withShares = true }: { onDone: () => void; withShares?: boolean }) {
   const { t } = useI18n()
   const sync = useSync()
   const { state, dispatch } = useStore()
@@ -30,10 +31,10 @@ export function ProfileForm({ onDone }: { onDone: () => void }) {
       if (!live) return
       setP({ ...pr, first_name: pr.first_name ?? (sync.user?.firstName || null) })
       if (pr.monthly_income != null) setIncome(String(pr.monthly_income).replace('.', ','))
-      if (pr.shares?.length === settings.buckets.length) setShares(pr.shares.map(String))
+      if (withShares && pr.shares?.length === settings.buckets.length) setShares(pr.shares.map(String))
     })
     return () => { live = false }
-  }, [settings.buckets.length, sync.user?.firstName])
+  }, [settings.buckets.length, sync.user?.firstName, withShares])
 
   if (!p || !sync.user) return <p className="muted small">…</p>
   const set = (patch: Partial<Profile>) => setP({ ...p, ...patch })
@@ -49,7 +50,7 @@ export function ProfileForm({ onDone }: { onDone: () => void }) {
     setBusy(true); setMsg(null)
     try {
       await saveProfile(sync.user!.id, { ...p!, monthly_income: inc != null && Number.isFinite(inc) ? inc : null, currency: settings.currency, shares: values })
-      if (apply) {
+      if (apply && withShares) {
         const buckets = settings.buckets.map((b, i) => ({ ...b, share: values[i] / 100 }))
         if (buckets.some((b, i) => b.share !== settings.buckets[i].share)) dispatch({ type: 'setSettings', settings: { ...settings, buckets } })
       }
@@ -65,7 +66,7 @@ export function ProfileForm({ onDone }: { onDone: () => void }) {
     catch { setMsg({ text: t('prof.errSave'), bad: true }) }
   }
 
-  const TOTAL = 5
+  const TOTAL = withShares ? 5 : 4
   const titles = [t('prof.stepIncome'), t('prof.goals'), t('prof.cards'), t('prof.stepInvest'), t('prof.shares')]
   const submit = (e: FormEvent) => {
     e.preventDefault(); setMsg(null)

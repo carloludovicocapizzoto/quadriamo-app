@@ -14,13 +14,15 @@ export const GOALS = ['understand', 'save', 'goal', 'debt', 'invest', 'family'] 
 export const CARDS = ['bank', 'credit', 'prepaid', 'Revolut', 'N26', 'Hype', 'Satispay', 'PayPal', 'American Express', 'cash', 'other'] as const
 export const WHERE = ['bank', 'broker', 'etf', 'stocks', 'bonds', 'pension', 'crypto', 'realestate', 'other'] as const
 
-const PROMPT_KEY = 'q.profilePrompt'
+const flag = (key: string) => ({
+  set: () => { try { localStorage.setItem(key, '1') } catch { /* niente */ } },
+  get: () => { try { return localStorage.getItem(key) === '1' } catch { return false } },
+  clear: () => { try { localStorage.removeItem(key) } catch { /* niente */ } },
+})
 /** Dopo la registrazione si propone il profilo una volta (anche se la conferma email arriva dopo). */
-export const profilePrompt = {
-  set: () => { try { localStorage.setItem(PROMPT_KEY, '1') } catch { /* niente */ } },
-  get: () => { try { return localStorage.getItem(PROMPT_KEY) === '1' } catch { return false } },
-  clear: () => { try { localStorage.removeItem(PROMPT_KEY) } catch { /* niente */ } },
-}
+export const profilePrompt = flag('q.profilePrompt')
+/** Configurazione iniziale a passaggi da completare (nuovo account o "continua senza account"). */
+export const setupPending = flag('q.setupPending')
 
 export const emptyProfile = (): Profile => ({ first_name: null, last_name: null, monthly_income: null, currency: null,
   goals: [], cards: [], invested: null, invest_where: [], shares: null })

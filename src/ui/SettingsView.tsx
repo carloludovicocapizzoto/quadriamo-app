@@ -13,7 +13,11 @@ const TYPES: CategoryType[] = ['expense', 'income', 'saving']
 const DEFAULT_IDS = new Set(DEFAULT_CATEGORIES.map(c => c.id))
 const pct = (share: number) => String(Math.round(share * 1000) / 10).replace('.', ',')
 
-export function SettingsView() {
+export type SettingsSection = 'general' | 'fx' | 'rule' | 'categories' | 'rules' | 'recurring' | 'data'
+
+/** Impostazioni. `only` mostra solo alcune sezioni (passaggi della configurazione iniziale); `onLogin` apre l'accesso. */
+export function SettingsView({ only, wizard = false, onLogin }: { only?: SettingsSection[]; wizard?: boolean; onLogin?: () => void }) {
+  const show = (x: SettingsSection) => !only || only.includes(x)
   const { t, lang, setLang, date } = useI18n()
   const { state, dispatch } = useStore()
   const data = state.data!
@@ -92,8 +96,8 @@ export function SettingsView() {
 
   return (
     <div className="settings">
-      <AccountSection />
-      <section className="card">
+      {!only && <AccountSection onLogin={onLogin} />}
+      {show('general') && <section className="card">
         <h3 className="h-plain">{t('settings.general')}</h3>
         <label className="field">
           <span>{t('lang.label')}</span>
@@ -114,9 +118,9 @@ export function SettingsView() {
                  onChange={e => edit(s => { s.monthStartDay = Number(e.target.value) })} />
           <small className="muted">{t('settings.startDayHint')}</small>
         </label>
-      </section>
+      </section>}
 
-      <section className="card">
+      {show('fx') && <section className="card">
         <h3 className="h-plain">{t('settings.fx')}</h3>
         <p className="muted small">{t('settings.fxHint')}</p>
         <p className="small">{data.settings.fxDate ? t('settings.fxDate', { date: date(data.settings.fxDate, { day: 'numeric', month: 'short', year: 'numeric' }) }) : t('settings.fxNever')}</p>
@@ -149,9 +153,9 @@ export function SettingsView() {
             {FX_SUPPORTED.filter(c => c !== draft.currency && !fxList.includes(c)).map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
-      </section>
+      </section>}
 
-      <section className="card">
+      {show('rule') && <section className="card">
         <h3 className="h-plain">{t('settings.rule')}</h3>
         <p className="muted small">{t('settings.ruleHint')}</p>
         <div className="rule-grid">
@@ -180,9 +184,9 @@ export function SettingsView() {
           {errors.includes('sharesNot100')
             ? `⚠ ${t('settings.ruleBad', { n: String(total).replace('.', ',') })}` : `✓ ${t('settings.ruleOk')}`}
         </p>
-      </section>
+      </section>}
 
-      <section className="card">
+      {show('categories') && <section className="card">
         <h3 className="h-plain">{t('settings.categories')}</h3>
         <ul className="edit-list">
           {draft.categories.map((c, i) => (
@@ -210,9 +214,9 @@ export function SettingsView() {
         <button className="btn" onClick={() => edit(s => {
           s.categories.push({ id: newId(), name: t('settings.newCategory'), type: 'expense', defaultBucket: s.buckets[0].id })
         })}>+ {t('settings.addCategory')}</button>
-      </section>
+      </section>}
 
-      <section className="card">
+      {show('rules') && <section className="card">
         <h3 className="h-plain">{t('rules.title')}</h3>
         <p className="muted small">{t('rules.hint')}</p>
         <button className="link-btn" aria-expanded={showRules} onClick={() => setShowRules(!showRules)}>
@@ -238,9 +242,9 @@ export function SettingsView() {
         <button className="btn" onClick={() => { setShowRules(true); edit(s => {
           s.rules = [{ id: newId(), keyword: '', category: draft.categories.find(c => c.type === 'expense')?.id ?? '', paidFrom: null, enabled: true }, ...rules]
         }) }}>+ {t('rules.add')}</button>
-      </section>
+      </section>}
 
-      <section className="card">
+      {show('recurring') && <section className="card">
         <h3 className="h-plain">{t('settings.recurring')}</h3>
         <p className="muted small">{t('settings.recurringHint')}</p>
         <ul className="edit-list recurring">
@@ -268,23 +272,24 @@ export function SettingsView() {
           const cat = s.categories.find(c => c.type === 'expense')
           s.recurring.push({ name: t('settings.newRecurring'), amount: 0, category: cat?.id ?? '', day: 1, active: true })
         })}>+ {t('settings.addRecurring')}</button>
-      </section>
+      </section>}
 
-      <section className="card">
+      {show('data') && <section className="card">
         <h3 className="h-plain">{t('settings.data')}</h3>
         <p className="muted small">🔒 {t('settings.dataHint')}</p>
+        {wizard && <p className="small">{t('setup.importHint')}</p>}
         <div className="stack-row">
-          <button className="btn" onClick={exportBackup}>{t('settings.export')}</button>
-          <button className="btn" onClick={exportCsv}>{t('settings.exportCsv')}</button>
+          {!wizard && <button className="btn" onClick={exportBackup}>{t('settings.export')}</button>}
+          {!wizard && <button className="btn" onClick={exportCsv}>{t('settings.exportCsv')}</button>}
           <label className="btn">{t('settings.import')}
             <input type="file" accept="application/json,.json" hidden onChange={importBackup} /></label>
-          <button className="btn danger" onClick={() => { if (confirm(t('settings.resetConfirm'))) dispatch({ type: 'replace', data: null }) }}>
-            {t('settings.reset')}</button>
+          {!wizard && <button className="btn danger" onClick={() => { if (confirm(t('settings.resetConfirm'))) dispatch({ type: 'replace', data: null }) }}>
+            {t('settings.reset')}</button>}
         </div>
         <p className="muted small top-gap">{t('settings.install')}</p>
         <InstallButton />
-        <LegalLinks />
-      </section>
+        {!wizard && <LegalLinks />}
+      </section>}
 
       {(errors.length > 0 || msg) && (
         <div className="save-bar" role="status">

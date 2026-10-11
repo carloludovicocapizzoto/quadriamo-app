@@ -21,7 +21,10 @@ import { BetaSection } from './ui/beta/BetaSection'
 import { ConsentCard } from './ui/beta/ConsentCard'
 import { FeedbackCard } from './ui/beta/FeedbackCard'
 import { ProfileForm } from './ui/ProfileForm'
-import { profilePrompt } from './sync/profile'
+import { profilePrompt, setupPending } from './sync/profile'
+import { LoginScreen } from './ui/AccountSection'
+import { SetupWizard } from './ui/SetupWizard'
+import { guessCurrency } from './ui/names'
 
 type Tab = 'month' | 'transactions' | 'year' | 'investments' | 'settings'
 
@@ -31,7 +34,7 @@ export default function App() {
   const sync = useSync()
   const today = todayIso()
   // ?login=1 / ?signup=1 (pulsanti del sito): si apre direttamente l'area account
-  const [tab, setTab] = useState<Tab>(fromSiteAccount ? 'settings' : 'month')
+  const [tab, setTab] = useState<Tab>('month')
   const [ym, setYm] = useState<YearMonth | null>(null)
   const [year, setYear] = useState(() => Number(todayIso().slice(0, 4)))
   // link di inserimento rapido: ?add=1&amount=12,50&desc=Pizza&cat=eatingOut (scorciatoia sull'icona, Comandi Rapidi)
@@ -46,14 +49,16 @@ export default function App() {
   useEffect(() => {
     // vecchio indirizzo della dashboard: ora è una pagina a sé
     if (new URLSearchParams(window.location.search).get('admin') === '1') { window.location.replace(`${import.meta.env.BASE_URL}admin/`); return }
-    // dal pulsante "Accedi o registrati" del sito: dritti al modulo dell'account
-    if (fromSiteAccount) setTimeout(() => document.getElementById('account')?.scrollIntoView(), 300)
     if (window.location.search) window.history.replaceState(null, '', window.location.pathname)
     const onInstalled = () => { void track('install') }
     window.addEventListener('appinstalled', onInstalled)
     return () => window.removeEventListener('appinstalled', onInstalled)
   }, [])
   const [askProfile, setAskProfile] = useState(() => profilePrompt.get())
+  // schermata di accesso (dal sito "Accedi o registrati", o da Impostazioni) e configurazione iniziale a passaggi
+  const [authOpen, setAuthOpen] = useState(fromSiteAccount)
+  const [setupTick, setSetupTick] = useState(0)
+  const inSetup = setupPending.get() && setupTick >= 0
   const [note, setNote] = useState('')
   const data = state.data
 
@@ -70,6 +75,12 @@ export default function App() {
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- una volta per caricamento dei dati
   useEffect(() => { if (state.loaded) ping() }, [state.loaded, !!data])
+
+  // nuovo account senza dati su questo dispositivo: si crea il budget e parte la configurazione
+  const newAccount = !data && state.loaded && !!sync.user && inSetup
+  useEffect(() => {
+    if (newAccount) dispatch({ type: 'replace', data: createInitial(guessCurrency(), todayIso(), 1) })
+  }, [newAccount, dispatch])
 
   if (!state.loaded) return <div className="app"><p className="muted top-gap">{t('app.loading')}</p></div>
 
@@ -89,6 +100,23 @@ export default function App() {
       )}
     </header>
   )
+
+  if (data && inSetup && !data.demo) {
+    return (
+      <div className="app">
+        {header}
+        <SetupWizard onDone={() => { setupPending.clear(); setSetupTick(x => x + 1); window.scrollTo(0, 0) }} />
+      </div>
+    )
+  }
+  if (data && authOpen && sync.enabled && !sync.user) {
+    return (
+      <div className="app">
+        {header}
+        <LoginScreen footer={<button className="link-btn" onClick={() => setAuthOpen(false)}>{t('onb.back')}</button>} />
+      </div>
+    )
+  }
 
   if (!data || !result || !current) {
     return (
@@ -125,7 +153,7 @@ export default function App() {
 
       <main>
         {tab === 'month' && <ConsentCard onAnswer={yes => ping(yes)} />}
-        {tab === 'month' && sync.user && askProfile && !data.demo && (
+        {tab === 'month' && sync.user && askProfile && !data.demo && !inSetup && (
           <section className="card"><h3 className="h-plain">{t('prof.promptTitle')}</h3><ProfileForm onDone={() => setAskProfile(false)} /></section>)}
         {tab === 'month' && showFeedback && <FeedbackCard onClose={() => setShowFeedback(false)} />}
         {(tab === 'month' || tab === 'transactions') && <MonthNav ym={current} onChange={setYm} />}
@@ -139,7 +167,7 @@ export default function App() {
                                                    year={year} onYear={setYear} />}
         {tab === 'settings' && <BetaSection onFeedback={() => { setShowFeedback(true); setTab('month'); window.scrollTo(0, 0) }}
                                             onAdmin={() => window.location.assign(`${import.meta.env.BASE_URL}admin/`)} />}
-        {tab === 'settings' && <SettingsView />}
+        {tab === 'settings' && <SettingsView onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} />}
         <FxAutoUpdate today={today} />
       </main>
 
