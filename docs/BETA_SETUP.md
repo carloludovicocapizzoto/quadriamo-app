@@ -7,11 +7,19 @@ cosa manca e per ogni passo ha il pulsante per copiare il codice già pronto (co
 Anteprima con dati di esempio: `…/quadriamo-app/admin/?demo=1`.
 
 ## 1. Tabelle e regole di sicurezza
-Supabase → **SQL Editor** → **New snippet** → incolla tutto `supabase/migrations/0002_beta_feedback_stats_push.sql` → **Run**.
+Supabase → **SQL Editor** → **New snippet** → incolla tutto `supabase/migrations/0002_beta_feedback_stats_push.sql`
+e poi `supabase/migrations/0004_profiles.sql` (profili: nome, cognome e dati facoltativi) → **Run**.
 Deve comparire "Success. No rows returned".
 
+## 1b. Registrazione con email e password
+Authentication → **Sign In / Providers** → **Email**: lascia attivo, e finché non c'è un servizio email proprio (arriva con il
+dominio) **disattiva "Confirm email"**: le email automatiche di Supabase arrivano solo agli indirizzi del team, quindi gli
+amici non riceverebbero la conferma. Per lo stesso motivo "password dimenticata" e "link via email" funzionano davvero solo
+dopo aver configurato l'SMTP. URL Configuration: Site URL `https://carloludovicocapizzoto.github.io/quadriamo-app/app/`,
+Redirect URLs `https://carloludovicocapizzoto.github.io/quadriamo-app/**`.
+
 ## 2. Diventare amministratore
-Nell'app (online) fai l'accesso con la tua email (Impostazioni → Account e sincronizzazione). Poi in **SQL Editor**:
+Nell'app (online) crea il tuo account (Impostazioni → Account e sincronizzazione → Crea account). Poi in **SQL Editor**:
 
 ```sql
 insert into public.admins (user_id)

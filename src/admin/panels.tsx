@@ -1,10 +1,12 @@
 // Le sezioni dell'area amministratore: componenti "puri" (ricevono i dati), così si provano senza database.
 import { useState } from 'react'
-import { downloadCsv, label, projectRef, type Account, type Device, type Feedback, type PushSub, type Setup, type Stats } from './data'
+import { downloadCsv, label, projectRef, type Account, type Device, type Feedback, type ProfileStats, type PushSub, type Setup, type Stats } from './data'
 import sql0002 from '../../supabase/migrations/0002_beta_feedback_stats_push.sql?raw'
+import sql0004 from '../../supabase/migrations/0004_profiles.sql?raw'
 import sql0003 from '../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
 import fnCode from '../../supabase/functions/send-push/index.ts?raw'
 
+const SITE = 'https://carloludovicocapizzoto.github.io/quadriamo-app/'
 const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : '—')
 const dt = (iso: string | null) => (iso ? new Date(iso).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' }) : '—')
 const d = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it-IT') : '—')
@@ -140,26 +142,57 @@ export function DevicesPanel({ rows }: { rows: Device[] }) {
 // ---------- Account ----------
 export function AccountsPanel({ rows }: { rows: Account[] }) {
   const [q, setQ] = useState('')
-  const list = rows.filter(r => !q || r.email.toLowerCase().includes(q.toLowerCase()))
+  const list = rows.filter(r => !q || `${r.email} ${r.first_name ?? ''} ${r.last_name ?? ''}`.toLowerCase().includes(q.toLowerCase()))
   return (
     <>
       <Toolbar count={`${list.length} account`} onExport={() => downloadCsv('quadriamo-account', [
-        ['Email', 'Iscritto il', 'Ultimo accesso', 'Notifiche', 'Feedback'],
-        ...list.map(r => [r.email, r.created_at, r.last_sign_in_at, yn(r.has_push), r.feedback_count])])}>
-        <input className="az-search" placeholder="Cerca per email…" value={q} onChange={e => setQ(e.target.value)} />
+        ['Nome', 'Cognome', 'Email', 'Iscritto il', 'Ultimo accesso', 'Profilo compilato', 'Notifiche', 'Feedback'],
+        ...list.map(r => [r.first_name, r.last_name, r.email, r.created_at, r.last_sign_in_at, yn(r.profile_done), yn(r.has_push), r.feedback_count])])}>
+        <input className="az-search" placeholder="Cerca per nome o email…" value={q} onChange={e => setQ(e.target.value)} />
       </Toolbar>
       <div className="az-table-wrap">
         <table className="az-table">
-          <thead><tr><th>Email</th><th>Iscritto il</th><th>Ultimo accesso</th><th>Notifiche</th><th>Feedback</th></tr></thead>
+          <thead><tr><th>Nome</th><th>Email</th><th>Iscritto il</th><th>Ultimo accesso</th><th>Profilo</th><th>Notifiche</th><th>Feedback</th></tr></thead>
           <tbody>
             {list.map(r => (
-              <tr key={r.email}><td>{r.email}</td><td>{d(r.created_at)}</td><td>{dt(r.last_sign_in_at)}</td>
+              <tr key={r.email}><td>{[r.first_name, r.last_name].filter(Boolean).join(' ') || '—'}</td><td>{r.email}</td><td>{d(r.created_at)}</td><td>{dt(r.last_sign_in_at)}</td>
+                <td>{r.profile_done ? <span className="az-pill ok">Compilato</span> : '—'}</td>
                 <td>{r.has_push ? <span className="az-pill ok">Attive</span> : '—'}</td><td>{r.feedback_count || '—'}</td></tr>
             ))}
           </tbody>
         </table>
       </div>
       {!list.length && <p className="az-empty">Nessun account{rows.length ? ' con questa ricerca' : ' registrato finora'}.</p>}
+    </>
+  )
+}
+
+// ---------- Profili (solo numeri aggregati) ----------
+const money = (n: number | null) => (n == null ? '—' : `${Math.round(n).toLocaleString('it-IT', { useGrouping: 'always' })} €`)
+export function ProfilesPanel({ p, buckets = ['Essenziali', 'Qualità della vita', 'Fondo di sicurezza', 'Investimenti'] }: { p: ProfileStats; buckets?: string[] }) {
+  const items = (o: Record<string, number>) => sorted(o).map(([k, n]) => [label(k), n] as [string, number])
+  const bands = Object.entries(p.income_bands).sort().map(([k, n]) => [k.replace(/^\d · /, '') + ' €', n] as [string, number])
+  const invested = (p.invested.yes ?? 0) + (p.invested.want ?? 0) + (p.invested.no ?? 0)
+  return (
+    <>
+      <div className="az-stat-grid">
+        <Stat n={p.completed} l="Profili compilati" sub={`su ${p.profiles} account`} />
+        <Stat n={money(p.income_median)} l="Entrate mensili nette (mediana)" sub={p.with_income ? `media ${money(p.income_avg)} · ${p.with_income} risposte` : undefined} />
+        <Stat n={pct(p.invested.yes ?? 0, invested)} l="Ha già investito" sub={invested ? `${pct(p.invested.want ?? 0, invested)} vorrebbe iniziare` : undefined} />
+        <Stat n={p.shares_custom} l="Hanno cambiato la regola 55-20-15-10" sub={`${p.shares_default} la tengono`} />
+      </div>
+      <div className="az-cols">
+        <div className="az-card"><h3>Entrate mensili nette</h3><Bars items={bands} /></div>
+        <div className="az-card"><h3>Per cosa usano Quadriamo</h3><Bars items={items(p.goals)} total={Math.max(1, p.completed)} /></div>
+        <div className="az-card"><h3>Carte e conti</h3><Bars items={items(p.cards)} total={Math.max(1, p.completed)} /></div>
+        <div className="az-card"><h3>Investimenti</h3><Bars items={items(p.invested)} />
+          {Object.keys(p.invest_where).length > 0 && <><h3 className="az-h3">Dove investono</h3><Bars items={items(p.invest_where)} /></>}</div>
+        <div className="az-card"><h3>Divisione media scelta</h3>
+          {p.shares_avg?.length === 4
+            ? <Bars items={p.shares_avg.map((v, i) => [`${buckets[i]} (${String(v).replace('.', ',')}%)`, v] as [string, number])} total={100} />
+            : <p className="az-empty">Ancora nessun dato.</p>}</div>
+      </div>
+      <p className="az-hint">Solo numeri aggregati: le risposte del singolo non si vedono qui. Le percentuali di obiettivi e carte sono sul numero di profili compilati (si possono scegliere più risposte).</p>
     </>
   )
 }
@@ -273,21 +306,33 @@ export function SetupPanel({ setup, email, onRecheck }: { setup: Setup; email: s
   const ref = projectRef()
   const dash = `https://supabase.com/dashboard/project/${ref}`
   const adminSql = `insert into public.admins (user_id)\nselect id from auth.users where email = '${email}'\non conflict do nothing;`
-  const fullSql = `${sql0002}\n-- tu sei l'amministratore\n${adminSql}\n`
+  const fullSql = `${sql0002}\n${sql0004}\n-- tu sei l'amministratore\n${adminSql}\n`
+  const step1 = !!setup.tables && setup.admin && !!setup.profiles
+  // tabelle già create ma manca qualcosa: solo i pezzi mancanti
+  const partialSql = [setup.profiles === false ? sql0004 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
   const cronSql = sql0003.replace('<PROJECT_REF>', ref)
   return (
     <>
       <p className="az-lead">Questa pagina controlla dal vivo cosa è già attivo sul tuo progetto Supabase. Ogni passo ha il codice già pronto:
         lo copi, lo incolli nel punto indicato e premi <b>Ricontrolla</b>.</p>
       <div className="az-steps">
-        <Step n={1} ok={setup.tables && setup.admin} title="Tabelle, regole di sicurezza e il tuo accesso da amministratore">
+        <Step n={1} ok={setup.tables == null ? null : step1} title="Tabelle (statistiche, feedback, notifiche, profili) e il tuo accesso da amministratore">
           {setup.tables
-            ? <p>Le tabelle ci sono, manca solo il tuo accesso. Incolla questa riga in <a href={`${dash}/sql/new`} target="_blank" rel="noreferrer">SQL Editor</a> → <b>Run</b>.</p>
+            ? <p>Manca ancora un pezzo. Copia, incolla in <a href={`${dash}/sql/new`} target="_blank" rel="noreferrer">SQL Editor</a> → <b>Run</b>.</p>
             : <p>Copia lo script (crea tutto e ti rende amministratore con <b>{email}</b>), poi apri <a href={`${dash}/sql/new`} target="_blank" rel="noreferrer">SQL Editor</a>, incolla e premi <b>Run</b>. Deve comparire "Success".</p>}
-          <div className="az-u-row"><Copy text={setup.tables ? adminSql : fullSql} label={setup.tables ? 'Copia la riga' : 'Copia lo script'} />
+          <div className="az-u-row"><Copy text={setup.tables ? partialSql : fullSql} label="Copia lo script" />
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
         </Step>
-        <Step n={2} ok={setup.admin ? setup.fn !== 'missing' : null} title="Funzione che invia le notifiche (send-push)">
+        <Step n={2} ok={null} title="Registrazione con email e password">
+          <p>In <a href={`${dash}/auth/providers`} target="_blank" rel="noreferrer">Authentication → Sign In / Providers → Email</a>:
+            lascia attivo <b>Email</b>. Finché non hai un servizio email tuo (arriva con il dominio), <b>disattiva "Confirm email"</b>:
+            le email automatiche di Supabase arrivano solo agli indirizzi del tuo team, quindi gli amici non riceverebbero la conferma.
+            Poi in <a href={`${dash}/auth/url-configuration`} target="_blank" rel="noreferrer">URL Configuration</a> metti come Site URL
+            <code>{SITE}app/</code> e tra i Redirect URLs <code>{SITE}**</code>.</p>
+          <div className="az-u-row"><Copy text={`${SITE}app/`} label="Copia Site URL" /><Copy text={`${SITE}**`} label="Copia Redirect URL" />
+            <a className="az-btn" href={`${dash}/auth/providers`} target="_blank" rel="noreferrer">↗ Apri Providers</a></div>
+        </Step>
+        <Step n={3} ok={setup.admin ? setup.fn !== 'missing' : null} title="Funzione che invia le notifiche (send-push)">
           <ol>
             <li>Apri <a href={`${dash}/functions`} target="_blank" rel="noreferrer">Edge Functions</a> → <b>Deploy a new function</b> → <b>Via Editor</b>.</li>
             <li>Nome: <code>send-push</code>. Cancella il codice di esempio, incolla quello copiato da qui → <b>Deploy</b>.</li>
@@ -296,13 +341,13 @@ export function SetupPanel({ setup, email, onRecheck }: { setup: Setup; email: s
           <div className="az-u-row"><Copy text={fnCode} label="Copia il codice della funzione" />
             <a className="az-btn" href={`${dash}/functions`} target="_blank" rel="noreferrer">↗ Apri Edge Functions</a></div>
         </Step>
-        <Step n={3} ok={setup.admin && setup.fn !== 'missing' ? setup.fn === 'ok' && setup.cronSecret : null} title="Chiavi delle notifiche (segreti)">
+        <Step n={4} ok={setup.admin && setup.fn !== 'missing' ? setup.fn === 'ok' && setup.cronSecret : null} title="Chiavi delle notifiche (segreti)">
           <p>In <a href={`${dash}/functions/secrets`} target="_blank" rel="noreferrer">Edge Functions → Secrets</a> aggiungi tre segreti, con nomi e valori
             presi dal file <code>.vapid.local</code> nella cartella <code>quadriamo-app</code> sul tuo Mac: <code>VAPID_PUBLIC_KEY</code>, <code>VAPID_PRIVATE_KEY</code>, <code>CRON_SECRET</code>.
             Per sicurezza non sono in questa pagina.</p>
           <div className="az-u-row"><a className="az-btn" href={`${dash}/functions/secrets`} target="_blank" rel="noreferrer">↗ Apri Secrets</a></div>
         </Step>
-        <Step n={4} ok={setup.admin ? setup.reminder : null} title="Promemoria automatico ogni 10 giorni (facoltativo)">
+        <Step n={5} ok={setup.admin ? setup.reminder : null} title="Promemoria automatico ogni 10 giorni (facoltativo)">
           <ol>
             <li>In <a href={`${dash}/database/extensions`} target="_blank" rel="noreferrer">Database → Extensions</a> attiva <code>pg_cron</code> e <code>pg_net</code>.</li>
             <li>Copia lo script, sostituisci <code>&lt;CRON_SECRET&gt;</code> con il valore del file <code>.vapid.local</code>, poi eseguilo in SQL Editor.</li>

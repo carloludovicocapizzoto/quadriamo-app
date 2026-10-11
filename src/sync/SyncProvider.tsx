@@ -14,6 +14,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SyncApi['user']>(null)
   const [status, setStatus] = useState<SyncStatus>('idle')
   const [lastSync, setLastSync] = useState<string | null>(null)
+  const [recovery, setRecovery] = useState(false)
   const dataRef = useRef<AppData | null>(state.data)
   const running = useRef(false)
   const again = useRef(false)
@@ -25,9 +26,13 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   // sessione
   useEffect(() => {
     if (!supabase) return
-    const toUser = (u: { id: string; email?: string } | null | undefined) => (u ? { id: u.id, email: u.email ?? '' } : null)
+    const toUser = (u: { id: string; email?: string; user_metadata?: { first_name?: string } } | null | undefined) =>
+      (u ? { id: u.id, email: u.email ?? '', firstName: u.user_metadata?.first_name ?? '' } : null)
     supabase.auth.getSession().then(({ data }) => setUser(toUser(data.session?.user)))
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setUser(toUser(session?.user)))
+    const { data: sub } = supabase.auth.onAuthStateChange((e, session) => {
+      setUser(toUser(session?.user))
+      if (e === 'PASSWORD_RECOVERY') setRecovery(true)
+    })
     return () => sub.subscription.unsubscribe()
   }, [])
 
@@ -79,10 +84,32 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     return () => { window.removeEventListener('online', onOnline); document.removeEventListener('visibilitychange', onVisible) }
   }, [syncNow])
 
+  const appUrl = `${window.location.origin}${import.meta.env.BASE_URL}app/?login=1`
   const api = useMemo<SyncApi>(() => ({
-    enabled: !!supabase, user, status, lastSync, syncNow,
+    enabled: !!supabase, user, status, lastSync, syncNow, recovery,
+    signIn: async (email, password) => {
+      const { error } = await supabase!.auth.signInWithPassword({ email, password })
+      if (error) throw error
+    },
+    signUp: async ({ firstName, lastName, email, password }) => {
+      const { data, error } = await supabase!.auth.signUp({ email, password,
+        options: { data: { first_name: firstName, last_name: lastName }, emailRedirectTo: appUrl } })
+      if (error) throw error
+      // con la conferma email attiva, un'email già registrata torna come utente senza identità
+      if (data.user && !data.user.identities?.length) throw Object.assign(new Error('exists'), { code: 'user_already_exists' })
+      return { needsConfirm: !data.session }
+    },
+    resetPassword: async email => {
+      const { error } = await supabase!.auth.resetPasswordForEmail(email, { redirectTo: appUrl })
+      if (error) throw error
+    },
+    updatePassword: async password => {
+      const { error } = await supabase!.auth.updateUser({ password })
+      if (error) throw error
+      setRecovery(false)
+    },
     sendCode: async email => {
-      const { error } = await supabase!.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}app/` } })
+      const { error } = await supabase!.auth.signInWithOtp({ email, options: { emailRedirectTo: appUrl } })
       if (error) throw error
     },
     verifyCode: async (email, code) => {
@@ -101,7 +128,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       lastPushed.current = ''
       setStatus('idle'); setLastSync(null)
     },
-  }), [user, status, lastSync, syncNow])
+  }), [user, status, lastSync, syncNow, recovery, appUrl])
 
   return <SyncContext.Provider value={api}>{children}</SyncContext.Provider>
 }

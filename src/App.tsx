@@ -43,6 +43,8 @@ export default function App() {
   useEffect(() => {
     // vecchio indirizzo della dashboard: ora è una pagina a sé
     if (new URLSearchParams(window.location.search).get('admin') === '1') { window.location.replace(`${import.meta.env.BASE_URL}admin/`); return }
+    // dal pulsante "Accedi o registrati" del sito: dritti al modulo dell'account
+    if (new URLSearchParams(window.location.search).get('login') === '1') setTimeout(() => document.getElementById('account')?.scrollIntoView(), 300)
     if (window.location.search) window.history.replaceState(null, '', window.location.pathname)
     const onInstalled = () => { void track('install') }
     window.addEventListener('appinstalled', onInstalled)

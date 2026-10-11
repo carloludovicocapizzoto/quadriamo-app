@@ -14,13 +14,20 @@ export interface Device {
   device_id: string; first_day: string; last_day: string; active_days: number; platform: string | null; lang: string | null
   standalone: boolean | null; signed_in: boolean | null; tx_count: number | null; months_used: number | null; app_version: string | null
 }
-export interface Account { email: string; created_at: string; last_sign_in_at: string | null; has_push: boolean; feedback_count: number }
+export interface Account { email: string; first_name: string | null; last_name: string | null; profile_done: boolean; created_at: string; last_sign_in_at: string | null; has_push: boolean; feedback_count: number }
+export interface ProfileStats {
+  profiles: number; completed: number; with_income: number; income_median: number | null; income_avg: number | null
+  income_bands: Record<string, number>; goals: Record<string, number>; cards: Record<string, number>
+  invested: Record<string, number>; invest_where: Record<string, number>
+  shares_avg: number[] | null; shares_default: number; shares_custom: number
+}
 export interface PushSub { lang: string | null; created_at: string; last_prompt_at: string | null; email: string | null }
 
 /** Stato della configurazione su Supabase, controllato dal vivo (pagina Configurazione). */
 export interface Setup {
   connected: boolean          // l'app ha URL e chiave di Supabase
   tables: boolean | null      // script 0002 eseguito (null = non ancora verificabile: serve l'accesso)
+  profiles: boolean | null    // script 0004 (profili) eseguito
   admin: boolean              // questo account è amministratore
   fn: 'ok' | 'missing' | 'nosecrets' | 'unknown'   // funzione send-push pubblicata e con le chiavi
   cronSecret: boolean
@@ -31,6 +38,10 @@ export interface Setup {
 export const LABELS: Record<string, string> = {
   open: 'Aperture', install: 'Installazioni', import: 'Import estratti conto', share: 'Inviti inviati',
   feedback: 'Feedback inviati', push_on: 'Notifiche attivate', it: 'Italiano', en: 'Inglese', fr: 'Francese', es: 'Spagnolo',
+  understand: 'Capire dove vanno i soldi', save: 'Risparmiare di più', goal: 'Mettere da parte per un obiettivo', debt: 'Ridurre debiti o rate',
+  invest: 'Iniziare a investire', family: 'Spese di casa o di coppia', bank: 'Banca', credit: 'Carta di credito', prepaid: 'Carta prepagata',
+  cash: 'Soprattutto contanti', other: 'Altro', yes: 'Sì, investe', want: 'No, ma vorrebbe', no: 'No', broker: 'App o broker online', etf: 'ETF',
+  stocks: 'Azioni', bonds: 'Titoli di Stato e obbligazioni', pension: 'Fondo pensione', crypto: 'Criptovalute', realestate: 'Immobili',
   ios: 'iPhone / iPad', android: 'Android', desktop: 'Computer', '?': 'Non indicato',
 }
 export const label = (k: string | null | undefined) => LABELS[k ?? '?'] ?? k ?? '—'
@@ -46,16 +57,19 @@ export const loadStats = (days: number) => rpc<Stats>('admin_stats', { p_days: d
 export const loadFeedback = () => rpc<Feedback[]>('admin_feedback', { p_limit: 500 })
 export const loadDevices = () => rpc<Device[]>('admin_devices', { p_limit: 5000 })
 export const loadAccounts = () => rpc<Account[]>('admin_accounts')
+export const loadProfileStats = () => rpc<ProfileStats>('admin_profile_stats')
 export const loadPush = () => rpc<PushSub[]>('admin_push_list')
 
 export async function checkSetup(signedIn: boolean): Promise<Setup> {
-  const s: Setup = { connected: !!supabase, tables: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
+  const s: Setup = { connected: !!supabase, tables: null, profiles: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
     vapidInApp: !!import.meta.env.VITE_VAPID_PUBLIC_KEY }
   if (!supabase || !signedIn) return s
   const { data, error } = await supabase.rpc('is_admin')
   // PGRST202 = funzione inesistente: lo script 0002 non è ancora stato eseguito
   s.tables = !(error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message)))
   s.admin = data === true
+  const pr = await supabase.from('profiles').select('user_id', { head: true, count: 'exact' })
+  s.profiles = !(pr.error && (pr.error.code === 'PGRST205' || pr.error.code === '42P01'))
   if (!s.admin) return s
   const fn = await supabase.functions.invoke('send-push', { body: { mode: 'check' } })
   if (fn.error) s.fn = 'missing'

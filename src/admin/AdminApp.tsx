@@ -3,22 +3,23 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../sync/client'
-import { checkSetup, loadAccounts, loadDevices, loadFeedback, loadPush, loadStats, sendPush,
-  type Account, type Device, type Feedback, type PushSub, type Setup, type Stats } from './data'
-import { sampleAccounts, sampleDevices, sampleFeedback, samplePush, sampleSetup, sampleStats } from './sample'
-import { AccountsPanel, DashboardPanel, DevicesPanel, FeedbackPanel, PushPanel, SetupPanel } from './panels'
+import { checkSetup, loadAccounts, loadDevices, loadFeedback, loadProfileStats, loadPush, loadStats, sendPush,
+  type Account, type Device, type Feedback, type ProfileStats, type PushSub, type Setup, type Stats } from './data'
+import { sampleAccounts, sampleDevices, sampleFeedback, sampleProfiles, samplePush, sampleSetup, sampleStats } from './sample'
+import { AccountsPanel, DashboardPanel, DevicesPanel, FeedbackPanel, ProfilesPanel, PushPanel, SetupPanel } from './panels'
 
-type Panel = 'dashboard' | 'dispositivi' | 'account' | 'feedback' | 'notifiche' | 'configurazione'
+type Panel = 'dashboard' | 'dispositivi' | 'account' | 'profili' | 'feedback' | 'notifiche' | 'configurazione'
 const NAV: { group: string; items: [Panel, string][] }[] = [
   { group: 'Panoramica', items: [['dashboard', '📊 Dashboard']] },
-  { group: 'Persone', items: [['dispositivi', '📱 Dispositivi'], ['account', '👤 Account']] },
+  { group: 'Persone', items: [['dispositivi', '📱 Dispositivi'], ['account', '👤 Account'], ['profili', '🧭 Profili']] },
   { group: 'Ascolto', items: [['feedback', '💬 Feedback'], ['notifiche', '🔔 Notifiche']] },
   { group: 'Impostazioni', items: [['configurazione', '⚙️ Configurazione']] },
 ]
 const TITLES: Record<Panel, [string, string]> = {
   dashboard: ['Dashboard', 'Quante persone usano Quadriamo e come.'],
   dispositivi: ['Dispositivi', 'Ogni telefono o computer che usa l’app (solo chi ha accettato le statistiche).'],
-  account: ['Account', 'Chi si è registrato con l’email.'],
+  account: ['Account', 'Chi si è registrato.'],
+  profili: ['Profili', 'Cosa raccontano di sé gli iscritti (facoltativo), in forma aggregata.'],
   feedback: ['Feedback', 'Voti e commenti arrivati dall’app.'],
   notifiche: ['Notifiche', 'Manda la richiesta di feedback direttamente sui dispositivi.'],
   configurazione: ['Configurazione', 'Cosa è attivo su Supabase e cosa manca.'],
@@ -98,6 +99,7 @@ function Shell({ email, demo = false }: { email: string; demo?: boolean }) {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [feedback, setFeedback] = useState<Feedback[]>([])
   const [push, setPush] = useState<PushSub[]>([])
+  const [profiles, setProfiles] = useState<ProfileStats | null>(null)
   const [error, setError] = useState('')
 
   const setPanel = (p: Panel) => {
@@ -121,11 +123,12 @@ function Shell({ email, demo = false }: { email: string; demo?: boolean }) {
   const load = useCallback(async () => {
     setError('')
     if (demo) {
-      setStats(sampleStats(days)); setDevices(sampleDevices); setAccounts(sampleAccounts); setFeedback(sampleFeedback); setPush(samplePush); return
+      setStats(sampleStats(days)); setDevices(sampleDevices); setAccounts(sampleAccounts); setFeedback(sampleFeedback); setPush(samplePush); setProfiles(sampleProfiles); return
     }
     try {
-      const [st, dv, ac, fb, pu] = await Promise.all([loadStats(days), loadDevices(), loadAccounts(), loadFeedback(), loadPush()])
-      setStats(st); setDevices(dv); setAccounts(ac); setFeedback(fb); setPush(pu)
+      const [st, dv, ac, fb, pu, pr] = await Promise.all([loadStats(days), loadDevices(), loadAccounts(), loadFeedback(), loadPush(),
+        loadProfileStats().catch(() => null)])   // null se lo script dei profili non è ancora stato eseguito
+      setStats(st); setDevices(dv); setAccounts(ac); setFeedback(fb); setPush(pu); setProfiles(pr)
     } catch (e) { setError((e as Error).message) }
   }, [days, demo])
   useEffect(() => {
@@ -147,7 +150,7 @@ function Shell({ email, demo = false }: { email: string; demo?: boolean }) {
               <p className="az-nav-group-label">{g.group}</p>
               {g.items.map(([id, text]) => (
                 <button key={id} className={`az-nav-item${panel === id ? ' is-active' : ''}`} onClick={() => setPanel(id)}>
-                  {text}{id === 'configurazione' && setup && (!setup.admin || setup.fn !== 'ok') && <span className="az-dot" aria-label="da completare" />}
+                  {text}{id === 'configurazione' && setup && (!setup.admin || !setup.profiles || setup.fn !== 'ok') && <span className="az-dot" aria-label="da completare" />}
                 </button>
               ))}
             </div>
@@ -173,6 +176,8 @@ function Shell({ email, demo = false }: { email: string; demo?: boolean }) {
         {setup?.admin && panel === 'dashboard' && stats && <DashboardPanel stats={stats} days={days} setDays={setDays} />}
         {setup?.admin && panel === 'dispositivi' && <DevicesPanel rows={devices} />}
         {setup?.admin && panel === 'account' && <AccountsPanel rows={accounts} />}
+        {setup?.admin && panel === 'profili' && (profiles ? <ProfilesPanel p={profiles} />
+          : <p className="az-msg error">Esegui lo script dei profili (sezione Configurazione, passo 1).</p>)}
         {setup?.admin && panel === 'feedback' && <FeedbackPanel rows={feedback} />}
         {setup?.admin && panel === 'notifiche' && <PushPanel rows={push} setup={setup} onSend={async (t, b) => {
           if (demo) return 'Anteprima: nessuna notifica inviata.'
