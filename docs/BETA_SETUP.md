@@ -57,4 +57,5 @@ Indipendentemente da questo, l'app stessa mostra il riquadro "Come ti trovi?" og
   `supabase/templates/` (o dai pulsanti "Copia" in Area amministratore → Configurazione). Il testo cambia lingua da solo.
 - Le email contengono un codice di 6 cifre (Email OTP Length = 6): si scrive nell'app installata, senza passare dal browser.
 - Il servizio email gratuito di Supabase consegna solo agli indirizzi del team. Per gli amici serve un SMTP (Authentication →
-  SMTP Settings): senza dominio va bene Brevo (gratis), con mittente "Quadriamo".
+  SMTP Settings). Senza dominio: casella Gmail dedicata con "password per le app" (smtp.gmail.com, porta 587), mittente
+  "Quadriamo". Con il dominio: Resend (smtp.resend.com, porta 465, utente "resend", password = chiave API).

@@ -333,9 +333,10 @@ export function SetupPanel({ setup, email, onRecheck }: { setup: Setup; email: s
             nell'app installata, senza passare dal browser.</p>
           <p><b>Importante:</b> il servizio email gratuito di Supabase consegna solo agli indirizzi del tuo team (per questo a te arriva) e poche
             email all'ora. Perché arrivino anche agli amici, collega un servizio SMTP in
-            <a href={`${dash}/auth/smtp`} target="_blank" rel="noreferrer">Authentication → SMTP Settings</a>. Senza dominio va bene <b>Brevo</b>
-            (gratis, 300 email al giorno): registri la tua email come mittente, copi host, porta, utente e chiave SMTP, e come nome del mittente
-            scrivi <b>Quadriamo</b> (così non compare più "Supabase Auth"). Finché non lo fai, puoi disattivare "Confirm email" per far entrare
+            <a href={`${dash}/auth/smtp`} target="_blank" rel="noreferrer">Authentication → SMTP Settings</a>. Senza dominio va bene una <b>casella Gmail
+            dedicata</b> (es. quadriamo.app@gmail.com) con una "password per le app": host <code>smtp.gmail.com</code>, porta <code>587</code>,
+            utente l'indirizzo Gmail, password quella per le app, nome del mittente <b>Quadriamo</b> (così non compare più "Supabase Auth").
+            Con il dominio passerai a Resend (<code>smtp.resend.com</code>, porta 465, utente <code>resend</code>, password la chiave API). Finché non lo fai, puoi disattivare "Confirm email" per far entrare
             gli amici senza conferma.</p>
           <p>In <a href={`${dash}/auth/url-configuration`} target="_blank" rel="noreferrer">URL Configuration</a>: Site URL
             <code>{SITE}app/</code> e tra i Redirect URLs <code>{SITE}**</code>.</p>
