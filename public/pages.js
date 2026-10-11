@@ -30,3 +30,20 @@
 ;(function () {
   ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) { document.addEventListener(ev, function (e) { e.preventDefault() }, { passive: false }) })
 })()
+
+// Pagina "Scarica": un pannello per dispositivo (iPhone, Android, Mac, Windows), scelto da solo e cambiabile a mano
+;(function () {
+  if (!document.querySelector('.dev-switch')) return
+  var ua = navigator.userAgent
+  var guess = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'iphone'
+    : /Android/.test(ua) ? 'android' : /Windows/.test(ua) ? 'windows' : 'mac'
+  var fromHash = (location.hash || '').slice(1)
+  function pick(dev) {
+    document.querySelectorAll('.dev-switch button').forEach(function (b) { b.setAttribute('aria-selected', String(b.getAttribute('data-dev') === dev)) })
+    document.querySelectorAll('.dev-panel').forEach(function (p) { p.classList.toggle('on', p.getAttribute('data-dev') === dev) })
+  }
+  pick(['iphone', 'android', 'mac', 'windows'].indexOf(fromHash) >= 0 ? fromHash : guess)
+  document.querySelectorAll('.dev-switch button').forEach(function (b) {
+    b.addEventListener('click', function () { var d = b.getAttribute('data-dev'); pick(d); history.replaceState(null, '', '#' + d) })
+  })
+})()

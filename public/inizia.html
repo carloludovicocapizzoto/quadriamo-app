@@ -3,32 +3,39 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <title>Come iniziare — Quadriamo</title>
-  <meta name="description" content="Come scaricare Quadriamo sul telefono e creare il tuo account, in 5 passaggi.">
+  <title>Scarica Quadriamo</title>
+  <meta name="description" content="Scarica Quadriamo su iPhone, Android, Mac o Windows: i passaggi per ogni dispositivo.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="pages.css">
   <style>
-    .journey { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 14px; }
+    .pick { font-weight: 700; margin: 22px 0 8px; }
+    .dev-switch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 6px; }
+    .dev-switch button { font: inherit; font-weight: 700; color: var(--text); background: none; border: 0; border-radius: 12px; min-height: 52px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .2s, color .2s; }
+    .dev-switch button span { font-size: 20px; }
+    .dev-switch button[aria-selected="true"] { background: var(--accent); color: #fff; }
+    @media (max-width: 520px) { .dev-switch { grid-template-columns: repeat(2, 1fr); } }
+    .dev-panel { display: none; animation: fade .35s ease both; }
+    .dev-panel.on { display: block; }
+    @keyframes fade { from { opacity: 0; transform: translateY(8px); } }
+    .dev-panel h2 { margin: 26px 0 0; }
+    .journey { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 14px; }
     .step { display: grid; grid-template-columns: 48px 1fr; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin: 0; }
     .step .n { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center;
       font-family: "DM Serif Display", Georgia, serif; font-size: 24px; }
-    .step h2 { margin: 6px 0 8px; }
+    .step h3 { margin: 8px 0 6px; font-size: 20px; }
     .step p { margin: 6px 0; }
+    .step ol { margin: 4px 0; }
     .step > div { min-width: 0; }
     .qr-big { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
     .qr-big img { width: 220px; height: 220px; background: #fff; border-radius: 16px; padding: 10px; border: 1px solid var(--line); }
     .qr-big p { flex: 1; min-width: 180px; font-size: 18px; }
-    .os { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .os .card { margin: 0; }
-    .os h3 { margin: 0 0 4px; }
-    .ok { color: #15803D; font-weight: 700; }
     .phone-only { display: none; }
-    .final { text-align: center; }
-    .phone-only .btn { margin-top: 4px; }
     @media (max-width: 760px), (hover: none) and (pointer: coarse) { .desk-only { display: none; } .phone-only { display: block; } }
-    @media (max-width: 600px) { .os { grid-template-columns: 1fr; } .step { grid-template-columns: 1fr; gap: 6px; padding: 16px; } .step .n { width: 40px; height: 40px; font-size: 20px; } }
-    .final { margin: 32px 0 0; }
+    @media (max-width: 600px) { .step { grid-template-columns: 1fr; gap: 6px; padding: 16px; } .step .n { width: 40px; height: 40px; font-size: 20px; } }
     .btn.big { min-height: 56px; font-size: 18px; padding: 0 28px; }
+    .guide-link { margin-top: 24px; }
+    @media (prefers-reduced-motion: reduce) { .dev-panel { animation: none; } }
   </style>
 </head>
 <body>
@@ -42,83 +49,202 @@
 
   <section data-lang="it">
     <p class="small"><a href="./?lang=it">← Torna al sito</a></p>
-    <h1>Inizia in 5 passaggi</h1>
-    <p class="muted">Quadriamo si usa dal telefono come una normale app, ma si installa dal browser: niente App Store. Ecco cosa fare, in ordine.</p>
-    <ol class="journey">
-      <li class="step"><span class="n">1</span><div><h2>Aprila sul telefono</h2>
-        <div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Inquadra il codice con la fotocamera del telefono: si apre Quadriamo con il tutorial per aggiungerla alla Home.</p></div>
-        <div class="phone-only"><p>Sei sul telefono: tocca il pulsante. Si apre Quadriamo con le istruzioni per metterla nella schermata Home.</p><p><a class="btn big" href="app/">Apri Quadriamo →</a></p></div></div></li>
-      <li class="step"><span class="n">2</span><div><h2>Aggiungila alla schermata Home</h2>
-        <div class="os"><div class="card"><h3>iPhone</h3><p>Con <b>Safari</b>: tocca <b>Condividi</b> <kbd>⬆︎</kbd> (se non lo vedi, prima <kbd>⋯</kbd> in basso a destra) → <b>Aggiungi alla schermata Home</b> → <b>Aggiungi</b>.</p></div><div class="card"><h3>Android</h3><p>Con <b>Chrome</b>: tocca <kbd>⋮</kbd> in alto a destra → <b>Installa app</b> → <b>Installa</b>.</p></div></div>
-        <p class="small muted">Da qui in poi apri Quadriamo dalla sua icona: si apre a schermo intero e funziona anche offline. <a href="install.html?lang=it">Guida completa con le immagini dei passaggi</a></p></div></li>
-      <li class="step"><span class="n">3</span><div><h2>Crea il tuo account</h2><p>Apri Quadriamo dall’icona sulla Home: per prima cosa ti chiede di <b>creare il tuo account</b> (nome e cognome, email, password) oppure di accedere.</p><p class="small muted">Con l’account i tuoi dati sono al sicuro sui server nell’UE e li ritrovi su telefono e computer. Puoi anche usare l’app senza account: i dati restano solo sul telefono.</p></div></li>
-      <li class="step"><span class="n">4</span><div><h2>Imposta il tuo budget</h2><p>Subito dopo la registrazione l’app ti guida passo passo: <b>valuta e giorno dello stipendio</b>, la tua <b>regola</b> (consigliata 55-20-15-10), <b>categorie</b>, <b>pagamenti ricorrenti</b>, <b>regole automatiche</b>, <b>cambi valuta</b> e, se vuoi, l’import di un backup.</p><p class="small muted">Se ti va, completa il profilo (facoltativo): entrate, obiettivi, carte che usi, investimenti e come vuoi dividere i soldi.</p></div></li>
-      <li class="step"><span class="n">5</span><div><h2>Usala ogni giorno</h2><p>Tocca <b>+</b> per registrare una spesa in 5 secondi, oppure importa l’estratto conto. In alto vedi sempre <b>quanto puoi ancora spendere oggi</b>.</p></div></li>
-    </ol>
-    <div class="final">
-      <p class="phone-only"><a class="btn big" href="app/">Apri Quadriamo →</a></p>
-      <p class="desk-only muted">Sei al computer? Inquadra con il telefono il codice del passaggio 1.</p>
+    <h1>Scarica Quadriamo</h1>
+    <p class="muted">Scegli il dispositivo: ognuno ha i suoi passaggi. Quadriamo si installa dal browser, senza App Store: in un minuto hai l’icona e l’app a schermo intero.</p>
+    <p class="pick">Su che dispositivo la vuoi?</p>
+    <div class="dev-switch" role="tablist"><button type="button" role="tab" data-dev="iphone"><span aria-hidden="true">📱</span>iPhone</button><button type="button" role="tab" data-dev="android"><span aria-hidden="true">🤖</span>Android</button><button type="button" role="tab" data-dev="mac"><span aria-hidden="true">💻</span>Mac</button><button type="button" role="tab" data-dev="windows"><span aria-hidden="true">🪟</span>Windows</button></div>
+    
+    <div class="dev-panel" data-dev="iphone" role="tabpanel">
+      <h2>iPhone e iPad</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Aprila sul telefono</h3><div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Inquadra il codice con la fotocamera del telefono: si apre Quadriamo.</p></div>
+          <div class="phone-only"><p>Sei già sul telefono: tocca il pulsante.</p><p><a class="btn big" href="app/">Apri Quadriamo →</a></p></div></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Mettila nella schermata Home</h3><p>Con <b>Safari</b>:</p><ol><li>tocca <b>Condividi</b> <kbd>⬆︎</kbd> (se non lo vedi, prima <kbd>⋯</kbd> in basso a destra);</li><li>scorri e tocca <b>Aggiungi alla schermata Home</b>;</li><li>tocca <b>Aggiungi</b>.</li></ol><p class="small muted">Con Chrome su iPhone: <kbd>⬆︎</kbd> in alto a destra → <b>Aggiungi alla schermata Home</b>.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Crea il tuo account</h3><p>Apri Quadriamo dalla sua icona e tocca <b>Crea account</b>: nome e cognome, email, password. Ti arriva un <b>codice di 6 cifre</b> via email: scrivilo nell’app e l’account è attivo. Puoi anche usarla senza account: i dati restano solo su quel dispositivo.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Imposta il budget</h3><p>L’app ti guida passo passo: valuta, giorno dello stipendio, la tua regola (consigliata 55-20-15-10), categorie e pagamenti ricorrenti. Poi registri la prima spesa con <b>+</b>.</p></div></li>
+      </ol>
     </div>
+    <div class="dev-panel" data-dev="android" role="tabpanel">
+      <h2>Android</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Aprila sul telefono</h3><div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Inquadra il codice con la fotocamera del telefono: si apre Quadriamo.</p></div>
+          <div class="phone-only"><p>Sei già sul telefono: tocca il pulsante.</p><p><a class="btn big" href="app/">Apri Quadriamo →</a></p></div></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Installala</h3><p>Con <b>Chrome</b>: tocca <kbd>⋮</kbd> in alto a destra → <b>Installa app</b> → <b>Installa</b>.</p><p>Con <b>Samsung Internet</b>: tocca <kbd>≡</kbd> in basso a destra → <b>Aggiungi pagina a</b> → <b>Installa come applicazione Web</b>.</p><p class="small muted">Con altri browser cerca nel menu “Installa” o “Aggiungi a schermata Home”.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Crea il tuo account</h3><p>Apri Quadriamo dalla sua icona e tocca <b>Crea account</b>: nome e cognome, email, password. Ti arriva un <b>codice di 6 cifre</b> via email: scrivilo nell’app e l’account è attivo. Puoi anche usarla senza account: i dati restano solo su quel dispositivo.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Imposta il budget</h3><p>L’app ti guida passo passo: valuta, giorno dello stipendio, la tua regola (consigliata 55-20-15-10), categorie e pagamenti ricorrenti. Poi registri la prima spesa con <b>+</b>.</p></div></li>
+      </ol>
+    </div>
+    <div class="dev-panel" data-dev="mac" role="tabpanel">
+      <h2>Mac</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Aprila sul Mac</h3><div class="desk-only"><p><a class="btn big" href="app/">Apri Quadriamo →</a></p><p class="small muted">Si apre nel browser con le istruzioni per installarla.</p></div>
+          <p class="phone-only muted">Questi passaggi sono per il computer: apri questa pagina dal tuo Mac.</p></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Installala come app</h3><p>Con <b>Safari</b>: menu <b>File</b> → <b>Aggiungi al Dock…</b> → <b>Aggiungi</b>.</p><p>Con <b>Chrome</b>: clicca l’icona di installazione a destra nella barra degli indirizzi → <b>Installa</b>.</p><p class="small muted">Quadriamo si apre nella sua finestra: la trovi nel Dock e nel Launchpad, come le altre app.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Crea il tuo account</h3><p>Apri Quadriamo dalla sua icona e tocca <b>Crea account</b>: nome e cognome, email, password. Ti arriva un <b>codice di 6 cifre</b> via email: scrivilo nell’app e l’account è attivo. Puoi anche usarla senza account: i dati restano solo su quel dispositivo.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Imposta il budget</h3><p>L’app ti guida passo passo: valuta, giorno dello stipendio, la tua regola (consigliata 55-20-15-10), categorie e pagamenti ricorrenti. Poi registri la prima spesa con <b>+</b>.</p></div></li>
+      </ol>
+    </div>
+    <div class="dev-panel" data-dev="windows" role="tabpanel">
+      <h2>Windows</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Aprila sul PC</h3><div class="desk-only"><p><a class="btn big" href="app/">Apri Quadriamo →</a></p><p class="small muted">Si apre nel browser con le istruzioni per installarla.</p></div>
+          <p class="phone-only muted">Questi passaggi sono per il computer: apri questa pagina dal tuo PC.</p></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Installala come app</h3><p>Con <b>Edge</b>: menu <kbd>⋯</kbd> → <b>App</b> → <b>Installa questo sito come app</b> → <b>Installa</b>.</p><p>Con <b>Chrome</b>: clicca l’icona di installazione a destra nella barra degli indirizzi → <b>Installa</b>.</p><p class="small muted">Quadriamo si apre nella sua finestra e compare nel menu Start: puoi fissarla sulla barra delle applicazioni.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Crea il tuo account</h3><p>Apri Quadriamo dalla sua icona e tocca <b>Crea account</b>: nome e cognome, email, password. Ti arriva un <b>codice di 6 cifre</b> via email: scrivilo nell’app e l’account è attivo. Puoi anche usarla senza account: i dati restano solo su quel dispositivo.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Imposta il budget</h3><p>L’app ti guida passo passo: valuta, giorno dello stipendio, la tua regola (consigliata 55-20-15-10), categorie e pagamenti ricorrenti. Poi registri la prima spesa con <b>+</b>.</p></div></li>
+      </ol>
+    </div>
+    <p class="small muted guide-link"><a href="install.html?lang=it">Guida completa</a></p>
   </section>
+
   <section data-lang="en">
     <p class="small"><a href="./?lang=en">← Back to the site</a></p>
-    <h1>Get started in 5 steps</h1>
-    <p class="muted">You use Quadriamo on your phone like any app, but you install it from the browser: no App Store. Here is what to do, in order.</p>
-    <ol class="journey">
-      <li class="step"><span class="n">1</span><div><h2>Open it on your phone</h2>
-        <div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Scan the code with your phone camera: Quadriamo opens with the tutorial to add it to your Home Screen.</p></div>
-        <div class="phone-only"><p>You’re on your phone: tap the button. Quadriamo opens with the steps to put it on your Home Screen.</p><p><a class="btn big" href="app/">Open Quadriamo →</a></p></div></div></li>
-      <li class="step"><span class="n">2</span><div><h2>Add it to your Home Screen</h2>
-        <div class="os"><div class="card"><h3>iPhone</h3><p>In <b>Safari</b>: tap <b>Share</b> <kbd>⬆︎</kbd> (if you can’t see it, first <kbd>⋯</kbd> at the bottom right) → <b>Add to Home Screen</b> → <b>Add</b>.</p></div><div class="card"><h3>Android</h3><p>In <b>Chrome</b>: tap <kbd>⋮</kbd> at the top right → <b>Install app</b> → <b>Install</b>.</p></div></div>
-        <p class="small muted">From now on open Quadriamo from its icon: it opens full screen and works offline too. <a href="install.html?lang=en">Full guide to every step</a></p></div></li>
-      <li class="step"><span class="n">3</span><div><h2>Create your account</h2><p>Open Quadriamo from its Home Screen icon: first it asks you to <b>create your account</b> (first and last name, email, password) or to sign in.</p><p class="small muted">With an account your data is safe on EU servers and you find it on phone and computer. You can also use the app without an account: your data then stays on your phone only.</p></div></li>
-      <li class="step"><span class="n">4</span><div><h2>Set up your budget</h2><p>Right after signing up the app guides you step by step: <b>currency and payday</b>, your <b>rule</b> (suggested 55-20-15-10), <b>categories</b>, <b>recurring payments</b>, <b>automatic rules</b>, <b>exchange rates</b> and, if you like, importing a backup.</p><p class="small muted">If you like, complete your profile (optional): income, goals, the cards you use, investments and how you want to split your money.</p></div></li>
-      <li class="step"><span class="n">5</span><div><h2>Use it every day</h2><p>Tap <b>+</b> to log an expense in 5 seconds, or import your bank statement. At the top you always see <b>how much you can still spend today</b>.</p></div></li>
-    </ol>
-    <div class="final">
-      <p class="phone-only"><a class="btn big" href="app/">Open Quadriamo →</a></p>
-      <p class="desk-only muted">On a computer? Scan the code in step 1 with your phone.</p>
+    <h1>Download Quadriamo</h1>
+    <p class="muted">Pick your device: each has its own steps. Quadriamo installs from the browser, no App Store: in a minute you have the icon and the full-screen app.</p>
+    <p class="pick">Which device do you want it on?</p>
+    <div class="dev-switch" role="tablist"><button type="button" role="tab" data-dev="iphone"><span aria-hidden="true">📱</span>iPhone</button><button type="button" role="tab" data-dev="android"><span aria-hidden="true">🤖</span>Android</button><button type="button" role="tab" data-dev="mac"><span aria-hidden="true">💻</span>Mac</button><button type="button" role="tab" data-dev="windows"><span aria-hidden="true">🪟</span>Windows</button></div>
+    
+    <div class="dev-panel" data-dev="iphone" role="tabpanel">
+      <h2>iPhone and iPad</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Open it on your phone</h3><div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Scan the code with your phone camera: Quadriamo opens.</p></div>
+          <div class="phone-only"><p>You’re already on your phone: tap the button.</p><p><a class="btn big" href="app/">Open Quadriamo →</a></p></div></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Add it to the Home Screen</h3><p>In <b>Safari</b>:</p><ol><li>tap <b>Share</b> <kbd>⬆︎</kbd> (if you can’t see it, first <kbd>⋯</kbd> at the bottom right);</li><li>scroll and tap <b>Add to Home Screen</b>;</li><li>tap <b>Add</b>.</li></ol><p class="small muted">In Chrome on iPhone: <kbd>⬆︎</kbd> at the top right → <b>Add to Home Screen</b>.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Create your account</h3><p>Open Quadriamo from its icon and tap <b>Create account</b>: name, email, password. You get a <b>6-digit code</b> by email: type it in the app and your account is active. You can also use it without an account: your data stays on that device.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Set up your budget</h3><p>The app guides you step by step: currency, payday, your rule (suggested 55-20-15-10), categories and recurring payments. Then log your first expense with <b>+</b>.</p></div></li>
+      </ol>
     </div>
+    <div class="dev-panel" data-dev="android" role="tabpanel">
+      <h2>Android</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Open it on your phone</h3><div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Scan the code with your phone camera: Quadriamo opens.</p></div>
+          <div class="phone-only"><p>You’re already on your phone: tap the button.</p><p><a class="btn big" href="app/">Open Quadriamo →</a></p></div></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Install it</h3><p>In <b>Chrome</b>: tap <kbd>⋮</kbd> at the top right → <b>Install app</b> → <b>Install</b>.</p><p>In <b>Samsung Internet</b>: tap <kbd>≡</kbd> at the bottom right → <b>Add page to</b> → <b>Install as web app</b>.</p><p class="small muted">In other browsers look in the menu for “Install” or “Add to Home screen”.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Create your account</h3><p>Open Quadriamo from its icon and tap <b>Create account</b>: name, email, password. You get a <b>6-digit code</b> by email: type it in the app and your account is active. You can also use it without an account: your data stays on that device.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Set up your budget</h3><p>The app guides you step by step: currency, payday, your rule (suggested 55-20-15-10), categories and recurring payments. Then log your first expense with <b>+</b>.</p></div></li>
+      </ol>
+    </div>
+    <div class="dev-panel" data-dev="mac" role="tabpanel">
+      <h2>Mac</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Open it on your Mac</h3><div class="desk-only"><p><a class="btn big" href="app/">Open Quadriamo →</a></p><p class="small muted">It opens in the browser with the steps to install it.</p></div>
+          <p class="phone-only muted">These steps are for a computer: open this page on your Mac.</p></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Install it as an app</h3><p>In <b>Safari</b>: <b>File</b> menu → <b>Add to Dock…</b> → <b>Add</b>.</p><p>In <b>Chrome</b>: click the install icon on the right of the address bar → <b>Install</b>.</p><p class="small muted">Quadriamo opens in its own window: you’ll find it in the Dock and Launchpad, like other apps.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Create your account</h3><p>Open Quadriamo from its icon and tap <b>Create account</b>: name, email, password. You get a <b>6-digit code</b> by email: type it in the app and your account is active. You can also use it without an account: your data stays on that device.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Set up your budget</h3><p>The app guides you step by step: currency, payday, your rule (suggested 55-20-15-10), categories and recurring payments. Then log your first expense with <b>+</b>.</p></div></li>
+      </ol>
+    </div>
+    <div class="dev-panel" data-dev="windows" role="tabpanel">
+      <h2>Windows</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Open it on your PC</h3><div class="desk-only"><p><a class="btn big" href="app/">Open Quadriamo →</a></p><p class="small muted">It opens in the browser with the steps to install it.</p></div>
+          <p class="phone-only muted">These steps are for a computer: open this page on your PC.</p></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Install it as an app</h3><p>In <b>Edge</b>: <kbd>⋯</kbd> menu → <b>Apps</b> → <b>Install this site as an app</b> → <b>Install</b>.</p><p>In <b>Chrome</b>: click the install icon on the right of the address bar → <b>Install</b>.</p><p class="small muted">Quadriamo opens in its own window and appears in the Start menu: you can pin it to the taskbar.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Create your account</h3><p>Open Quadriamo from its icon and tap <b>Create account</b>: name, email, password. You get a <b>6-digit code</b> by email: type it in the app and your account is active. You can also use it without an account: your data stays on that device.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Set up your budget</h3><p>The app guides you step by step: currency, payday, your rule (suggested 55-20-15-10), categories and recurring payments. Then log your first expense with <b>+</b>.</p></div></li>
+      </ol>
+    </div>
+    <p class="small muted guide-link"><a href="install.html?lang=en">Full guide</a></p>
   </section>
+
   <section data-lang="fr">
     <p class="small"><a href="./?lang=fr">← Retour au site</a></p>
-    <h1>Démarrer en 5 étapes</h1>
-    <p class="muted">Quadriamo s’utilise sur le téléphone comme une application, mais s’installe depuis le navigateur : pas d’App Store. Voici quoi faire, dans l’ordre.</p>
-    <ol class="journey">
-      <li class="step"><span class="n">1</span><div><h2>Ouvrez-la sur votre téléphone</h2>
-        <div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Scannez le code avec l’appareil photo du téléphone : Quadriamo s’ouvre avec le tutoriel pour l’ajouter à l’écran d’accueil.</p></div>
-        <div class="phone-only"><p>Vous êtes sur le téléphone : touchez le bouton. Quadriamo s’ouvre avec les étapes pour l’ajouter à l’écran d’accueil.</p><p><a class="btn big" href="app/">Ouvrir Quadriamo →</a></p></div></div></li>
-      <li class="step"><span class="n">2</span><div><h2>Ajoutez-la à l’écran d’accueil</h2>
-        <div class="os"><div class="card"><h3>iPhone</h3><p>Avec <b>Safari</b> : touchez <b>Partager</b> <kbd>⬆︎</kbd> (sinon d’abord <kbd>⋯</kbd> en bas à droite) → <b>Sur l’écran d’accueil</b> → <b>Ajouter</b>.</p></div><div class="card"><h3>Android</h3><p>Avec <b>Chrome</b> : touchez <kbd>⋮</kbd> en haut à droite → <b>Installer l’application</b> → <b>Installer</b>.</p></div></div>
-        <p class="small muted">Ensuite, ouvrez Quadriamo depuis son icône : plein écran, et fonctionne hors ligne. <a href="install.html?lang=fr">Guide complet de chaque étape</a></p></div></li>
-      <li class="step"><span class="n">3</span><div><h2>Créez votre compte</h2><p>Ouvrez Quadriamo depuis son icône : d’abord, il vous propose de <b>créer votre compte</b> (prénom et nom, e-mail, mot de passe) ou de vous connecter.</p><p class="small muted">Avec un compte, vos données sont en sécurité sur des serveurs dans l’UE et vous les retrouvez sur téléphone et ordinateur. Sans compte, elles restent uniquement sur le téléphone.</p></div></li>
-      <li class="step"><span class="n">4</span><div><h2>Configurez votre budget</h2><p>Juste après l’inscription, l’app vous guide étape par étape : <b>devise et jour de paie</b>, votre <b>règle</b> (conseillée 55-20-15-10), <b>catégories</b>, <b>paiements récurrents</b>, <b>règles automatiques</b>, <b>taux de change</b> et, si vous voulez, l’import d’une sauvegarde.</p><p class="small muted">Si vous voulez, complétez votre profil (facultatif) : revenus, objectifs, cartes utilisées, investissements et répartition de votre argent.</p></div></li>
-      <li class="step"><span class="n">5</span><div><h2>Utilisez-la chaque jour</h2><p>Touchez <b>+</b> pour noter une dépense en 5 secondes, ou importez votre relevé. En haut, vous voyez toujours <b>combien vous pouvez encore dépenser aujourd’hui</b>.</p></div></li>
-    </ol>
-    <div class="final">
-      <p class="phone-only"><a class="btn big" href="app/">Ouvrir Quadriamo →</a></p>
-      <p class="desk-only muted">Sur ordinateur ? Scannez le code de l’étape 1 avec le téléphone.</p>
+    <h1>Télécharger Quadriamo</h1>
+    <p class="muted">Choisissez l’appareil : chacun a ses étapes. Quadriamo s’installe depuis le navigateur, sans App Store : en une minute vous avez l’icône et l’app en plein écran.</p>
+    <p class="pick">Sur quel appareil la voulez-vous ?</p>
+    <div class="dev-switch" role="tablist"><button type="button" role="tab" data-dev="iphone"><span aria-hidden="true">📱</span>iPhone</button><button type="button" role="tab" data-dev="android"><span aria-hidden="true">🤖</span>Android</button><button type="button" role="tab" data-dev="mac"><span aria-hidden="true">💻</span>Mac</button><button type="button" role="tab" data-dev="windows"><span aria-hidden="true">🪟</span>Windows</button></div>
+    
+    <div class="dev-panel" data-dev="iphone" role="tabpanel">
+      <h2>iPhone et iPad</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Ouvrez-la sur le téléphone</h3><div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Scannez le code avec l’appareil photo du téléphone : Quadriamo s’ouvre.</p></div>
+          <div class="phone-only"><p>Vous êtes déjà sur le téléphone : touchez le bouton.</p><p><a class="btn big" href="app/">Ouvrir Quadriamo →</a></p></div></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Ajoutez-la à l’écran d’accueil</h3><p>Avec <b>Safari</b> :</p><ol><li>touchez <b>Partager</b> <kbd>⬆︎</kbd> (sinon d’abord <kbd>⋯</kbd> en bas à droite) ;</li><li>faites défiler et touchez <b>Sur l’écran d’accueil</b> ;</li><li>touchez <b>Ajouter</b>.</li></ol><p class="small muted">Avec Chrome sur iPhone : <kbd>⬆︎</kbd> en haut à droite → <b>Sur l’écran d’accueil</b>.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Créez votre compte</h3><p>Ouvrez Quadriamo depuis son icône et touchez <b>Créer un compte</b> : nom, e-mail, mot de passe. Vous recevez un <b>code à 6 chiffres</b> par e-mail : saisissez-le dans l’app et le compte est actif. Vous pouvez aussi l’utiliser sans compte : les données restent sur cet appareil.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Configurez votre budget</h3><p>L’app vous guide pas à pas : devise, jour de paie, votre règle (conseillée 55-20-15-10), catégories et paiements récurrents. Puis notez votre première dépense avec <b>+</b>.</p></div></li>
+      </ol>
     </div>
+    <div class="dev-panel" data-dev="android" role="tabpanel">
+      <h2>Android</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Ouvrez-la sur le téléphone</h3><div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Scannez le code avec l’appareil photo du téléphone : Quadriamo s’ouvre.</p></div>
+          <div class="phone-only"><p>Vous êtes déjà sur le téléphone : touchez le bouton.</p><p><a class="btn big" href="app/">Ouvrir Quadriamo →</a></p></div></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Installez-la</h3><p>Avec <b>Chrome</b> : touchez <kbd>⋮</kbd> en haut à droite → <b>Installer l’application</b> → <b>Installer</b>.</p><p>Avec <b>Samsung Internet</b> : touchez <kbd>≡</kbd> en bas à droite → <b>Ajouter la page à</b> → <b>Installer comme application Web</b>.</p><p class="small muted">Avec d’autres navigateurs, cherchez « Installer » ou « Ajouter à l’écran d’accueil » dans le menu.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Créez votre compte</h3><p>Ouvrez Quadriamo depuis son icône et touchez <b>Créer un compte</b> : nom, e-mail, mot de passe. Vous recevez un <b>code à 6 chiffres</b> par e-mail : saisissez-le dans l’app et le compte est actif. Vous pouvez aussi l’utiliser sans compte : les données restent sur cet appareil.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Configurez votre budget</h3><p>L’app vous guide pas à pas : devise, jour de paie, votre règle (conseillée 55-20-15-10), catégories et paiements récurrents. Puis notez votre première dépense avec <b>+</b>.</p></div></li>
+      </ol>
+    </div>
+    <div class="dev-panel" data-dev="mac" role="tabpanel">
+      <h2>Mac</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Ouvrez-la sur le Mac</h3><div class="desk-only"><p><a class="btn big" href="app/">Ouvrir Quadriamo →</a></p><p class="small muted">Elle s’ouvre dans le navigateur avec les étapes pour l’installer.</p></div>
+          <p class="phone-only muted">Ces étapes sont pour l’ordinateur : ouvrez cette page sur votre Mac.</p></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Installez-la comme une app</h3><p>Avec <b>Safari</b> : menu <b>Fichier</b> → <b>Ajouter au Dock…</b> → <b>Ajouter</b>.</p><p>Avec <b>Chrome</b> : cliquez sur l’icône d’installation à droite de la barre d’adresse → <b>Installer</b>.</p><p class="small muted">Quadriamo s’ouvre dans sa fenêtre : vous la retrouvez dans le Dock et le Launchpad.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Créez votre compte</h3><p>Ouvrez Quadriamo depuis son icône et touchez <b>Créer un compte</b> : nom, e-mail, mot de passe. Vous recevez un <b>code à 6 chiffres</b> par e-mail : saisissez-le dans l’app et le compte est actif. Vous pouvez aussi l’utiliser sans compte : les données restent sur cet appareil.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Configurez votre budget</h3><p>L’app vous guide pas à pas : devise, jour de paie, votre règle (conseillée 55-20-15-10), catégories et paiements récurrents. Puis notez votre première dépense avec <b>+</b>.</p></div></li>
+      </ol>
+    </div>
+    <div class="dev-panel" data-dev="windows" role="tabpanel">
+      <h2>Windows</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Ouvrez-la sur le PC</h3><div class="desk-only"><p><a class="btn big" href="app/">Ouvrir Quadriamo →</a></p><p class="small muted">Elle s’ouvre dans le navigateur avec les étapes pour l’installer.</p></div>
+          <p class="phone-only muted">Ces étapes sont pour l’ordinateur : ouvrez cette page sur votre PC.</p></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Installez-la comme une app</h3><p>Avec <b>Edge</b> : menu <kbd>⋯</kbd> → <b>Applications</b> → <b>Installer ce site en tant qu’application</b> → <b>Installer</b>.</p><p>Avec <b>Chrome</b> : cliquez sur l’icône d’installation à droite de la barre d’adresse → <b>Installer</b>.</p><p class="small muted">Quadriamo s’ouvre dans sa fenêtre et apparaît dans le menu Démarrer : vous pouvez l’épingler à la barre des tâches.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Créez votre compte</h3><p>Ouvrez Quadriamo depuis son icône et touchez <b>Créer un compte</b> : nom, e-mail, mot de passe. Vous recevez un <b>code à 6 chiffres</b> par e-mail : saisissez-le dans l’app et le compte est actif. Vous pouvez aussi l’utiliser sans compte : les données restent sur cet appareil.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Configurez votre budget</h3><p>L’app vous guide pas à pas : devise, jour de paie, votre règle (conseillée 55-20-15-10), catégories et paiements récurrents. Puis notez votre première dépense avec <b>+</b>.</p></div></li>
+      </ol>
+    </div>
+    <p class="small muted guide-link"><a href="install.html?lang=fr">Guide complet</a></p>
   </section>
+
   <section data-lang="es">
     <p class="small"><a href="./?lang=es">← Volver a la web</a></p>
-    <h1>Empieza en 5 pasos</h1>
-    <p class="muted">Quadriamo se usa en el móvil como cualquier app, pero se instala desde el navegador: sin App Store. Esto es lo que tienes que hacer, en orden.</p>
-    <ol class="journey">
-      <li class="step"><span class="n">1</span><div><h2>Ábrela en el móvil</h2>
-        <div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Escanea el código con la cámara del móvil: Quadriamo se abre con el tutorial para añadirla a la pantalla de inicio.</p></div>
-        <div class="phone-only"><p>Estás en el móvil: toca el botón. Quadriamo se abre con los pasos para ponerla en la pantalla de inicio.</p><p><a class="btn big" href="app/">Abrir Quadriamo →</a></p></div></div></li>
-      <li class="step"><span class="n">2</span><div><h2>Añádela a la pantalla de inicio</h2>
-        <div class="os"><div class="card"><h3>iPhone</h3><p>Con <b>Safari</b>: toca <b>Compartir</b> <kbd>⬆︎</kbd> (si no lo ves, primero <kbd>⋯</kbd> abajo a la derecha) → <b>Añadir a pantalla de inicio</b> → <b>Añadir</b>.</p></div><div class="card"><h3>Android</h3><p>Con <b>Chrome</b>: toca <kbd>⋮</kbd> arriba a la derecha → <b>Instalar aplicación</b> → <b>Instalar</b>.</p></div></div>
-        <p class="small muted">A partir de ahora abre Quadriamo desde su icono: a pantalla completa y también sin conexión. <a href="install.html?lang=es">Guía completa de cada paso</a></p></div></li>
-      <li class="step"><span class="n">3</span><div><h2>Crea tu cuenta</h2><p>Abre Quadriamo desde su icono: lo primero, te pide <b>crear tu cuenta</b> (nombre y apellidos, correo, contraseña) o entrar.</p><p class="small muted">Con la cuenta tus datos están seguros en servidores de la UE y los tienes en el móvil y el ordenador. También puedes usar la app sin cuenta: los datos se quedan solo en el móvil.</p></div></li>
-      <li class="step"><span class="n">4</span><div><h2>Configura tu presupuesto</h2><p>Justo después de registrarte la app te guía paso a paso: <b>moneda y día de cobro</b>, tu <b>regla</b> (recomendada 55-20-15-10), <b>categorías</b>, <b>pagos recurrentes</b>, <b>reglas automáticas</b>, <b>tipos de cambio</b> y, si quieres, importar una copia.</p><p class="small muted">Si quieres, completa tu perfil (opcional): ingresos, objetivos, tarjetas que usas, inversiones y cómo repartir tu dinero.</p></div></li>
-      <li class="step"><span class="n">5</span><div><h2>Úsala cada día</h2><p>Toca <b>+</b> para apuntar un gasto en 5 segundos, o importa el extracto. Arriba ves siempre <b>cuánto puedes gastar todavía hoy</b>.</p></div></li>
-    </ol>
-    <div class="final">
-      <p class="phone-only"><a class="btn big" href="app/">Abrir Quadriamo →</a></p>
-      <p class="desk-only muted">¿En el ordenador? Escanea con el móvil el código del paso 1.</p>
+    <h1>Descarga Quadriamo</h1>
+    <p class="muted">Elige el dispositivo: cada uno tiene sus pasos. Quadriamo se instala desde el navegador, sin App Store: en un minuto tienes el icono y la app a pantalla completa.</p>
+    <p class="pick">¿En qué dispositivo la quieres?</p>
+    <div class="dev-switch" role="tablist"><button type="button" role="tab" data-dev="iphone"><span aria-hidden="true">📱</span>iPhone</button><button type="button" role="tab" data-dev="android"><span aria-hidden="true">🤖</span>Android</button><button type="button" role="tab" data-dev="mac"><span aria-hidden="true">💻</span>Mac</button><button type="button" role="tab" data-dev="windows"><span aria-hidden="true">🪟</span>Windows</button></div>
+    
+    <div class="dev-panel" data-dev="iphone" role="tabpanel">
+      <h2>iPhone y iPad</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Ábrela en el móvil</h3><div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Escanea el código con la cámara del móvil: se abre Quadriamo.</p></div>
+          <div class="phone-only"><p>Ya estás en el móvil: toca el botón.</p><p><a class="btn big" href="app/">Abrir Quadriamo →</a></p></div></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Añádela a la pantalla de inicio</h3><p>Con <b>Safari</b>:</p><ol><li>toca <b>Compartir</b> <kbd>⬆︎</kbd> (si no lo ves, primero <kbd>⋯</kbd> abajo a la derecha);</li><li>desliza y toca <b>Añadir a pantalla de inicio</b>;</li><li>toca <b>Añadir</b>.</li></ol><p class="small muted">Con Chrome en iPhone: <kbd>⬆︎</kbd> arriba a la derecha → <b>Añadir a pantalla de inicio</b>.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Crea tu cuenta</h3><p>Abre Quadriamo desde su icono y toca <b>Crear cuenta</b>: nombre, correo, contraseña. Te llega un <b>código de 6 cifras</b> por correo: escríbelo en la app y la cuenta queda activa. También puedes usarla sin cuenta: los datos se quedan en ese dispositivo.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Configura tu presupuesto</h3><p>La app te guía paso a paso: moneda, día de cobro, tu regla (recomendada 55-20-15-10), categorías y pagos recurrentes. Luego apuntas tu primer gasto con <b>+</b>.</p></div></li>
+      </ol>
     </div>
+    <div class="dev-panel" data-dev="android" role="tabpanel">
+      <h2>Android</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Ábrela en el móvil</h3><div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Escanea el código con la cámara del móvil: se abre Quadriamo.</p></div>
+          <div class="phone-only"><p>Ya estás en el móvil: toca el botón.</p><p><a class="btn big" href="app/">Abrir Quadriamo →</a></p></div></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Instálala</h3><p>Con <b>Chrome</b>: toca <kbd>⋮</kbd> arriba a la derecha → <b>Instalar aplicación</b> → <b>Instalar</b>.</p><p>Con <b>Samsung Internet</b>: toca <kbd>≡</kbd> abajo a la derecha → <b>Añadir página a</b> → <b>Instalar como aplicación web</b>.</p><p class="small muted">Con otros navegadores busca en el menú “Instalar” o “Añadir a pantalla de inicio”.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Crea tu cuenta</h3><p>Abre Quadriamo desde su icono y toca <b>Crear cuenta</b>: nombre, correo, contraseña. Te llega un <b>código de 6 cifras</b> por correo: escríbelo en la app y la cuenta queda activa. También puedes usarla sin cuenta: los datos se quedan en ese dispositivo.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Configura tu presupuesto</h3><p>La app te guía paso a paso: moneda, día de cobro, tu regla (recomendada 55-20-15-10), categorías y pagos recurrentes. Luego apuntas tu primer gasto con <b>+</b>.</p></div></li>
+      </ol>
+    </div>
+    <div class="dev-panel" data-dev="mac" role="tabpanel">
+      <h2>Mac</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Ábrela en el Mac</h3><div class="desk-only"><p><a class="btn big" href="app/">Abrir Quadriamo →</a></p><p class="small muted">Se abre en el navegador con los pasos para instalarla.</p></div>
+          <p class="phone-only muted">Estos pasos son para el ordenador: abre esta página desde tu Mac.</p></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Instálala como app</h3><p>Con <b>Safari</b>: menú <b>Archivo</b> → <b>Añadir al Dock…</b> → <b>Añadir</b>.</p><p>Con <b>Chrome</b>: haz clic en el icono de instalación a la derecha de la barra de direcciones → <b>Instalar</b>.</p><p class="small muted">Quadriamo se abre en su ventana: la encuentras en el Dock y en el Launchpad.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Crea tu cuenta</h3><p>Abre Quadriamo desde su icono y toca <b>Crear cuenta</b>: nombre, correo, contraseña. Te llega un <b>código de 6 cifras</b> por correo: escríbelo en la app y la cuenta queda activa. También puedes usarla sin cuenta: los datos se quedan en ese dispositivo.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Configura tu presupuesto</h3><p>La app te guía paso a paso: moneda, día de cobro, tu regla (recomendada 55-20-15-10), categorías y pagos recurrentes. Luego apuntas tu primer gasto con <b>+</b>.</p></div></li>
+      </ol>
+    </div>
+    <div class="dev-panel" data-dev="windows" role="tabpanel">
+      <h2>Windows</h2>
+      <ol class="journey">
+        <li class="step"><span class="n">1</span><div><h3>Ábrela en el PC</h3><div class="desk-only"><p><a class="btn big" href="app/">Abrir Quadriamo →</a></p><p class="small muted">Se abre en el navegador con los pasos para instalarla.</p></div>
+          <p class="phone-only muted">Estos pasos son para el ordenador: abre esta página desde tu PC.</p></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Instálala como app</h3><p>Con <b>Edge</b>: menú <kbd>⋯</kbd> → <b>Aplicaciones</b> → <b>Instalar este sitio como una aplicación</b> → <b>Instalar</b>.</p><p>Con <b>Chrome</b>: haz clic en el icono de instalación a la derecha de la barra de direcciones → <b>Instalar</b>.</p><p class="small muted">Quadriamo se abre en su ventana y aparece en el menú Inicio: puedes anclarla a la barra de tareas.</p></div></li>
+        <li class="step"><span class="n">3</span><div><h3>Crea tu cuenta</h3><p>Abre Quadriamo desde su icono y toca <b>Crear cuenta</b>: nombre, correo, contraseña. Te llega un <b>código de 6 cifras</b> por correo: escríbelo en la app y la cuenta queda activa. También puedes usarla sin cuenta: los datos se quedan en ese dispositivo.</p></div></li>
+        <li class="step"><span class="n">4</span><div><h3>Configura tu presupuesto</h3><p>La app te guía paso a paso: moneda, día de cobro, tu regla (recomendada 55-20-15-10), categorías y pagos recurrentes. Luego apuntas tu primer gasto con <b>+</b>.</p></div></li>
+      </ol>
+    </div>
+    <p class="small muted guide-link"><a href="install.html?lang=es">Guía completa</a></p>
   </section>
 
   <footer><a href="privacy.html">Privacy</a> · <a href="terms.html">Termini / Terms</a></footer>
