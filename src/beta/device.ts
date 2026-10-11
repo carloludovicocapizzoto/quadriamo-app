@@ -25,7 +25,7 @@ export function platform(): string {
 /** App installata: dalla Home/Dock, oppure l'app per computer (Mac/Windows) che si presenta come "QuadriamoDesktop". */
 export const isStandalone = () =>
   window.matchMedia?.('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true ||
-  /QuadriamoDesktop\//.test(navigator.userAgent)
+  /QuadriamoDesktop\//.test(navigator.userAgent) || 'quadriamoDesktop' in window
 
 /** Il "ping" giornaliero parte una volta al giorno. */
 export function firstOpenToday(today: string): boolean {

@@ -1,7 +1,7 @@
 {
   "name": "quadriamo-desktop",
   "productName": "Quadriamo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Quadriamo: i tuoi soldi, in quattro.",
   "author": "Quadriamo",
   "main": "main.js",
@@ -21,7 +21,8 @@
     },
     "files": [
       "main.js",
-      "updater.js"
+      "updater.js",
+      "preload.js"
     ],
     "mac": {
       "target": [

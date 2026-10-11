@@ -1,6 +1,8 @@
 // Quadriamo per computer (Mac e Windows): una finestra dedicata che apre l'app di Quadriamo.
 // I dati restano quelli dell'app (account e sincronizzazione); funziona anche offline dopo la prima apertura.
-const { app, BrowserWindow, shell } = require('electron')
+const path = require('path')
+const fs = require('fs')
+const { app, BrowserWindow, session, shell } = require('electron')
 const { setupUpdates } = require('./updater')
 
 const APP_URL = 'https://carloludovicocapizzoto.github.io/quadriamo-app/app/'
@@ -13,7 +15,7 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1100, height: 820, minWidth: 380, minHeight: 600,
     title: 'Quadriamo', backgroundColor: '#FAF7F2', autoHideMenuBar: true, show: false,
-    webPreferences: { contextIsolation: true, sandbox: true, spellcheck: false },
+    webPreferences: { contextIsolation: true, sandbox: true, spellcheck: false, preload: path.join(__dirname, 'preload.js') },
   })
   // l'app riconosce la versione per computer (niente tutorial "aggiungi alla Home")
   win.webContents.setUserAgent(`${win.webContents.getUserAgent()} QuadriamoDesktop/${app.getVersion()}`)
@@ -27,7 +29,19 @@ function createWindow() {
 }
 
 app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus() } })
-app.whenReady().then(() => {
+// a ogni nuova versione dell'app per computer si svuota la copia salvata del sito (si riscarica quella aggiornata)
+async function freshSiteOnNewVersion() {
+  const mark = path.join(app.getPath('userData'), 'last-version.txt')
+  let last = ''
+  try { last = fs.readFileSync(mark, 'utf8') } catch { /* primo avvio */ }
+  if (last === app.getVersion()) return
+  await session.defaultSession.clearStorageData({ storages: ['serviceworkers', 'cachestorage'] }).catch(() => {})
+  await session.defaultSession.clearCache().catch(() => {})
+  try { fs.writeFileSync(mark, app.getVersion()) } catch { /* niente */ }
+}
+
+app.whenReady().then(async () => {
+  await freshSiteOnNewVersion()
   createWindow()
   setupUpdates()
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })

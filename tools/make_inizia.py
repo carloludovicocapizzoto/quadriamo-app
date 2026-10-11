@@ -73,7 +73,130 @@ T = {
 }
 APP = 'https://carloludovicocapizzoto.github.io/quadriamo-app/app/'
 DL = 'https://github.com/carloludovicocapizzoto/quadriamo-app/releases/latest/download/'
-X = {'it': {'tabletName': 'iPad e tablet', 'tabletS1': 'Aprila sul tablet', 'tabletS2': 'Mettila nella schermata Home', 'tabletHow': '<p><b>iPad</b>, con Safari: tocca <b>Condividi</b> <kbd>⬆︎</kbd> in alto a destra, accanto all’indirizzo → <b>Aggiungi alla schermata Home</b> → <b>Aggiungi</b>.</p><p><b>Tablet Android</b>, con Chrome: <kbd>⋮</kbd> in alto a destra → <b>Installa app</b> → <b>Installa</b>.</p><p class="small muted">Sul tablet Quadriamo usa tutto lo schermo, anche in orizzontale.</p>', 'macS1': 'Scarica l’app per Mac', 'macBtnArm': 'Mac con chip Apple (M1, M2, M3, M4…)', 'macBtnIntel': 'Mac con processore Intel', 'macWhich': 'Non sai quale? Menu  → <b>Informazioni su questo Mac</b>: se c’è scritto “Chip Apple” scegli il primo.', 'macS2': 'Trascinala in Applicazioni', 'macS2T': 'Apri il file scaricato: si apre una finestra con l’icona di Quadriamo e la cartella Applicazioni. Trascina l’icona sulla cartella.', 'macS3': 'Autorizzala la prima volta', 'macS3T': 'Apri Quadriamo da Applicazioni. La prima volta macOS avvisa che non può verificare lo sviluppatore: premi <b>Fine</b>, poi apri <b>Impostazioni di Sistema → Privacy e sicurezza</b>, scorri in fondo e premi <b>Apri comunque</b>. Basta una volta.', 'winS1': 'Scarica l’app per Windows', 'winBtn': 'Scarica per Windows (64 bit)', 'winS2': 'Installala', 'winS2T': 'Apri il file scaricato. Se compare “Windows ha protetto il PC”, clicca <b>Ulteriori informazioni</b> e poi <b>Esegui comunque</b>. Segui l’installazione: puoi scegliere la cartella.', 'deskS3': 'La trovi tra le tue app', 'deskS3T': 'Quadriamo compare {where}, con la sua icona. Si aggiorna da sola: le novità arrivano a ogni apertura e, quando serve, l’app ti propone la nuova versione.', 'whereMac': 'nel Launchpad e nella cartella Applicazioni (trascinala nel Dock per averla sempre a portata)', 'whereWin': 'sul desktop e nel menu Start (puoi fissarla sulla barra delle applicazioni)', 'orBrowser': 'Preferisci senza scaricare niente? <a href="app/">Aprila nel browser</a> e installala da lì.', 'size': 'circa 130 MB'}, 'en': {'tabletName': 'iPad and tablets', 'tabletS1': 'Open it on your tablet', 'tabletS2': 'Add it to the Home Screen', 'tabletHow': '<p><b>iPad</b>, in Safari: tap <b>Share</b> <kbd>⬆︎</kbd> at the top right, next to the address → <b>Add to Home Screen</b> → <b>Add</b>.</p><p><b>Android tablet</b>, in Chrome: <kbd>⋮</kbd> at the top right → <b>Install app</b> → <b>Install</b>.</p><p class="small muted">On a tablet Quadriamo uses the whole screen, in landscape too.</p>', 'macS1': 'Download the Mac app', 'macBtnArm': 'Mac with Apple chip (M1, M2, M3, M4…)', 'macBtnIntel': 'Mac with Intel processor', 'macWhich': 'Not sure? Menu  → <b>About This Mac</b>: if it says “Chip Apple”, pick the first.', 'macS2': 'Drag it to Applications', 'macS2T': 'Open the downloaded file: a window shows the Quadriamo icon and the Applications folder. Drag the icon onto the folder.', 'macS3': 'Allow it the first time', 'macS3T': 'Open Quadriamo from Applications. The first time macOS says it can’t verify the developer: press <b>Done</b>, then open <b>System Settings → Privacy &amp; Security</b>, scroll down and press <b>Open Anyway</b>. Only once.', 'winS1': 'Download the Windows app', 'winBtn': 'Download for Windows (64-bit)', 'winS2': 'Install it', 'winS2T': 'Open the downloaded file. If “Windows protected your PC” appears, click <b>More info</b> and then <b>Run anyway</b>. Follow the setup: you can choose the folder.', 'deskS3': 'Find it with your apps', 'deskS3T': 'Quadriamo appears {where}, with its icon. It updates itself: new features arrive every time you open it and, when needed, the app offers the new version.', 'whereMac': 'in Launchpad and the Applications folder (drag it to the Dock to keep it handy)', 'whereWin': 'on the desktop and in the Start menu (you can pin it to the taskbar)', 'orBrowser': 'Rather not download anything? <a href="app/">Open it in the browser</a> and install it from there.', 'size': 'about 130 MB'}, 'fr': {'tabletName': 'iPad et tablettes', 'tabletS1': 'Ouvrez-la sur la tablette', 'tabletS2': 'Ajoutez-la à l’écran d’accueil', 'tabletHow': '<p><b>iPad</b>, avec Safari : touchez <b>Partager</b> <kbd>⬆︎</kbd> en haut à droite, près de l’adresse → <b>Sur l’écran d’accueil</b> → <b>Ajouter</b>.</p><p><b>Tablette Android</b>, avec Chrome : <kbd>⋮</kbd> en haut à droite → <b>Installer l’application</b> → <b>Installer</b>.</p><p class="small muted">Sur tablette, Quadriamo utilise tout l’écran, même à l’horizontale.</p>', 'macS1': 'Téléchargez l’app pour Mac', 'macBtnArm': 'Mac avec puce Apple (M1, M2, M3, M4…)', 'macBtnIntel': 'Mac avec processeur Intel', 'macWhich': 'Vous ne savez pas ? Menu  → <b>À propos de ce Mac</b> : s’il est écrit « Puce Apple », choisissez le premier.', 'macS2': 'Glissez-la dans Applications', 'macS2T': 'Ouvrez le fichier téléchargé : une fenêtre montre l’icône de Quadriamo et le dossier Applications. Glissez l’icône sur le dossier.', 'macS3': 'Autorisez-la la première fois', 'macS3T': 'Ouvrez Quadriamo depuis Applications. La première fois, macOS indique qu’il ne peut pas vérifier le développeur : touchez <b>Terminé</b>, puis <b>Réglages Système → Confidentialité et sécurité</b>, en bas <b>Ouvrir quand même</b>. Une seule fois.', 'winS1': 'Téléchargez l’app pour Windows', 'winBtn': 'Télécharger pour Windows (64 bits)', 'winS2': 'Installez-la', 'winS2T': 'Ouvrez le fichier téléchargé. Si « Windows a protégé votre ordinateur » apparaît, cliquez sur <b>Informations complémentaires</b> puis <b>Exécuter quand même</b>. Suivez l’installation.', 'deskS3': 'Retrouvez-la avec vos apps', 'deskS3T': 'Quadriamo apparaît {where}, avec son icône. Elle se met à jour toute seule : les nouveautés arrivent à chaque ouverture et, si besoin, l’app propose la nouvelle version.', 'whereMac': 'dans le Launchpad et le dossier Applications (glissez-la dans le Dock)', 'whereWin': 'sur le bureau et dans le menu Démarrer (épinglez-la à la barre des tâches)', 'orBrowser': 'Vous préférez ne rien télécharger ? <a href="app/">Ouvrez-la dans le navigateur</a> et installez-la de là.', 'size': 'environ 130 Mo'}, 'es': {'tabletName': 'iPad y tablets', 'tabletS1': 'Ábrela en la tablet', 'tabletS2': 'Añádela a la pantalla de inicio', 'tabletHow': '<p><b>iPad</b>, con Safari: toca <b>Compartir</b> <kbd>⬆︎</kbd> arriba a la derecha, junto a la dirección → <b>Añadir a pantalla de inicio</b> → <b>Añadir</b>.</p><p><b>Tablet Android</b>, con Chrome: <kbd>⋮</kbd> arriba a la derecha → <b>Instalar aplicación</b> → <b>Instalar</b>.</p><p class="small muted">En la tablet Quadriamo usa toda la pantalla, también en horizontal.</p>', 'macS1': 'Descarga la app para Mac', 'macBtnArm': 'Mac con chip Apple (M1, M2, M3, M4…)', 'macBtnIntel': 'Mac con procesador Intel', 'macWhich': '¿No sabes cuál? Menú  → <b>Acerca de este Mac</b>: si pone “Chip Apple”, elige el primero.', 'macS2': 'Arrástrala a Aplicaciones', 'macS2T': 'Abre el archivo descargado: aparece una ventana con el icono de Quadriamo y la carpeta Aplicaciones. Arrastra el icono a la carpeta.', 'macS3': 'Autorízala la primera vez', 'macS3T': 'Abre Quadriamo desde Aplicaciones. La primera vez macOS avisa que no puede verificar al desarrollador: pulsa <b>OK</b>, luego <b>Ajustes del Sistema → Privacidad y seguridad</b>, abajo <b>Abrir igualmente</b>. Solo una vez.', 'winS1': 'Descarga la app para Windows', 'winBtn': 'Descargar para Windows (64 bits)', 'winS2': 'Instálala', 'winS2T': 'Abre el archivo descargado. Si aparece “Windows protegió su PC”, haz clic en <b>Más información</b> y luego en <b>Ejecutar de todas formas</b>. Sigue la instalación.', 'deskS3': 'La encuentras entre tus apps', 'deskS3T': 'Quadriamo aparece {where}, con su icono. Se actualiza sola: las novedades llegan cada vez que la abres y, si hace falta, la app te ofrece la nueva versión.', 'whereMac': 'en el Launchpad y en la carpeta Aplicaciones (arrástrala al Dock)', 'whereWin': 'en el escritorio y en el menú Inicio (puedes anclarla a la barra de tareas)', 'orBrowser': '¿Prefieres no descargar nada? <a href="app/">Ábrela en el navegador</a> e instálala desde ahí.', 'size': 'unos 130 MB'}}
+X = {'en': {'deskS3': 'Find it with your apps',
+        'deskS3T': 'Quadriamo appears {where}, with its icon. It updates itself: new features arrive every time you open it and, when needed, the '
+                   'app offers the new version.',
+        'macBtnArm': 'Mac with Apple chip (M1, M2, M3, M4…)',
+        'macBtnIntel': 'Mac with Intel processor',
+        'macS1': 'Download the Mac app',
+        'macS2': 'Drag it to Applications',
+        'macS2T': 'Open the downloaded file: a window shows the Quadriamo icon and the Applications folder. Drag the icon onto the folder.',
+        'macS3': 'Allow it the first time',
+        'macS3T': 'Open Quadriamo from Applications. The first time macOS shows “Apple could not verify…”: press <b>Done</b>. Then open <b>System '
+                  'Settings → Privacy &amp; Security</b> and scroll to <b>Security</b>: under “Allow applications from” you’ll see <b>“Quadriamo was '
+                  'blocked…”</b> with an <b>Open Anyway</b> button. Press it, confirm with Touch ID or your password, and in the last prompt press '
+                  '<b>Open Anyway</b> again. Only the first time. (On macOS 14 or earlier: right-click the app → <b>Open</b> → <b>Open</b>.)',
+        'macWhich': 'Not sure? Menu  → <b>About This Mac</b>: if it says “Chip Apple”, pick the first.',
+        'orBrowser': 'Rather not download anything? <a href="app/">Open it in the browser</a> and install it from there.',
+        'size': 'about 130 MB',
+        'tabletHow': '<p><b>iPad</b>, in Safari: tap <b>Share</b> <kbd>⬆︎</kbd> at the top right, next to the address → <b>Add to Home Screen</b> → '
+                     '<b>Add</b>.</p><p><b>Android tablet</b>, in Chrome: <kbd>⋮</kbd> at the top right → <b>Install app</b> → <b>Install</b>.</p><p '
+                     'class="small muted">On a tablet Quadriamo uses the whole screen, in landscape too.</p>',
+        'tabletName': 'iPad and tablets',
+        'tabletS1': 'Open it on your tablet',
+        'tabletS2': 'Add it to the Home Screen',
+        'whereMac': 'in Launchpad and the Applications folder (drag it to the Dock to keep it handy)',
+        'whereWin': 'on the desktop and in the Start menu (you can pin it to the taskbar)',
+        'winBtn': 'Download for Windows (64-bit)',
+        'winS1': 'Download the Windows app',
+        'winS2': 'Install it',
+        'winS2T': 'Open the downloaded file. If “Windows protected your PC” appears, click <b>More info</b> and then <b>Run anyway</b>. Follow the '
+                  'setup: you can choose the folder.'},
+ 'es': {'deskS3': 'La encuentras entre tus apps',
+        'deskS3T': 'Quadriamo aparece {where}, con su icono. Se actualiza sola: las novedades llegan cada vez que la abres y, si hace falta, la app '
+                   'te ofrece la nueva versión.',
+        'macBtnArm': 'Mac con chip Apple (M1, M2, M3, M4…)',
+        'macBtnIntel': 'Mac con procesador Intel',
+        'macS1': 'Descarga la app para Mac',
+        'macS2': 'Arrástrala a Aplicaciones',
+        'macS2T': 'Abre el archivo descargado: aparece una ventana con el icono de Quadriamo y la carpeta Aplicaciones. Arrastra el icono a la '
+                  'carpeta.',
+        'macS3': 'Autorízala la primera vez',
+        'macS3T': 'Abre Quadriamo desde Aplicaciones. La primera vez macOS muestra “Apple no ha podido verificar…”: pulsa <b>OK</b>. Luego '
+                  '<b>Ajustes del Sistema → Privacidad y seguridad</b> y baja hasta <b>Seguridad</b>: bajo “Permitir aplicaciones de” aparece '
+                  '<b>“Quadriamo ha sido bloqueada…”</b> con el botón <b>Abrir igualmente</b>. Púlsalo, confirma con Touch ID o contraseña y en el '
+                  'último aviso pulsa otra vez <b>Abrir igualmente</b>. Solo la primera vez. (En macOS 14 o anterior: clic derecho en la app → '
+                  '<b>Abrir</b> → <b>Abrir</b>.)',
+        'macWhich': '¿No sabes cuál? Menú  → <b>Acerca de este Mac</b>: si pone “Chip Apple”, elige el primero.',
+        'orBrowser': '¿Prefieres no descargar nada? <a href="app/">Ábrela en el navegador</a> e instálala desde ahí.',
+        'size': 'unos 130 MB',
+        'tabletHow': '<p><b>iPad</b>, con Safari: toca <b>Compartir</b> <kbd>⬆︎</kbd> arriba a la derecha, junto a la dirección → <b>Añadir a '
+                     'pantalla de inicio</b> → <b>Añadir</b>.</p><p><b>Tablet Android</b>, con Chrome: <kbd>⋮</kbd> arriba a la derecha → '
+                     '<b>Instalar aplicación</b> → <b>Instalar</b>.</p><p class="small muted">En la tablet Quadriamo usa toda la pantalla, también '
+                     'en horizontal.</p>',
+        'tabletName': 'iPad y tablets',
+        'tabletS1': 'Ábrela en la tablet',
+        'tabletS2': 'Añádela a la pantalla de inicio',
+        'whereMac': 'en el Launchpad y en la carpeta Aplicaciones (arrástrala al Dock)',
+        'whereWin': 'en el escritorio y en el menú Inicio (puedes anclarla a la barra de tareas)',
+        'winBtn': 'Descargar para Windows (64 bits)',
+        'winS1': 'Descarga la app para Windows',
+        'winS2': 'Instálala',
+        'winS2T': 'Abre el archivo descargado. Si aparece “Windows protegió su PC”, haz clic en <b>Más información</b> y luego en <b>Ejecutar de '
+                  'todas formas</b>. Sigue la instalación.'},
+ 'fr': {'deskS3': 'Retrouvez-la avec vos apps',
+        'deskS3T': 'Quadriamo apparaît {where}, avec son icône. Elle se met à jour toute seule : les nouveautés arrivent à chaque ouverture et, si '
+                   'besoin, l’app propose la nouvelle version.',
+        'macBtnArm': 'Mac avec puce Apple (M1, M2, M3, M4…)',
+        'macBtnIntel': 'Mac avec processeur Intel',
+        'macS1': 'Téléchargez l’app pour Mac',
+        'macS2': 'Glissez-la dans Applications',
+        'macS2T': 'Ouvrez le fichier téléchargé : une fenêtre montre l’icône de Quadriamo et le dossier Applications. Glissez l’icône sur le '
+                  'dossier.',
+        'macS3': 'Autorisez-la la première fois',
+        'macS3T': 'Ouvrez Quadriamo depuis Applications. La première fois, macOS affiche « Apple n’a pas pu vérifier… » : touchez <b>Terminé</b>. '
+                  'Puis <b>Réglages Système → Confidentialité et sécurité</b>, descendez jusqu’à <b>Sécurité</b> : sous « Autoriser les applications '
+                  'de » apparaît <b>« Quadriamo a été bloquée… »</b> avec le bouton <b>Ouvrir quand même</b>. Cliquez, confirmez avec Touch ID ou le '
+                  'mot de passe, puis encore <b>Ouvrir quand même</b>. Une seule fois. (Sur macOS 14 ou antérieur : clic droit sur l’app → '
+                  '<b>Ouvrir</b> → <b>Ouvrir</b>.)',
+        'macWhich': 'Vous ne savez pas ? Menu  → <b>À propos de ce Mac</b> : s’il est écrit « Puce Apple », choisissez le premier.',
+        'orBrowser': 'Vous préférez ne rien télécharger ? <a href="app/">Ouvrez-la dans le navigateur</a> et installez-la de là.',
+        'size': 'environ 130 Mo',
+        'tabletHow': '<p><b>iPad</b>, avec Safari : touchez <b>Partager</b> <kbd>⬆︎</kbd> en haut à droite, près de l’adresse → <b>Sur l’écran '
+                     'd’accueil</b> → <b>Ajouter</b>.</p><p><b>Tablette Android</b>, avec Chrome : <kbd>⋮</kbd> en haut à droite → <b>Installer '
+                     'l’application</b> → <b>Installer</b>.</p><p class="small muted">Sur tablette, Quadriamo utilise tout l’écran, même à '
+                     'l’horizontale.</p>',
+        'tabletName': 'iPad et tablettes',
+        'tabletS1': 'Ouvrez-la sur la tablette',
+        'tabletS2': 'Ajoutez-la à l’écran d’accueil',
+        'whereMac': 'dans le Launchpad et le dossier Applications (glissez-la dans le Dock)',
+        'whereWin': 'sur le bureau et dans le menu Démarrer (épinglez-la à la barre des tâches)',
+        'winBtn': 'Télécharger pour Windows (64 bits)',
+        'winS1': 'Téléchargez l’app pour Windows',
+        'winS2': 'Installez-la',
+        'winS2T': 'Ouvrez le fichier téléchargé. Si « Windows a protégé votre ordinateur » apparaît, cliquez sur <b>Informations complémentaires</b> '
+                  'puis <b>Exécuter quand même</b>. Suivez l’installation.'},
+ 'it': {'deskS3': 'La trovi tra le tue app',
+        'deskS3T': 'Quadriamo compare {where}, con la sua icona. Si aggiorna da sola: le novità arrivano a ogni apertura e, quando serve, l’app ti '
+                   'propone la nuova versione.',
+        'macBtnArm': 'Mac con chip Apple (M1, M2, M3, M4…)',
+        'macBtnIntel': 'Mac con processore Intel',
+        'macS1': 'Scarica l’app per Mac',
+        'macS2': 'Trascinala in Applicazioni',
+        'macS2T': 'Apri il file scaricato: si apre una finestra con l’icona di Quadriamo e la cartella Applicazioni. Trascina l’icona sulla '
+                  'cartella.',
+        'macS3': 'Autorizzala la prima volta',
+        'macS3T': 'Apri Quadriamo da Applicazioni. La prima volta macOS mostra “Apple non può verificare…”: premi <b>Fine</b>. Poi apri '
+                  '<b>Impostazioni di Sistema → Privacy e sicurezza</b> e scorri fino a <b>Sicurezza</b>: sotto “Consenti applicazioni da” compare '
+                  '<b>“Quadriamo è stata bloccata…”</b> con il pulsante <b>Apri comunque</b>. Premilo, conferma con Touch ID o password e '
+                  'nell’ultimo avviso premi ancora <b>Apri comunque</b>. Serve solo la prima volta. (Su macOS 14 o precedenti basta: tasto destro '
+                  'sull’app → <b>Apri</b> → <b>Apri</b>.)',
+        'macWhich': 'Non sai quale? Menu  → <b>Informazioni su questo Mac</b>: se c’è scritto “Chip Apple” scegli il primo.',
+        'orBrowser': 'Preferisci senza scaricare niente? <a href="app/">Aprila nel browser</a> e installala da lì.',
+        'size': 'circa 130 MB',
+        'tabletHow': '<p><b>iPad</b>, con Safari: tocca <b>Condividi</b> <kbd>⬆︎</kbd> in alto a destra, accanto all’indirizzo → <b>Aggiungi alla '
+                     'schermata Home</b> → <b>Aggiungi</b>.</p><p><b>Tablet Android</b>, con Chrome: <kbd>⋮</kbd> in alto a destra → <b>Installa '
+                     'app</b> → <b>Installa</b>.</p><p class="small muted">Sul tablet Quadriamo usa tutto lo schermo, anche in orizzontale.</p>',
+        'tabletName': 'iPad e tablet',
+        'tabletS1': 'Aprila sul tablet',
+        'tabletS2': 'Mettila nella schermata Home',
+        'whereMac': 'nel Launchpad e nella cartella Applicazioni (trascinala nel Dock per averla sempre a portata)',
+        'whereWin': 'sul desktop e nel menu Start (puoi fissarla sulla barra delle applicazioni)',
+        'winBtn': 'Scarica per Windows (64 bit)',
+        'winS1': 'Scarica l’app per Windows',
+        'winS2': 'Installala',
+        'winS2T': 'Apri il file scaricato. Se compare “Windows ha protetto il PC”, clicca <b>Ulteriori informazioni</b> e poi <b>Esegui '
+                  'comunque</b>. Segui l’installazione: puoi scegliere la cartella.'}}
 ICON = {'iphone': '📱', 'tablet': '📲', 'android': '🤖', 'mac': '💻', 'windows': '🪟'}
 LABEL = {'iphone': 'iPhone', 'tablet': 'Tablet', 'android': 'Android', 'mac': 'Mac', 'windows': 'Windows'}
 OSNAME = {'mac': 'Mac', 'windows': 'PC'}
