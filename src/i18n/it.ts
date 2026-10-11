@@ -291,6 +291,7 @@ const it: Dict = {
   'beta.stats': 'Statistiche d’uso anonime',
   'beta.statsHint': 'Ci aiutano a capire come viene usata la beta. Nessun dato del budget viene mai inviato.',
   'admin.open': 'Dashboard amministratore',
+  'inst.ipad1d': "Su iPad l’icona ⬆︎ è in alto a destra, accanto all’indirizzo.",
   'prof.stepPrivacy': "I tuoi dati",
   'prof.privTitle': "I tuoi dati sensibili restano tuoi",
   'prof.privText': "Entrate, obiettivi, carte e investimenti sono salvati solo nel tuo account, insieme al tuo budget: li vedi solo tu. Non li vede nessun altro, nemmeno chi gestisce Quadriamo, e non li condividiamo né li vendiamo mai. Li modifichi o cancelli quando vuoi.",

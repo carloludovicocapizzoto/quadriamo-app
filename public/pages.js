@@ -35,15 +35,28 @@
 ;(function () {
   if (!document.querySelector('.dev-switch')) return
   var ua = navigator.userAgent
-  var guess = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'iphone'
+  var ipad = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)
+  var androidTablet = /Android/.test(ua) && !/Mobile/.test(ua)
+  var guess = ipad || androidTablet ? 'tablet' : /iPhone|iPod/.test(ua) ? 'iphone'
     : /Android/.test(ua) ? 'android' : /Windows/.test(ua) ? 'windows' : 'mac'
   var fromHash = (location.hash || '').slice(1)
   function pick(dev) {
     document.querySelectorAll('.dev-switch button').forEach(function (b) { b.setAttribute('aria-selected', String(b.getAttribute('data-dev') === dev)) })
     document.querySelectorAll('.dev-panel').forEach(function (p) { p.classList.toggle('on', p.getAttribute('data-dev') === dev) })
   }
-  pick(['iphone', 'android', 'mac', 'windows'].indexOf(fromHash) >= 0 ? fromHash : guess)
+  pick(['iphone', 'tablet', 'android', 'mac', 'windows'].indexOf(fromHash) >= 0 ? fromHash : guess)
   document.querySelectorAll('.dev-switch button').forEach(function (b) {
     b.addEventListener('click', function () { var d = b.getAttribute('data-dev'); pick(d); history.replaceState(null, '', '#' + d) })
+  })
+})()
+
+// "Copia link" nella pagina Scarica
+;(function () {
+  document.querySelectorAll('.copy-link').forEach(function (b) {
+    var label = b.textContent
+    b.addEventListener('click', function () {
+      var done = function () { b.textContent = b.getAttribute('data-done'); setTimeout(function () { b.textContent = label }, 2000) }
+      if (navigator.clipboard) navigator.clipboard.writeText(b.getAttribute('data-url')).then(done, done); else done()
+    })
   })
 })()

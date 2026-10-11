@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
+import { isStandalone as standalone } from '../beta/device'
 import { PAGES } from '../config'
 import { useI18n } from '../i18n/core'
 
 interface InstallEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
-
-const standalone = () => window.matchMedia?.('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone
 
 /** Installa l'app: su Chrome/Android con il pulsante del browser, altrove (iPhone) con la guida. Nascosto se è già installata. */
 export function InstallButton() {

@@ -22,7 +22,6 @@ export default defineConfig({
         start_url: `${base}app/`,
         scope: base,
         display: 'standalone',
-        orientation: 'portrait',
         background_color: '#FAF7F2',
         theme_color: '#1F2328',
         shortcuts: [

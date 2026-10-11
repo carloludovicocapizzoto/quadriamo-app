@@ -5,7 +5,7 @@ describe('detectKind', () => {
   it('riconosce dispositivi e browser', () => {
     expect(detectKind('Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit Version/26.0 Mobile Safari/604.1', 5)).toBe('ios')
     expect(detectKind('Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit CriOS/140.0 Mobile Safari/604.1', 5)).toBe('ios-other')
-    expect(detectKind('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit Version/17 Safari/605.1.15', 5)).toBe('ios')   // iPad
+    expect(detectKind('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit Version/17 Safari/605.1.15', 5)).toBe('ipad')   // iPad
     expect(detectKind('Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit Chrome/129 Mobile Safari/537.36', 5)).toBe('android')
     expect(detectKind('Mozilla/5.0 (Linux; Android 14; SM-S921B) AppleWebKit SamsungBrowser/27.0 Chrome/125 Mobile Safari/537.36', 5)).toBe('android-samsung')
     expect(detectKind('Mozilla/5.0 (Android 14; Mobile; rv:131.0) Gecko/131.0 Firefox/131.0', 5)).toBe('android-firefox')

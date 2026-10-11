@@ -291,6 +291,7 @@ const en = {
   'beta.stats': 'Anonymous usage statistics',
   'beta.statsHint': 'Helps us understand how the beta is used. No budget data is ever sent.',
   'admin.open': 'Admin dashboard',
+  'inst.ipad1d': "On iPad the ⬆︎ icon is at the top right, next to the address.",
   'prof.stepPrivacy': "Your data",
   'prof.privTitle': "Your sensitive data stays yours",
   'prof.privText': "Income, goals, cards and investments are stored only in your account, together with your budget: only you can see them. Nobody else sees them, not even the people running Quadriamo, and we never share or sell them. Edit or delete them whenever you like.",

@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# app per computer
+desktop/node_modules
+desktop/dist

@@ -13,6 +13,8 @@ interface Step { title: keyof Dict; text: keyof Dict; mock: Mock; arrow: Arrow }
 
 const OPEN: Step = { title: 'inst.open', text: 'inst.opend', mock: 'home', arrow: null }
 const STEPS: Record<Kind, Step[]> = {
+  ipad: [{ title: 'inst.iosO1', text: 'inst.ipad1d', mock: 'iosTop', arrow: 'up-right' }, { title: 'inst.ios2', text: 'inst.ios2d', mock: 'iosSheet', arrow: null },
+    { title: 'inst.ios3', text: 'inst.ios3d', mock: 'iosAdd', arrow: null }, OPEN],
   'ios-other': [{ title: 'inst.iosO1', text: 'inst.iosO1d', mock: 'iosTop', arrow: 'up-right' }, { title: 'inst.ios2', text: 'inst.ios2d', mock: 'iosSheet', arrow: null },
     { title: 'inst.ios3', text: 'inst.ios3d', mock: 'iosAdd', arrow: null }, OPEN],
   'android-samsung': [{ title: 'inst.sam1', text: 'inst.sam1d', mock: 'samBar', arrow: 'down-right' }, { title: 'inst.sam2', text: 'inst.sam2d', mock: 'samList', arrow: null },

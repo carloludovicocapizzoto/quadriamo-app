@@ -1,0 +1,112 @@
+{
+  "name": "quadriamo-desktop",
+  "productName": "Quadriamo",
+  "version": "1.0.0",
+  "description": "Quadriamo: i tuoi soldi, in quattro.",
+  "author": "Quadriamo",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "release": "electron-builder --mac --win --publish always"
+  },
+  "build": {
+    "appId": "app.quadriamo.desktop",
+    "productName": "Quadriamo",
+    "copyright": "© 2026 Quadriamo",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "updater.js"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.finance",
+      "icon": "build/icon.png",
+      "identity": "-",
+      "artifactName": "Quadriamo-Mac-${arch}.${ext}",
+      "hardenedRuntime": false
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Quadriamo",
+      "installerLanguages": [
+        "it_IT",
+        "en_US"
+      ],
+      "language": "1040",
+      "artifactName": "Quadriamo-Windows-Setup.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "carloludovicocapizzoto",
+        "repo": "quadriamo-app",
+        "releaseType": "release"
+      }
+    ],
+    "dmg": {
+      "title": "Quadriamo",
+      "icon": "build/icon.png",
+      "iconSize": 112,
+      "window": {
+        "width": 660,
+        "height": 420
+      },
+      "contents": [
+        {
+          "x": 180,
+          "y": 230,
+          "type": "file"
+        },
+        {
+          "x": 480,
+          "y": 230,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}
