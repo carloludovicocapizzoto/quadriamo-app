@@ -25,6 +25,11 @@ Dopo: import dell'estratto conto (CSV), collegamento con le banche (open banking
 
 ## Da fare oltre alle fasi
 
+- Dominio scelto: **quadriamo.com** (verificato libero l'11/10/2026, anche quadriamo.it): da comprare presto.
+  Indirizzi previsti: `admin@quadriamo.com` (accesso amministratore: in Supabase → Authentication → Users si cambia l'email
+  dell'account admin di oggi), `ciao@quadriamo.com` (contatti, privacy, feedback), `noreply@quadriamo.com` (mittente delle email
+  dell'app via Resend), `app.quadriamo.com` (l'app). Finché il dominio non è suo non si usano: le email finirebbero a vuoto.
+
 - Quando prende il dominio: dati del titolare in `public/owner.js` (oggi persona fisica; aggiornare se nasce una ditta o una SRL)
   e casella email dedicata (es. ciao@quadriamo.com) come contatto di privacy, termini e pulsante feedback (`FEEDBACK_EMAIL` in `src/config.ts`).
 
