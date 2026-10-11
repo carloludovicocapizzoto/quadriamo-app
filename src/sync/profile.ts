@@ -43,3 +43,5 @@ export async function saveProfile(userId: string, p: Profile) {
 
 /** Hai scelto di usare l'app senza account su questo dispositivo: niente schermata di accesso all'apertura. */
 export const noAccount = flag('q.noAccount')
+/** Hai già visto (o saltato) il tutorial per aggiungere l'app alla Home. */
+export const installSkip = flag('q.installSkip')

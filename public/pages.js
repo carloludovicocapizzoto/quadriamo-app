@@ -8,7 +8,21 @@
     l = pick(l)
     document.documentElement.lang = l
     document.querySelectorAll('[data-lang]').forEach(function (el) { el.classList.toggle('on', el.getAttribute('data-lang') === l) })
-    document.querySelectorAll('[data-set]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-set') === l)) })
+    if (location.hash === '#email') { var mc = document.querySelector('[data-lang].on .mail-card'); if (mc) mc.scrollIntoView() }
+  // "Mandami il link via email": prepara un'email nella tua app di posta con passaggi e link dell'app
+  document.querySelectorAll('.mail-form').forEach(function (f) {
+    f.addEventListener('submit', function (e) {
+      e.preventDefault()
+      var box = f.parentNode, to = f.querySelector('input').value.trim()
+      var ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)
+      box.querySelector('.mail-bad').hidden = ok
+      box.querySelector('.mail-ok').hidden = !ok
+      if (!ok) return
+      var body = f.getAttribute('data-body').replace('{url}', f.getAttribute('data-url'))
+      location.href = 'mailto:' + encodeURIComponent(to) + '?subject=' + encodeURIComponent(f.getAttribute('data-subject')) + '&body=' + encodeURIComponent(body)
+    })
+  })
+  document.querySelectorAll('[data-set]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-set') === l)) })
   }
   var q = new URLSearchParams(location.search).get('lang')
   var saved = null
@@ -20,6 +34,20 @@
     if (!v) return
     if (el.getAttribute('data-owner') === 'email') { el.innerHTML = ''; var a = document.createElement('a'); a.href = 'mailto:' + v; a.textContent = v; el.appendChild(a) }
     else el.textContent = v
+  })
+  if (location.hash === '#email') { var mc = document.querySelector('[data-lang].on .mail-card'); if (mc) mc.scrollIntoView() }
+  // "Mandami il link via email": prepara un'email nella tua app di posta con passaggi e link dell'app
+  document.querySelectorAll('.mail-form').forEach(function (f) {
+    f.addEventListener('submit', function (e) {
+      e.preventDefault()
+      var box = f.parentNode, to = f.querySelector('input').value.trim()
+      var ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)
+      box.querySelector('.mail-bad').hidden = ok
+      box.querySelector('.mail-ok').hidden = !ok
+      if (!ok) return
+      var body = f.getAttribute('data-body').replace('{url}', f.getAttribute('data-url'))
+      location.href = 'mailto:' + encodeURIComponent(to) + '?subject=' + encodeURIComponent(f.getAttribute('data-subject')) + '&body=' + encodeURIComponent(body)
+    })
   })
   document.querySelectorAll('[data-set]').forEach(function (b) {
     b.addEventListener('click', function () { show(b.getAttribute('data-set')) })

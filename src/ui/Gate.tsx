@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { LANGS, useI18n, type Lang } from '../i18n/core'
 import { useSync } from '../sync/context'
+import { isStandalone } from '../beta/device'
+import { installSkip } from '../sync/profile'
 import { LoginScreen } from './AccountSection'
+import { InstallTutorial } from './InstallTutorial'
 import { LegalLinks } from './LegalLinks'
 
 /** Il logo di Quadriamo: i quattro blocchi compaiono uno dopo l'altro. */
@@ -29,13 +32,16 @@ export function Splash() {
 export function Gate({ hasData, onLocal, onDemo }: { hasData: boolean; onLocal: () => void; onDemo: () => void }) {
   const { t, lang, setLang } = useI18n()
   const sync = useSync()
-  const [phase, setPhase] = useState<'welcome' | 'login'>('welcome')
+  const [phase, setPhase] = useState<'welcome' | 'install' | 'login'>('welcome')
   const [leaving, setLeaving] = useState(false)
+  // aperta dal browser (non ancora installata): prima il tutorial per aggiungerla alla Home, poi l'accesso
+  const needsInstall = !isStandalone() && !installSkip.get()
   const go = () => {
-    if (!sync.enabled) { onLocal(); return }
+    if (!sync.enabled && !needsInstall) { onLocal(); return }
     setLeaving(true)
-    setTimeout(() => { setPhase('login'); setLeaving(false) }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 380)
+    setTimeout(() => { setPhase(needsInstall ? 'install' : 'login'); setLeaving(false) }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 380)
   }
+  const afterInstall = () => { installSkip.set(); if (sync.enabled) setPhase('login'); else onLocal() }
   const langSelect = (
     <select className="lang gate-lang" value={lang} onChange={e => setLang(e.target.value as Lang)} aria-label={t('lang.label')}>
       {Object.entries(LANGS).map(([c, n]) => <option key={c} value={c}>{n}</option>)}
@@ -57,6 +63,16 @@ export function Gate({ hasData, onLocal, onDemo }: { hasData: boolean; onLocal: 
           </div>
           <button className="btn primary big-btn gate-cta" onClick={go}>{t('gate.start')} →</button>
         </div>
+      </div>
+    )
+  }
+
+  if (phase === 'install') {
+    return (
+      <div className="gate gate-login">
+        {langSelect}
+        <div className="gate-glow" aria-hidden="true" />
+        <div className="gate-panel"><section className="card"><InstallTutorial onContinue={afterInstall} /></section></div>
       </div>
     )
   }
