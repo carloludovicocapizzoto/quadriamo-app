@@ -16,7 +16,6 @@ import { InvestmentsView } from './ui/InvestmentsView'
 import { FxAutoUpdate } from './ui/FxAutoUpdate'
 import { feedbackDue, firstOpenToday, statsConsent } from './beta/device'
 import { track } from './beta/telemetry'
-import { AdminView } from './ui/beta/AdminView'
 import { BetaSection } from './ui/beta/BetaSection'
 import { ConsentCard } from './ui/beta/ConsentCard'
 import { FeedbackCard } from './ui/beta/FeedbackCard'
@@ -41,8 +40,9 @@ export default function App() {
   // beta: richiesta di feedback (dal link della notifica, o ogni 10 giorni) e dashboard (?admin=1)
   const [showFeedback, setShowFeedback] = useState(() =>
     new URLSearchParams(window.location.search).get('feedback') === '1' || feedbackDue())
-  const [showAdmin, setShowAdmin] = useState(() => new URLSearchParams(window.location.search).get('admin') === '1')
   useEffect(() => {
+    // vecchio indirizzo della dashboard: ora è una pagina a sé
+    if (new URLSearchParams(window.location.search).get('admin') === '1') { window.location.replace(`${import.meta.env.BASE_URL}admin/`); return }
     if (window.location.search) window.history.replaceState(null, '', window.location.pathname)
     const onInstalled = () => { void track('install') }
     window.addEventListener('appinstalled', onInstalled)
@@ -118,10 +118,8 @@ export default function App() {
       )}
 
       <main>
-        {showAdmin && <AdminView onClose={() => setShowAdmin(false)} />}
-        {!showAdmin && tab === 'month' && <ConsentCard onAnswer={yes => ping(yes)} />}
-        {!showAdmin && tab === 'month' && showFeedback && <FeedbackCard onClose={() => setShowFeedback(false)} />}
-        {!showAdmin && <>
+        {tab === 'month' && <ConsentCard onAnswer={yes => ping(yes)} />}
+        {tab === 'month' && showFeedback && <FeedbackCard onClose={() => setShowFeedback(false)} />}
         {(tab === 'month' || tab === 'transactions') && <MonthNav ym={current} onChange={setYm} />}
         {tab === 'year' && <YearNav year={year} onChange={setYear} />}
         {tab === 'year' && <YearView year={year} transactions={data.transactions} settings={data.settings} today={today}
@@ -132,9 +130,8 @@ export default function App() {
         {tab === 'investments' && <InvestmentsView settings={data.settings} transactions={data.transactions} today={today}
                                                    year={year} onYear={setYear} />}
         {tab === 'settings' && <BetaSection onFeedback={() => { setShowFeedback(true); setTab('month'); window.scrollTo(0, 0) }}
-                                            onAdmin={() => { setShowAdmin(true); window.scrollTo(0, 0) }} />}
+                                            onAdmin={() => window.location.assign(`${import.meta.env.BASE_URL}admin/`)} />}
         {tab === 'settings' && <SettingsView />}
-        </>}
         <FxAutoUpdate today={today} />
       </main>
 

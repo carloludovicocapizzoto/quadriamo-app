@@ -2,6 +2,10 @@
 
 Da fare una volta, in quest'ordine. Tempo: circa 15 minuti.
 
+**Più comodo:** apri l'area amministratore (`…/quadriamo-app/admin/`), accedi e vai su **Configurazione**: controlla da sola
+cosa manca e per ogni passo ha il pulsante per copiare il codice già pronto (con la tua email e il codice del progetto).
+Anteprima con dati di esempio: `…/quadriamo-app/admin/?demo=1`.
+
 ## 1. Tabelle e regole di sicurezza
 Supabase → **SQL Editor** → **New snippet** → incolla tutto `supabase/migrations/0002_beta_feedback_stats_push.sql` → **Run**.
 Deve comparire "Success. No rows returned".
@@ -14,7 +18,7 @@ insert into public.admins (user_id)
 select id from auth.users where email = 'LA-TUA-EMAIL';
 ```
 
-Da quel momento in Impostazioni → Beta compare **Dashboard amministratore** (oppure apri `…/app/?admin=1`).
+Da quel momento in Impostazioni → Beta compare **Dashboard amministratore** (oppure apri `…/admin/`).
 
 ## 3. Funzione per inviare le notifiche
 1. Supabase → **Edge Functions** → **Deploy a new function** → **Via Editor**.

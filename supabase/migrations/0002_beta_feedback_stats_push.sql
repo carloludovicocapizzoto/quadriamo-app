@@ -141,3 +141,68 @@ revoke all on function public.admin_stats(int) from public, anon;
 revoke all on function public.admin_feedback(int) from public, anon;
 grant execute on function public.admin_stats(int) to authenticated;
 grant execute on function public.admin_feedback(int) to authenticated;
+
+-- ---------- elenchi per le sezioni della dashboard (sempre solo per l'amministratore) ----------
+-- Dispositivi: un rigo per dispositivo con l'ultima "fotografia" (soli conteggi, mai dati del budget)
+create or replace function public.admin_devices(p_limit int default 500)
+returns table (device_id uuid, first_day date, last_day date, active_days bigint, platform text, lang text,
+               standalone boolean, signed_in boolean, tx_count int, months_used int, app_version text)
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.is_admin() then raise exception 'not allowed'; end if;
+  return query
+  with agg as (select e.device_id, min(e.day) f, max(e.day) l, count(distinct e.day) n from public.usage_events e group by e.device_id),
+  snap as (select distinct on (e.device_id) e.* from public.usage_events e where e.event = 'open'
+           order by e.device_id, e.day desc, e.created_at desc)
+  select a.device_id, a.f, a.l, a.n, s.platform, s.lang, s.standalone, s.signed_in, s.tx_count, s.months_used, s.app_version
+  from agg a left join snap s on s.device_id = a.device_id
+  order by a.l desc, a.n desc limit greatest(1, least(p_limit, 5000));
+end;
+$$;
+
+-- Account registrati: email, iscrizione, ultimo accesso, se hanno notifiche e quanti feedback hanno lasciato
+create or replace function public.admin_accounts()
+returns table (email text, created_at timestamptz, last_sign_in_at timestamptz, has_push boolean, feedback_count bigint)
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.is_admin() then raise exception 'not allowed'; end if;
+  return query
+  select u.email::text, u.created_at, u.last_sign_in_at,
+         exists (select 1 from public.push_subscriptions p where p.user_id = u.id),
+         (select count(*) from public.feedback f where f.user_id = u.id)
+  from auth.users u order by u.created_at desc;
+end;
+$$;
+
+-- Iscrizioni alle notifiche (senza gli indirizzi tecnici del dispositivo)
+create or replace function public.admin_push_list()
+returns table (lang text, created_at timestamptz, last_prompt_at timestamptz, email text)
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.is_admin() then raise exception 'not allowed'; end if;
+  return query
+  select p.lang, p.created_at, p.last_prompt_at, u.email::text
+  from public.push_subscriptions p left join auth.users u on u.id = p.user_id order by p.created_at desc;
+end;
+$$;
+
+revoke all on function public.admin_devices(int) from public, anon;
+revoke all on function public.admin_accounts() from public, anon;
+revoke all on function public.admin_push_list() from public, anon;
+grant execute on function public.admin_devices(int) to authenticated;
+grant execute on function public.admin_accounts() to authenticated;
+grant execute on function public.admin_push_list() to authenticated;
+
+-- Promemoria automatico attivo? (per la pagina Configurazione; falso se pg_cron non è attivato)
+create or replace function public.admin_reminder_active()
+returns boolean language plpgsql stable security definer set search_path = '' as $$
+declare r boolean := false;
+begin
+  if not public.is_admin() then raise exception 'not allowed'; end if;
+  if to_regclass('cron.job') is null then return false; end if;
+  execute 'select exists (select 1 from cron.job where jobname = ''quadriamo-feedback-every-10-days'' and active)' into r;
+  return r;
+end;
+$$;
+revoke all on function public.admin_reminder_active() from public, anon;
+grant execute on function public.admin_reminder_active() to authenticated;

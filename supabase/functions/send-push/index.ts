@@ -1,5 +1,6 @@
 // Supabase Edge Function "send-push": invia la notifica "Come ti trovi con Quadriamo?" ai dispositivi iscritti.
 // - mode "manual": la chiama l'amministratore dalla dashboard (serve il suo accesso) -> a tutti gli iscritti
+// - mode "check": solo per l'amministratore, dice se i segreti sono impostati (pagina Configurazione della dashboard)
 // - mode "scheduled": la chiama il promemoria automatico giornaliero (serve CRON_SECRET) -> a chi non riceve
 //   un promemoria da almeno 10 giorni
 // Segreti da impostare in Supabase (Edge Functions -> Secrets): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, CRON_SECRET.
@@ -41,6 +42,7 @@ Deno.serve(async req => {
     })
     const { data: ok } = await asUser.rpc('is_admin')
     if (ok !== true) return json({ error: 'forbidden' }, 403)
+    if (mode === 'check') return json({ ok: true, vapid: !!Deno.env.get('VAPID_PUBLIC_KEY') && !!Deno.env.get('VAPID_PRIVATE_KEY'), cron: !!Deno.env.get('CRON_SECRET') })
   }
 
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)

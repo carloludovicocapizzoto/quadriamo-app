@@ -36,6 +36,6 @@ export default defineConfig({
       workbox: { globPatterns: ['**/*.{js,css,html,svg,png,ttf}'], navigateFallback: null, importScripts: ['push-sw.js'] },
     }),
   ],
-  build: { rollupOptions: { input: { home: 'index.html', app: 'app/index.html' } } },
+  build: { rollupOptions: { input: { home: 'index.html', app: 'app/index.html', admin: 'admin/index.html' } } },
   test: { include: ['src/**/*.test.ts', 'src/**/*.test.tsx'] },
 })
