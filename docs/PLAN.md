@@ -35,6 +35,9 @@ Dopo: import dell'estratto conto (CSV), collegamento con le banche (open banking
 - **Domani anche: area amministratore come app per computer** ("Quadriamo Admin", Mac e Windows), come l'app per computer
   di Quadriamo: finestra Electron che apre `…/admin/`, icona distinta, aggiornamenti automatici. Da NON mettere nella pagina
   Scarica pubblica: si scarica da un link privato (o si compila solo per Carlo), perché è riservata all'amministratore.
+- **Domani anche: notifiche già durante la registrazione.** Appena creato l'account, un passaggio "Attiva le notifiche"
+  con il pulsante che apre subito l'avviso del sistema (Consenti). I browser lo permettono solo dopo un tocco dell'utente;
+  su iPhone/iPad solo nell'app aperta dall'icona. Per l'app per computer, le notifiche di sistema di Mac e Windows.
 - In attesa di una scelta: Free/Pro con abbonamento Stripe, da preparare in modalità test.
 
 - Dominio scelto: **quadriamo.com** (verificato libero l'11/10/2026, anche quadriamo.it): da comprare presto.
