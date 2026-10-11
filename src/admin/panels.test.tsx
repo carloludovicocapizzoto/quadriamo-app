@@ -40,7 +40,7 @@ describe('area amministratore', () => {
     expect(todo).toContain('Copia lo script'); expect(todo).toContain('io@x.it')
     const done = renderToString(<SetupPanel setup={setup} email="io@x.it" onRecheck={() => {}} />)
     expect(done.match(/az-step done/g)?.length).toBe(3)
-    expect(done).toContain('Confirm email'); expect(done).toContain('Email Templates')
+    expect(done).toContain('Confirm email'); expect(done).toContain('Email Templates'); expect(done).toContain('Segna come fatto')
   })
   it('profili aggregati', () => {
     const h = renderToString(<ProfilesPanel p={sampleProfiles} />)

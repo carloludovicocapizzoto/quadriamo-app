@@ -298,17 +298,34 @@ function Copy({ text, label: l = 'Copia' }: { text: string; label?: string }) {
   const [done, setDone] = useState(false)
   return <button className="az-btn" onClick={() => void navigator.clipboard.writeText(text).then(() => { setDone(true); setTimeout(() => setDone(false), 2000) })}>{done ? '✓ Copiato' : `📋 ${l}`}</button>
 }
-function Step({ n, ok, title, children }: { n: number; ok: boolean | null; title: string; children?: React.ReactNode }) {
+// passi che Supabase non lascia controllare da fuori (impostazioni di accesso, modelli email): li segni tu come fatti
+const MANUAL_KEY = 'q.setupManual'
+const readManual = (): number[] => { try { return JSON.parse(localStorage.getItem(MANUAL_KEY) ?? '[]') } catch { return [] } }
+
+function Step({ n, ok, title, children, manual }: { n: number; ok: boolean | null; title: string; children?: React.ReactNode; manual?: { done: boolean; toggle: () => void } }) {
+  const done = ok ?? manual?.done ?? null
   return (
-    <div className={`az-step${ok ? ' done' : ''}`}>
-      <span className="num">{ok ? '✓' : n}</span>
-      <div><h4>{title} {ok === false && <span className="az-pill warn">da fare</span>}{ok && <span className="az-pill ok">fatto</span>}</h4>{!ok && children}</div>
+    <div className={`az-step${done ? ' done' : ''}`}>
+      <span className="num">{done ? '✓' : n}</span>
+      <div><h4>{title} {done === false && <span className="az-pill warn">da fare</span>}{done && <span className="az-pill ok">fatto</span>}</h4>
+        {!done && children}
+        {manual && ok == null && (done
+          ? <button className="az-link" onClick={manual.toggle}>Riapri le istruzioni</button>
+          : <div className="az-u-row"><button className="az-btn primary" onClick={manual.toggle}>✓ Segna come fatto</button>
+              <span className="az-hint">Supabase non lascia controllare queste impostazioni da qui: segnalo tu quando hai finito.</span></div>)}
+      </div>
     </div>
   )
 }
 
 export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup; email: string; adminKey?: { name: string; hash: string }; onRecheck: () => void }) {
   const ref = projectRef()
+  const [manual, setManual] = useState<number[]>(readManual)
+  const toggle = (n: number) => () => setManual(m => {
+    const next = m.includes(n) ? m.filter(x => x !== n) : [...m, n]
+    try { localStorage.setItem(MANUAL_KEY, JSON.stringify(next)) } catch { /* niente */ }
+    return next
+  })
   const dash = `https://supabase.com/dashboard/project/${ref}`
   // con nome + codice: si registra solo l'impronta del codice; con l'account: l'utente con questa email
   const adminSql = adminKey
@@ -331,7 +348,7 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
           <div className="az-u-row"><Copy text={setup.tables ? partialSql : fullSql} label="Copia lo script" />
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
         </Step>
-        <Step n={2} ok={null} title="Registrazione con email e password">
+        <Step n={2} ok={null} manual={{ done: manual.includes(2), toggle: toggle(2) }} title="Registrazione con email e password">
           <p>In <a href={`${dash}/auth/providers`} target="_blank" rel="noreferrer">Authentication → Sign In / Providers → Email</a> lascia attivi
             <b>Email</b> e <b>Confirm email</b>, con <b>Email OTP Length = 6</b>: l'email contiene un codice di 6 cifre che si scrive direttamente
             nell'app installata, senza passare dal browser.</p>
@@ -347,7 +364,7 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
           <div className="az-u-row"><Copy text={`${SITE}app/`} label="Copia Site URL" /><Copy text={`${SITE}**`} label="Copia Redirect URL" />
             <a className="az-btn" href={`${dash}/auth/providers`} target="_blank" rel="noreferrer">↗ Apri Providers</a></div>
         </Step>
-        <Step n={3} ok={null} title="Email con lo stile di Quadriamo">
+        <Step n={3} ok={null} manual={{ done: manual.includes(3), toggle: toggle(3) }} title="Email con lo stile di Quadriamo">
           <p>In <a href={`${dash}/auth/templates`} target="_blank" rel="noreferrer">Authentication → Email Templates</a>, per ognuna delle tre email
             incolla l'oggetto e il testo (scheda <b>Source</b>) e salva. Il testo esce nella lingua scelta dall'utente (IT, EN, FR, ES).</p>
           <ul className="az-tpl">
