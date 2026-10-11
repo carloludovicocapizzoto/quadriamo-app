@@ -1,6 +1,6 @@
 // Dati dell'area amministratore: tutto passa dalle funzioni admin_* del database, che rispondono solo
 // a chi è nella tabella admins (il controllo è nel database, non qui).
-import { supabase } from '../sync/client'
+import { db, keyHeaders } from './adminKey'
 
 export interface Stats {
   devices: number; active_1: number; active_7: number; active_30: number; accounts: number; installed: number
@@ -28,6 +28,8 @@ export interface Setup {
   connected: boolean          // l'app ha URL e chiave di Supabase
   tables: boolean | null      // script 0002 eseguito (null = non ancora verificabile: serve l'accesso)
   profiles: boolean | null    // script 0004 (profili) eseguito
+  adminKeys: boolean | null   // script 0006 (accesso con nome + codice) eseguito
+  adminName: string | null    // nome di chi è entrato con il codice
   siteFeedback: boolean | null  // script 0005 (feedback dal sito) eseguito
   admin: boolean              // questo account è amministratore
   fn: 'ok' | 'missing' | 'nosecrets' | 'unknown'   // funzione send-push pubblicata e con le chiavi
@@ -50,7 +52,7 @@ export const label = (k: string | null | undefined) => LABELS[k ?? '?'] ?? k ?? 
 export const projectRef = () => (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.match(/https:\/\/([^.]+)\./)?.[1] ?? ''
 
 async function rpc<T>(name: string, args?: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase!.rpc(name, args)
+  const { data, error } = await db()!.rpc(name, args)
   if (error) throw error
   return data as T
 }
@@ -62,7 +64,8 @@ export const loadProfileStats = () => rpc<ProfileStats>('admin_profile_stats')
 export const loadPush = () => rpc<PushSub[]>('admin_push_list')
 
 export async function checkSetup(signedIn: boolean): Promise<Setup> {
-  const s: Setup = { connected: !!supabase, tables: null, profiles: null, siteFeedback: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
+  const supabase = db()
+  const s: Setup = { connected: !!supabase, tables: null, profiles: null, siteFeedback: null, adminKeys: null, adminName: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
     vapidInApp: !!import.meta.env.VITE_VAPID_PUBLIC_KEY }
   if (!supabase || !signedIn) return s
   const { data, error } = await supabase.rpc('is_admin')
@@ -71,10 +74,13 @@ export async function checkSetup(signedIn: boolean): Promise<Setup> {
   s.admin = data === true
   const pr = await supabase.from('profiles').select('user_id', { head: true, count: 'exact' })
   s.profiles = !(pr.error && (pr.error.code === 'PGRST205' || pr.error.code === '42P01'))
+  const an = await supabase.rpc('admin_name')
+  s.adminKeys = !(an.error && (an.error.code === 'PGRST202' || /could not find the function/i.test(an.error.message)))
+  s.adminName = (an.data as string | null) ?? null
   const sf = await supabase.rpc('site_feedback_ready')
   s.siteFeedback = !sf.error
   if (!s.admin) return s
-  const fn = await supabase.functions.invoke('send-push', { body: { mode: 'check' } })
+  const fn = await supabase.functions.invoke('send-push', { body: { mode: 'check' }, headers: keyHeaders() })
   if (fn.error) s.fn = 'missing'
   else { s.fn = fn.data?.vapid ? 'ok' : 'nosecrets'; s.cronSecret = !!fn.data?.cron }
   s.reminder = await rpc<boolean>('admin_reminder_active').catch(() => false)
@@ -82,7 +88,7 @@ export async function checkSetup(signedIn: boolean): Promise<Setup> {
 }
 
 export async function sendPush(title: string, body: string) {
-  const { data, error } = await supabase!.functions.invoke('send-push', { body: { mode: 'manual', title: title || undefined, body: body || undefined } })
+  const { data, error } = await db()!.functions.invoke('send-push', { body: { mode: 'manual', title: title || undefined, body: body || undefined }, headers: keyHeaders() })
   if (error) throw error
   return data as { total: number; sent: number; removed: number; failed: number }
 }

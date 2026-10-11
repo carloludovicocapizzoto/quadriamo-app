@@ -31,4 +31,4 @@ export const sampleProfiles: ProfileStats = { profiles: 21, completed: 15, with_
   goals: { understand: 11, save: 9, goal: 6, invest: 5, debt: 2, family: 3 }, cards: { bank: 12, Revolut: 7, Satispay: 6, PayPal: 5, Hype: 2, credit: 4, cash: 1 },
   invested: { yes: 6, want: 7, no: 2 }, invest_where: { etf: 4, broker: 4, bank: 2, crypto: 2, pension: 1 },
   shares_avg: [53.7, 21.3, 14.7, 10.3], shares_default: 10, shares_custom: 5 }
-export const sampleSetup: Setup = { connected: true, tables: true, profiles: true, siteFeedback: true, admin: true, fn: 'ok', cronSecret: true, reminder: true, vapidInApp: true }
+export const sampleSetup: Setup = { connected: true, tables: true, profiles: true, siteFeedback: true, adminKeys: true, adminName: null, admin: true, fn: 'ok', cronSecret: true, reminder: true, vapidInApp: true }

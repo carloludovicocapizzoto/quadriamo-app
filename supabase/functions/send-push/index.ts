@@ -20,7 +20,7 @@ const TEXT: Record<string, { title: string; body: string }> = {
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret, x-admin-key',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 const json = (body: unknown, status = 200) =>
@@ -36,10 +36,11 @@ Deno.serve(async req => {
   if (mode === 'scheduled') {
     if (!Deno.env.get('CRON_SECRET') || req.headers.get('x-cron-secret') !== Deno.env.get('CRON_SECRET')) return json({ error: 'forbidden' }, 403)
   } else {
-    // solo l'amministratore: si controlla con il SUO accesso, tramite la funzione is_admin()
-    const asUser = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, {
-      global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
-    })
+    // solo l'amministratore: si controlla con il SUO accesso (o con il suo codice x-admin-key), tramite is_admin()
+    const auth = req.headers.get('Authorization') ?? ''
+    const headers: Record<string, string> = { 'x-admin-key': req.headers.get('x-admin-key') ?? '' }
+    if (auth.startsWith('Bearer eyJ')) headers.Authorization = auth   // solo un vero accesso utente (JWT)
+    const asUser = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers } })
     const { data: ok } = await asUser.rpc('is_admin')
     if (ok !== true) return json({ error: 'forbidden' }, 403)
     if (mode === 'check') return json({ ok: true, vapid: !!Deno.env.get('VAPID_PUBLIC_KEY') && !!Deno.env.get('VAPID_PRIVATE_KEY'), cron: !!Deno.env.get('CRON_SECRET') })

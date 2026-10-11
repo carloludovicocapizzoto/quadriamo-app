@@ -20,6 +20,12 @@ dopo aver configurato l'SMTP. URL Configuration: Site URL `https://carloludovico
 Redirect URLs `https://carloludovicocapizzoto.github.io/quadriamo-app/**`.
 
 ## 2. Diventare amministratore
+**Il modo più rapido (senza account):** apri `…/admin/`, scrivi il tuo nome, premi "Primo accesso? Genera un codice sicuro",
+salva il codice (Note o portachiavi), premi Entra. In Configurazione "Copia lo script" contiene già il tuo nome e l'impronta
+del codice (`supabase/migrations/0006_admin_key.sql`): incollalo nel SQL Editor e premi Run. Sugli altri dispositivi entri con
+lo stesso nome e codice. Per revocarlo: `delete from public.admin_keys where name = 'Carlo';`
+
+**Oppure con l'account:**
 Nell'app (online) crea il tuo account (Impostazioni → Account e sincronizzazione → Crea account). Poi in **SQL Editor**:
 
 ```sql

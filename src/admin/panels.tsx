@@ -7,6 +7,7 @@ import sql0005 from '../../supabase/migrations/0005_site_feedback.sql?raw'
 import tplConfirm from '../../supabase/templates/confirmation.html?raw'
 import tplMagic from '../../supabase/templates/magic_link.html?raw'
 import tplRecovery from '../../supabase/templates/recovery.html?raw'
+import sql0006 from '../../supabase/migrations/0006_admin_key.sql?raw'
 import sql0003 from '../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
 import fnCode from '../../supabase/functions/send-push/index.ts?raw'
 
@@ -306,14 +307,17 @@ function Step({ n, ok, title, children }: { n: number; ok: boolean | null; title
   )
 }
 
-export function SetupPanel({ setup, email, onRecheck }: { setup: Setup; email: string; onRecheck: () => void }) {
+export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup; email: string; adminKey?: { name: string; hash: string }; onRecheck: () => void }) {
   const ref = projectRef()
   const dash = `https://supabase.com/dashboard/project/${ref}`
-  const adminSql = `insert into public.admins (user_id)\nselect id from auth.users where email = '${email}'\non conflict do nothing;`
-  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n-- tu sei l'amministratore\n${adminSql}\n`
-  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.siteFeedback !== false
+  // con nome + codice: si registra solo l'impronta del codice; con l'account: l'utente con questa email
+  const adminSql = adminKey
+    ? `insert into public.admin_keys (name, key_hash)\nvalues ('${adminKey.name.replace(/'/g, "''")}', decode('${adminKey.hash}', 'hex'))\non conflict (key_hash) do update set name = excluded.name;`
+    : `insert into public.admins (user_id)\nselect id from auth.users where email = '${email}'\non conflict do nothing;`
+  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n${sql0006}\n-- tu sei l'amministratore\n${adminSql}\n`
+  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.siteFeedback !== false && setup.adminKeys !== false
   // tabelle già create ma manca qualcosa: solo i pezzi mancanti
-  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
+  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.adminKeys === false ? sql0006 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
   const cronSql = sql0003.replace('<PROJECT_REF>', ref)
   return (
     <>
@@ -323,7 +327,7 @@ export function SetupPanel({ setup, email, onRecheck }: { setup: Setup; email: s
         <Step n={1} ok={setup.tables == null ? null : step1} title="Tabelle (statistiche, feedback, notifiche, profili) e il tuo accesso da amministratore">
           {setup.tables
             ? <p>Manca ancora un pezzo. Copia, incolla in <a href={`${dash}/sql/new`} target="_blank" rel="noreferrer">SQL Editor</a> → <b>Run</b>.</p>
-            : <p>Copia lo script (crea tutto e ti rende amministratore con <b>{email}</b>), poi apri <a href={`${dash}/sql/new`} target="_blank" rel="noreferrer">SQL Editor</a>, incolla e premi <b>Run</b>. Deve comparire "Success".</p>}
+            : <p>Copia lo script (crea tutto e ti rende amministratore {adminKey ? <>con il nome <b>{adminKey.name}</b> e il tuo codice</> : <>con <b>{email}</b></>}), poi apri <a href={`${dash}/sql/new`} target="_blank" rel="noreferrer">SQL Editor</a>, incolla e premi <b>Run</b>. Deve comparire "Success".</p>}
           <div className="az-u-row"><Copy text={setup.tables ? partialSql : fullSql} label="Copia lo script" />
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
         </Step>

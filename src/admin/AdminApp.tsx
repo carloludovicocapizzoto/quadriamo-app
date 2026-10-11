@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../sync/client'
+import { newCode, saveKey, savedKey, sha256Hex, type AdminKey } from './adminKey'
 import { checkSetup, loadAccounts, loadDevices, loadFeedback, loadProfileStats, loadPush, loadStats, sendPush,
   type Account, type Device, type Feedback, type ProfileStats, type PushSub, type Setup, type Stats } from './data'
 import { sampleAccounts, sampleDevices, sampleFeedback, sampleProfiles, samplePush, sampleSetup, sampleStats } from './sample'
@@ -30,6 +31,7 @@ const DEMO = new URLSearchParams(window.location.search).get('demo') === '1'
 export function AdminApp() {
   const [session, setSession] = useState<Session | null>(null)
   const [ready, setReady] = useState(!supabase)
+  const [key, setKey] = useState<AdminKey | null>(savedKey)
   useEffect(() => {
     if (!supabase) return
     void supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true) })
@@ -39,8 +41,10 @@ export function AdminApp() {
   if (DEMO) return <Shell email="anteprima con dati di esempio" demo />
   if (!ready) return null
   if (!supabase) return <Gate><p className="az-msg error">Questa versione non è collegata a Supabase.</p></Gate>
-  if (!session) return <Login />
-  return <Shell email={session.user.email ?? ''} />
+  // con nome + codice si entra senza account
+  if (key) return <Shell email={key.name} adminKey={key} onLogout={() => { saveKey(null); setKey(null) }} />
+  if (!session) return <Login onKey={k => { saveKey(k); setKey(k) }} />
+  return <Shell email={session.user.email ?? ''} onLogout={() => void supabase!.auth.signOut()} />
 }
 
 function Gate({ children }: { children: React.ReactNode }) {
@@ -54,7 +58,10 @@ function Gate({ children }: { children: React.ReactNode }) {
   )
 }
 
-function Login() {
+function Login({ onKey }: { onKey: (k: AdminKey) => void }) {
+  const [mode, setMode] = useState<'key' | 'email'>('key')
+  const [name, setName] = useState('')
+  const [code, setCode] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -73,10 +80,35 @@ function Login() {
     setBusy(false)
     setMsg(error ? { text: 'Invio non riuscito: riprova tra qualche minuto.', bad: true } : { text: 'Ti abbiamo mandato un link: aprilo da questo dispositivo.' })
   }
+  function enter(e: FormEvent) {
+    e.preventDefault()
+    if (!name.trim()) { setMsg({ text: 'Scrivi il tuo nome.', bad: true }); return }
+    if (code.trim().length < 20) { setMsg({ text: 'Il codice deve avere almeno 20 caratteri: generane uno con il pulsante qui sotto.', bad: true }); return }
+    onKey({ name: name.trim(), code: code.trim() })
+  }
+  if (mode === 'key') {
+    return (
+      <Gate>
+        <h1>Accedi</h1>
+        <p className="az-hint">Con il tuo nome e il codice amministratore. Questo dispositivo li ricorda.</p>
+        <form className="az-form" onSubmit={enter}>
+          <label className="az-field"><span>Nome</span><input autoComplete="name" value={name} onChange={e => setName(e.target.value)} /></label>
+          <label className="az-field"><span>Codice amministratore</span><input type="password" autoComplete="current-password" value={code} onChange={e => setCode(e.target.value)} /></label>
+          <button className="az-btn primary big">Entra</button>
+          <button type="button" className="az-link" onClick={() => { const c = newCode(); setCode(c); void navigator.clipboard?.writeText(c).catch(() => {})
+            setMsg({ text: `Nuovo codice: ${c} — è già copiato. Salvalo (per esempio nelle Note o nel portachiavi delle password): ti servirà su altri dispositivi.` }) }}>
+            Primo accesso? Genera un codice sicuro</button>
+          {msg && <p className={`az-msg ${msg.bad ? 'error' : 'ok'}`} role="status">{msg.text}</p>}
+        </form>
+        <p className="az-hint">Il primo accesso con un codice nuovo apre la Configurazione: lì copi lo script che lo attiva su Supabase.</p>
+        <p className="az-hint"><button className="az-link" onClick={() => { setMode('email'); setMsg(null) }}>Entra con email e password</button> · <a href={APP_URL}>← Torna all'app</a></p>
+      </Gate>
+    )
+  }
   return (
     <Gate>
       <h1>Accedi</h1>
-      <p className="az-hint">Con lo stesso account che usi nell'app.</p>
+      <p className="az-hint">Con lo stesso account che usi nell'app. <button className="az-link" onClick={() => { setMode('key'); setMsg(null) }}>Usa nome e codice</button></p>
       <form className="az-form" onSubmit={submit}>
         <label className="az-field"><span>Email</span><input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>
         <label className="az-field"><span>Password</span><input type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /></label>
@@ -89,7 +121,9 @@ function Login() {
   )
 }
 
-function Shell({ email, demo = false }: { email: string; demo?: boolean }) {
+function Shell({ email, demo = false, adminKey, onLogout }: { email: string; demo?: boolean; adminKey?: AdminKey; onLogout?: () => void }) {
+  const [keyHash, setKeyHash] = useState('')
+  useEffect(() => { if (adminKey) void sha256Hex(adminKey.code).then(setKeyHash) }, [adminKey])
   const [panel, setPanelState] = useState<Panel>(() => (new URLSearchParams(window.location.search).get('panel') as Panel) || 'dashboard')
   const [menu, setMenu] = useState(false)
   const [setup, setSetup] = useState<Setup | null>(null)
@@ -160,7 +194,7 @@ function Shell({ email, demo = false }: { email: string; demo?: boolean }) {
         <div className="az-sidebar-footer">
           <span className="az-sidebar-user" title={email}>{email}</span>
           {demo ? <a className="az-logout" href={window.location.pathname}>Esci</a>
-            : <button className="az-logout" onClick={() => void supabase!.auth.signOut()}>Esci</button>}
+            : <button className="az-logout" onClick={onLogout}>Esci</button>}
         </div>
       </aside>
       <main className="az-main">
@@ -172,7 +206,7 @@ function Shell({ email, demo = false }: { email: string; demo?: boolean }) {
         {!setup && <p className="az-empty">Caricamento…</p>}
         {locked && <p className="az-msg error">Completa prima la configurazione.</p>}
         {error && setup?.admin && <p className="az-msg error">Errore nel caricare i dati: {error}</p>}
-        {setup && panel === 'configurazione' && <SetupPanel setup={setup} email={email} onRecheck={() => void recheck().then(s => { if (s.admin) void load() })} />}
+        {setup && panel === 'configurazione' && <SetupPanel setup={setup} email={email} adminKey={adminKey && keyHash ? { name: adminKey.name, hash: keyHash } : undefined} onRecheck={() => void recheck().then(s => { if (s.admin) void load() })} />}
         {setup?.admin && panel === 'dashboard' && stats && <DashboardPanel stats={stats} days={days} setDays={setDays} />}
         {setup?.admin && panel === 'dispositivi' && <DevicesPanel rows={devices} />}
         {setup?.admin && panel === 'account' && <AccountsPanel rows={accounts} />}
