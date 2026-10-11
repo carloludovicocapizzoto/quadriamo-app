@@ -25,10 +25,13 @@ Dopo: import dell'estratto conto (CSV), collegamento con le banche (open banking
 
 ## Da fare oltre alle fasi
 
-- **Prossimo (deciso il 12/10/2026): una nuova pagina Home**, la prima scheda dell'app. In alto grafici e widget
-  interattivi (quanto resta in ogni parte, quanto puoi spendere oggi, andamento del mese, spese per categoria, confronto con il
-  mese prima), in fondo la lista degli ultimi movimenti. Il pulsante + resta per aggiungere le spese. Le altre schede
-  (Mese, Movimenti, Anno, Investi, Impostazioni) restano come sono.
+- **Prossimo (deciso il 12/10/2026): una nuova pagina Home**, la prima scheda dell'app. Solo l'essenziale: un riassunto
+  chiaro dei soldi rimasti e delle spese. È fatta di **widget personalizzabili**: l'utente sceglie quali vedere, li aggiunge o
+  toglie e cambia l'ordine (modalità "Modifica" con un catalogo di widget; la scelta si salva e si sincronizza).
+  Proposta di widget: Rimasto questo mese (totale e per parte) · Oggi puoi spendere · Speso questo mese vs entrate ·
+  Ciambella delle quattro parti · Spese giorno per giorno · Spese per categoria · Confronto con il mese prima ·
+  Prossimi pagamenti ricorrenti · Ultimi movimenti · Risparmi e investimenti. Predefiniti: i primi tre + Ultimi movimenti.
+  Il pulsante + resta. Le altre schede (Mese, Movimenti, Anno, Investi, Impostazioni) restano come sono.
 - In attesa di una scelta: Free/Pro con abbonamento Stripe, da preparare in modalità test.
 
 - Dominio scelto: **quadriamo.com** (verificato libero l'11/10/2026, anche quadriamo.it): da comprare presto.
