@@ -170,3 +170,9 @@ details p { margin: 10px 0 0; color: var(--muted); }
 .fb-msg { margin: 4px 0 0; font-weight: 600; font-size: 15px; }
 .fb-msg.ok { color: #15803D; } .fb-msg.bad { color: #B42318; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fb-msg.ok { color: #4ADE80; } :root:not([data-theme="light"]) .fb-msg.bad { color: #F87171; } }
+
+/* interfaccia ferma come un'app: niente zoom con il doppio tocco, niente rimbalzo della pagina, testo che non si ingrandisce
+   da solo; campi da 16px perché su iPhone quelli più piccoli fanno ingrandire la pagina quando li tocchi */
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { overscroll-behavior: none; }
+input, select, textarea { font-size: max(16px, 1em); }

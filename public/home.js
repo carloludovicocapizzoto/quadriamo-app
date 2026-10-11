@@ -229,3 +229,8 @@
     apply(sel.value)
   })
 })()
+
+// Interfaccia ferma: niente zoom con due dita (iOS ignora user-scalable=no); il doppio tocco lo blocca il CSS
+;(function () {
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) { document.addEventListener(ev, function (e) { e.preventDefault() }, { passive: false }) })
+})()

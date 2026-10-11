@@ -485,3 +485,9 @@ main.app-enter { animation: fade-up .5s cubic-bezier(.2,.8,.2,1) both; }
 .inst-browsers .chip { min-height: 32px; font-size: 13px; padding: 0 12px; }
 .inst-arrow.down-right { bottom: 8px; right: 18px; transform: rotate(60deg); animation: bob-dr 1.1s ease-in-out infinite; }
 @keyframes bob-dr { 50% { transform: translate(6px, 8px) rotate(60deg); } }
+
+/* interfaccia ferma come un'app: niente zoom con il doppio tocco, niente rimbalzo della pagina, testo che non si ingrandisce
+   da solo; campi da 16px perché su iPhone quelli più piccoli fanno ingrandire la pagina quando li tocchi */
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { overscroll-behavior: none; }
+input, select, textarea { font-size: max(16px, 1em); }

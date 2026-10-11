@@ -36,3 +36,9 @@ code { font-size: 14px; word-break: break-all; background: var(--surface); borde
 [data-lang] { display: none; }
 [data-lang].on { display: block; }
 footer { margin-top: 40px; font-size: 14px; color: var(--muted); }
+
+/* interfaccia ferma come un'app: niente zoom con il doppio tocco, niente rimbalzo della pagina, testo che non si ingrandisce
+   da solo; campi da 16px perché su iPhone quelli più piccoli fanno ingrandire la pagina quando li tocchi */
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { overscroll-behavior: none; }
+input, select, textarea { font-size: max(16px, 1em); }
