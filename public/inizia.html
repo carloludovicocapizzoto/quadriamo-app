@@ -23,15 +23,11 @@
     .os h3 { margin: 0 0 4px; }
     .ok { color: #15803D; font-weight: 700; }
     .phone-only { display: none; }
+    .final { text-align: center; }
+    .phone-only .btn { margin-top: 4px; }
     @media (max-width: 760px), (hover: none) and (pointer: coarse) { .desk-only { display: none; } .phone-only { display: block; } }
     @media (max-width: 600px) { .os { grid-template-columns: 1fr; } .step { grid-template-columns: 1fr; gap: 6px; padding: 16px; } .step .n { width: 40px; height: 40px; font-size: 20px; } }
     .final { margin: 32px 0 0; }
-    .mail-card h2 { margin-top: 0; }
-    .mail-form { display: flex; gap: 10px; flex-wrap: wrap; }
-    .mail-form input { flex: 1; min-width: 200px; font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 0 14px; min-height: 48px; }
-    .mail-form .btn { border: 0; font: inherit; font-weight: 700; cursor: pointer; }
-    .mail-ok { color: #15803D; font-weight: 700; } .mail-bad { color: #B42318; font-weight: 700; }
-    .phone-only a { font-weight: 700; }
     .btn.big { min-height: 56px; font-size: 18px; padding: 0 28px; }
   </style>
 </head>
@@ -51,7 +47,7 @@
     <ol class="journey">
       <li class="step"><span class="n">1</span><div><h2>Aprila sul telefono</h2>
         <div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Inquadra il codice con la fotocamera del telefono: si apre Quadriamo con il tutorial per aggiungerla alla Home.</p></div>
-        <p class="phone-only"><a href="#email-it">Sei già sul telefono? Fatti mandare il link via email qui sotto.</a></p></div></li>
+        <div class="phone-only"><p>Sei sul telefono: tocca il pulsante. Si apre Quadriamo con le istruzioni per metterla nella schermata Home.</p><p><a class="btn big" href="app/">Apri Quadriamo →</a></p></div></div></li>
       <li class="step"><span class="n">2</span><div><h2>Aggiungila alla schermata Home</h2>
         <div class="os"><div class="card"><h3>iPhone</h3><p>Con <b>Safari</b>: tocca <b>Condividi</b> <kbd>⬆︎</kbd> (se non lo vedi, prima <kbd>⋯</kbd> in basso a destra) → <b>Aggiungi alla schermata Home</b> → <b>Aggiungi</b>.</p></div><div class="card"><h3>Android</h3><p>Con <b>Chrome</b>: tocca <kbd>⋮</kbd> in alto a destra → <b>Installa app</b> → <b>Installa</b>.</p></div></div>
         <p class="small muted">Da qui in poi apri Quadriamo dalla sua icona: si apre a schermo intero e funziona anche offline. <a href="install.html?lang=it">Guida completa con le immagini dei passaggi</a></p></div></li>
@@ -59,25 +55,9 @@
       <li class="step"><span class="n">4</span><div><h2>Imposta il tuo budget</h2><p>Subito dopo la registrazione l’app ti guida passo passo: <b>valuta e giorno dello stipendio</b>, la tua <b>regola</b> (consigliata 55-20-15-10), <b>categorie</b>, <b>pagamenti ricorrenti</b>, <b>regole automatiche</b>, <b>cambi valuta</b> e, se vuoi, l’import di un backup.</p><p class="small muted">Se ti va, completa il profilo (facoltativo): entrate, obiettivi, carte che usi, investimenti e come vuoi dividere i soldi.</p></div></li>
       <li class="step"><span class="n">5</span><div><h2>Usala ogni giorno</h2><p>Tocca <b>+</b> per registrare una spesa in 5 secondi, oppure importa l’estratto conto. In alto vedi sempre <b>quanto puoi ancora spendere oggi</b>.</p></div></li>
     </ol>
-    <div class="final card mail-card" id="email-it">
-      <h2>✉️ Mandami il link via email</h2>
-      <p class="muted">Scrivi la tua email: si apre la tua app di posta con un messaggio già pronto (passaggi e link). Premi Invia e lo ritrovi nella tua casella, da aprire sul telefono.</p>
-      <form class="mail-form" data-subject="Quadriamo: il link per iniziare" data-body="Ciao!
-
-Ecco come iniziare con Quadriamo:
-
-1. Apri questo link dal telefono:
-{url}
-2. Segui il tutorial per aggiungerla alla schermata Home
-3. Apri Quadriamo dalla sua icona e crea il tuo account (nome, email, password)
-4. Configura il budget in pochi passaggi
-
-Buon budget!" data-url="https://carloludovicocapizzoto.github.io/quadriamo-app/app/" novalidate>
-        <input type="email" autocomplete="email" placeholder="la-tua@email.it" aria-label="Email" required>
-        <button class="btn" type="submit">Prepara l’email</button>
-      </form>
-      <p class="mail-ok" hidden>✓ Si è aperta la tua app di posta: premi Invia.</p>
-      <p class="mail-bad" hidden>Scrivi un indirizzo email valido.</p>
+    <div class="final">
+      <p class="phone-only"><a class="btn big" href="app/">Apri Quadriamo →</a></p>
+      <p class="desk-only muted">Sei al computer? Inquadra con il telefono il codice del passaggio 1.</p>
     </div>
   </section>
   <section data-lang="en">
@@ -87,7 +67,7 @@ Buon budget!" data-url="https://carloludovicocapizzoto.github.io/quadriamo-app/a
     <ol class="journey">
       <li class="step"><span class="n">1</span><div><h2>Open it on your phone</h2>
         <div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Scan the code with your phone camera: Quadriamo opens with the tutorial to add it to your Home Screen.</p></div>
-        <p class="phone-only"><a href="#email-en">Already on your phone? Get the link by email below.</a></p></div></li>
+        <div class="phone-only"><p>You’re on your phone: tap the button. Quadriamo opens with the steps to put it on your Home Screen.</p><p><a class="btn big" href="app/">Open Quadriamo →</a></p></div></div></li>
       <li class="step"><span class="n">2</span><div><h2>Add it to your Home Screen</h2>
         <div class="os"><div class="card"><h3>iPhone</h3><p>In <b>Safari</b>: tap <b>Share</b> <kbd>⬆︎</kbd> (if you can’t see it, first <kbd>⋯</kbd> at the bottom right) → <b>Add to Home Screen</b> → <b>Add</b>.</p></div><div class="card"><h3>Android</h3><p>In <b>Chrome</b>: tap <kbd>⋮</kbd> at the top right → <b>Install app</b> → <b>Install</b>.</p></div></div>
         <p class="small muted">From now on open Quadriamo from its icon: it opens full screen and works offline too. <a href="install.html?lang=en">Full guide to every step</a></p></div></li>
@@ -95,25 +75,9 @@ Buon budget!" data-url="https://carloludovicocapizzoto.github.io/quadriamo-app/a
       <li class="step"><span class="n">4</span><div><h2>Set up your budget</h2><p>Right after signing up the app guides you step by step: <b>currency and payday</b>, your <b>rule</b> (suggested 55-20-15-10), <b>categories</b>, <b>recurring payments</b>, <b>automatic rules</b>, <b>exchange rates</b> and, if you like, importing a backup.</p><p class="small muted">If you like, complete your profile (optional): income, goals, the cards you use, investments and how you want to split your money.</p></div></li>
       <li class="step"><span class="n">5</span><div><h2>Use it every day</h2><p>Tap <b>+</b> to log an expense in 5 seconds, or import your bank statement. At the top you always see <b>how much you can still spend today</b>.</p></div></li>
     </ol>
-    <div class="final card mail-card" id="email-en">
-      <h2>✉️ Email me the link</h2>
-      <p class="muted">Enter your email: your mail app opens with a ready-made message (steps and link). Press Send and you’ll find it in your inbox, to open on your phone.</p>
-      <form class="mail-form" data-subject="Quadriamo: your link to get started" data-body="Hi!
-
-Here is how to get started with Quadriamo:
-
-1. Open this link on your phone:
-{url}
-2. Follow the tutorial to add it to your Home Screen
-3. Open Quadriamo from its icon and create your account (name, email, password)
-4. Set up your budget in a few steps
-
-Happy budgeting!" data-url="https://carloludovicocapizzoto.github.io/quadriamo-app/app/" novalidate>
-        <input type="email" autocomplete="email" placeholder="you@email.com" aria-label="Email" required>
-        <button class="btn" type="submit">Prepare the email</button>
-      </form>
-      <p class="mail-ok" hidden>✓ Your mail app has opened: press Send.</p>
-      <p class="mail-bad" hidden>Enter a valid email address.</p>
+    <div class="final">
+      <p class="phone-only"><a class="btn big" href="app/">Open Quadriamo →</a></p>
+      <p class="desk-only muted">On a computer? Scan the code in step 1 with your phone.</p>
     </div>
   </section>
   <section data-lang="fr">
@@ -123,7 +87,7 @@ Happy budgeting!" data-url="https://carloludovicocapizzoto.github.io/quadriamo-a
     <ol class="journey">
       <li class="step"><span class="n">1</span><div><h2>Ouvrez-la sur votre téléphone</h2>
         <div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Scannez le code avec l’appareil photo du téléphone : Quadriamo s’ouvre avec le tutoriel pour l’ajouter à l’écran d’accueil.</p></div>
-        <p class="phone-only"><a href="#email-fr">Déjà sur le téléphone ? Recevez le lien par e-mail ci-dessous.</a></p></div></li>
+        <div class="phone-only"><p>Vous êtes sur le téléphone : touchez le bouton. Quadriamo s’ouvre avec les étapes pour l’ajouter à l’écran d’accueil.</p><p><a class="btn big" href="app/">Ouvrir Quadriamo →</a></p></div></div></li>
       <li class="step"><span class="n">2</span><div><h2>Ajoutez-la à l’écran d’accueil</h2>
         <div class="os"><div class="card"><h3>iPhone</h3><p>Avec <b>Safari</b> : touchez <b>Partager</b> <kbd>⬆︎</kbd> (sinon d’abord <kbd>⋯</kbd> en bas à droite) → <b>Sur l’écran d’accueil</b> → <b>Ajouter</b>.</p></div><div class="card"><h3>Android</h3><p>Avec <b>Chrome</b> : touchez <kbd>⋮</kbd> en haut à droite → <b>Installer l’application</b> → <b>Installer</b>.</p></div></div>
         <p class="small muted">Ensuite, ouvrez Quadriamo depuis son icône : plein écran, et fonctionne hors ligne. <a href="install.html?lang=fr">Guide complet de chaque étape</a></p></div></li>
@@ -131,25 +95,9 @@ Happy budgeting!" data-url="https://carloludovicocapizzoto.github.io/quadriamo-a
       <li class="step"><span class="n">4</span><div><h2>Configurez votre budget</h2><p>Juste après l’inscription, l’app vous guide étape par étape : <b>devise et jour de paie</b>, votre <b>règle</b> (conseillée 55-20-15-10), <b>catégories</b>, <b>paiements récurrents</b>, <b>règles automatiques</b>, <b>taux de change</b> et, si vous voulez, l’import d’une sauvegarde.</p><p class="small muted">Si vous voulez, complétez votre profil (facultatif) : revenus, objectifs, cartes utilisées, investissements et répartition de votre argent.</p></div></li>
       <li class="step"><span class="n">5</span><div><h2>Utilisez-la chaque jour</h2><p>Touchez <b>+</b> pour noter une dépense en 5 secondes, ou importez votre relevé. En haut, vous voyez toujours <b>combien vous pouvez encore dépenser aujourd’hui</b>.</p></div></li>
     </ol>
-    <div class="final card mail-card" id="email-fr">
-      <h2>✉️ Recevoir le lien par e-mail</h2>
-      <p class="muted">Saisissez votre e-mail : votre messagerie s’ouvre avec un message prêt (étapes et lien). Appuyez sur Envoyer et vous le retrouverez dans votre boîte, à ouvrir sur le téléphone.</p>
-      <form class="mail-form" data-subject="Quadriamo : le lien pour commencer" data-body="Bonjour !
-
-Voici comment commencer avec Quadriamo :
-
-1. Ouvrez ce lien sur votre téléphone :
-{url}
-2. Suivez le tutoriel pour l’ajouter à l’écran d’accueil
-3. Ouvrez Quadriamo depuis son icône et créez votre compte (nom, e-mail, mot de passe)
-4. Configurez votre budget en quelques étapes
-
-Bon budget !" data-url="https://carloludovicocapizzoto.github.io/quadriamo-app/app/" novalidate>
-        <input type="email" autocomplete="email" placeholder="vous@email.fr" aria-label="Email" required>
-        <button class="btn" type="submit">Préparer l’e-mail</button>
-      </form>
-      <p class="mail-ok" hidden>✓ Votre messagerie s’est ouverte : appuyez sur Envoyer.</p>
-      <p class="mail-bad" hidden>Saisissez une adresse e-mail valide.</p>
+    <div class="final">
+      <p class="phone-only"><a class="btn big" href="app/">Ouvrir Quadriamo →</a></p>
+      <p class="desk-only muted">Sur ordinateur ? Scannez le code de l’étape 1 avec le téléphone.</p>
     </div>
   </section>
   <section data-lang="es">
@@ -159,7 +107,7 @@ Bon budget !" data-url="https://carloludovicocapizzoto.github.io/quadriamo-app/a
     <ol class="journey">
       <li class="step"><span class="n">1</span><div><h2>Ábrela en el móvil</h2>
         <div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><p>Escanea el código con la cámara del móvil: Quadriamo se abre con el tutorial para añadirla a la pantalla de inicio.</p></div>
-        <p class="phone-only"><a href="#email-es">¿Ya estás en el móvil? Recibe el enlace por correo aquí abajo.</a></p></div></li>
+        <div class="phone-only"><p>Estás en el móvil: toca el botón. Quadriamo se abre con los pasos para ponerla en la pantalla de inicio.</p><p><a class="btn big" href="app/">Abrir Quadriamo →</a></p></div></div></li>
       <li class="step"><span class="n">2</span><div><h2>Añádela a la pantalla de inicio</h2>
         <div class="os"><div class="card"><h3>iPhone</h3><p>Con <b>Safari</b>: toca <b>Compartir</b> <kbd>⬆︎</kbd> (si no lo ves, primero <kbd>⋯</kbd> abajo a la derecha) → <b>Añadir a pantalla de inicio</b> → <b>Añadir</b>.</p></div><div class="card"><h3>Android</h3><p>Con <b>Chrome</b>: toca <kbd>⋮</kbd> arriba a la derecha → <b>Instalar aplicación</b> → <b>Instalar</b>.</p></div></div>
         <p class="small muted">A partir de ahora abre Quadriamo desde su icono: a pantalla completa y también sin conexión. <a href="install.html?lang=es">Guía completa de cada paso</a></p></div></li>
@@ -167,25 +115,9 @@ Bon budget !" data-url="https://carloludovicocapizzoto.github.io/quadriamo-app/a
       <li class="step"><span class="n">4</span><div><h2>Configura tu presupuesto</h2><p>Justo después de registrarte la app te guía paso a paso: <b>moneda y día de cobro</b>, tu <b>regla</b> (recomendada 55-20-15-10), <b>categorías</b>, <b>pagos recurrentes</b>, <b>reglas automáticas</b>, <b>tipos de cambio</b> y, si quieres, importar una copia.</p><p class="small muted">Si quieres, completa tu perfil (opcional): ingresos, objetivos, tarjetas que usas, inversiones y cómo repartir tu dinero.</p></div></li>
       <li class="step"><span class="n">5</span><div><h2>Úsala cada día</h2><p>Toca <b>+</b> para apuntar un gasto en 5 segundos, o importa el extracto. Arriba ves siempre <b>cuánto puedes gastar todavía hoy</b>.</p></div></li>
     </ol>
-    <div class="final card mail-card" id="email-es">
-      <h2>✉️ Envíame el enlace por correo</h2>
-      <p class="muted">Escribe tu correo: se abre tu app de correo con un mensaje ya preparado (pasos y enlace). Pulsa Enviar y lo tendrás en tu bandeja, para abrirlo en el móvil.</p>
-      <form class="mail-form" data-subject="Quadriamo: el enlace para empezar" data-body="¡Hola!
-
-Así empiezas con Quadriamo:
-
-1. Abre este enlace en el móvil:
-{url}
-2. Sigue el tutorial para añadirla a la pantalla de inicio
-3. Abre Quadriamo desde su icono y crea tu cuenta (nombre, correo, contraseña)
-4. Configura tu presupuesto en pocos pasos
-
-¡Buen presupuesto!" data-url="https://carloludovicocapizzoto.github.io/quadriamo-app/app/" novalidate>
-        <input type="email" autocomplete="email" placeholder="tu@correo.es" aria-label="Email" required>
-        <button class="btn" type="submit">Preparar el correo</button>
-      </form>
-      <p class="mail-ok" hidden>✓ Se ha abierto tu app de correo: pulsa Enviar.</p>
-      <p class="mail-bad" hidden>Escribe un correo válido.</p>
+    <div class="final">
+      <p class="phone-only"><a class="btn big" href="app/">Abrir Quadriamo →</a></p>
+      <p class="desk-only muted">¿En el ordenador? Escanea con el móvil el código del paso 1.</p>
     </div>
   </section>
 

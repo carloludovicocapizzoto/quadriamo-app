@@ -481,3 +481,7 @@ main.app-enter { animation: fade-up .5s cubic-bezier(.2,.8,.2,1) both; }
 .conf-steps p { margin: 2px 0 0; }
 .conf-icon .logo-mark { animation: pop .6s 1s cubic-bezier(.2,1.4,.4,1) both, breathe 1.6s 1.6s ease-in-out infinite; }
 .conf-login { font-size: 12px; font-weight: 700; padding: 6px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); }
+.inst-browsers { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 2px; }
+.inst-browsers .chip { min-height: 32px; font-size: 13px; padding: 0 12px; }
+.inst-arrow.down-right { bottom: 8px; right: 18px; transform: rotate(60deg); animation: bob-dr 1.1s ease-in-out infinite; }
+@keyframes bob-dr { 50% { transform: translate(6px, 8px) rotate(60deg); } }
