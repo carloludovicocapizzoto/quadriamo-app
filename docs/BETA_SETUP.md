@@ -51,3 +51,10 @@ Indipendentemente da questo, l'app stessa mostra il riquadro "Come ti trovi?" og
 - Le statistiche partono solo dai dispositivi che hanno detto sì al consenso.
 - Su iPhone le notifiche funzionano solo con l'app installata sulla schermata Home (iOS 16.4 o successivi).
 - Privacy policy già aggiornata con statistiche, feedback e notifiche.
+
+## Email di conferma, accesso e password con lo stile di Quadriamo
+- Authentication → Email Templates: per "Confirm signup", "Magic Link" e "Reset Password" incolla oggetto e testo da
+  `supabase/templates/` (o dai pulsanti "Copia" in Area amministratore → Configurazione). Il testo cambia lingua da solo.
+- Le email contengono un codice di 6 cifre (Email OTP Length = 6): si scrive nell'app installata, senza passare dal browser.
+- Il servizio email gratuito di Supabase consegna solo agli indirizzi del team. Per gli amici serve un SMTP (Authentication →
+  SMTP Settings): senza dominio va bene Brevo (gratis), con mittente "Quadriamo".

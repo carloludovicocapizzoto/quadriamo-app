@@ -86,19 +86,35 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   }, [syncNow])
 
   const appUrl = `${window.location.origin}${import.meta.env.BASE_URL}app/?login=1`
+  // il pulsante dell'email apre il browser (non l'app installata): lì compare "Email confermata, torna sull'app"
+  const confirmUrl = `${window.location.origin}${import.meta.env.BASE_URL}app/?confirmed=1`
   const api = useMemo<SyncApi>(() => ({
     enabled: !!supabase, ready, user, status, lastSync, syncNow, recovery,
     signIn: async (email, password) => {
       const { error } = await supabase!.auth.signInWithPassword({ email, password })
       if (error) throw error
     },
-    signUp: async ({ firstName, lastName, email, password }) => {
+    signUp: async ({ firstName, lastName, email, password, lang }) => {
+      // lang: la lingua delle email (i modelli in supabase/templates la usano)
       const { data, error } = await supabase!.auth.signUp({ email, password,
-        options: { data: { first_name: firstName, last_name: lastName }, emailRedirectTo: appUrl } })
+        options: { data: { first_name: firstName, last_name: lastName, lang }, emailRedirectTo: confirmUrl } })
       if (error) throw error
       // con la conferma email attiva, un'email già registrata torna come utente senza identità
       if (data.user && !data.user.identities?.length) throw Object.assign(new Error('exists'), { code: 'user_already_exists' })
       return { needsConfirm: !data.session }
+    },
+    verifySignup: async (email, code) => {
+      const { error } = await supabase!.auth.verifyOtp({ email, token: code, type: 'signup' })
+      if (error) throw error
+    },
+    verifyRecovery: async (email, code) => {
+      const { error } = await supabase!.auth.verifyOtp({ email, token: code, type: 'recovery' })
+      if (error) throw error
+      setRecovery(true)
+    },
+    resendSignup: async email => {
+      const { error } = await supabase!.auth.resend({ type: 'signup', email, options: { emailRedirectTo: confirmUrl } })
+      if (error) throw error
     },
     resetPassword: async email => {
       const { error } = await supabase!.auth.resetPasswordForEmail(email, { redirectTo: appUrl })
@@ -129,7 +145,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       lastPushed.current = ''
       setStatus('idle'); setLastSync(null)
     },
-  }), [ready, user, status, lastSync, syncNow, recovery, appUrl])
+  }), [ready, user, status, lastSync, syncNow, recovery, appUrl, confirmUrl])
 
   return <SyncContext.Provider value={api}>{children}</SyncContext.Provider>
 }

@@ -93,3 +93,27 @@ export function Gate({ hasData, onLocal, onDemo }: { hasData: boolean; onLocal: 
     </div>
   )
 }
+
+/** Aperta dal pulsante dell'email di conferma (quindi nel browser): l'account è attivo, si torna sull'app installata. */
+export function ConfirmedScreen({ onContinue }: { onContinue: () => void }) {
+  const { t } = useI18n()
+  return (
+    <div className="gate gate-login">
+      <div className="gate-glow" aria-hidden="true" />
+      <div className="gate-panel">
+        <section className="card confirmed">
+          <div className="ready-check"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><path d="M13 25l7 7 15-16" /></svg></div>
+          <h1>{t('conf.title')}</h1>
+          <p className="muted">{t('conf.sub')}</p>
+          <ol className="conf-steps">
+            <li><span className="n">1</span><div><b>{t('conf.s1')}</b><p className="small muted">{t('conf.s1d')}</p></div>
+              <span className="conf-icon"><LogoMark size={44} /></span></li>
+            <li><span className="n">2</span><div><b>{t('conf.s2')}</b><p className="small muted">{t('conf.s2d')}</p></div>
+              <span className="conf-login">{t('auth.tabSignIn')}</span></li>
+          </ol>
+          <button className="link-btn" onClick={onContinue}>{t('conf.here')} →</button>
+        </section>
+      </div>
+    </div>
+  )
+}

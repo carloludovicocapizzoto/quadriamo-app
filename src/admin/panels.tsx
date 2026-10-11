@@ -4,6 +4,9 @@ import { downloadCsv, label, projectRef, type Account, type Device, type Feedbac
 import sql0002 from '../../supabase/migrations/0002_beta_feedback_stats_push.sql?raw'
 import sql0004 from '../../supabase/migrations/0004_profiles.sql?raw'
 import sql0005 from '../../supabase/migrations/0005_site_feedback.sql?raw'
+import tplConfirm from '../../supabase/templates/confirmation.html?raw'
+import tplMagic from '../../supabase/templates/magic_link.html?raw'
+import tplRecovery from '../../supabase/templates/recovery.html?raw'
 import sql0003 from '../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
 import fnCode from '../../supabase/functions/send-push/index.ts?raw'
 
@@ -325,15 +328,32 @@ export function SetupPanel({ setup, email, onRecheck }: { setup: Setup; email: s
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
         </Step>
         <Step n={2} ok={null} title="Registrazione con email e password">
-          <p>In <a href={`${dash}/auth/providers`} target="_blank" rel="noreferrer">Authentication → Sign In / Providers → Email</a>:
-            lascia attivo <b>Email</b>. Finché non hai un servizio email tuo (arriva con il dominio), <b>disattiva "Confirm email"</b>:
-            le email automatiche di Supabase arrivano solo agli indirizzi del tuo team, quindi gli amici non riceverebbero la conferma.
-            Poi in <a href={`${dash}/auth/url-configuration`} target="_blank" rel="noreferrer">URL Configuration</a> metti come Site URL
+          <p>In <a href={`${dash}/auth/providers`} target="_blank" rel="noreferrer">Authentication → Sign In / Providers → Email</a> lascia attivi
+            <b>Email</b> e <b>Confirm email</b>, con <b>Email OTP Length = 6</b>: l'email contiene un codice di 6 cifre che si scrive direttamente
+            nell'app installata, senza passare dal browser.</p>
+          <p><b>Importante:</b> il servizio email gratuito di Supabase consegna solo agli indirizzi del tuo team (per questo a te arriva) e poche
+            email all'ora. Perché arrivino anche agli amici, collega un servizio SMTP in
+            <a href={`${dash}/auth/smtp`} target="_blank" rel="noreferrer">Authentication → SMTP Settings</a>. Senza dominio va bene <b>Brevo</b>
+            (gratis, 300 email al giorno): registri la tua email come mittente, copi host, porta, utente e chiave SMTP, e come nome del mittente
+            scrivi <b>Quadriamo</b> (così non compare più "Supabase Auth"). Finché non lo fai, puoi disattivare "Confirm email" per far entrare
+            gli amici senza conferma.</p>
+          <p>In <a href={`${dash}/auth/url-configuration`} target="_blank" rel="noreferrer">URL Configuration</a>: Site URL
             <code>{SITE}app/</code> e tra i Redirect URLs <code>{SITE}**</code>.</p>
           <div className="az-u-row"><Copy text={`${SITE}app/`} label="Copia Site URL" /><Copy text={`${SITE}**`} label="Copia Redirect URL" />
             <a className="az-btn" href={`${dash}/auth/providers`} target="_blank" rel="noreferrer">↗ Apri Providers</a></div>
         </Step>
-        <Step n={3} ok={setup.admin ? setup.fn !== 'missing' : null} title="Funzione che invia le notifiche (send-push)">
+        <Step n={3} ok={null} title="Email con lo stile di Quadriamo">
+          <p>In <a href={`${dash}/auth/templates`} target="_blank" rel="noreferrer">Authentication → Email Templates</a>, per ognuna delle tre email
+            incolla l'oggetto e il testo (scheda <b>Source</b>) e salva. Il testo esce nella lingua scelta dall'utente (IT, EN, FR, ES).</p>
+          <ul className="az-tpl">
+            {([['Confirm signup', 'Conferma il tuo account Quadriamo', tplConfirm], ['Magic Link', 'Il tuo accesso a Quadriamo', tplMagic],
+               ['Reset Password', 'Nuova password per Quadriamo', tplRecovery]] as const).map(([name, subject, body]) => (
+              <li key={name}><b>{name}</b><span className="az-u-row"><Copy text={subject} label="Copia oggetto" /><Copy text={body} label="Copia testo" /></span></li>
+            ))}
+          </ul>
+          <div className="az-u-row"><a className="az-btn" href={`${dash}/auth/templates`} target="_blank" rel="noreferrer">↗ Apri Email Templates</a></div>
+        </Step>
+        <Step n={4} ok={setup.admin ? setup.fn !== 'missing' : null} title="Funzione che invia le notifiche (send-push)">
           <ol>
             <li>Apri <a href={`${dash}/functions`} target="_blank" rel="noreferrer">Edge Functions</a> → <b>Deploy a new function</b> → <b>Via Editor</b>.</li>
             <li>Nome: <code>send-push</code>. Cancella il codice di esempio, incolla quello copiato da qui → <b>Deploy</b>.</li>
@@ -342,13 +362,13 @@ export function SetupPanel({ setup, email, onRecheck }: { setup: Setup; email: s
           <div className="az-u-row"><Copy text={fnCode} label="Copia il codice della funzione" />
             <a className="az-btn" href={`${dash}/functions`} target="_blank" rel="noreferrer">↗ Apri Edge Functions</a></div>
         </Step>
-        <Step n={4} ok={setup.admin && setup.fn !== 'missing' ? setup.fn === 'ok' && setup.cronSecret : null} title="Chiavi delle notifiche (segreti)">
+        <Step n={5} ok={setup.admin && setup.fn !== 'missing' ? setup.fn === 'ok' && setup.cronSecret : null} title="Chiavi delle notifiche (segreti)">
           <p>In <a href={`${dash}/functions/secrets`} target="_blank" rel="noreferrer">Edge Functions → Secrets</a> aggiungi tre segreti, con nomi e valori
             presi dal file <code>.vapid.local</code> nella cartella <code>quadriamo-app</code> sul tuo Mac: <code>VAPID_PUBLIC_KEY</code>, <code>VAPID_PRIVATE_KEY</code>, <code>CRON_SECRET</code>.
             Per sicurezza non sono in questa pagina.</p>
           <div className="az-u-row"><a className="az-btn" href={`${dash}/functions/secrets`} target="_blank" rel="noreferrer">↗ Apri Secrets</a></div>
         </Step>
-        <Step n={5} ok={setup.admin ? setup.reminder : null} title="Promemoria automatico ogni 10 giorni (facoltativo)">
+        <Step n={6} ok={setup.admin ? setup.reminder : null} title="Promemoria automatico ogni 10 giorni (facoltativo)">
           <ol>
             <li>In <a href={`${dash}/database/extensions`} target="_blank" rel="noreferrer">Database → Extensions</a> attiva <code>pg_cron</code> e <code>pg_net</code>.</li>
             <li>Copia lo script, sostituisci <code>&lt;CRON_SECRET&gt;</code> con il valore del file <code>.vapid.local</code>, poi eseguilo in SQL Editor.</li>

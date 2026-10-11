@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { demoAppData } from './demo'
-import { fromSiteAccount } from './entry'
+import { ENTRY, fromSiteAccount } from './entry'
 import { computeMonth, monthOf, todayIso, undated, type ClassifiedTx, type Transaction, type YearMonth } from './engine'
 import { LANGS, useI18n, type Lang } from './i18n/core'
 import { useStore } from './store/context'
@@ -22,7 +22,8 @@ import { ConsentCard } from './ui/beta/ConsentCard'
 import { FeedbackCard } from './ui/beta/FeedbackCard'
 import { ProfileForm } from './ui/ProfileForm'
 import { noAccount, profilePrompt, setupPending } from './sync/profile'
-import { Gate, Splash } from './ui/Gate'
+import { ConfirmedScreen, Gate, Splash } from './ui/Gate'
+import { isStandalone } from './beta/device'
 import { LoginScreen } from './ui/AccountSection'
 import { SetupWizard } from './ui/SetupWizard'
 import { guessCurrency } from './ui/names'
@@ -59,6 +60,8 @@ export default function App() {
   // schermata di accesso (dal sito "Accedi o registrati", o da Impostazioni) e configurazione iniziale a passaggi
   const [authOpen, setAuthOpen] = useState(fromSiteAccount)
   const [setupTick, setSetupTick] = useState(0)
+  // aperta dal pulsante dell'email di conferma nel browser: "Email confermata, torna sull'app e accedi"
+  const [confirmed, setConfirmed] = useState(() => ENTRY.get('confirmed') === '1' && !isStandalone())
   const inSetup = setupPending.get() && setupTick >= 0
   const [note, setNote] = useState('')
   const data = state.data
@@ -91,6 +94,9 @@ export default function App() {
     if (!data) { setupPending.set(); dispatch({ type: 'replace', data: createInitial(guessCurrency(), today, 1) }) }
     setSetupTick(x => x + 1)
   }
+  if (confirmed) return <ConfirmedScreen onContinue={() => setConfirmed(false)} />
+  // "password dimenticata": prima la nuova password, poi l'app
+  if (sync.recovery) return <div className="gate gate-login"><div className="gate-glow" aria-hidden="true" /><div className="gate-panel"><LoginScreen /></div></div>
   // ingresso: chi non ha fatto l'accesso (e non ha scelto di usarla senza account) vede benvenuto e accesso
   if (sync.enabled && !sync.user && !sync.recovery && (!noAccount.get() || (authOpen && !data))) {
     return <Gate hasData={!!data} onLocal={startLocal}

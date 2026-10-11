@@ -13,7 +13,11 @@ export interface SyncApi {
   verifyCode: (email: string, code: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   /** true se serve confermare l'email prima di accedere */
-  signUp: (p: { firstName: string; lastName: string; email: string; password: string }) => Promise<{ needsConfirm: boolean }>
+  signUp: (p: { firstName: string; lastName: string; email: string; password: string; lang: string }) => Promise<{ needsConfirm: boolean }>
+  /** codice di 6 cifre dell'email: conferma la registrazione o il recupero password restando nell'app */
+  verifySignup: (email: string, code: string) => Promise<void>
+  verifyRecovery: (email: string, code: string) => Promise<void>
+  resendSignup: (email: string) => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updatePassword: (password: string) => Promise<void>
   signOut: () => Promise<void>

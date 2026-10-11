@@ -61,7 +61,7 @@ function SignInOrUp() {
   const sync = useSync()
   const hasData = !!useStore().state.data
   // ?signup=1 ("Crea il tuo account" sul sito) apre direttamente la registrazione
-  const [tab, setTab] = useState<'in' | 'up' | 'link'>(ENTRY.get('signup') === '1' ? 'up' : 'in')
+  const [tab, setTab] = useState<'in' | 'up' | 'link' | 'confirm' | 'reset'>(ENTRY.get('signup') === '1' ? 'up' : 'in')
   const [step, setStep] = useState(1)
   const [first, setFirst] = useState('')
   const [last, setLast] = useState('')
@@ -85,10 +85,10 @@ function SignInOrUp() {
     if (password.length < 8) return bad(t('auth.errPassword'))
     if (!accept) return bad(t('auth.errAccept'))
     void run(async () => {
-      const r = await sync.signUp({ firstName: first.trim(), lastName: last.trim(), email: em, password })
+      const r = await sync.signUp({ firstName: first.trim(), lastName: last.trim(), email: em, password, lang })
       // nuovo account: configurazione iniziale a passaggi (se su questo dispositivo non c'è già un budget) e profilo
       if (!hasData) setupPending.set(); else profilePrompt.set()
-      if (r.needsConfirm) setMsg({ text: t('auth.confirmSent', { email: em }) })
+      if (r.needsConfirm) { setTab('confirm'); setCode('') }
     }, e => (e.code === 'user_already_exists' ? t('auth.errExists') : e.code === 'weak_password' ? t('auth.errPassword') : t('auth.errGeneric')))
   }
   // accesso: 1 email · 2 password
@@ -97,7 +97,12 @@ function SignInOrUp() {
     if (step === 1) { if (!EMAIL.test(em)) return bad(t('sync.errEmail')); return next() }
     void run(() => sync.signIn(em, password), () => t('auth.errLogin'))
   }
-  const forgot = () => void run(async () => { await sync.resetPassword(em); setMsg({ text: t('auth.resetSent') }) }, () => t('auth.errGeneric'))
+  const forgot = () => void run(async () => { await sync.resetPassword(em); setCode(''); setTab('reset') }, () => t('auth.errGeneric'))
+  // codice di 6 cifre dell'email: si conferma restando nell'app (il pulsante dell'email aprirebbe il browser)
+  const confirmSignup = (e: FormEvent) => { e.preventDefault(); void run(() => sync.verifySignup(em, code.trim()), () => t('sync.errCode')) }
+  const confirmReset = (e: FormEvent) => { e.preventDefault(); void run(() => sync.verifyRecovery(em, code.trim()), () => t('sync.errCode')) }
+  const codeInput = <input className="code-input" inputMode="numeric" autoComplete="one-time-code" maxLength={8} value={code} placeholder="••••••"
+    onChange={e => setCode(e.target.value.replace(/\D/g, ''))} autoFocus />
   const sendLink = (e: FormEvent) => {
     e.preventDefault()
     if (!EMAIL.test(em)) { bad(t('sync.errEmail')); return }
@@ -111,8 +116,8 @@ function SignInOrUp() {
     <>
       <p className="muted small">{t('auth.intro')}</p>
       <div className="seg" role="tablist">
-        <button role="tab" aria-selected={tab !== 'up'} className={tab !== 'up' ? 'on' : ''} onClick={() => go('in')}>{t('auth.tabSignIn')}</button>
-        <button role="tab" aria-selected={tab === 'up'} className={tab === 'up' ? 'on' : ''} onClick={() => go('up')}>{t('auth.tabSignUp')}</button>
+        <button role="tab" aria-selected={tab === 'in' || tab === 'link' || tab === 'reset'} className={tab === 'in' || tab === 'link' || tab === 'reset' ? 'on' : ''} onClick={() => go('in')}>{t('auth.tabSignIn')}</button>
+        <button role="tab" aria-selected={tab === 'up' || tab === 'confirm'} className={tab === 'up' || tab === 'confirm' ? 'on' : ''} onClick={() => go('up')}>{t('auth.tabSignUp')}</button>
       </div>
 
       {tab === 'up' && (
@@ -149,6 +154,28 @@ function SignInOrUp() {
             {step === 2 && <button type="button" className="link-btn" disabled={busy} onClick={forgot}>{t('auth.forgot')}</button>}
             <button type="button" className="link-btn" onClick={() => go('link')}>{t('auth.useLink')}</button>
           </div>
+        </form>
+      )}
+
+      {tab === 'confirm' && (
+        <form onSubmit={confirmSignup} className="auth-form step-body" noValidate>
+          <h4 className="step-title">✉️ {t('auth.confirmTitle')}</h4>
+          <p className="small">{t('auth.confirmCode', { email: em })}</p>
+          <label className="field"><span>{t('sync.code')}</span>{codeInput}</label>
+          <div className="step-nav"><button className="btn primary" disabled={busy || code.length < 6}>{t('auth.confirm')}</button>
+            <button type="button" className="link-btn" disabled={busy}
+              onClick={() => void run(async () => { await sync.resendSignup(em); setMsg({ text: t('auth.resent') }) }, () => t('auth.errGeneric'))}>{t('auth.resend')}</button></div>
+          <p className="muted small top-gap">{t('auth.confirmLinkHint')} <button type="button" className="link-btn" onClick={() => go('in')}>{t('auth.goSignIn')}</button></p>
+        </form>
+      )}
+
+      {tab === 'reset' && (
+        <form onSubmit={confirmReset} className="auth-form step-body" noValidate>
+          <h4 className="step-title">🔑 {t('auth.resetTitle')}</h4>
+          <p className="small">{t('auth.resetCode', { email: em })}</p>
+          <label className="field"><span>{t('sync.code')}</span>{codeInput}</label>
+          <div className="step-nav"><button className="btn primary" disabled={busy || code.length < 6}>{t('step.next')} →</button>
+            <button type="button" className="link-btn" onClick={() => go('in')}>← {t('step.back')}</button></div>
         </form>
       )}
 

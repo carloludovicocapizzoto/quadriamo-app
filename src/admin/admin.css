@@ -142,3 +142,6 @@ table.az-table { width: 100%; border-collapse: collapse; font-size: 13.5px; whit
 .az-checks { list-style: none; display: grid; gap: 6px; font-size: 14px; }
 .az-checks li::before { content: "✓"; color: var(--good); font-weight: 700; margin-right: 8px; }
 .az-checks li.bad::before { content: "✕"; color: var(--bad); }
+.az-tpl { list-style: none; display: grid; gap: 8px; margin: 10px 0 0; padding: 0; }
+.az-tpl li { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--soft); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+.az-tpl .az-u-row { margin: 0; }
