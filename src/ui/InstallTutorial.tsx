@@ -43,7 +43,7 @@ export function InstallTutorial({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="inst">
       <h1>{desktop ? t('inst.titleDesktop') : t('inst.title')}</h1>
-      <p className="muted small">{t('inst.why')}</p>
+      {i === 0 && <p className="muted small">{t('inst.why')}</p>}
       {evt && (
         <div className="inst-quick">
           <span>{t('inst.oneTap')}</span>
@@ -74,17 +74,17 @@ function MockScreen({ mock }: { mock: Mock }) {
   const hl = (x: ReactNode) => <span className="hl">{x}</span>
   const icons = ['#7C9CBF', '#9BC48A', '#E5B85C', '#C98BB9', '#7FB7B2', '#B9A27F', '#8C8FD9']
   switch (mock) {
-    case 'iosBar': return <div className="mock phone"><div className="m-page" /><div className="m-bar ios"><span>‹</span><span>›</span>{hl('⬆︎')}<span>⧉</span><span>⋯</span></div></div>
-    case 'iosSheet': return <div className="mock phone"><div className="m-sheet"><div className="m-row">⧉</div><div className="m-row">☆</div>{hl(<div className="m-row">⊞ {t('inst.ios2').replace(/^[^“«"]*[“«"]\s?|[”»"]$/g, '')}</div>)}<div className="m-row">✎</div></div></div>
-    case 'iosAdd': return <div className="mock phone"><div className="m-head"><span>✕</span><b>Quadriamo</b>{hl(t('inst.ios3').replace(/^[^“«"]*[“«"]\s?|[”»"]$/g, ''))}</div><div className="m-preview"><LogoMark size={48} /><span>Quadriamo</span></div></div>
+    case 'iosBar': return <div className="mock phone"><div className="m-page" /><div className="m-bar ios"><span>‹</span><span>›</span><span className="hl" title={t('inst.lblShare')}>⬆︎</span><span>⧉</span><span>⋯</span></div></div>
+    case 'iosSheet': return <div className="mock phone"><div className="m-sheet"><div className="m-row">⧉</div><div className="m-row">☆</div>{hl(<div className="m-row">⊞ {t('inst.lblAddHome')}</div>)}<div className="m-row">✎</div></div></div>
+    case 'iosAdd': return <div className="mock phone"><div className="m-head"><span>✕</span><b>Quadriamo</b>{hl(t('inst.lblAdd'))}</div><div className="m-preview"><LogoMark size={48} /><span>Quadriamo</span></div></div>
     case 'home': return <div className="mock phone home">{icons.map((c, k) => <span key={k} className="m-app" style={{ background: c }} />)}<span className="m-app q"><LogoMark size={38} /></span></div>
     case 'andMenu': return <div className="mock phone"><div className="m-bar and"><span className="m-url">quadriamo…</span>{hl('⋮')}</div><div className="m-page" /></div>
-    case 'andList': return <div className="mock phone"><div className="m-bar and"><span className="m-url">quadriamo…</span><span>⋮</span></div><div className="m-menu"><div className="m-row">↻</div><div className="m-row">☆</div>{hl(<div className="m-row">⤓ {t('inst.and2').replace(/^[^“«"]*[“«"]\s?|[”»"]$/g, '')}</div>)}<div className="m-row">⚙</div></div></div>
+    case 'andList': return <div className="mock phone"><div className="m-bar and"><span className="m-url">quadriamo…</span><span>⋮</span></div><div className="m-menu"><div className="m-row">↻</div><div className="m-row">☆</div>{hl(<div className="m-row">⤓ {t('inst.lblInstallApp')}</div>)}<div className="m-row">⚙</div></div></div>
     case 'andDialog': case 'deskDialog':
-      return <div className={`mock ${mock === 'deskDialog' ? 'desk' : 'phone'}`}><div className="m-dialog"><LogoMark size={36} /><b>Quadriamo</b><div className="m-btns"><span>✕</span>{hl(t('inst.and3').replace(/^[^“«"]*[“«"]\s?|[”»"]$/g, ''))}</div></div></div>
+      return <div className={`mock ${mock === 'deskDialog' ? 'desk' : 'phone'}`}><div className="m-dialog"><LogoMark size={36} /><b>Quadriamo</b><div className="m-btns"><span>✕</span>{hl(t('inst.lblInstall'))}</div></div></div>
     case 'deskBar': return <div className="mock desk"><div className="m-bar desk"><span className="m-url">carloludovicocapizzoto.github.io/quadriamo-app/app/</span>{hl('⊕')}<span>☆</span><span>⋮</span></div><div className="m-page" /></div>
     case 'macMenu': return <div className="mock desk"><div className="m-bar mac"><span></span><b>Safari</b>{hl('File')}<span>…</span></div><div className="m-page" /></div>
-    case 'macList': return <div className="mock desk"><div className="m-bar mac"><span></span><b>Safari</b><span className="hl">File</span><span>…</span></div><div className="m-menu left"><div className="m-row">⌘N</div><div className="m-row">⌘T</div>{hl(<div className="m-row">⊞ Dock…</div>)}<div className="m-row">⌘W</div></div></div>
+    case 'macList': return <div className="mock desk"><div className="m-bar mac"><span></span><b>Safari</b><span className="hl">File</span><span>…</span></div><div className="m-menu left"><div className="m-row">⌘N</div><div className="m-row">⌘T</div>{hl(<div className="m-row">⊞ {t('inst.lblAddDock')}</div>)}<div className="m-row">⌘W</div></div></div>
     case 'dock': return <div className="mock desk"><div className="m-page" /><div className="m-dock">{icons.slice(0, 5).map((c, k) => <span key={k} className="m-app" style={{ background: c }} />)}<span className="m-app q"><LogoMark size={34} /></span></div></div>
   }
 }
