@@ -40,9 +40,20 @@
       <p class="eyebrow" data-i18n="hero.eyebrow"></p>
       <h1 data-i18n-html="hero.title"></h1>
       <p class="lead" data-i18n="hero.lead"></p>
-      <div class="cta-row">
-        <a class="btn" href="app/" data-i18n="hero.cta"></a>
-        <a class="btn btn-ghost" href="#scarica" data-i18n="hero.install"></a>
+      <ul class="hero-points">
+        <li><span class="ico">◎</span><span data-i18n="hero.b1"></span></li>
+        <li><span class="ico">⚡</span><span data-i18n="hero.b2"></span></li>
+        <li><span class="ico">↗</span><span data-i18n="hero.b3"></span></li>
+      </ul>
+      <div class="hero-get">
+        <div class="cta-row">
+          <a class="btn" href="app/" data-i18n="hero.cta"></a>
+          <a class="btn btn-ghost hide-desktop" href="#scarica" data-i18n="hero.install"></a>
+        </div>
+        <div class="hero-qr">
+          <img src="/qr.svg" alt="QR" width="104" height="104">
+          <div><b data-i18n="hero.qrT"></b><span class="muted small" data-i18n="hero.qr"></span></div>
+        </div>
       </div>
       <p class="muted small" data-i18n="hero.note"></p>
     </div>
@@ -90,16 +101,30 @@
 
   <section id="funzioni" class="site-wrap">
     <h2 data-i18n="feat.title"></h2>
-    <div class="feat-grid">
-      <article><span class="ico">◎</span><h3 data-i18n="feat.safeT"></h3><p data-i18n="feat.safe"></p></article>
-      <article><span class="ico">⇄</span><h3 data-i18n="feat.payT"></h3><p data-i18n="feat.pay"></p></article>
-      <article><span class="ico">⇪</span><h3 data-i18n="feat.importT"></h3><p data-i18n="feat.import"></p></article>
-      <article><span class="ico">↻</span><h3 data-i18n="feat.carryT"></h3><p data-i18n="feat.carry"></p></article>
-      <article><span class="ico">▥</span><h3 data-i18n="feat.yearT"></h3><p data-i18n="feat.year"></p></article>
-      <article><span class="ico">↗</span><h3 data-i18n="feat.invT"></h3><p data-i18n="feat.inv"></p></article>
-      <article><span class="ico">€</span><h3 data-i18n="feat.fxT"></h3><p data-i18n="feat.fx"></p></article>
-      <article><span class="ico">⚡</span><h3 data-i18n="feat.fastT"></h3><p data-i18n="feat.fast"></p></article>
+    <div class="feat-chips">
+      <button type="button" class="feat-chip" data-feat="safe"><span class="ico">◎</span><span data-i18n="feat.safeT"></span></button>
+      <button type="button" class="feat-chip" data-feat="pay"><span class="ico">⇄</span><span data-i18n="feat.payT"></span></button>
+      <button type="button" class="feat-chip" data-feat="import"><span class="ico">⇪</span><span data-i18n="feat.importT"></span></button>
+      <button type="button" class="feat-chip" data-feat="carry"><span class="ico">↻</span><span data-i18n="feat.carryT"></span></button>
+      <button type="button" class="feat-chip" data-feat="year"><span class="ico">▥</span><span data-i18n="feat.yearT"></span></button>
+      <button type="button" class="feat-chip" data-feat="inv"><span class="ico">↗</span><span data-i18n="feat.invT"></span></button>
+      <button type="button" class="feat-chip" data-feat="fx"><span class="ico">€</span><span data-i18n="feat.fxT"></span></button>
+      <button type="button" class="feat-chip" data-feat="fast"><span class="ico">⚡</span><span data-i18n="feat.fastT"></span></button>
     </div>
+    <button type="button" class="link-more" data-feat="safe" data-i18n="feat.more"></button>
+    <dialog id="feat-dialog" aria-labelledby="feat-dialog-title">
+      <form method="dialog" class="dlg-head"><h2 id="feat-dialog-title" data-i18n="feat.title"></h2><button class="dlg-close" data-i18n="feat.close"></button></form>
+      <div class="feat-grid">
+        <article id="feat-safe"><span class="ico">◎</span><h3 data-i18n="feat.safeT"></h3><p data-i18n="feat.safe"></p></article>
+        <article id="feat-pay"><span class="ico">⇄</span><h3 data-i18n="feat.payT"></h3><p data-i18n="feat.pay"></p></article>
+        <article id="feat-import"><span class="ico">⇪</span><h3 data-i18n="feat.importT"></h3><p data-i18n="feat.import"></p></article>
+        <article id="feat-carry"><span class="ico">↻</span><h3 data-i18n="feat.carryT"></h3><p data-i18n="feat.carry"></p></article>
+        <article id="feat-year"><span class="ico">▥</span><h3 data-i18n="feat.yearT"></h3><p data-i18n="feat.year"></p></article>
+        <article id="feat-inv"><span class="ico">↗</span><h3 data-i18n="feat.invT"></h3><p data-i18n="feat.inv"></p></article>
+        <article id="feat-fx"><span class="ico">€</span><h3 data-i18n="feat.fxT"></h3><p data-i18n="feat.fx"></p></article>
+        <article id="feat-fast"><span class="ico">⚡</span><h3 data-i18n="feat.fastT"></h3><p data-i18n="feat.fast"></p></article>
+      </div>
+    </dialog>
   </section>
 
   <section class="alt">

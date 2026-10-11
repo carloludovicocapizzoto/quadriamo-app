@@ -6,9 +6,10 @@
       'nav.how': 'Come funziona', 'nav.features': 'Funzioni', 'nav.pricing': 'Prezzi', 'nav.faq': 'Domande', 'nav.login': 'Accedi o registrati', 'nav.open': 'Apri l’app',
       'hero.eyebrow': 'Budget personale · Beta gratuita',
       'hero.title': 'I tuoi soldi, <em>in quattro.</em>',
-      'hero.lead': 'Dividi lo stipendio in 4 parti con la regola 55-20-15-10, registra una spesa in 5 secondi e sai sempre quanto puoi ancora spendere.',
+      'hero.lead': 'Dividi lo stipendio in 4 parti con la regola 55-20-15-10. Il resto lo fa l’app.',
       'hero.cta': 'Prova gratis la beta', 'hero.install': 'Installala sul telefono',
       'hero.note': 'Nessun account necessario · Funziona offline · Dati nell’Unione europea',
+      'hero.b1': 'Ogni giorno sai quanto puoi ancora spendere', 'hero.b2': 'Registri una spesa in 5 secondi, o importi l’estratto conto', 'hero.b3': 'Risparmi e investimenti crescono da soli, mese dopo mese', 'hero.qrT': 'Inquadra e aprila sul telefono', 'hero.qr': 'Si installa dal browser in 30 secondi, senza App Store.', 'feat.more': 'Scopri cosa fa ogni funzione', 'feat.close': 'Chiudi',
       'mock.safe': 'Oggi puoi spendere', 'mock.perDay1': '24,80 € al giorno', 'mock.perDay2': '13,10 € al giorno',
       'b.essentials': 'Essenziali', 'b.qualityOfLife': 'Qualità della vita', 'b.safetyFund': 'Fondo di sicurezza', 'b.investments': 'Investimenti',
       'rule.title': 'Un metodo semplice: ogni euro ha un compito',
@@ -18,7 +19,7 @@
       'how.1t': 'Scegli la tua regola', 'how.1': 'Parti dalla 55-20-15-10 o imposta le tue quote. Le entrate si dividono da sole.',
       'how.2t': 'Registra o importa', 'how.2': 'Una spesa in 5 secondi dal telefono, oppure importi l’estratto conto: le regole riconoscono i negozi e smistano tutto.',
       'how.3t': 'Sai quanto puoi spendere', 'how.3': 'Ogni giorno vedi quanto puoi ancora spendere per ogni parte. Quello che avanza passa al mese dopo.',
-      'feat.title': 'Tutto quello che serve, niente di superfluo',
+      'feat.title': 'Le funzioni, in breve',
       'feat.safeT': 'Oggi puoi spendere', 'feat.safe': 'Un numero chiaro al giorno per ogni parte, tenendo da parte le bollette in arrivo.',
       'feat.payT': 'Giorno di paga', 'feat.pay': 'Ti dice quanto spostare in ogni pocket (Revolut, Trade Republic…) e lo spunti.',
       'feat.importT': 'Import e regole', 'feat.import': 'Importi l’estratto conto, le parole chiave smistano le spese. Tu confermi o cambi, e l’app impara.',
@@ -56,9 +57,10 @@
       'nav.how': 'How it works', 'nav.features': 'Features', 'nav.pricing': 'Pricing', 'nav.faq': 'FAQ', 'nav.login': 'Sign in or sign up', 'nav.open': 'Open the app',
       'hero.eyebrow': 'Personal budget · Free beta',
       'hero.title': 'Your money, <em>in four.</em>',
-      'hero.lead': 'Split your salary into 4 parts with the 55-20-15-10 rule, log an expense in 5 seconds and always know how much you can still spend.',
+      'hero.lead': 'Split your salary into 4 parts with the 55-20-15-10 rule. The app does the rest.',
       'hero.cta': 'Try the beta for free', 'hero.install': 'Install it on your phone',
       'hero.note': 'No account needed · Works offline · Data in the European Union',
+      'hero.b1': 'Every day you know how much you can still spend', 'hero.b2': 'Log an expense in 5 seconds, or import your bank statement', 'hero.b3': 'Savings and investments grow on their own, month after month', 'hero.qrT': 'Scan to open it on your phone', 'hero.qr': 'Installs from the browser in 30 seconds, no App Store.', 'feat.more': 'See what each feature does', 'feat.close': 'Close',
       'mock.safe': 'You can spend today', 'mock.perDay1': '€24.80 a day', 'mock.perDay2': '€13.10 a day',
       'b.essentials': 'Essentials', 'b.qualityOfLife': 'Quality of Life', 'b.safetyFund': 'Safety Fund', 'b.investments': 'Investments',
       'rule.title': 'A simple method: every euro has a job',
@@ -68,7 +70,7 @@
       'how.1t': 'Choose your rule', 'how.1': 'Start from 55-20-15-10 or set your own shares. Income splits itself.',
       'how.2t': 'Log or import', 'how.2': 'An expense in 5 seconds from your phone, or import your bank statement: rules recognise shops and sort everything.',
       'how.3t': 'Know what you can spend', 'how.3': 'Every day you see how much you can still spend in each part. What is left rolls into next month.',
-      'feat.title': 'Everything you need, nothing you don’t',
+      'feat.title': 'Features at a glance',
       'feat.safeT': 'You can spend today', 'feat.safe': 'One clear daily number for each part, keeping aside the bills still to come.',
       'feat.payT': 'Payday plan', 'feat.pay': 'Tells you how much to move into each pocket (Revolut, Trade Republic…) and you tick it off.',
       'feat.importT': 'Import and rules', 'feat.import': 'Import your statement, keywords sort the expenses. You confirm or change, and the app learns.',
@@ -106,9 +108,10 @@
       'nav.how': 'Fonctionnement', 'nav.features': 'Fonctions', 'nav.pricing': 'Prix', 'nav.faq': 'Questions', 'nav.login': 'Connexion / inscription', 'nav.open': 'Ouvrir l’app',
       'hero.eyebrow': 'Budget personnel · Bêta gratuite',
       'hero.title': 'Votre argent, <em>en quatre.</em>',
-      'hero.lead': 'Répartissez votre salaire en 4 parts avec la règle 55-20-15-10, saisissez une dépense en 5 secondes et sachez toujours ce que vous pouvez encore dépenser.',
+      'hero.lead': 'Divisez votre salaire en 4 parts avec la règle 55-20-15-10. L’app fait le reste.',
       'hero.cta': 'Essayer la bêta gratuitement', 'hero.install': 'L’installer sur le téléphone',
       'hero.note': 'Sans compte · Fonctionne hors ligne · Données dans l’Union européenne',
+      'hero.b1': 'Chaque jour, vous savez combien vous pouvez encore dépenser', 'hero.b2': 'Une dépense notée en 5 secondes, ou l’import du relevé bancaire', 'hero.b3': 'Épargne et investissements grandissent tout seuls, mois après mois', 'hero.qrT': 'Scannez pour l’ouvrir sur le téléphone', 'hero.qr': 'S’installe depuis le navigateur en 30 secondes, sans App Store.', 'feat.more': 'Voir ce que fait chaque fonction', 'feat.close': 'Fermer',
       'mock.safe': 'Vous pouvez dépenser aujourd’hui', 'mock.perDay1': '24,80 € par jour', 'mock.perDay2': '13,10 € par jour',
       'b.essentials': 'Essentiels', 'b.qualityOfLife': 'Qualité de vie', 'b.safetyFund': 'Fonds de sécurité', 'b.investments': 'Investissements',
       'rule.title': 'Une méthode simple : chaque euro a une mission',
@@ -118,7 +121,7 @@
       'how.1t': 'Choisissez votre règle', 'how.1': 'Partez du 55-20-15-10 ou fixez vos parts. Les revenus se répartissent tout seuls.',
       'how.2t': 'Saisissez ou importez', 'how.2': 'Une dépense en 5 secondes depuis le téléphone, ou importez votre relevé : les règles reconnaissent les magasins et trient tout.',
       'how.3t': 'Sachez ce que vous pouvez dépenser', 'how.3': 'Chaque jour, vous voyez ce qu’il reste à dépenser dans chaque part. Le reste passe au mois suivant.',
-      'feat.title': 'Tout ce qu’il faut, rien de superflu',
+      'feat.title': 'Les fonctions en bref',
       'feat.safeT': 'Dépensable aujourd’hui', 'feat.safe': 'Un chiffre clair par jour pour chaque part, en gardant de côté les factures à venir.',
       'feat.payT': 'Jour de paie', 'feat.pay': 'Indique combien placer dans chaque espace (Revolut, Trade Republic…) et vous cochez.',
       'feat.importT': 'Import et règles', 'feat.import': 'Importez votre relevé, les mots-clés trient les dépenses. Vous confirmez ou modifiez, l’app apprend.',
@@ -156,9 +159,10 @@
       'nav.how': 'Cómo funciona', 'nav.features': 'Funciones', 'nav.pricing': 'Precios', 'nav.faq': 'Preguntas', 'nav.login': 'Entrar o registrarse', 'nav.open': 'Abrir la app',
       'hero.eyebrow': 'Presupuesto personal · Beta gratuita',
       'hero.title': 'Tu dinero, <em>en cuatro.</em>',
-      'hero.lead': 'Reparte tu sueldo en 4 partes con la regla 55-20-15-10, apunta un gasto en 5 segundos y sabe siempre cuánto puedes gastar todavía.',
+      'hero.lead': 'Divide tu sueldo en 4 partes con la regla 55-20-15-10. La app hace el resto.',
       'hero.cta': 'Prueba la beta gratis', 'hero.install': 'Instálala en el móvil',
       'hero.note': 'Sin cuenta · Funciona sin conexión · Datos en la Unión Europea',
+      'hero.b1': 'Cada día sabes cuánto puedes gastar todavía', 'hero.b2': 'Apuntas un gasto en 5 segundos, o importas el extracto del banco', 'hero.b3': 'Ahorros e inversiones crecen solos, mes a mes', 'hero.qrT': 'Escanea y ábrela en el móvil', 'hero.qr': 'Se instala desde el navegador en 30 segundos, sin App Store.', 'feat.more': 'Descubre qué hace cada función', 'feat.close': 'Cerrar',
       'mock.safe': 'Hoy puedes gastar', 'mock.perDay1': '24,80 € al día', 'mock.perDay2': '13,10 € al día',
       'b.essentials': 'Esenciales', 'b.qualityOfLife': 'Calidad de vida', 'b.safetyFund': 'Fondo de seguridad', 'b.investments': 'Inversiones',
       'rule.title': 'Un método sencillo: cada euro tiene un trabajo',
@@ -168,7 +172,7 @@
       'how.1t': 'Elige tu regla', 'how.1': 'Empieza con el 55-20-15-10 o pon tus partes. Los ingresos se reparten solos.',
       'how.2t': 'Apunta o importa', 'how.2': 'Un gasto en 5 segundos desde el móvil, o importa tu extracto: las reglas reconocen las tiendas y lo ordenan todo.',
       'how.3t': 'Sabe cuánto puedes gastar', 'how.3': 'Cada día ves cuánto puedes gastar en cada parte. Lo que sobra pasa al mes siguiente.',
-      'feat.title': 'Todo lo que necesitas, nada de más',
+      'feat.title': 'Las funciones, en breve',
       'feat.safeT': 'Hoy puedes gastar', 'feat.safe': 'Una cifra clara al día para cada parte, apartando las facturas que vienen.',
       'feat.payT': 'Día de cobro', 'feat.pay': 'Te dice cuánto pasar a cada hucha (Revolut, Trade Republic…) y lo marcas.',
       'feat.importT': 'Importación y reglas', 'feat.import': 'Importa tu extracto, las palabras clave ordenan los gastos. Tú confirmas o cambias y la app aprende.',
@@ -219,6 +223,18 @@
   var q = new URLSearchParams(location.search).get('lang'), saved = null
   try { saved = localStorage.getItem('quadriamo.lang') } catch { /* storage non disponibile */ }
   apply(q || saved || (navigator.language || 'en').slice(0, 2))
+  // funzioni: dettagli nel pop-up, aperto sulla funzione toccata
+  var dlg = document.getElementById('feat-dialog')
+  if (dlg && dlg.showModal) {
+    document.querySelectorAll('[data-feat]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        dlg.showModal()
+        var el = document.getElementById('feat-' + b.getAttribute('data-feat'))
+        if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('hl'); setTimeout(function () { el.classList.remove('hl') }, 1200) }
+      })
+    })
+    dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close() })   // tocco fuori: chiude
+  }
   var sel = document.querySelector('.lang-select')
   if (sel) sel.addEventListener('change', function () {
     try { localStorage.setItem('quadriamo.lang', sel.value) } catch { /* ignora */ }
