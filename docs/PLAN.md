@@ -32,6 +32,9 @@ Dopo: import dell'estratto conto (CSV), collegamento con le banche (open banking
   Ciambella delle quattro parti · Spese giorno per giorno · Spese per categoria · Confronto con il mese prima ·
   Prossimi pagamenti ricorrenti · Ultimi movimenti · Risparmi e investimenti. Predefiniti: i primi tre + Ultimi movimenti.
   Il pulsante + resta. Le altre schede (Mese, Movimenti, Anno, Investi, Impostazioni) restano come sono.
+- **Domani anche: area amministratore come app per computer** ("Quadriamo Admin", Mac e Windows), come l'app per computer
+  di Quadriamo: finestra Electron che apre `…/admin/`, icona distinta, aggiornamenti automatici. Da NON mettere nella pagina
+  Scarica pubblica: si scarica da un link privato (o si compila solo per Carlo), perché è riservata all'amministratore.
 - In attesa di una scelta: Free/Pro con abbonamento Stripe, da preparare in modalità test.
 
 - Dominio scelto: **quadriamo.com** (verificato libero l'11/10/2026, anche quadriamo.it): da comprare presto.
