@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { fromSiteAccount } from '../entry'
 import { useI18n } from '../i18n/core'
 import { useSync } from '../sync/context'
 import { AccountSection } from './AccountSection'
@@ -6,16 +7,29 @@ import { InstallButton } from './InstallButton'
 import { LegalLinks } from './LegalLinks'
 import { CURRENCIES, guessCurrency } from './names'
 
+
 export function Onboarding({ onStart, onDemo }: { onStart: (currency: string, startDay: number) => void; onDemo: () => void }) {
   const { t } = useI18n()
   const [currency, setCurrency] = useState(guessCurrency)
   const [startDay, setStartDay] = useState(1)
-  const [signIn, setSignIn] = useState(() => new URLSearchParams(window.location.search).get('login') === '1')
   const sync = useSync()
+  // dal sito ("Accedi o registrati", "Crea il tuo account"): prima il modulo dell'account, poi l'impostazione del budget
+  const [account, setAccount] = useState(() => sync.enabled && fromSiteAccount)
+
+  if (account && sync.enabled && !sync.user) {
+    return (
+      <section className="card onboarding">
+        <h1>{t('onb.accountTitle')}</h1>
+        <AccountSection compact />
+        <button className="link-btn top-gap" onClick={() => setAccount(false)}>{t('onb.skipAccount')} →</button>
+      </section>
+    )
+  }
+
   return (
     <section className="card onboarding">
       <h1>{t('onb.title')}</h1>
-      <p className="lead">{t('onb.text')}</p>
+      {sync.user?.firstName ? <p className="lead">{t('onb.hello', { name: sync.user.firstName })}</p> : <p className="lead">{t('onb.text')}</p>}
       <p className="muted small">{t('app.rule')}</p>
       <label className="field">
         <span>{t('settings.currency')}</span>
@@ -33,12 +47,10 @@ export function Onboarding({ onStart, onDemo }: { onStart: (currency: string, st
         <button className="btn primary big-btn" onClick={() => onStart(currency, startDay)}>{t('onb.start')}</button>
         <button className="btn" onClick={onDemo}>{t('onb.demo')}</button>
       </div>
-      <p className="muted small">🔒 {t('onb.privacy')}</p>
+      {!sync.user && <p className="muted small">🔒 {t('onb.privacy')}</p>}
+      {sync.enabled && !sync.user && <button className="btn" onClick={() => setAccount(true)}>👤 {t('onb.account')}</button>}
       <InstallButton />
       <LegalLinks notice />
-      {sync.enabled && !sync.user && (signIn
-        ? <AccountSection compact />
-        : <button className="link-btn" onClick={() => setSignIn(true)}>{t('sync.haveAccount')}</button>)}
     </section>
   )
 }

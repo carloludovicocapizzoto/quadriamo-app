@@ -216,7 +216,7 @@
     document.querySelectorAll('[data-i18n-html]').forEach(function (el) { var k = el.getAttribute('data-i18n-html'); if (d[k] != null) el.innerHTML = d[k] })
     var sel = document.querySelector('.lang-select'); if (sel) sel.value = l
     // i link verso l'app e le pagine portano la lingua scelta
-    document.querySelectorAll('a[href^="install.html"], a[href^="privacy.html"], a[href^="terms.html"]').forEach(function (a) {
+    document.querySelectorAll('a[href^="install.html"], a[href^="inizia.html"], a[href^="privacy.html"], a[href^="terms.html"]').forEach(function (a) {
       a.href = a.getAttribute('href').split('?')[0] + '?lang=' + l
     })
   }

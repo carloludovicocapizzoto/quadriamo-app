@@ -73,7 +73,7 @@ h2 { font-size: clamp(28px, 5vw, 40px); margin: 0 0 12px; }
 .hero-get { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin: 24px 0 10px; }
 .hero-get .cta-row { margin: 0; }
 .hero-qr { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 10px 16px 10px 10px; }
-.hero-qr img { width: 88px; height: 88px; background: #fff; border-radius: 10px; padding: 5px; flex-shrink: 0; }
+.hero-qr img { width: 150px; height: 150px; background: #fff; border-radius: 10px; padding: 5px; flex-shrink: 0; }
 .hero-qr div { display: grid; gap: 2px; max-width: 13em; line-height: 1.35; }
 .hide-desktop { display: none; }
 /* sul telefono il QR non serve: al suo posto il pulsante per installarla */

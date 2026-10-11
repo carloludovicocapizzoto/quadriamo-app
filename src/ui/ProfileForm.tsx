@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useI18n } from '../i18n/core'
 import type { Dict } from '../i18n/en'
 import { useStore } from '../store/context'
 import { useSync } from '../sync/context'
 import { CARDS, GOALS, WHERE, emptyProfile, loadProfile, profilePrompt, saveProfile, type Profile } from '../sync/profile'
 import { bucketName } from './names'
+import { StepHeader, StepNav } from './Steps'
 
 const PRESETS = [[55, 20, 15, 10], [50, 25, 15, 10], [60, 15, 15, 10], [50, 20, 15, 15]]
 const num = (s: string) => { const n = Number(s.replace(/\./g, '').replace(',', '.')); return Number.isFinite(n) ? n : NaN }
@@ -19,6 +20,7 @@ export function ProfileForm({ onDone }: { onDone: () => void }) {
   const [income, setIncome] = useState('')
   const [shares, setShares] = useState<string[]>(() => settings.buckets.map(b => String(Math.round(b.share * 1000) / 10)))
   const [apply, setApply] = useState(true)
+  const [step, setStep] = useState(1)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ text: string; bad?: boolean } | null>(null)
 
@@ -63,57 +65,68 @@ export function ProfileForm({ onDone }: { onDone: () => void }) {
     catch { setMsg({ text: t('prof.errSave'), bad: true }) }
   }
 
+  const TOTAL = 5
+  const titles = [t('prof.stepIncome'), t('prof.goals'), t('prof.cards'), t('prof.stepInvest'), t('prof.shares')]
+  const submit = (e: FormEvent) => {
+    e.preventDefault(); setMsg(null)
+    if (step < TOTAL) setStep(step + 1)
+    else void save()
+  }
   return (
-    <div className="profile-form">
-      <p className="muted small">{t('prof.intro')}</p>
-      <div className="two-col">
-        <label className="field"><span>{t('auth.firstName')}</span>
-          <input autoComplete="given-name" maxLength={80} value={p.first_name ?? ''} onChange={e => set({ first_name: e.target.value })} /></label>
-        <label className="field"><span>{t('auth.lastName')}</span>
-          <input autoComplete="family-name" maxLength={80} value={p.last_name ?? ''} onChange={e => set({ last_name: e.target.value })} /></label>
+    <form className="profile-form" onSubmit={submit} noValidate>
+      {step === 1 && <p className="muted small">{t('prof.intro')}</p>}
+      <StepHeader n={step} total={TOTAL} title={titles[step - 1]} />
+      <div className="step-body" key={step}>
+        {step === 1 && <>
+          <div className="two-col">
+            <label className="field"><span>{t('auth.firstName')}</span>
+              <input autoComplete="given-name" maxLength={80} value={p.first_name ?? ''} onChange={e => set({ first_name: e.target.value })} /></label>
+            <label className="field"><span>{t('auth.lastName')}</span>
+              <input autoComplete="family-name" maxLength={80} value={p.last_name ?? ''} onChange={e => set({ last_name: e.target.value })} /></label>
+          </div>
+          <label className="field"><span>{t('prof.income')} ({settings.currency})</span>
+            <input inputMode="decimal" placeholder="1.600" value={income} onChange={e => setIncome(e.target.value.replace(/[^\d.,]/g, ''))} autoFocus />
+            <small className="muted">{t('prof.incomeHint')}</small></label>
+        </>}
+
+        {step === 2 && <div className="chips">{GOALS.map(g => <button key={g} type="button" className={`chip${p.goals.includes(g) ? ' on' : ''}`}
+          aria-pressed={p.goals.includes(g)} onClick={() => toggle('goals', g)}>{t(`prof.g.${g}` as keyof Dict)}</button>)}</div>}
+
+        {step === 3 && <div className="chips">{CARDS.map(c => <button key={c} type="button" className={`chip${p.cards.includes(c) ? ' on' : ''}`}
+          aria-pressed={p.cards.includes(c)} onClick={() => toggle('cards', c)}>{cardLabel(c)}</button>)}</div>}
+
+        {step === 4 && <>
+          <p className="field-label">{t('prof.invested')}</p>
+          <div className="chips">{(['yes', 'want', 'no'] as const).map(v => <button key={v} type="button" className={`chip${p.invested === v ? ' on' : ''}`}
+            aria-pressed={p.invested === v} onClick={() => set({ invested: p.invested === v ? null : v })}>{t(`prof.i.${v}`)}</button>)}</div>
+          {p.invested === 'yes' && <>
+            <p className="field-label top-gap">{t('prof.where')}</p>
+            <div className="chips">{WHERE.map(w => <button key={w} type="button" className={`chip${p.invest_where.includes(w) ? ' on' : ''}`}
+              aria-pressed={p.invest_where.includes(w)} onClick={() => toggle('invest_where', w)}>{t(w === 'other' ? 'prof.other' : `prof.w.${w}` as keyof Dict)}</button>)}</div>
+          </>}
+        </>}
+
+        {step === 5 && <>
+          <small className="muted">{t('prof.sharesHint')}</small>
+          <div className="chips">{PRESETS.filter(pr => pr.length === settings.buckets.length).map(pr => (
+            <button key={pr.join()} type="button" className={`chip${pr.every((v, i) => v === values[i]) ? ' on' : ''}`} onClick={() => setShares(pr.map(String))}>
+              {pr.join('-')}{pr[0] === 55 && pr[1] === 20 ? ` · ${t('prof.recommended')}` : ''}</button>))}</div>
+          <div className="share-grid">
+            {settings.buckets.map((b, i) => (
+              <label key={b.id} className="share-input"><span>{bucketName(b, t)}</span>
+                <span className="pct-input"><input inputMode="decimal" value={shares[i]} onChange={e => setShares(shares.map((x, j) => (j === i ? e.target.value.replace(/[^\d.,]/g, '') : x)))} />%</span></label>
+            ))}
+          </div>
+          <p className={`small ${total === 100 ? 'muted' : 'bad-text'}`}>{t('prof.sharesTotal', { n: String(total).replace('.', ',') })}</p>
+          <label className="check"><input type="checkbox" checked={apply} onChange={e => setApply(e.target.checked)} /> {t('prof.apply')}</label>
+        </>}
       </div>
-      <label className="field"><span>{t('prof.income')} ({settings.currency})</span>
-        <input inputMode="decimal" placeholder="1.600" value={income} onChange={e => setIncome(e.target.value.replace(/[^\d.,]/g, ''))} />
-        <small className="muted">{t('prof.incomeHint')}</small></label>
 
-      <fieldset className="field"><legend>{t('prof.goals')}</legend>
-        <div className="chips">{GOALS.map(g => <button key={g} type="button" className={`chip${p.goals.includes(g) ? ' on' : ''}`}
-          aria-pressed={p.goals.includes(g)} onClick={() => toggle('goals', g)}>{t(`prof.g.${g}` as keyof Dict)}</button>)}</div></fieldset>
-
-      <fieldset className="field"><legend>{t('prof.cards')}</legend>
-        <div className="chips">{CARDS.map(c => <button key={c} type="button" className={`chip${p.cards.includes(c) ? ' on' : ''}`}
-          aria-pressed={p.cards.includes(c)} onClick={() => toggle('cards', c)}>{cardLabel(c)}</button>)}</div></fieldset>
-
-      <fieldset className="field"><legend>{t('prof.invested')}</legend>
-        <div className="chips">{(['yes', 'want', 'no'] as const).map(v => <button key={v} type="button" className={`chip${p.invested === v ? ' on' : ''}`}
-          aria-pressed={p.invested === v} onClick={() => set({ invested: p.invested === v ? null : v })}>{t(`prof.i.${v}`)}</button>)}</div></fieldset>
-      {p.invested === 'yes' && (
-        <fieldset className="field"><legend>{t('prof.where')}</legend>
-          <div className="chips">{WHERE.map(w => <button key={w} type="button" className={`chip${p.invest_where.includes(w) ? ' on' : ''}`}
-            aria-pressed={p.invest_where.includes(w)} onClick={() => toggle('invest_where', w)}>{t(w === 'other' ? 'prof.other' : `prof.w.${w}` as keyof Dict)}</button>)}</div></fieldset>
-      )}
-
-      <fieldset className="field"><legend>{t('prof.shares')}</legend>
-        <small className="muted">{t('prof.sharesHint')}</small>
-        <div className="chips">{PRESETS.filter(pr => pr.length === settings.buckets.length).map(pr => (
-          <button key={pr.join()} type="button" className={`chip${pr.every((v, i) => v === values[i]) ? ' on' : ''}`} onClick={() => setShares(pr.map(String))}>
-            {pr.join('-')}{pr[0] === 55 && pr[1] === 20 ? ` · ${t('prof.recommended')}` : ''}</button>))}</div>
-        <div className="share-grid">
-          {settings.buckets.map((b, i) => (
-            <label key={b.id} className="share-input"><span>{bucketName(b, t)}</span>
-              <span className="pct-input"><input inputMode="decimal" value={shares[i]} onChange={e => setShares(shares.map((s, j) => (j === i ? e.target.value.replace(/[^\d.,]/g, '') : s)))} />%</span></label>
-          ))}
-        </div>
-        <p className={`small ${total === 100 ? 'muted' : 'bad-text'}`}>{t('prof.sharesTotal', { n: String(total).replace('.', ',') })}</p>
-        <label className="check"><input type="checkbox" checked={apply} onChange={e => setApply(e.target.checked)} /> {t('prof.apply')}</label>
-      </fieldset>
-
-      <div className="stack-row top-gap">
-        <button className="btn primary" disabled={busy} onClick={() => void save()}>{t('prof.save')}</button>
-        <button className="btn" onClick={() => { profilePrompt.clear(); onDone() }}>{t('prof.skip')}</button>
-      </div>
-      <button className="link-btn small" onClick={() => void clear()}>{t('prof.clear')}</button>
+      <StepNav onBack={step > 1 ? () => setStep(step - 1) : undefined} busy={busy}
+        next={step < TOTAL ? `${t('step.next')} →` : t('prof.save')}
+        extra={<button type="button" className="link-btn" onClick={() => { profilePrompt.clear(); onDone() }}>{t('prof.skip')}</button>} />
+      {step === TOTAL && <button type="button" className="link-btn small" onClick={() => void clear()}>{t('prof.clear')}</button>}
       {msg && <p className={msg.bad ? 'bad-text small' : 'good-text small'} role="status">{msg.text}</p>}
-    </div>
+    </form>
   )
 }

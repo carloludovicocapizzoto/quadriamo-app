@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { PAGES } from '../config'
+import { ENTRY } from '../entry'
 import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
 import { useSync } from '../sync/context'
 import { profilePrompt } from '../sync/profile'
 import { ProfileForm } from './ProfileForm'
+import { StepHeader, StepNav } from './Steps'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 type Msg = { text: string; bad?: boolean } | null
@@ -29,12 +31,12 @@ function useRun() {
   return { busy, msg, setMsg, run }
 }
 
-function PasswordInput({ value, onChange, autoComplete }: { value: string; onChange: (v: string) => void; autoComplete: string }) {
+function PasswordInput({ value, onChange, autoComplete, autoFocus }: { value: string; onChange: (v: string) => void; autoComplete: string; autoFocus?: boolean }) {
   const { t } = useI18n()
   const [show, setShow] = useState(false)
   return (
     <span className="pw">
-      <input type={show ? 'text' : 'password'} autoComplete={autoComplete} value={value} onChange={e => onChange(e.target.value)} />
+      <input type={show ? 'text' : 'password'} autoComplete={autoComplete} value={value} onChange={e => onChange(e.target.value)} autoFocus={autoFocus} />
       <button type="button" className="link-btn" onClick={() => setShow(!show)}>{show ? t('auth.hide') : t('auth.show')}</button>
     </span>
   )
@@ -43,7 +45,9 @@ function PasswordInput({ value, onChange, autoComplete }: { value: string; onCha
 function SignInOrUp() {
   const { t, lang } = useI18n()
   const sync = useSync()
-  const [tab, setTab] = useState<'in' | 'up' | 'link'>('in')
+  // ?signup=1 ("Crea il tuo account" sul sito) apre direttamente la registrazione
+  const [tab, setTab] = useState<'in' | 'up' | 'link'>(ENTRY.get('signup') === '1' ? 'up' : 'in')
+  const [step, setStep] = useState(1)
   const [first, setFirst] = useState('')
   const [last, setLast] = useState('')
   const [email, setEmail] = useState('')
@@ -53,35 +57,38 @@ function SignInOrUp() {
   const [codeSent, setCodeSent] = useState(false)
   const { busy, msg, setMsg, run } = useRun()
   const em = email.trim()
+  const bad = (text: string) => { setMsg({ text, bad: true }); return false }
+  const next = () => { setMsg(null); setStep(step + 1) }
+  const back = () => { setMsg(null); setStep(step - 1) }
+  const go = (x: typeof tab) => { setTab(x); setStep(1); setMsg(null) }
 
-  const signIn = (e: FormEvent) => {
-    e.preventDefault()
-    if (!EMAIL.test(em)) { setMsg({ text: t('sync.errEmail'), bad: true }); return }
-    void run(() => sync.signIn(em, password), () => t('auth.errLogin'))
-  }
+  // registrazione: 1 nome e cognome · 2 email · 3 password e consenso
   const signUp = (e: FormEvent) => {
     e.preventDefault()
-    if (!first.trim() || !last.trim()) { setMsg({ text: t('auth.errName'), bad: true }); return }
-    if (!EMAIL.test(em)) { setMsg({ text: t('sync.errEmail'), bad: true }); return }
-    if (password.length < 8) { setMsg({ text: t('auth.errPassword'), bad: true }); return }
-    if (!accept) { setMsg({ text: t('auth.errAccept'), bad: true }); return }
+    if (step === 1) { if (!first.trim() || !last.trim()) return bad(t('auth.errName')); return next() }
+    if (step === 2) { if (!EMAIL.test(em)) return bad(t('sync.errEmail')); return next() }
+    if (password.length < 8) return bad(t('auth.errPassword'))
+    if (!accept) return bad(t('auth.errAccept'))
     void run(async () => {
       const r = await sync.signUp({ firstName: first.trim(), lastName: last.trim(), email: em, password })
       profilePrompt.set()
       if (r.needsConfirm) setMsg({ text: t('auth.confirmSent', { email: em }) })
     }, e => (e.code === 'user_already_exists' ? t('auth.errExists') : e.code === 'weak_password' ? t('auth.errPassword') : t('auth.errGeneric')))
   }
-  const forgot = () => {
-    if (!EMAIL.test(em)) { setMsg({ text: t('sync.errEmail'), bad: true }); return }
-    void run(async () => { await sync.resetPassword(em); setMsg({ text: t('auth.resetSent') }) }, () => t('auth.errGeneric'))
+  // accesso: 1 email · 2 password
+  const signIn = (e: FormEvent) => {
+    e.preventDefault()
+    if (step === 1) { if (!EMAIL.test(em)) return bad(t('sync.errEmail')); return next() }
+    void run(() => sync.signIn(em, password), () => t('auth.errLogin'))
   }
+  const forgot = () => void run(async () => { await sync.resetPassword(em); setMsg({ text: t('auth.resetSent') }) }, () => t('auth.errGeneric'))
   const sendLink = (e: FormEvent) => {
     e.preventDefault()
-    if (!EMAIL.test(em)) { setMsg({ text: t('sync.errEmail'), bad: true }); return }
+    if (!EMAIL.test(em)) { bad(t('sync.errEmail')); return }
     void run(async () => { await sync.sendCode(em); setCodeSent(true) }, () => t('sync.errSend'))
   }
   const verify = (e: FormEvent) => { e.preventDefault(); void run(() => sync.verifyCode(em, code.trim()), () => t('sync.errCode')) }
-  const go = (x: typeof tab) => { setTab(x); setMsg(null) }
+  const emailInput = <input type="email" inputMode="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} autoFocus />
 
   return (
     <>
@@ -92,28 +99,37 @@ function SignInOrUp() {
       </div>
 
       {tab === 'up' && (
-        <form onSubmit={signUp} className="auth-form">
-          <div className="two-col">
-            <label className="field"><span>{t('auth.firstName')}</span><input autoComplete="given-name" maxLength={80} value={first} onChange={e => setFirst(e.target.value)} /></label>
-            <label className="field"><span>{t('auth.lastName')}</span><input autoComplete="family-name" maxLength={80} value={last} onChange={e => setLast(e.target.value)} /></label>
+        <form onSubmit={signUp} className="auth-form" noValidate>
+          <StepHeader n={step} total={3} title={[t('auth.stepName'), t('auth.stepEmail'), t('auth.stepPassword')][step - 1]} />
+          <div className="step-body" key={step}>
+            {step === 1 && <div className="two-col">
+              <label className="field"><span>{t('auth.firstName')}</span><input autoComplete="given-name" maxLength={80} value={first} onChange={e => setFirst(e.target.value)} autoFocus /></label>
+              <label className="field"><span>{t('auth.lastName')}</span><input autoComplete="family-name" maxLength={80} value={last} onChange={e => setLast(e.target.value)} /></label>
+            </div>}
+            {step === 2 && <label className="field"><span>{t('sync.email')}</span>{emailInput}<small className="muted">{t('auth.stepEmailHint')}</small></label>}
+            {step === 3 && <>
+              <label className="field"><span>{t('auth.password')}</span><PasswordInput value={password} onChange={setPassword} autoComplete="new-password" />
+                <small className="muted">{t('auth.passwordHint')}</small></label>
+              <label className="check wrap-text"><input type="checkbox" checked={accept} onChange={e => setAccept(e.target.checked)} />
+                <span>{t('auth.accept')} (<a href={`${PAGES.terms}?lang=${lang}`} target="_blank" rel="noopener">{t('legal.terms')}</a>,{' '}
+                  <a href={`${PAGES.privacy}?lang=${lang}`} target="_blank" rel="noopener">{t('legal.privacy')}</a>)</span></label>
+            </>}
           </div>
-          <label className="field"><span>{t('sync.email')}</span><input type="email" inputMode="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} /></label>
-          <label className="field"><span>{t('auth.password')}</span><PasswordInput value={password} onChange={setPassword} autoComplete="new-password" />
-            <small className="muted">{t('auth.passwordHint')}</small></label>
-          <label className="check wrap-text"><input type="checkbox" checked={accept} onChange={e => setAccept(e.target.checked)} />
-            <span>{t('auth.accept')} (<a href={`${PAGES.terms}?lang=${lang}`} target="_blank" rel="noopener">{t('legal.terms')}</a>,{' '}
-              <a href={`${PAGES.privacy}?lang=${lang}`} target="_blank" rel="noopener">{t('legal.privacy')}</a>)</span></label>
-          <button className="btn primary big-btn" disabled={busy}>{t('auth.signUp')}</button>
+          <StepNav onBack={step > 1 ? back : undefined} next={step < 3 ? `${t('step.next')} →` : t('auth.signUp')} busy={busy} />
         </form>
       )}
 
       {tab === 'in' && (
-        <form onSubmit={signIn} className="auth-form">
-          <label className="field"><span>{t('sync.email')}</span><input type="email" inputMode="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} /></label>
-          <label className="field"><span>{t('auth.password')}</span><PasswordInput value={password} onChange={setPassword} autoComplete="current-password" /></label>
-          <button className="btn primary big-btn" disabled={busy}>{t('auth.signIn')}</button>
+        <form onSubmit={signIn} className="auth-form" noValidate>
+          <StepHeader n={step} total={2} title={step === 1 ? t('auth.stepSignInEmail') : t('auth.stepSignInPassword')} />
+          <div className="step-body" key={step}>
+            {step === 1 && <label className="field"><span>{t('sync.email')}</span>{emailInput}</label>}
+            {step === 2 && <label className="field"><span>{t('auth.password')}</span>
+              <PasswordInput value={password} onChange={setPassword} autoComplete="current-password" autoFocus /></label>}
+          </div>
+          <StepNav onBack={step > 1 ? back : undefined} next={step === 1 ? `${t('step.next')} →` : t('auth.signIn')} busy={busy} />
           <div className="stack-row">
-            <button type="button" className="link-btn" disabled={busy} onClick={forgot}>{t('auth.forgot')}</button>
+            {step === 2 && <button type="button" className="link-btn" disabled={busy} onClick={forgot}>{t('auth.forgot')}</button>}
             <button type="button" className="link-btn" onClick={() => go('link')}>{t('auth.useLink')}</button>
           </div>
         </form>
@@ -121,7 +137,7 @@ function SignInOrUp() {
 
       {tab === 'link' && (!codeSent ? (
         <form onSubmit={sendLink} className="auth-form">
-          <label className="field"><span>{t('sync.email')}</span><input type="email" inputMode="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} /></label>
+          <label className="field"><span>{t('sync.email')}</span>{emailInput}</label>
           <button className="btn primary" disabled={busy}>{t('sync.sendCode')}</button>
           <button type="button" className="link-btn" onClick={() => go('in')}>{t('auth.usePassword')}</button>
         </form>

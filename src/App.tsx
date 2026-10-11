@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { demoAppData } from './demo'
+import { fromSiteAccount } from './entry'
 import { computeMonth, monthOf, todayIso, undated, type ClassifiedTx, type Transaction, type YearMonth } from './engine'
 import { LANGS, useI18n, type Lang } from './i18n/core'
 import { useStore } from './store/context'
@@ -19,6 +20,8 @@ import { track } from './beta/telemetry'
 import { BetaSection } from './ui/beta/BetaSection'
 import { ConsentCard } from './ui/beta/ConsentCard'
 import { FeedbackCard } from './ui/beta/FeedbackCard'
+import { ProfileForm } from './ui/ProfileForm'
+import { profilePrompt } from './sync/profile'
 
 type Tab = 'month' | 'transactions' | 'year' | 'investments' | 'settings'
 
@@ -27,8 +30,8 @@ export default function App() {
   const { state, dispatch } = useStore()
   const sync = useSync()
   const today = todayIso()
-  // ?login=1 (pulsante "Accedi" del sito): si apre direttamente l'area account
-  const [tab, setTab] = useState<Tab>(() => new URLSearchParams(window.location.search).get('login') === '1' ? 'settings' : 'month')
+  // ?login=1 / ?signup=1 (pulsanti del sito): si apre direttamente l'area account
+  const [tab, setTab] = useState<Tab>(fromSiteAccount ? 'settings' : 'month')
   const [ym, setYm] = useState<YearMonth | null>(null)
   const [year, setYear] = useState(() => Number(todayIso().slice(0, 4)))
   // link di inserimento rapido: ?add=1&amount=12,50&desc=Pizza&cat=eatingOut (scorciatoia sull'icona, Comandi Rapidi)
@@ -44,12 +47,13 @@ export default function App() {
     // vecchio indirizzo della dashboard: ora è una pagina a sé
     if (new URLSearchParams(window.location.search).get('admin') === '1') { window.location.replace(`${import.meta.env.BASE_URL}admin/`); return }
     // dal pulsante "Accedi o registrati" del sito: dritti al modulo dell'account
-    if (new URLSearchParams(window.location.search).get('login') === '1') setTimeout(() => document.getElementById('account')?.scrollIntoView(), 300)
+    if (fromSiteAccount) setTimeout(() => document.getElementById('account')?.scrollIntoView(), 300)
     if (window.location.search) window.history.replaceState(null, '', window.location.pathname)
     const onInstalled = () => { void track('install') }
     window.addEventListener('appinstalled', onInstalled)
     return () => window.removeEventListener('appinstalled', onInstalled)
   }, [])
+  const [askProfile, setAskProfile] = useState(() => profilePrompt.get())
   const [note, setNote] = useState('')
   const data = state.data
 
@@ -121,6 +125,8 @@ export default function App() {
 
       <main>
         {tab === 'month' && <ConsentCard onAnswer={yes => ping(yes)} />}
+        {tab === 'month' && sync.user && askProfile && !data.demo && (
+          <section className="card"><h3 className="h-plain">{t('prof.promptTitle')}</h3><ProfileForm onDone={() => setAskProfile(false)} /></section>)}
         {tab === 'month' && showFeedback && <FeedbackCard onClose={() => setShowFeedback(false)} />}
         {(tab === 'month' || tab === 'transactions') && <MonthNav ym={current} onChange={setYm} />}
         {tab === 'year' && <YearNav year={year} onChange={setYear} />}
