@@ -104,7 +104,8 @@ function SignInOrUp() {
     void run(async () => { await sync.sendCode(em); setCodeSent(true) }, () => t('sync.errSend'))
   }
   const verify = (e: FormEvent) => { e.preventDefault(); void run(() => sync.verifyCode(em, code.trim()), () => t('sync.errCode')) }
-  const emailInput = <input type="email" inputMode="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} autoFocus />
+  // il cursore si sposta da solo solo dal secondo passaggio: all'apertura la pagina non scorre e la tastiera non si apre
+  const emailInput = <input type="email" inputMode="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} autoFocus={step > 1} />
 
   return (
     <>
@@ -119,7 +120,7 @@ function SignInOrUp() {
           <StepHeader n={step} total={3} title={[t('auth.stepName'), t('auth.stepEmail'), t('auth.stepPassword')][step - 1]} />
           <div className="step-body" key={step}>
             {step === 1 && <div className="two-col">
-              <label className="field"><span>{t('auth.firstName')}</span><input autoComplete="given-name" maxLength={80} value={first} onChange={e => setFirst(e.target.value)} autoFocus /></label>
+              <label className="field"><span>{t('auth.firstName')}</span><input autoComplete="given-name" maxLength={80} value={first} onChange={e => setFirst(e.target.value)} /></label>
               <label className="field"><span>{t('auth.lastName')}</span><input autoComplete="family-name" maxLength={80} value={last} onChange={e => setLast(e.target.value)} /></label>
             </div>}
             {step === 2 && <label className="field"><span>{t('sync.email')}</span>{emailInput}<small className="muted">{t('auth.stepEmailHint')}</small></label>}

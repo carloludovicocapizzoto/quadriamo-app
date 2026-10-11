@@ -3,6 +3,7 @@ import { paydayPlan, safeToSpend, ymKey, type ClassifiedTx, type MonthResult, ty
 import { useStore } from '../store/context'
 import { useI18n } from '../i18n/core'
 import { Checks } from './Checks'
+import { HomeCharts } from './HomeCharts'
 import { BUCKET_COLORS, bucketName, categoryName } from './names'
 import { TxRow } from './TxRow'
 
@@ -21,6 +22,7 @@ export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; sett
 
   return (
     <>
+      <HomeCharts r={r} settings={settings} today={today} />
       {safe.length > 0 && (
         <section className="card safe">
           <h3 className="h-plain">{t('safe.title')}</h3>

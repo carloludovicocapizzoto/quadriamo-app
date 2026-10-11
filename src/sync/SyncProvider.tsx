@@ -15,6 +15,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<SyncStatus>('idle')
   const [lastSync, setLastSync] = useState<string | null>(null)
   const [recovery, setRecovery] = useState(false)
+  const [ready, setReady] = useState(!supabase)
   const dataRef = useRef<AppData | null>(state.data)
   const running = useRef(false)
   const again = useRef(false)
@@ -28,7 +29,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     if (!supabase) return
     const toUser = (u: { id: string; email?: string; user_metadata?: { first_name?: string } } | null | undefined) =>
       (u ? { id: u.id, email: u.email ?? '', firstName: u.user_metadata?.first_name ?? '' } : null)
-    supabase.auth.getSession().then(({ data }) => setUser(toUser(data.session?.user)))
+    supabase.auth.getSession().then(({ data }) => { setUser(toUser(data.session?.user)); setReady(true) }, () => setReady(true))
     const { data: sub } = supabase.auth.onAuthStateChange((e, session) => {
       setUser(toUser(session?.user))
       if (e === 'PASSWORD_RECOVERY') setRecovery(true)
@@ -86,7 +87,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
   const appUrl = `${window.location.origin}${import.meta.env.BASE_URL}app/?login=1`
   const api = useMemo<SyncApi>(() => ({
-    enabled: !!supabase, user, status, lastSync, syncNow, recovery,
+    enabled: !!supabase, ready, user, status, lastSync, syncNow, recovery,
     signIn: async (email, password) => {
       const { error } = await supabase!.auth.signInWithPassword({ email, password })
       if (error) throw error
@@ -128,7 +129,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       lastPushed.current = ''
       setStatus('idle'); setLastSync(null)
     },
-  }), [user, status, lastSync, syncNow, recovery, appUrl])
+  }), [ready, user, status, lastSync, syncNow, recovery, appUrl])
 
   return <SyncContext.Provider value={api}>{children}</SyncContext.Provider>
 }

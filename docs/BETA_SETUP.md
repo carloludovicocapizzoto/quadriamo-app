@@ -8,7 +8,8 @@ Anteprima con dati di esempio: `…/quadriamo-app/admin/?demo=1`.
 
 ## 1. Tabelle e regole di sicurezza
 Supabase → **SQL Editor** → **New snippet** → incolla tutto `supabase/migrations/0002_beta_feedback_stats_push.sql`
-e poi `supabase/migrations/0004_profiles.sql` (profili: nome, cognome e dati facoltativi) → **Run**.
+poi `supabase/migrations/0004_profiles.sql` (profili) e `supabase/migrations/0005_site_feedback.sql` (feedback dal sito,
+con email facoltativa) → **Run**. La sezione Configurazione dell'area amministratore li copia già tutti insieme.
 Deve comparire "Success. No rows returned".
 
 ## 1b. Registrazione con email e password

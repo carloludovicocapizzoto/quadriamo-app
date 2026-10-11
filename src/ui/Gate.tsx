@@ -1,0 +1,79 @@
+import { useState } from 'react'
+import { LANGS, useI18n, type Lang } from '../i18n/core'
+import { useSync } from '../sync/context'
+import { LoginScreen } from './AccountSection'
+import { LegalLinks } from './LegalLinks'
+
+/** Il logo di Quadriamo: i quattro blocchi compaiono uno dopo l'altro. */
+export function LogoMark({ size = 96 }: { size?: number }) {
+  return (
+    <svg className="logo-mark" width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="14" fill="#1F2328" className="lm-bg" />
+      <rect x="13" y="13" width="20" height="18" rx="2" fill="#C2410C" className="lm lm1" />
+      <rect x="36" y="13" width="15" height="18" rx="2" fill="#E89A6C" className="lm lm2" />
+      <rect x="13" y="34" width="20" height="17" rx="2" fill="#E9C9A6" className="lm lm3" />
+      <rect x="36" y="34" width="15" height="17" rx="2" fill="#8A8F98" className="lm lm4" />
+    </svg>
+  )
+}
+
+/** Mentre l'app si avvia: solo il logo. */
+export function Splash() {
+  return <div className="gate gate-splash"><LogoMark size={84} /></div>
+}
+
+/**
+ * Ingresso nell'app quando non hai fatto l'accesso: pagina di benvenuto con logo e colori, poi il riquadro
+ * "Accedi / Crea account" (con password dimenticata). Dopo, la configurazione a passaggi e infine l'app.
+ */
+export function Gate({ hasData, onLocal, onDemo }: { hasData: boolean; onLocal: () => void; onDemo: () => void }) {
+  const { t, lang, setLang } = useI18n()
+  const sync = useSync()
+  const [phase, setPhase] = useState<'welcome' | 'login'>('welcome')
+  const [leaving, setLeaving] = useState(false)
+  const go = () => {
+    if (!sync.enabled) { onLocal(); return }
+    setLeaving(true)
+    setTimeout(() => { setPhase('login'); setLeaving(false) }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 380)
+  }
+  const langSelect = (
+    <select className="lang gate-lang" value={lang} onChange={e => setLang(e.target.value as Lang)} aria-label={t('lang.label')}>
+      {Object.entries(LANGS).map(([c, n]) => <option key={c} value={c}>{n}</option>)}
+    </select>
+  )
+
+  if (phase === 'welcome') {
+    return (
+      <div className={`gate gate-welcome${leaving ? ' leaving' : ''}`}>
+        {langSelect}
+        <div className="gate-glow" aria-hidden="true" />
+        <div className="gate-hero">
+          <LogoMark />
+          <h1 className="gate-word">Quadriamo<span>.</span></h1>
+          <p className="gate-tag">{t('app.tagline')}</p>
+          <p className="gate-sub">{t('gate.sub')}</p>
+          <div className="gate-rule" aria-hidden="true">
+            <span style={{ flex: 55 }} /><span style={{ flex: 20 }} /><span style={{ flex: 15 }} /><span style={{ flex: 10 }} />
+          </div>
+          <button className="btn primary big-btn gate-cta" onClick={go}>{t('gate.start')} →</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="gate gate-login">
+      {langSelect}
+      <div className="gate-glow" aria-hidden="true" />
+      <div className="gate-panel">
+        <button className="gate-mini" onClick={() => setPhase('welcome')} aria-label="Quadriamo"><LogoMark size={40} /><span>Quadriamo<i>.</i></span></button>
+        <LoginScreen footer={<>
+          <button className="link-btn" onClick={onLocal}>{t('onb.noAccount')} →</button>
+          <small className="muted">{t('onb.noAccountHint')}</small>
+          {!hasData && <button className="link-btn" onClick={onDemo}>{t('onb.demo')}</button>}
+          <LegalLinks notice />
+        </>} />
+      </div>
+    </div>
+  )
+}

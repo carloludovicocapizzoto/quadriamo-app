@@ -4,6 +4,7 @@ export type SyncStatus = 'idle' | 'syncing' | 'ok' | 'error' | 'offline'
 
 export interface SyncApi {
   enabled: boolean                       // false se l'app non è collegata a Supabase
+  ready: boolean                         // la sessione salvata è stata letta (si sa se hai fatto l'accesso)
   user: { id: string; email: string; firstName: string } | null
   recovery: boolean                      // aperto dal link "password dimenticata": va scelta una nuova password
   status: SyncStatus

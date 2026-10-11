@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { downloadCsv, label, projectRef, type Account, type Device, type Feedback, type ProfileStats, type PushSub, type Setup, type Stats } from './data'
 import sql0002 from '../../supabase/migrations/0002_beta_feedback_stats_push.sql?raw'
 import sql0004 from '../../supabase/migrations/0004_profiles.sql?raw'
+import sql0005 from '../../supabase/migrations/0005_site_feedback.sql?raw'
 import sql0003 from '../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
 import fnCode from '../../supabase/functions/send-push/index.ts?raw'
 
@@ -217,20 +218,20 @@ export function FeedbackPanel({ rows }: { rows: Feedback[] }) {
         </div>
       </div>
       <Toolbar count={`${list.length} risposte`} onExport={() => downloadCsv('quadriamo-feedback', [
-        ['Data', 'Voto', 'Commento', 'Lingua', 'Versione', 'Con account'],
-        ...list.map(r => [r.created_at, r.rating, r.message, label(r.lang), r.app_version, yn(!!r.user_id)])])}>
+        ['Data', 'Da', 'Voto', 'Commento', 'Email', 'Lingua', 'Versione', 'Con account'],
+        ...list.map(r => [r.created_at, r.source === 'site' ? 'Sito' : 'App', r.rating, r.message, r.email, label(r.lang), r.app_version, yn(!!r.user_id)])])}>
         <select value={stars} onChange={e => setStars(Number(e.target.value))} aria-label="Filtra per voto">
           <option value={0}>Tutti i voti</option>{[5, 4, 3, 2, 1].map(s => <option key={s} value={s}>{s} stelle</option>)}
         </select>
       </Toolbar>
       <div className="az-table-wrap">
         <table className="az-table">
-          <thead><tr><th>Data</th><th>Voto</th><th>Commento</th><th>Lingua</th><th>Versione</th><th>Account</th></tr></thead>
+          <thead><tr><th>Data</th><th>Da</th><th>Voto</th><th>Commento</th><th>Email</th><th>Lingua</th><th>Versione</th><th>Account</th></tr></thead>
           <tbody>
             {list.map(r => (
-              <tr key={r.id}><td>{dt(r.created_at)}</td>
+              <tr key={r.id}><td>{dt(r.created_at)}</td><td>{r.source === 'site' ? <span className="az-pill warn">Sito</span> : 'App'}</td>
                 <td className="stars">{r.rating ? <>{'★'.repeat(r.rating)}<span>{'★'.repeat(5 - r.rating)}</span></> : '—'}</td>
-                <td className="wrap">{r.message ?? '—'}</td><td>{label(r.lang)}</td><td>{r.app_version ?? '—'}</td><td>{r.user_id ? 'Sì' : '—'}</td></tr>
+                <td className="wrap">{r.message ?? '—'}</td><td>{r.email ? <a href={`mailto:${r.email}`}>{r.email}</a> : '—'}</td><td>{label(r.lang)}</td><td>{r.app_version ?? '—'}</td><td>{r.user_id ? 'Sì' : '—'}</td></tr>
             ))}
           </tbody>
         </table>
@@ -306,10 +307,10 @@ export function SetupPanel({ setup, email, onRecheck }: { setup: Setup; email: s
   const ref = projectRef()
   const dash = `https://supabase.com/dashboard/project/${ref}`
   const adminSql = `insert into public.admins (user_id)\nselect id from auth.users where email = '${email}'\non conflict do nothing;`
-  const fullSql = `${sql0002}\n${sql0004}\n-- tu sei l'amministratore\n${adminSql}\n`
-  const step1 = !!setup.tables && setup.admin && !!setup.profiles
+  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n-- tu sei l'amministratore\n${adminSql}\n`
+  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.siteFeedback !== false
   // tabelle già create ma manca qualcosa: solo i pezzi mancanti
-  const partialSql = [setup.profiles === false ? sql0004 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
+  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
   const cronSql = sql0003.replace('<PROJECT_REF>', ref)
   return (
     <>

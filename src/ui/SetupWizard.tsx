@@ -17,12 +17,24 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
   const { t } = useI18n()
   const sync = useSync()
   const [step, setStep] = useState(1)
+  const [ready, setReady] = useState(false)
+  // fine della configurazione: un attimo di "Tutto pronto!", poi si entra nell'app
+  const finish = () => { setReady(true); window.scrollTo(0, 0); setTimeout(onDone, 1600) }
   const total = STEPS.length + (sync.user ? 1 : 0)
   const isProfile = step > STEPS.length
   const next = (e: FormEvent) => {
     e.preventDefault()
     window.scrollTo(0, 0)
-    if (step < total) setStep(step + 1); else onDone()
+    if (step < total) setStep(step + 1); else finish()
+  }
+  if (ready) {
+    return (
+      <section className="ready" role="status">
+        <div className="ready-check"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><path d="M13 25l7 7 15-16" /></svg></div>
+        <h2>{t('setup.ready')}</h2>
+        <p>{t('setup.readySub')}</p>
+      </section>
+    )
   }
   return (
     <section className="card wizard">
@@ -30,14 +42,14 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
       {step === 1 && <p className="muted small">{t('setup.intro')}</p>}
       <StepHeader n={step} total={total} title={isProfile ? t('setup.profile') : t(STEPS[step - 1][1])} />
       <div className="step-body" key={step}>
-        {isProfile ? <ProfileForm withShares={false} onDone={onDone} />
+        {isProfile ? <ProfileForm withShares={false} onDone={finish} />
           : <SettingsView only={[STEPS[step - 1][0]]} wizard />}
       </div>
       {!isProfile && (
         <form onSubmit={next}>
           <StepNav onBack={step > 1 ? () => setStep(step - 1) : undefined}
             next={step < total ? `${t('step.next')} →` : t('setup.finish')}
-            extra={<button type="button" className="link-btn" onClick={onDone}>{t('setup.skip')}</button>} />
+            extra={<button type="button" className="link-btn" onClick={finish}>{t('setup.skip')}</button>} />
         </form>
       )}
     </section>

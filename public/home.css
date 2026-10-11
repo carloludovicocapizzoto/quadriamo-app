@@ -151,3 +151,22 @@ details p { margin: 10px 0 0; color: var(--muted); }
 @media (max-width: 340px) { .head-row .logo { font-size: 19px; } .btn-small { padding: 0 8px; } }
 .rule-item, .steps li, .feat-grid article, .card { min-width: 0; }
 @media (max-width: 420px) { .rule-grid { grid-template-columns: 1fr; } }
+
+/* feedback dal sito */
+.fb-band { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+@media (max-width: 760px) { .fb-band { grid-template-columns: 1fr; } }
+.fb-form { display: grid; gap: 8px; }
+.fb-form fieldset { border: 0; padding: 0; margin: 0; }
+.fb-label { font-weight: 700; font-size: 15px; padding: 0; }
+.fb-form textarea, .fb-form input[type="email"] { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%; }
+.fb-form input[type="email"]:disabled { opacity: .5; }
+.stars-row { display: flex; gap: 6px; margin-top: 4px; }
+.stars-row button { font-size: 30px; line-height: 1; background: none; border: 0; color: var(--line); cursor: pointer; padding: 2px; transition: transform .15s, color .15s; }
+.stars-row button.on { color: #F59E0B; }
+.stars-row button:hover { transform: scale(1.15); }
+.fb-check { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.fb-check input { width: 18px; height: 18px; }
+.fb-form .btn { justify-self: start; margin-top: 4px; }
+.fb-msg { margin: 4px 0 0; font-weight: 600; font-size: 15px; }
+.fb-msg.ok { color: #15803D; } .fb-msg.bad { color: #B42318; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fb-msg.ok { color: #4ADE80; } :root:not([data-theme="light"]) .fb-msg.bad { color: #F87171; } }

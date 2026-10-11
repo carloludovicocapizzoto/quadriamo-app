@@ -11,7 +11,7 @@ const stats: Stats = {
   daily: [{ day: '2026-10-09', active: 1, new: 0 }, { day: '2026-10-10', active: 2, new: 2 }],
   langs: { it: 2, en: 1, '?': 1 }, platforms: { ios: 1, android: 1, desktop: 1 }, events: { open: 4, share: 1 },
 }
-const setup: Setup = { connected: true, tables: true, profiles: true, admin: true, fn: 'ok', cronSecret: true, reminder: false, vapidInApp: true }
+const setup: Setup = { connected: true, tables: true, profiles: true, siteFeedback: true, admin: true, fn: 'ok', cronSecret: true, reminder: false, vapidInApp: true }
 
 describe('area amministratore', () => {
   it('dashboard: numeri chiave, imbuto, lingue', () => {

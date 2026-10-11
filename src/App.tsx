@@ -21,7 +21,8 @@ import { BetaSection } from './ui/beta/BetaSection'
 import { ConsentCard } from './ui/beta/ConsentCard'
 import { FeedbackCard } from './ui/beta/FeedbackCard'
 import { ProfileForm } from './ui/ProfileForm'
-import { profilePrompt, setupPending } from './sync/profile'
+import { noAccount, profilePrompt, setupPending } from './sync/profile'
+import { Gate, Splash } from './ui/Gate'
 import { LoginScreen } from './ui/AccountSection'
 import { SetupWizard } from './ui/SetupWizard'
 import { guessCurrency } from './ui/names'
@@ -82,7 +83,20 @@ export default function App() {
     if (newAccount) dispatch({ type: 'replace', data: createInitial(guessCurrency(), todayIso(), 1) })
   }, [newAccount, dispatch])
 
-  if (!state.loaded) return <div className="app"><p className="muted top-gap">{t('app.loading')}</p></div>
+  if (!state.loaded || !sync.ready) return <Splash />
+
+  // senza account: si usa solo su questo dispositivo; se non c'è ancora un budget parte la configurazione
+  const startLocal = () => {
+    noAccount.set(); setAuthOpen(false)
+    if (!data) { setupPending.set(); dispatch({ type: 'replace', data: createInitial(guessCurrency(), today, 1) }) }
+    setSetupTick(x => x + 1)
+  }
+  // ingresso: chi non ha fatto l'accesso (e non ha scelto di usarla senza account) vede benvenuto e accesso
+  if (sync.enabled && !sync.user && !sync.recovery && (!noAccount.get() || (authOpen && !data))) {
+    return <Gate hasData={!!data} onLocal={startLocal}
+      onDemo={() => { noAccount.set(); setSetupTick(x => x + 1); dispatch({ type: 'replace', data: demoAppData(today) }) }} />
+  }
+  if (!sync.enabled && !data) return <Gate hasData={false} onLocal={startLocal} onDemo={() => dispatch({ type: 'replace', data: demoAppData(today) })} />
 
   const header = (
     <header className="top">
@@ -151,7 +165,7 @@ export default function App() {
         </div>
       )}
 
-      <main>
+      <main className="app-enter">
         {tab === 'month' && <ConsentCard onAnswer={yes => ping(yes)} />}
         {tab === 'month' && sync.user && askProfile && !data.demo && !inSetup && (
           <section className="card"><h3 className="h-plain">{t('prof.promptTitle')}</h3><ProfileForm onDone={() => setAskProfile(false)} /></section>)}

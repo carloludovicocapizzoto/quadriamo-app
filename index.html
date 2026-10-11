@@ -28,7 +28,7 @@
       <select class="lang-select" aria-label="Lingua / Language">
         <option value="it">IT</option><option value="en">EN</option><option value="fr">FR</option><option value="es">ES</option>
       </select>
-      <a class="link-login" href="app/?login=1" data-i18n="nav.login"></a>
+      <a class="link-login" href="#feedback" data-i18n="nav.feedback"></a>
       <a class="btn btn-small" href="inizia.html" data-i18n="nav.open"></a>
     </div>
   </div>
@@ -159,19 +159,31 @@
     <p class="cta-row"><a class="btn" href="inizia.html" data-i18n="nav.open"></a><a class="btn btn-ghost" href="install.html" data-i18n="dl.guide"></a></p>
   </section>
 
-  <section id="accedi" class="alt">
-    <div class="site-wrap login-band">
+  <section id="feedback" class="alt">
+    <div class="site-wrap fb-band">
       <div>
-        <h2 data-i18n="acc.title"></h2>
-        <p data-i18n="acc.text"></p>
-        <ul class="checks-list"><li data-i18n="acc.1"></li><li data-i18n="acc.2"></li><li data-i18n="acc.3"></li></ul>
+        <h2 data-i18n="fb.title"></h2>
+        <p data-i18n="fb.text"></p>
       </div>
-      <div class="card login-card">
-        <h3 data-i18n="acc.cardT"></h3>
-        <p class="muted small" data-i18n="acc.card"></p>
-        <a class="btn" href="app/?login=1" data-i18n="nav.login"></a>
-        <a class="small" href="app/" data-i18n="acc.noAccount"></a>
-      </div>
+      <form class="card fb-form" id="fb-form" novalidate>
+        <fieldset class="fb-stars" aria-label="Voto">
+          <legend class="fb-label" data-i18n="fb.rating"></legend>
+          <div class="stars-row">
+            <button type="button" data-star="1" aria-label="1">★</button><button type="button" data-star="2" aria-label="2">★</button><button type="button" data-star="3" aria-label="3">★</button><button type="button" data-star="4" aria-label="4">★</button><button type="button" data-star="5" aria-label="5">★</button>
+          </div>
+        </fieldset>
+        <label class="fb-label" for="fb-msg" data-i18n="fb.message"></label>
+        <textarea id="fb-msg" maxlength="4000" rows="4"></textarea>
+        <label class="fb-label" for="fb-email" data-i18n="fb.email"></label>
+        <input id="fb-email" type="email" autocomplete="email" maxlength="200">
+        <label class="fb-check"><input type="checkbox" id="fb-anon"> <span data-i18n="fb.anon"></span></label>
+        <p class="muted small" data-i18n="fb.privacy"></p>
+        <button class="btn" type="submit" data-i18n="fb.send"></button>
+        <p class="fb-msg ok" id="fb-ok" hidden data-i18n="fb.ok"></p>
+        <p class="fb-msg bad" id="fb-empty" hidden data-i18n="fb.empty"></p>
+        <p class="fb-msg bad" id="fb-bademail" hidden data-i18n="fb.badEmail"></p>
+        <p class="fb-msg bad" id="fb-err" hidden data-i18n="fb.err"></p>
+      </form>
     </div>
   </section>
 
@@ -218,5 +230,6 @@
   <p class="site-wrap muted small" data-i18n="foot.legal"></p>
 </footer>
 <script src="/home.js"></script>
+<script type="module" src="/src/site/feedback.ts"></script>
 </body>
 </html>

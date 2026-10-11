@@ -9,7 +9,7 @@ export interface Stats {
   daily: { day: string; active: number; new: number }[] | null
   langs: Record<string, number>; platforms: Record<string, number>; events: Record<string, number>
 }
-export interface Feedback { id: number; created_at: string; rating: number | null; message: string | null; lang: string | null; app_version: string | null; user_id: string | null }
+export interface Feedback { id: number; created_at: string; rating: number | null; message: string | null; lang: string | null; app_version: string | null; user_id: string | null; email?: string | null; source?: 'app' | 'site' }
 export interface Device {
   device_id: string; first_day: string; last_day: string; active_days: number; platform: string | null; lang: string | null
   standalone: boolean | null; signed_in: boolean | null; tx_count: number | null; months_used: number | null; app_version: string | null
@@ -28,6 +28,7 @@ export interface Setup {
   connected: boolean          // l'app ha URL e chiave di Supabase
   tables: boolean | null      // script 0002 eseguito (null = non ancora verificabile: serve l'accesso)
   profiles: boolean | null    // script 0004 (profili) eseguito
+  siteFeedback: boolean | null  // script 0005 (feedback dal sito) eseguito
   admin: boolean              // questo account è amministratore
   fn: 'ok' | 'missing' | 'nosecrets' | 'unknown'   // funzione send-push pubblicata e con le chiavi
   cronSecret: boolean
@@ -61,7 +62,7 @@ export const loadProfileStats = () => rpc<ProfileStats>('admin_profile_stats')
 export const loadPush = () => rpc<PushSub[]>('admin_push_list')
 
 export async function checkSetup(signedIn: boolean): Promise<Setup> {
-  const s: Setup = { connected: !!supabase, tables: null, profiles: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
+  const s: Setup = { connected: !!supabase, tables: null, profiles: null, siteFeedback: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
     vapidInApp: !!import.meta.env.VITE_VAPID_PUBLIC_KEY }
   if (!supabase || !signedIn) return s
   const { data, error } = await supabase.rpc('is_admin')
@@ -70,6 +71,8 @@ export async function checkSetup(signedIn: boolean): Promise<Setup> {
   s.admin = data === true
   const pr = await supabase.from('profiles').select('user_id', { head: true, count: 'exact' })
   s.profiles = !(pr.error && (pr.error.code === 'PGRST205' || pr.error.code === '42P01'))
+  const sf = await supabase.rpc('site_feedback_ready')
+  s.siteFeedback = !sf.error
   if (!s.admin) return s
   const fn = await supabase.functions.invoke('send-push', { body: { mode: 'check' } })
   if (fn.error) s.fn = 'missing'

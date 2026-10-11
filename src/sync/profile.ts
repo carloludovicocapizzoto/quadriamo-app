@@ -40,3 +40,6 @@ export async function saveProfile(userId: string, p: Profile) {
     invest_where: p.invested === 'yes' ? p.invest_where : [], updated_at: new Date().toISOString() })
   if (error) throw error
 }
+
+/** Hai scelto di usare l'app senza account su questo dispositivo: niente schermata di accesso all'apertura. */
+export const noAccount = flag('q.noAccount')
