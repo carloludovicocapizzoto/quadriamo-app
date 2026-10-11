@@ -491,3 +491,6 @@ main.app-enter { animation: fade-up .5s cubic-bezier(.2,.8,.2,1) both; }
 html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body { overscroll-behavior: none; }
 input, select, textarea { font-size: max(16px, 1em); }
+.privacy-note { background: var(--good-bg); border-radius: 14px; padding: 12px 14px; margin: 6px 0 12px; }
+.privacy-note p { margin: 0 0 4px; }
+.research-check { align-items: flex-start; gap: 10px; }

@@ -201,3 +201,16 @@ describe('duplicates between imported rows and transactions logged by hand', () 
     expect(duplicateCandidates(d).size).toBe(1)
   })
 })
+
+describe('profilo riservato: sincronizzazione', () => {
+  const base = parseBackup(JSON.stringify(createInitial('EUR', '2026-10-01', 1)))
+  const prof = { monthlyIncome: 1600, goals: ['save'], cards: [], invested: null, investWhere: [], research: false }
+  it('vince la modifica più recente, anche quando il profilo è stato cancellato', () => {
+    const a = { ...base, profile: prof, profileUpdatedAt: '2026-10-10T10:00:00Z' }
+    const b = { ...base, profile: { ...prof, monthlyIncome: 2000 }, profileUpdatedAt: '2026-10-11T10:00:00Z' }
+    expect(mergeData(a, b).profile?.monthlyIncome).toBe(2000)
+    const cleared = { ...base, profile: undefined, profileUpdatedAt: '2026-10-12T10:00:00Z' }
+    expect(mergeData(b, cleared).profile).toBeUndefined()
+    expect(mergeData(base, a).profile?.monthlyIncome).toBe(1600)
+  })
+})

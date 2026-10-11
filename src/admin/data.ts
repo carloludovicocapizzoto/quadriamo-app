@@ -14,12 +14,13 @@ export interface Device {
   device_id: string; first_day: string; last_day: string; active_days: number; platform: string | null; lang: string | null
   standalone: boolean | null; signed_in: boolean | null; tx_count: number | null; months_used: number | null; app_version: string | null
 }
-export interface Account { email: string; first_name: string | null; last_name: string | null; profile_done: boolean; created_at: string; last_sign_in_at: string | null; has_push: boolean; feedback_count: number }
-export interface ProfileStats {
-  profiles: number; completed: number; with_income: number; income_median: number | null; income_avg: number | null
-  income_bands: Record<string, number>; goals: Record<string, number>; cards: Record<string, number>
-  invested: Record<string, number>; invest_where: Record<string, number>
-  shares_avg: number[] | null; shares_default: number; shares_custom: number
+export interface Account { email: string; first_name: string | null; last_name: string | null; created_at: string; last_sign_in_at: string | null; has_push: boolean; feedback_count: number }
+/** Ricerca anonima: totali delle schede inviate per scelta degli utenti; sotto `min` schede arriva solo il conteggio. */
+export interface ResearchStats {
+  answers: number; min: number
+  income_bands?: Record<string, number>; goals?: Record<string, number>; cards?: Record<string, number>
+  invested?: Record<string, number>; invest_where?: Record<string, number>
+  shares_avg?: number[] | null; shares_default?: number; shares_custom?: number
 }
 export interface PushSub { lang: string | null; created_at: string; last_prompt_at: string | null; email: string | null }
 
@@ -28,6 +29,7 @@ export interface Setup {
   connected: boolean          // l'app ha URL e chiave di Supabase
   tables: boolean | null      // script 0002 eseguito (null = non ancora verificabile: serve l'accesso)
   profiles: boolean | null    // script 0004 (profili) eseguito
+  research: boolean | null    // script 0007 (profilo riservato e ricerca anonima) eseguito
   adminKeys: boolean | null   // script 0006 (accesso con nome + codice) eseguito
   adminName: string | null    // nome di chi è entrato con il codice
   siteFeedback: boolean | null  // script 0005 (feedback dal sito) eseguito
@@ -45,6 +47,7 @@ export const LABELS: Record<string, string> = {
   invest: 'Iniziare a investire', family: 'Spese di casa o di coppia', bank: 'Banca', credit: 'Carta di credito', prepaid: 'Carta prepagata',
   cash: 'Soprattutto contanti', other: 'Altro', yes: 'Sì, investe', want: 'No, ma vorrebbe', no: 'No', broker: 'App o broker online', etf: 'ETF',
   stocks: 'Azioni', bonds: 'Titoli di Stato e obbligazioni', pension: 'Fondo pensione', crypto: 'Criptovalute', realestate: 'Immobili',
+  lt1000: 'meno di 1.000 €', '1000-1500': '1.000–1.500 €', '1500-2000': '1.500–2.000 €', '2000-3000': '2.000–3.000 €', ge3000: '3.000 € e oltre',
   ios: 'iPhone / iPad', android: 'Android', desktop: 'Computer', '?': 'Non indicato',
 }
 export const label = (k: string | null | undefined) => LABELS[k ?? '?'] ?? k ?? '—'
@@ -60,12 +63,12 @@ export const loadStats = (days: number) => rpc<Stats>('admin_stats', { p_days: d
 export const loadFeedback = () => rpc<Feedback[]>('admin_feedback', { p_limit: 500 })
 export const loadDevices = () => rpc<Device[]>('admin_devices', { p_limit: 5000 })
 export const loadAccounts = () => rpc<Account[]>('admin_accounts')
-export const loadProfileStats = () => rpc<ProfileStats>('admin_profile_stats')
+export const loadResearch = () => rpc<ResearchStats>('admin_research_stats')
 export const loadPush = () => rpc<PushSub[]>('admin_push_list')
 
 export async function checkSetup(signedIn: boolean): Promise<Setup> {
   const supabase = db()
-  const s: Setup = { connected: !!supabase, tables: null, profiles: null, siteFeedback: null, adminKeys: null, adminName: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
+  const s: Setup = { connected: !!supabase, tables: null, profiles: null, research: null, siteFeedback: null, adminKeys: null, adminName: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
     vapidInApp: !!import.meta.env.VITE_VAPID_PUBLIC_KEY }
   if (!supabase || !signedIn) return s
   const { data, error } = await supabase.rpc('is_admin')
@@ -74,6 +77,8 @@ export async function checkSetup(signedIn: boolean): Promise<Setup> {
   s.admin = data === true
   const pr = await supabase.from('profiles').select('user_id', { head: true, count: 'exact' })
   s.profiles = !(pr.error && (pr.error.code === 'PGRST205' || pr.error.code === '42P01'))
+  const rs = await supabase.rpc('admin_research_stats')
+  s.research = !(rs.error && (rs.error.code === 'PGRST202' || /could not find the function/i.test(rs.error.message)))
   const an = await supabase.rpc('admin_name')
   s.adminKeys = !(an.error && (an.error.code === 'PGRST202' || /could not find the function/i.test(an.error.message)))
   s.adminName = (an.data as string | null) ?? null

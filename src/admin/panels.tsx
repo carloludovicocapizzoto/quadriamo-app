@@ -1,6 +1,6 @@
 // Le sezioni dell'area amministratore: componenti "puri" (ricevono i dati), così si provano senza database.
 import { useState } from 'react'
-import { downloadCsv, label, projectRef, type Account, type Device, type Feedback, type ProfileStats, type PushSub, type Setup, type Stats } from './data'
+import { downloadCsv, label, projectRef, type Account, type Device, type Feedback, type PushSub, type ResearchStats, type Setup, type Stats } from './data'
 import sql0002 from '../../supabase/migrations/0002_beta_feedback_stats_push.sql?raw'
 import sql0004 from '../../supabase/migrations/0004_profiles.sql?raw'
 import sql0005 from '../../supabase/migrations/0005_site_feedback.sql?raw'
@@ -8,6 +8,7 @@ import tplConfirm from '../../supabase/templates/confirmation.html?raw'
 import tplMagic from '../../supabase/templates/magic_link.html?raw'
 import tplRecovery from '../../supabase/templates/recovery.html?raw'
 import sql0006 from '../../supabase/migrations/0006_admin_key.sql?raw'
+import sql0007 from '../../supabase/migrations/0007_private_profile_anonymous_research.sql?raw'
 import sql0003 from '../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
 import fnCode from '../../supabase/functions/send-push/index.ts?raw'
 
@@ -151,17 +152,16 @@ export function AccountsPanel({ rows }: { rows: Account[] }) {
   return (
     <>
       <Toolbar count={`${list.length} account`} onExport={() => downloadCsv('quadriamo-account', [
-        ['Nome', 'Cognome', 'Email', 'Iscritto il', 'Ultimo accesso', 'Profilo compilato', 'Notifiche', 'Feedback'],
-        ...list.map(r => [r.first_name, r.last_name, r.email, r.created_at, r.last_sign_in_at, yn(r.profile_done), yn(r.has_push), r.feedback_count])])}>
+        ['Nome', 'Cognome', 'Email', 'Iscritto il', 'Ultimo accesso', 'Notifiche', 'Feedback'],
+        ...list.map(r => [r.first_name, r.last_name, r.email, r.created_at, r.last_sign_in_at, yn(r.has_push), r.feedback_count])])}>
         <input className="az-search" placeholder="Cerca per nome o email…" value={q} onChange={e => setQ(e.target.value)} />
       </Toolbar>
       <div className="az-table-wrap">
         <table className="az-table">
-          <thead><tr><th>Nome</th><th>Email</th><th>Iscritto il</th><th>Ultimo accesso</th><th>Profilo</th><th>Notifiche</th><th>Feedback</th></tr></thead>
+          <thead><tr><th>Nome</th><th>Email</th><th>Iscritto il</th><th>Ultimo accesso</th><th>Notifiche</th><th>Feedback</th></tr></thead>
           <tbody>
             {list.map(r => (
               <tr key={r.email}><td>{[r.first_name, r.last_name].filter(Boolean).join(' ') || '—'}</td><td>{r.email}</td><td>{d(r.created_at)}</td><td>{dt(r.last_sign_in_at)}</td>
-                <td>{r.profile_done ? <span className="az-pill ok">Compilato</span> : '—'}</td>
                 <td>{r.has_push ? <span className="az-pill ok">Attive</span> : '—'}</td><td>{r.feedback_count || '—'}</td></tr>
             ))}
           </tbody>
@@ -172,32 +172,44 @@ export function AccountsPanel({ rows }: { rows: Account[] }) {
   )
 }
 
-// ---------- Profili (solo numeri aggregati) ----------
-const money = (n: number | null) => (n == null ? '—' : `${Math.round(n).toLocaleString('it-IT', { useGrouping: 'always' })} €`)
-export function ProfilesPanel({ p, buckets = ['Essenziali', 'Qualità della vita', 'Fondo di sicurezza', 'Investimenti'] }: { p: ProfileStats; buckets?: string[] }) {
-  const items = (o: Record<string, number>) => sorted(o).map(([k, n]) => [label(k), n] as [string, number])
-  const bands = Object.entries(p.income_bands).sort().map(([k, n]) => [k.replace(/^\d · /, '') + ' €', n] as [string, number])
-  const invested = (p.invested.yes ?? 0) + (p.invested.want ?? 0) + (p.invested.no ?? 0)
+// ---------- Ricerca anonima (solo totali, da 5 schede in su) ----------
+export function ResearchPanel({ r, buckets = ['Essenziali', 'Qualità della vita', 'Fondo di sicurezza', 'Investimenti'] }: { r: ResearchStats; buckets?: string[] }) {
+  const items = (o: Record<string, number> = {}) => sorted(o).map(([k, n]) => [label(k), n] as [string, number])
+  const order = ['lt1000', '1000-1500', '1500-2000', '2000-3000', 'ge3000']
+  const bands = order.filter(k => r.income_bands?.[k]).map(k => [label(k), r.income_bands![k]] as [string, number])
+  const inv = r.invested ?? {}
+  const invTot = (inv.yes ?? 0) + (inv.want ?? 0) + (inv.no ?? 0)
+  const note = <p className="az-hint">Schede inviate per scelta degli utenti, senza nome, email né account; entrate solo per fascia. Le risposte dei singoli non sono visibili e non sono collegate agli account.</p>
+  if (r.answers < r.min) {
+    return (
+      <>
+        <div className="az-card az-locked-info">
+          <h3>Servono almeno {r.min} schede anonime</h3>
+          <p>Finora ne sono arrivate <b>{r.answers}</b>. I totali compaiono da {r.min} in su: con meno risposte una persona potrebbe essere riconosciuta.</p>
+        </div>
+        {note}
+      </>
+    )
+  }
   return (
     <>
       <div className="az-stat-grid">
-        <Stat n={p.completed} l="Profili compilati" sub={`su ${p.profiles} account`} />
-        <Stat n={money(p.income_median)} l="Entrate mensili nette (mediana)" sub={p.with_income ? `media ${money(p.income_avg)} · ${p.with_income} risposte` : undefined} />
-        <Stat n={pct(p.invested.yes ?? 0, invested)} l="Ha già investito" sub={invested ? `${pct(p.invested.want ?? 0, invested)} vorrebbe iniziare` : undefined} />
-        <Stat n={p.shares_custom} l="Hanno cambiato la regola 55-20-15-10" sub={`${p.shares_default} la tengono`} />
+        <Stat n={r.answers} l="Schede anonime ricevute" />
+        <Stat n={pct(inv.yes ?? 0, invTot)} l="Ha già investito" sub={invTot ? `${pct(inv.want ?? 0, invTot)} vorrebbe iniziare` : undefined} />
+        <Stat n={r.shares_custom ?? 0} l="Hanno cambiato la regola 55-20-15-10" sub={`${r.shares_default ?? 0} la tengono`} />
       </div>
       <div className="az-cols">
-        <div className="az-card"><h3>Entrate mensili nette</h3><Bars items={bands} /></div>
-        <div className="az-card"><h3>Per cosa usano Quadriamo</h3><Bars items={items(p.goals)} total={Math.max(1, p.completed)} /></div>
-        <div className="az-card"><h3>Carte e conti</h3><Bars items={items(p.cards)} total={Math.max(1, p.completed)} /></div>
-        <div className="az-card"><h3>Investimenti</h3><Bars items={items(p.invested)} />
-          {Object.keys(p.invest_where).length > 0 && <><h3 className="az-h3">Dove investono</h3><Bars items={items(p.invest_where)} /></>}</div>
+        <div className="az-card"><h3>Entrate mensili nette (fasce)</h3><Bars items={bands} /></div>
+        <div className="az-card"><h3>Per cosa usano Quadriamo</h3><Bars items={items(r.goals)} total={Math.max(1, r.answers)} /></div>
+        <div className="az-card"><h3>Carte e conti</h3><Bars items={items(r.cards)} total={Math.max(1, r.answers)} /></div>
+        <div className="az-card"><h3>Investimenti</h3><Bars items={items(r.invested)} />
+          {Object.keys(r.invest_where ?? {}).length > 0 && <><h3 className="az-h3">Dove investono</h3><Bars items={items(r.invest_where)} /></>}</div>
         <div className="az-card"><h3>Divisione media scelta</h3>
-          {p.shares_avg?.length === 4
-            ? <Bars items={p.shares_avg.map((v, i) => [`${buckets[i]} (${String(v).replace('.', ',')}%)`, v] as [string, number])} total={100} />
+          {r.shares_avg?.length === 4
+            ? <Bars items={r.shares_avg.map((v, i) => [`${buckets[i]} (${String(v).replace('.', ',')}%)`, v] as [string, number])} total={100} />
             : <p className="az-empty">Ancora nessun dato.</p>}</div>
       </div>
-      <p className="az-hint">Solo numeri aggregati: le risposte del singolo non si vedono qui. Le percentuali di obiettivi e carte sono sul numero di profili compilati (si possono scegliere più risposte).</p>
+      {note}
     </>
   )
 }
@@ -331,17 +343,17 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
   const adminSql = adminKey
     ? `insert into public.admin_keys (name, key_hash)\nvalues ('${adminKey.name.replace(/'/g, "''")}', decode('${adminKey.hash}', 'hex'))\non conflict (key_hash) do update set name = excluded.name;`
     : `insert into public.admins (user_id)\nselect id from auth.users where email = '${email}'\non conflict do nothing;`
-  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n${sql0006}\n-- tu sei l'amministratore\n${adminSql}\n`
-  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.siteFeedback !== false && setup.adminKeys !== false
+  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n${sql0006}\n${sql0007}\n-- tu sei l'amministratore\n${adminSql}\n`
+  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.research !== false && setup.siteFeedback !== false && setup.adminKeys !== false
   // tabelle già create ma manca qualcosa: solo i pezzi mancanti
-  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.adminKeys === false ? sql0006 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
+  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.adminKeys === false ? sql0006 : '', setup.research === false ? sql0007 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
   const cronSql = sql0003.replace('<PROJECT_REF>', ref)
   return (
     <>
       <p className="az-lead">Questa pagina controlla dal vivo cosa è già attivo sul tuo progetto Supabase. Ogni passo ha il codice già pronto:
         lo copi, lo incolli nel punto indicato e premi <b>Ricontrolla</b>.</p>
       <div className="az-steps">
-        <Step n={1} ok={setup.tables == null ? null : step1} title="Tabelle (statistiche, feedback, notifiche, profili) e il tuo accesso da amministratore">
+        <Step n={1} ok={setup.tables == null ? null : step1} title="Tabelle (statistiche, feedback, notifiche, profili, ricerca anonima) e il tuo accesso da amministratore">
           {setup.tables
             ? <p>Manca ancora un pezzo. Copia, incolla in <a href={`${dash}/sql/new`} target="_blank" rel="noreferrer">SQL Editor</a> → <b>Run</b>.</p>
             : <p>Copia lo script (crea tutto e ti rende amministratore {adminKey ? <>con il nome <b>{adminKey.name}</b> e il tuo codice</> : <>con <b>{email}</b></>}), poi apri <a href={`${dash}/sql/new`} target="_blank" rel="noreferrer">SQL Editor</a>, incolla e premi <b>Run</b>. Deve comparire "Success".</p>}

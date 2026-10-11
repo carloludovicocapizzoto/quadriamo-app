@@ -1,5 +1,5 @@
 // Dati finti per vedere l'area amministratore prima della configurazione (/admin/?demo=1): nessun dato reale.
-import type { Account, Device, Feedback, ProfileStats, PushSub, Setup, Stats } from './data'
+import type { Account, Device, Feedback, PushSub, ResearchStats, Setup, Stats } from './data'
 
 const day = (n: number) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10)
 const at = (n: number, h = 10) => `${day(n)}T${String(h).padStart(2, '0')}:15:00Z`
@@ -18,7 +18,7 @@ export const sampleDevices: Device[] = Array.from({ length: 24 }, (_, i) => ({
   platform: plat[i % 3], lang: langs[i % 6], standalone: i % 2 === 0, signed_in: i % 3 === 0, tx_count: (i * 7) % 60, months_used: 1 + (i % 2), app_version: '0.9-beta' }))
 const names = ['giulia.r', 'marco.b', 'sara.l', 'luca.m', 'elena.c', 'paolo.v', 'chiara.d', 'andrea.f']
 const people = [['Giulia', 'Rossi'], ['Marco', 'Bianchi'], ['Sara', 'Leone'], ['Luca', 'Moretti'], ['Elena', 'Conti'], ['Paolo', 'Villa'], ['Chiara', 'De Luca'], ['Andrea', 'Ferri']]
-export const sampleAccounts: Account[] = names.map((n, i) => ({ email: `${n}@esempio.it`, first_name: people[i][0], last_name: people[i][1], profile_done: i % 3 !== 2, created_at: at(28 - i * 3), last_sign_in_at: at(i, 18), has_push: i % 2 === 0, feedback_count: i % 3 }))
+export const sampleAccounts: Account[] = names.map((n, i) => ({ email: `${n}@esempio.it`, first_name: people[i][0], last_name: people[i][1], created_at: at(28 - i * 3), last_sign_in_at: at(i, 18), has_push: i % 2 === 0, feedback_count: i % 3 }))
 const msgs = ['Finalmente capisco dove finiscono i soldi a fine mese.', 'Mi piacerebbe collegare la carta in automatico.', null,
   'L’import del CSV della banca è comodissimo.', 'Un po’ difficile all’inizio, poi chiarissima.', 'Vorrei un grafico per categoria.', null, 'Top!']
 export const sampleFeedback: Feedback[] = msgs.map((m, i) => ({ id: i + 1, created_at: at(i * 2, 9 + i), rating: [5, 4, 4, 5, 3, 4, 5, 5][i], message: m,
@@ -26,9 +26,9 @@ export const sampleFeedback: Feedback[] = msgs.map((m, i) => ({ id: i + 1, creat
   source: i % 3 === 2 ? 'site' as const : 'app' as const, email: i === 2 ? 'lettore@esempio.it' : null }))
 export const samplePush: PushSub[] = Array.from({ length: 6 }, (_, i) => ({ lang: langs[i], created_at: at(25 - i * 3), last_prompt_at: i < 4 ? at(3, 18) : null,
   email: i % 2 ? sampleAccounts[i].email : null }))
-export const sampleProfiles: ProfileStats = { profiles: 21, completed: 15, with_income: 13, income_median: 1650, income_avg: 1780,
-  income_bands: { '1 · meno di 1.000': 2, '2 · 1.000–1.500': 3, '3 · 1.500–2.000': 5, '4 · 2.000–3.000': 2, '5 · 3.000 e oltre': 1 },
-  goals: { understand: 11, save: 9, goal: 6, invest: 5, debt: 2, family: 3 }, cards: { bank: 12, Revolut: 7, Satispay: 6, PayPal: 5, Hype: 2, credit: 4, cash: 1 },
-  invested: { yes: 6, want: 7, no: 2 }, invest_where: { etf: 4, broker: 4, bank: 2, crypto: 2, pension: 1 },
-  shares_avg: [53.7, 21.3, 14.7, 10.3], shares_default: 10, shares_custom: 5 }
-export const sampleSetup: Setup = { connected: true, tables: true, profiles: true, siteFeedback: true, adminKeys: true, adminName: null, admin: true, fn: 'ok', cronSecret: true, reminder: true, vapidInApp: true }
+export const sampleResearch: ResearchStats = { answers: 14, min: 5,
+  income_bands: { lt1000: 2, '1000-1500': 3, '1500-2000': 5, '2000-3000': 3, ge3000: 1 },
+  goals: { understand: 10, save: 8, goal: 5, invest: 5, debt: 2, family: 3 }, cards: { bank: 11, Revolut: 6, Satispay: 5, PayPal: 4, credit: 3 },
+  invested: { yes: 5, want: 7, no: 2 }, invest_where: { etf: 4, broker: 3, bank: 2, crypto: 1 },
+  shares_avg: [53.6, 21.4, 14.6, 10.4], shares_default: 9, shares_custom: 5 }
+export const sampleSetup: Setup = { connected: true, tables: true, profiles: true, research: true, siteFeedback: true, adminKeys: true, adminName: null, admin: true, fn: 'ok', cronSecret: true, reminder: true, vapidInApp: true }

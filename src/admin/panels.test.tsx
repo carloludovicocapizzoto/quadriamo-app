@@ -1,8 +1,8 @@
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { Setup, Stats } from './data'
-import { AccountsPanel, DashboardPanel, DevicesPanel, FeedbackPanel, ProfilesPanel, PushPanel, SetupPanel } from './panels'
-import { sampleProfiles } from './sample'
+import { AccountsPanel, DashboardPanel, DevicesPanel, FeedbackPanel, PushPanel, ResearchPanel, SetupPanel } from './panels'
+import { sampleResearch } from './sample'
 
 // stessi numeri restituiti da admin_stats() nella prova con PGlite
 const stats: Stats = {
@@ -11,7 +11,7 @@ const stats: Stats = {
   daily: [{ day: '2026-10-09', active: 1, new: 0 }, { day: '2026-10-10', active: 2, new: 2 }],
   langs: { it: 2, en: 1, '?': 1 }, platforms: { ios: 1, android: 1, desktop: 1 }, events: { open: 4, share: 1 },
 }
-const setup: Setup = { connected: true, tables: true, profiles: true, siteFeedback: true, adminKeys: true, adminName: null, admin: true, fn: 'ok', cronSecret: true, reminder: false, vapidInApp: true }
+const setup: Setup = { connected: true, tables: true, profiles: true, research: true, siteFeedback: true, adminKeys: true, adminName: null, admin: true, fn: 'ok', cronSecret: true, reminder: false, vapidInApp: true }
 
 describe('area amministratore', () => {
   it('dashboard: numeri chiave, imbuto, lingue', () => {
@@ -28,7 +28,7 @@ describe('area amministratore', () => {
     const dv = renderToString(<DevicesPanel rows={[{ device_id: 'abcdef12-0000-0000-0000-000000000000', first_day: '2026-10-01', last_day: '2026-10-10',
       active_days: 5, platform: 'ios', lang: 'it', standalone: true, signed_in: false, tx_count: 12, months_used: 1, app_version: '0.9-beta' }]} />)
     expect(dv).toContain('abcdef12'); expect(dv).toContain('1 dispositivi')
-    expect(renderToString(<AccountsPanel rows={[{ email: 'a@x.it', first_name: 'Giulia', last_name: 'Rossi', profile_done: true, created_at: '2026-10-01T10:00:00Z', last_sign_in_at: null, has_push: true, feedback_count: 2 }]} />)).toContain('a@x.it')
+    expect(renderToString(<AccountsPanel rows={[{ email: 'a@x.it', first_name: 'Giulia', last_name: 'Rossi', created_at: '2026-10-01T10:00:00Z', last_sign_in_at: null, has_push: true, feedback_count: 2 }]} />)).toContain('a@x.it')
     const fb = renderToString(<FeedbackPanel rows={[{ id: 1, created_at: '2026-10-10T10:00:00Z', rating: 4, message: 'Bella app', lang: 'it', app_version: '0.9-beta', user_id: null }]} />)
     expect(fb).toContain('Bella app'); expect(fb).toContain('4.0')
     const pu = renderToString(<PushPanel rows={[{ lang: 'it', created_at: '2026-10-10T10:00:00Z', last_prompt_at: null, email: null }]} setup={setup} onSend={async () => ''} />)
@@ -42,10 +42,10 @@ describe('area amministratore', () => {
     expect(done.match(/az-step done/g)?.length).toBe(3)
     expect(done).toContain('Confirm email'); expect(done).toContain('Email Templates'); expect(done).toContain('Segna come fatto')
   })
-  it('profili aggregati', () => {
-    const h = renderToString(<ProfilesPanel p={sampleProfiles} />)
-    for (const s of ['Profili compilati', '1.650 €', 'Capire dove vanno i soldi', 'Revolut', 'ETF', 'Essenziali (53,7%)']) expect(h).toContain(s)
-    expect(() => renderToString(<ProfilesPanel p={{ ...sampleProfiles, income_median: null, income_avg: null, income_bands: {}, goals: {}, cards: {},
-      invested: {}, invest_where: {}, shares_avg: null }} />)).not.toThrow()
+  it('ricerca anonima: totali da 5 schede, sotto solo il conteggio', () => {
+    const h = renderToString(<ResearchPanel r={sampleResearch} />)
+    for (const x of ['Schede anonime ricevute', '1.500–2.000 €', 'Capire dove vanno i soldi', 'Revolut', 'ETF', 'Essenziali (53,6%)']) expect(h).toContain(x)
+    const few = renderToString(<ResearchPanel r={{ answers: 1, min: 5 }} />)
+    expect(few).toContain('Servono almeno'); expect(few).not.toContain('Carte e conti')
   })
 })

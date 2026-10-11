@@ -13,8 +13,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png', 'fonts/*.ttf'],
       manifest: {
+        id: `${base}app/`,
         name: 'Quadriamo',
         short_name: 'Quadriamo',
+        categories: ['finance', 'productivity'],
         description: 'Your money, in four: the 55-20-15-10 budget planner.',
         lang: 'en',
         start_url: `${base}app/`,

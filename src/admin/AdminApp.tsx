@@ -4,15 +4,15 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../sync/client'
 import { newCode, saveKey, savedKey, sha256Hex, type AdminKey } from './adminKey'
-import { checkSetup, loadAccounts, loadDevices, loadFeedback, loadProfileStats, loadPush, loadStats, sendPush,
-  type Account, type Device, type Feedback, type ProfileStats, type PushSub, type Setup, type Stats } from './data'
-import { sampleAccounts, sampleDevices, sampleFeedback, sampleProfiles, samplePush, sampleSetup, sampleStats } from './sample'
-import { AccountsPanel, DashboardPanel, DevicesPanel, FeedbackPanel, ProfilesPanel, PushPanel, SetupPanel } from './panels'
+import { checkSetup, loadAccounts, loadDevices, loadFeedback, loadPush, loadResearch, loadStats, sendPush,
+  type Account, type Device, type Feedback, type PushSub, type ResearchStats, type Setup, type Stats } from './data'
+import { sampleAccounts, sampleDevices, sampleFeedback, samplePush, sampleResearch, sampleSetup, sampleStats } from './sample'
+import { AccountsPanel, DashboardPanel, DevicesPanel, FeedbackPanel, PushPanel, ResearchPanel, SetupPanel } from './panels'
 
-type Panel = 'dashboard' | 'dispositivi' | 'account' | 'profili' | 'feedback' | 'notifiche' | 'configurazione'
+type Panel = 'dashboard' | 'dispositivi' | 'account' | 'ricerca' | 'feedback' | 'notifiche' | 'configurazione'
 const NAV: { group: string; items: [Panel, string][] }[] = [
   { group: 'Panoramica', items: [['dashboard', '📊 Dashboard']] },
-  { group: 'Persone', items: [['dispositivi', '📱 Dispositivi'], ['account', '👤 Account'], ['profili', '🧭 Profili']] },
+  { group: 'Persone', items: [['dispositivi', '📱 Dispositivi'], ['account', '👤 Account'], ['ricerca', '🔒 Ricerca anonima']] },
   { group: 'Ascolto', items: [['feedback', '💬 Feedback'], ['notifiche', '🔔 Notifiche']] },
   { group: 'Impostazioni', items: [['configurazione', '⚙️ Configurazione']] },
 ]
@@ -20,7 +20,7 @@ const TITLES: Record<Panel, [string, string]> = {
   dashboard: ['Dashboard', 'Quante persone usano Quadriamo e come.'],
   dispositivi: ['Dispositivi', 'Ogni telefono o computer che usa l’app (solo chi ha accettato le statistiche).'],
   account: ['Account', 'Chi si è registrato.'],
-  profili: ['Profili', 'Cosa raccontano di sé gli iscritti (facoltativo), in forma aggregata.'],
+  ricerca: ['Ricerca anonima', 'Totali delle schede che gli utenti scelgono di inviare in forma anonima. Dati riservati.'],
   feedback: ['Feedback', 'Voti e commenti arrivati dall’app.'],
   notifiche: ['Notifiche', 'Manda la richiesta di feedback direttamente sui dispositivi.'],
   configurazione: ['Configurazione', 'Cosa è attivo su Supabase e cosa manca.'],
@@ -133,11 +133,13 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
   const [accounts, setAccounts] = useState<Account[]>([])
   const [feedback, setFeedback] = useState<Feedback[]>([])
   const [push, setPush] = useState<PushSub[]>([])
-  const [profiles, setProfiles] = useState<ProfileStats | null>(null)
+  const [research, setResearch] = useState<ResearchStats | null>(null)
+  // la ricerca anonima si vede solo dopo aver reinserito il codice (o la password); si richiude lasciando la sezione
+  const [unlocked, setUnlocked] = useState(false)
   const [error, setError] = useState('')
 
   const setPanel = (p: Panel) => {
-    setPanelState(p); setMenu(false)
+    setPanelState(p); setMenu(false); setUnlocked(false)
     const q = new URLSearchParams(demo ? 'demo=1' : '')
     if (p !== 'dashboard') q.set('panel', p)
     history.pushState({ panel: p }, '', q.size ? `?${q}` : window.location.pathname)
@@ -157,12 +159,12 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
   const load = useCallback(async () => {
     setError('')
     if (demo) {
-      setStats(sampleStats(days)); setDevices(sampleDevices); setAccounts(sampleAccounts); setFeedback(sampleFeedback); setPush(samplePush); setProfiles(sampleProfiles); return
+      setStats(sampleStats(days)); setDevices(sampleDevices); setAccounts(sampleAccounts); setFeedback(sampleFeedback); setPush(samplePush); setResearch(sampleResearch); return
     }
     try {
       const [st, dv, ac, fb, pu, pr] = await Promise.all([loadStats(days), loadDevices(), loadAccounts(), loadFeedback(), loadPush(),
-        loadProfileStats().catch(() => null)])   // null se lo script dei profili non è ancora stato eseguito
-      setStats(st); setDevices(dv); setAccounts(ac); setFeedback(fb); setPush(pu); setProfiles(pr)
+        loadResearch().catch(() => null)])   // null se lo script 0007 non è ancora stato eseguito
+      setStats(st); setDevices(dv); setAccounts(ac); setFeedback(fb); setPush(pu); setResearch(pr)
     } catch (e) { setError((e as Error).message) }
   }, [days, demo])
   useEffect(() => {
@@ -210,8 +212,10 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
         {setup?.admin && panel === 'dashboard' && stats && <DashboardPanel stats={stats} days={days} setDays={setDays} />}
         {setup?.admin && panel === 'dispositivi' && <DevicesPanel rows={devices} />}
         {setup?.admin && panel === 'account' && <AccountsPanel rows={accounts} />}
-        {setup?.admin && panel === 'profili' && (profiles ? <ProfilesPanel p={profiles} />
-          : <p className="az-msg error">Esegui lo script dei profili (sezione Configurazione, passo 1).</p>)}
+        {setup?.admin && panel === 'ricerca' && (!research
+          ? <p className="az-msg error">Esegui lo script aggiornato (sezione Configurazione, passo 1).</p>
+          : unlocked || demo ? <ResearchPanel r={research} />
+          : <Unlock adminKey={adminKey} email={email} onOk={() => setUnlocked(true)} />)}
         {setup?.admin && panel === 'feedback' && <FeedbackPanel rows={feedback} />}
         {setup?.admin && panel === 'notifiche' && <PushPanel rows={push} setup={setup} onSend={async (t, b) => {
           if (demo) return 'Anteprima: nessuna notifica inviata.'
@@ -219,6 +223,34 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
           return `Inviate ${r.sent} su ${r.total}${r.removed ? ` · ${r.removed} iscrizioni scadute rimosse` : ''}${r.failed ? ` · ${r.failed} non riuscite` : ''}`
         }} />}
       </main>
+    </div>
+  )
+}
+
+/** Secondo controllo prima dei dati della ricerca: il codice amministratore (o la password, per chi entra con l'email). */
+function Unlock({ adminKey, email, onOk }: { adminKey?: AdminKey; email: string; onOk: () => void }) {
+  const [value, setValue] = useState('')
+  const [bad, setBad] = useState(false)
+  const [busy, setBusy] = useState(false)
+  async function submit(e: FormEvent) {
+    e.preventDefault(); setBad(false)
+    if (adminKey) { if (value.trim() === adminKey.code) onOk(); else setBad(true); return }
+    setBusy(true)
+    const { error } = await supabase!.auth.signInWithPassword({ email, password: value })
+    setBusy(false)
+    if (error) setBad(true); else onOk()
+  }
+  return (
+    <div className="az-card az-lock">
+      <h3>🔒 Dati riservati</h3>
+      <p className="az-hint">Per vedere i totali della ricerca anonima inserisci di nuovo {adminKey ? 'il tuo codice amministratore' : 'la tua password'}.
+        La sezione si richiude quando la lasci.</p>
+      <form className="az-form" onSubmit={submit}>
+        <label className="az-field"><span>{adminKey ? 'Codice amministratore' : 'Password'}</span>
+          <input type="password" autoComplete="current-password" value={value} onChange={e => setValue(e.target.value)} autoFocus /></label>
+        <div><button className="az-btn primary" disabled={busy}>Mostra i dati</button></div>
+        {bad && <p className="az-msg error">{adminKey ? 'Codice non corretto.' : 'Password non corretta.'}</p>}
+      </form>
     </div>
   )
 }
