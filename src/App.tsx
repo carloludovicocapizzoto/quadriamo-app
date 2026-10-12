@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { demoAppData } from './demo'
 import { ENTRY, fromSiteAccount } from './entry'
-import { computeMonth, monthOf, safeToSpend, streakOf, todayIso, undated, type ClassifiedTx, type Transaction, type YearMonth } from './engine'
+import { computeMonth, monthOf, safeToSpend, streakOf, todayIso, type ClassifiedTx, type Transaction, type YearMonth } from './engine'
 import { LANGS, useI18n, type Lang } from './i18n/core'
 import { useStore } from './store/context'
 import { createInitial } from './store/state'
 import { useSync } from './sync/context'
-import { MonthNav } from './ui/MonthNav'
 import { Onboarding } from './ui/Onboarding'
-import { TransactionsView } from './ui/TransactionsView'
 import { TxForm } from './ui/TxForm'
 import { FxAutoUpdate } from './ui/FxAutoUpdate'
 import { feedbackDue, firstOpenToday, statsConsent } from './beta/device'
@@ -17,6 +15,7 @@ import { ConsentCard } from './ui/beta/ConsentCard'
 import { FeedbackCard } from './ui/beta/FeedbackCard'
 import { ProfileForm } from './ui/ProfileForm'
 import { HomeScreen } from './ui/home/HomeScreen'
+import { TransactionsScreen } from './ui/screens/TransactionsScreen'
 import { TopBar } from './ui/shell/TopBar'
 import { BottomNav, type MainTab } from './ui/shell/BottomNav'
 import { AnalysisScreen, type AnalysisView } from './ui/screens/AnalysisScreen'
@@ -245,11 +244,7 @@ export default function App() {
           onShared={() => { go('profile'); setProfilePage('shared') }}
           onAnalysis={() => go('analysis')} />}
 
-        {tab === 'transactions' && <div className="screen">
-          <h1 className="screen-title">{t('nav.transactions')}</h1>
-          <MonthNav ym={current} onChange={setYm} />
-          <TransactionsView r={result} settings={data.settings} undated={undated(data.transactions)} onOpen={openTx} />
-        </div>}
+        {tab === 'transactions' && <TransactionsScreen data={data} current={current} result={result} today={today} onMonth={setYm} onOpen={openTx} />}
 
         {tab === 'analysis' && homeResult && <AnalysisScreen view={analysisView} onView={setAnalysisView} data={data} result={result}
           current={current} homeResult={homeResult} today={today} year={year} onYear={setYear} onMonth={setYm} onOpen={openTx} />}

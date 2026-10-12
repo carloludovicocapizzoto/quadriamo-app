@@ -73,7 +73,10 @@ Aggiunto: scorciatoie, missioni, tessere toccabili, pannelli di dettaglio.
 ### Movimenti
 ```
 Movimenti                    (titolo grande)
-‹   Ottobre 2026   ›
+[🔍 Cerca movimenti        ✕]  ← descrizione, categoria, parte o importo ("12,50"); cerca in tutti i mesi
+[Filtri 1] [Questo mese] [3 mesi] [Quest'anno] [Tutto]   ← pillole che scorrono
+[Mangiare fuori ✕]  Azzera     ← filtri attivi, si tolgono con un tocco
+‹   Ottobre 2026   ›           ← solo con "Questo mese"
 [Da confermare (5)]          ← solo se ci sono importati
 [Elenco: avatar colorato · descrizione · data · categoria · importo]
 ```
@@ -192,7 +195,7 @@ Tutte disattivate con "Riduci movimento" del sistema. Vibrazione leggera al tocc
 
 ## 7. Prossimi passi consigliati
 1. Scorrimento orizzontale tra i mesi in Movimenti e Analisi (swipe).
-2. Ricerca e filtri nei movimenti (categoria, parte, importo).
+2. ~~Ricerca e filtri nei movimenti~~ fatto (ottobre 2026).
 3. ~~Obiettivi di risparmio~~ fatto (ottobre 2026).
 4. Modalità scura rifinita sul riquadro del giorno e sulle medaglie.
 5. Test con 5 tester: tempo per segnare una spesa e per trovare "quanto posso spendere oggi".

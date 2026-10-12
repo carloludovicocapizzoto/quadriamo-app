@@ -30,6 +30,8 @@ const P: Record<string, string> = {
   gift: 'M4 11h16v9H4ZM3 7.5h18V11H3ZM12 7.5V20M12 7.5c-1.4-3-5-3.2-5-.8 0 .8 1 .8 5 .8Zm0 0c1.4-3 5-3.2 5-.8 0 .8-1 .8-5 .8Z',
   heart: 'M12 20s-7.5-4.6-7.5-10.2A4.1 4.1 0 0 1 12 7.4a4.1 4.1 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20Z',
   minus: 'M5 12h14',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14ZM20 20l-4-4',
+  filter: 'M4 6h16M7 12h10M10 18h4',
   message: 'M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4Z',
 }
 export type IconName = keyof typeof P
