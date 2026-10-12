@@ -6,14 +6,15 @@ import type { Dict } from '../i18n/en'
 import { useStore } from '../store/context'
 import { BucketDonut, DailyChart } from './HomeCharts'
 import { BUCKET_COLORS, bucketName, categoryName } from './names'
+import { CategoryChangesReport, ForecastReport, TrendReport } from './Reports'
 import { StreakCard } from './Streak'
 import { Icon } from './Icon'
 import { TxRow } from './TxRow'
 
-// widget disponibili; i primi quattro sono quelli di partenza
-const WIDGETS = ['left', 'today', 'flow', 'recent', 'donut', 'daily', 'categories', 'compare', 'upcoming', 'savings', 'shared'] as const
+// widget disponibili; quelli di partenza sono in DEFAULT_HOME
+const WIDGETS = ['left', 'today', 'forecast', 'flow', 'recent', 'trend', 'growing', 'donut', 'daily', 'categories', 'compare', 'upcoming', 'savings', 'shared'] as const
 type WidgetId = typeof WIDGETS[number]
-const DEFAULT_HOME: WidgetId[] = ['left', 'today', 'flow', 'recent']
+const DEFAULT_HOME: WidgetId[] = ['left', 'today', 'forecast', 'recent']
 const isWidget = (x: string): x is WidgetId => (WIDGETS as readonly string[]).includes(x)
 
 /** Home: solo l'essenziale, a widget che ognuno sceglie e ordina (la scelta si salva e si sincronizza). */
@@ -128,6 +129,9 @@ function Widget({ id, data, r, today, onOpen, onAll, onShared }: {
         <button className="link-btn" onClick={onAll}>{t('w.seeAll')}<Icon name="chevron" size={16} /></button>
       </>
     }
+    case 'forecast': return <ForecastReport r={r} settings={s} today={today} />
+    case 'trend': return <TrendReport r={r} txs={data.transactions} settings={s} today={today} />
+    case 'growing': return <CategoryChangesReport r={r} txs={data.transactions} settings={s} today={today} />
     case 'donut': return <BucketDonut r={r} settings={s} />
     case 'daily': return <DailyChart r={r} settings={s} today={today} />
     case 'categories': {

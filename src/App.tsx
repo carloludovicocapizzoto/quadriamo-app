@@ -26,6 +26,7 @@ import { SharedView } from './ui/shared/SharedView'
 import { saveMorningSnapshot } from './beta/morning'
 import { syncPush, touchPush } from './beta/push'
 import { StreakCelebration } from './ui/Streak'
+import { CategoryChangesReport, TrendReport } from './ui/Reports'
 import { bucketName } from './ui/names'
 import { noAccount, profilePrompt, setupPending } from './sync/profile'
 import { ConfirmedScreen, Gate, Splash } from './ui/Gate'
@@ -207,6 +208,13 @@ export default function App() {
         {tab === 'shared' && <SharedView onBack={() => { setTab('home'); window.scrollTo(0, 0) }} onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} />}
         {(tab === 'month' || tab === 'transactions') && <MonthNav ym={current} onChange={setYm} />}
         {tab === 'year' && <YearNav year={year} onChange={setYear} />}
+        {tab === 'year' && homeResult && year === homeResult.ym.year && (
+          <div className="widgets report-grid">
+            <section className="card widget"><div className="w-head"><h3 className="h-plain">{t('w.trend')}</h3></div>
+              <TrendReport r={homeResult} txs={data.transactions} settings={data.settings} today={today} /></section>
+            <section className="card widget"><div className="w-head"><h3 className="h-plain">{t('w.growing')}</h3></div>
+              <CategoryChangesReport r={homeResult} txs={data.transactions} settings={data.settings} today={today} /></section>
+          </div>)}
         {tab === 'year' && <YearView year={year} transactions={data.transactions} settings={data.settings} today={today}
                                      onYear={setYear} onOpenMonth={m => { setYm(m); setTab('month'); window.scrollTo(0, 0) }} />}
         {tab === 'month' && <MonthView r={result} settings={data.settings} onOpen={openTx} today={today} />}
