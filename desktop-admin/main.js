@@ -1,12 +1,12 @@
 // Quadriamo Admin (Mac e Windows): finestra dedicata all'area amministratore (…/admin/).
-// Il contenuto arriva dal sito e si aggiorna da solo; per la "cornice" l'app controlla se c'è una nuova versione e la propone.
+// Il contenuto arriva dal sito e si aggiorna da solo. L'app è solo per l'amministratore: non è pubblicata da nessuna parte,
+// i file di installazione si consegnano a mano (nuove versioni comprese).
 const path = require('path')
 const fs = require('fs')
-const { app, BrowserWindow, dialog, net, session, shell } = require('electron')
+const { app, BrowserWindow, session, shell } = require('electron')
 
 const ADMIN_URL = 'https://carloludovicocapizzoto.github.io/quadriamo-app/admin/'
 const ADMIN_PREFIX = 'https://carloludovicocapizzoto.github.io/quadriamo-app/admin'
-const RELEASES_API = 'https://api.github.com/repos/carloludovicocapizzoto/quadriamo-app/releases?per_page=30'
 
 if (!app.requestSingleInstanceLock()) app.quit()
 
@@ -35,31 +35,10 @@ async function freshSiteOnNewVersion() {
   try { fs.writeFileSync(mark, app.getVersion()) } catch { /* niente */ }
 }
 
-// nuove versioni: release "admin-vX.Y.Z" su GitHub (pubblicate come pre-release, così non toccano i link di Quadriamo)
-const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false }
-async function checkUpdate() {
-  try {
-    const res = await net.fetch(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' } })
-    const list = await res.json()
-    const rel = list.find(r => /^admin-v\d/.test(r.tag_name) && !r.draft)
-    if (!rel) return
-    const v = rel.tag_name.replace('admin-v', '')
-    if (!newer(v, app.getVersion())) return
-    const it = app.getLocale().startsWith('it')
-    const { response } = await dialog.showMessageBox({
-      type: 'info', buttons: it ? ['Scarica', 'Più tardi'] : ['Download', 'Later'], defaultId: 0, cancelId: 1,
-      message: it ? `È disponibile Quadriamo Admin ${v}` : `Quadriamo Admin ${v} is available`,
-      detail: it ? 'Scarica la nuova versione e installala al posto di quella di ora.' : 'Download the new version and install it over the current one.',
-    })
-    if (response === 0) void shell.openExternal(rel.html_url)
-  } catch { /* senza connessione: si riprova al prossimo avvio */ }
-}
-
 app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus() } })
 app.whenReady().then(async () => {
   await freshSiteOnNewVersion()
   createWindow()
-  if (app.isPackaged) { setTimeout(checkUpdate, 8000); setInterval(checkUpdate, 6 * 3600_000) }
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
 })
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit() })

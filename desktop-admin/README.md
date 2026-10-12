@@ -1,12 +1,13 @@
-# Quadriamo Admin per Mac e Windows
+# Quadriamo Admin per Mac e Windows (solo per l'amministratore)
 
 Finestra Electron che apre l'area amministratore (`…/quadriamo-app/admin/`): si entra con nome e codice amministratore.
-Il contenuto si aggiorna dal sito a ogni apertura. Non è linkata nella pagina Scarica pubblica.
+Il contenuto si aggiorna dal sito a ogni apertura, quindi una nuova versione dell'app serve di rado.
 
-- Release su GitHub come **pre-release** `admin-vX.Y.Z` (così `releases/latest` resta quella di Quadriamo).
-- All'avvio (e ogni 6 ore) l'app controlla se c'è una `admin-v` più nuova e propone di scaricarla.
+**Non è pubblicata:** niente link nel sito, niente release su GitHub. I file di installazione stanno sul Mac di Carlo in
+`~/Desktop/Quadriamo/Quadriamo Admin/` (Mac Apple Silicon, Mac Intel, Windows).
 
 ## Nuova versione
 1. Aumenta `version` in `package.json`.
 2. `npm install && npm run build`
-3. `gh release create admin-vX.Y.Z --prerelease dist/Quadriamo-Admin-Mac-arm64.dmg dist/Quadriamo-Admin-Mac-x64.dmg dist/Quadriamo-Admin-Windows-Setup.exe`
+3. Copia `dist/Quadriamo-Admin-*.dmg` e `dist/Quadriamo-Admin-Windows-Setup.exe` nella cartella sul Desktop e installala
+   al posto di quella vecchia.
