@@ -437,14 +437,18 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
         </Step>
         <Step n={7} ok={null} manual={{ done: manual.includes(7), toggle: toggle(7) }} title="Notifica del mattino &quot;Oggi puoi spendere&quot; (facoltativo)">
           <ol>
-            <li>Aggiorna la funzione <code>send-push</code>: apri <a href={`${dash}/functions`} target="_blank" rel="noreferrer">Edge Functions</a> → send-push → Code,
-              incolla il codice nuovo (pulsante del passo 4) → <b>Deploy</b>.</li>
-            <li>Copia lo script, sostituisci <code>&lt;CRON_SECRET&gt;</code> con il valore del file <code>.vapid.local</code> ed eseguilo in SQL Editor
-              (servono pg_cron e pg_net, come al passo 6).</li>
+            <li>Aggiorna la funzione: premi <b>Copia il codice della funzione</b>, apri <b>send-push → Code</b>, clicca nel codice,
+              <b>Cmd+A</b> poi <b>Cmd+V</b> → <b>Deploy</b>.</li>
           </ol>
-          <p className="az-hint">Ogni mattina alle 7:30 arriva a chi ha le notifiche attive. Il server manda solo la sveglia: il numero lo calcola il telefono.</p>
+          <div className="az-u-row"><Copy text={fnCode} label="Copia il codice della funzione" />
+            <a className="az-btn" href={`${dash}/functions/send-push/code`} target="_blank" rel="noreferrer">↗ Apri send-push → Code</a></div>
+          <ol start={2}>
+            <li>Premi <b>Copia lo script</b>, apri SQL Editor e incolla. Sostituisci <code>&lt;CRON_SECRET&gt;</code> (anche i simboli &lt; &gt;) con il valore
+              del file <code>.vapid.local</code> → <b>Run</b>. Poi cancella la query, perché contiene il segreto.</li>
+          </ol>
           <div className="az-u-row"><Copy text={morningSql} label="Copia lo script" />
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
+          <p className="az-hint">Ogni mattina alle 7:30 arriva a chi ha le notifiche attive. Il server manda solo la sveglia: il numero lo calcola il telefono.</p>
         </Step>
       </div>
       <div className="az-card">
