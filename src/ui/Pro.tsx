@@ -66,7 +66,7 @@ export function PlanCard({ onLogin }: { onLogin: () => void }) {
         <ul className="pro-list">
           {(['reports', 'investments', 'shared'] as const).map(f => <li key={f}><Icon name="check" size={16} /><span><b>{t(`pro.f.${f}` as keyof Dict)}</b><small className="muted">{t(`pro.f.${f}D` as keyof Dict)}</small></span></li>)}
         </ul>
-        <div className="seg" role="radiogroup" aria-label={t('pro.title')}>
+        <div className="plan-seg" role="radiogroup" aria-label={t('pro.title')}>
           {(['year', 'month'] as const).map(i => (
             <button key={i} role="radio" aria-checked={interval === i} className={interval === i ? 'on' : ''} onClick={() => setIv(i)}>
               <b>{money(i === 'year' ? PRICE.year : PRICE.month, PRICE.currency)}</b>

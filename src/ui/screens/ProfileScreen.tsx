@@ -66,7 +66,7 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onFe
   return (
     <div className="screen">
       <section className="prof-head">
-        <span className={`prof-avatar${plan.pro ? ' pro' : ''}`}>{name.charAt(0).toUpperCase()}</span>
+        <span className={`prof-avatar${plan.pro ? ' pro' : ''}`}>{sync.user ? name.charAt(0).toUpperCase() : <Icon name="user" size={32} />}</span>
         <div><h1>{name}</h1>
           <p className="muted small">{sync.user ? sync.user.email : t('prof.guestHint')}</p>
           {plan.pro && <span className="pro-badge">Pro</span>}</div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Streak } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import { Flame } from '../Streak'
+import { Icon } from '../Icon'
 import { Sheet } from '../kit/Sheet'
 import { tap, useCountUp } from '../kit/motion'
 import { StreakCalendar } from './StreakCalendar'
@@ -25,7 +26,7 @@ export function TopBar({ streak, activity, today, todayLeft, parts, currency, in
           <Flame /><b>{streak.count}</b></button>}
         {todayLeft != null && <button className="tb-chip today-chip" onClick={() => { tap(); setOpen('today') }} aria-label={t('w.today')}>
           <span className="tb-coin" aria-hidden="true">€</span><b>{money(left, currency).replace(/\s?€|€\s?/, '')}</b></button>}
-        <button className={`tb-avatar${pro ? ' pro' : ''}`} onClick={() => { tap(); onProfile() }} aria-label={t('nav.profile')}>{initial}</button>
+        <button className={`tb-avatar${pro ? ' pro' : ''}`} onClick={() => { tap(); onProfile() }} aria-label={t('nav.profile')}>{initial || <Icon name="user" size={18} />}</button>
       </header>
 
       <Sheet open={open === 'streak'} onClose={() => setOpen(null)}>

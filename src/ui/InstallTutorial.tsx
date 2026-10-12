@@ -3,6 +3,7 @@ import { useI18n } from '../i18n/core'
 import type { Dict } from '../i18n/en'
 import { LogoMark } from './Gate'
 import { StepHeader } from './Steps'
+import { Icon } from './Icon'
 import { CHOICES, detectKind, familyOf, type Kind } from './installKind'
 
 interface InstallEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
@@ -75,10 +76,10 @@ export function InstallTutorial({ onContinue }: { onContinue: () => void }) {
         </div>
         <div className="step-nav">
           {i > 0 && <button className="btn" onClick={() => setI(i - 1)}>← {t('step.back')}</button>}
-          {i < steps.length - 1 && <button className="btn primary" onClick={() => setI(i + 1)}>{t('step.next')} →</button>}
+          {i < steps.length - 1 && <button className="btn primary" onClick={() => setI(i + 1)}>{t('step.next')}<Icon name="chevron" size={16} /></button>}
         </div>
       </>}
-      <button className="link-btn inst-skip" onClick={onContinue}>{t('inst.skip')} →</button>
+      <button className="link-btn inst-skip" onClick={onContinue}>{t('inst.skip')}<Icon name="chevron" size={16} /></button>
       {step?.arrow && <div className={`inst-arrow ${step.arrow}`} aria-hidden="true" key={`a${i}`}>➜</div>}
     </div>
   )

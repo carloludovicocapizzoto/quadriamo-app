@@ -216,7 +216,7 @@ export default function App() {
     const i = data.settings.buckets.findIndex(b => b.id === p.bucketId)
     return { name: bucketName(data.settings.buckets[i], t), color: BUCKET_COLORS[i], perDay: p.perDay, over: p.free < 0 }
   })
-  const initial = (sync.user?.firstName || sync.user?.email || '?').charAt(0).toUpperCase()
+  const initial = (sync.user?.firstName || sync.user?.email || '').charAt(0).toUpperCase()
 
   return (
     <div className="app has-nav app2">

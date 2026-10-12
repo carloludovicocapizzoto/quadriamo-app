@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { fxRate, suggest, type CategoryType, type Settings, type Transaction } from '../engine'
+import { addDays, fxRate, suggest, todayIso, type CategoryType, type Settings, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { newId, parseAmount } from '../store/state'
 import { Icon } from './Icon'
-import { CURRENCIES, bucketName, categoryName } from './names'
+import { BUCKET_COLORS, CURRENCIES, bucketName, categoryName } from './names'
 
 const GROUPS: CategoryType[] = ['expense', 'income', 'saving']
 
@@ -73,86 +73,91 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
     })
   }
 
+  const kinds = GROUPS.filter(g => settings.categories.some(c => c.type === g))
+  const [kindPick, setKind] = useState<CategoryType>('expense')
+  // il tipo segue la categoria scelta (anche quando la propone una regola)
+  const kind: CategoryType = cat?.type ?? kindPick
+  const yesterday = addDays(todayIso(), -1)
+  const tileColor = (c: Settings['categories'][number]) => c.type === 'income' ? 'var(--good)'
+    : BUCKET_COLORS[Math.max(0, settings.buckets.findIndex(b => b.id === c.defaultBucket))]
+
   return (
-    <dialog ref={ref} className="sheet" onClose={onClose} aria-labelledby="tx-title">
+    <dialog ref={ref} className="sheet tx-sheet" onClose={onClose} aria-labelledby="tx-title">
       <form onSubmit={submit} noValidate>
-        <div className="sheet-head">
+        <div className="txs-head">
+          <button type="button" className="icon-btn ghost" onClick={() => ref.current?.close()} aria-label={t('action.close')}><Icon name="close" size={20} /></button>
           <h2 id="tx-title">{initial ? t('tx.edit') : t('tx.new')}</h2>
-          <button type="button" className="icon-btn" onClick={() => ref.current?.close()} aria-label={t('action.close')}>×</button>
+          <span className="icon-btn ghost" aria-hidden="true" />
         </div>
 
-        <div className="amount-row">
-          <label className="field">
-            <span>{t('tx.amount')}</span>
-            <input className="amount-input" inputMode="decimal" autoComplete="off" placeholder="0,00" autoFocus={!initial}
-                   value={amount} onChange={e => setAmount(e.target.value)} aria-invalid={errors.length > 0 && (parsed == null || parsed <= 0)} />
+        {kinds.length > 1 && (
+          <div className="segmented txs-kind" role="tablist" style={{ gridTemplateColumns: `repeat(${kinds.length}, 1fr)` }}>
+            {kinds.map(k => (
+              <button type="button" key={k} role="tab" aria-selected={kind === k} className={kind === k ? 'on' : ''}
+                      onClick={() => { setKind(k); if (cat && cat.type !== k) { setCategory(null); setCatTouched(false) } }}>{t(`type.${k}`)}</button>))}
+            <span className="seg-pill" style={{ width: `calc((100% - 8px) / ${kinds.length})`, transform: `translateX(${kinds.indexOf(kind) * 100}%)` }} />
+          </div>
+        )}
+
+        <div className={`txs-amount${kind === 'income' ? ' income' : ''}`}>
+          <input className="amount-input" inputMode="decimal" autoComplete="off" placeholder="0,00" autoFocus={!initial} aria-label={t('tx.amount')}
+                 value={amount} onChange={e => setAmount(e.target.value)} aria-invalid={errors.length > 0 && (parsed == null || parsed <= 0)} />
+          <select className="txs-cur" value={currency} onChange={e => setCurrency(e.target.value)} aria-label={t('tx.currency')}>
+            {currencies.map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+        {parsed != null && parsed > 0 && foreign && (
+          <p className={`txs-fx small ${rate == null ? 'bad-text' : 'muted'}`}>
+            {rate == null ? t('tx.noRate', { cur: currency })
+              : t('tx.converted', { amount: money(parsed * rate, settings.currency), rate: String(rate).replace('.', ',') })}
+          </p>
+        )}
+
+        <p className="txs-label">{t('tx.category')}</p>
+        <div className="cat-grid" role="radiogroup" aria-label={t('tx.category')}>
+          {settings.categories.filter(c => c.type === kind).map(c => (
+            <button type="button" key={c.id} role="radio" aria-checked={category === c.id} className={`cat-tile${category === c.id ? ' on' : ''}`}
+                    style={{ ['--cc' as string]: tileColor(c) }}
+                    onClick={() => { setCategory(c.id); setCatTouched(true); setFromRule(false) }}>
+              <span className="cat-dot">{categoryName(c, t).charAt(0).toUpperCase()}</span>
+              <span className="cat-name">{categoryName(c, t)}</span>
+            </button>
+          ))}
+        </div>
+        {fromRule && category && <p className="small good-text"><Icon name="check" size={15} />{t('tx.fromRule')}</p>}
+
+        <div className="txs-rows">
+          <label className="txs-row">
+            <span>{t('tx.description')}</span>
+            <input value={description} onChange={e => onDescription(e.target.value)} placeholder={t('tx.descriptionPlaceholder')} />
           </label>
-          <label className="field currency-field">
-            <span>{t('tx.currency')}</span>
-            <select value={currency} onChange={e => setCurrency(e.target.value)}>
-              {currencies.map(c => <option key={c}>{c}</option>)}
+          <div className="txs-row">
+            <span>{t('tx.date')}</span>
+            <div className="txs-date">
+              <button type="button" className={`mini-chip${date === todayIso() ? ' on' : ''}`} onClick={() => setDate(todayIso())}>{t('day.today')}</button>
+              <button type="button" className={`mini-chip${date === yesterday ? ' on' : ''}`} onClick={() => setDate(yesterday)}>{t('day.yesterday')}</button>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} required aria-label={t('tx.date')} />
+            </div>
+          </div>
+          <label className="txs-row">
+            <span>{t('tx.paidFrom')}</span>
+            <select value={paidFrom} onChange={e => setPaidFrom(e.target.value)}>
+              <option value="">{isIncome ? t('tx.paidFromSplit') : t('tx.paidFromDefault')}</option>
+              {settings.buckets.map(b => <option key={b.id} value={b.id}>{bucketName(b, t)}</option>)}
             </select>
           </label>
         </div>
-        {parsed != null && parsed > 0 && (
-          <small className={foreign && rate == null ? 'bad-text' : 'muted'}>
-            {!foreign ? money(parsed, settings.currency)
-              : rate == null ? t('tx.noRate', { cur: currency })
-              : t('tx.converted', { amount: money(parsed * rate, settings.currency), rate: String(rate).replace('.', ',') })}
-          </small>
-        )}
-
-        <fieldset className="field">
-          <legend>{t('tx.category')}</legend>
-          {GROUPS.map(g => {
-            const cats = settings.categories.filter(c => c.type === g)
-            if (!cats.length) return null
-            return (
-              <div key={g} className="chip-group">
-                <span className="chip-label">{t(`type.${g}`)}</span>
-                <div className="chips">
-                  {cats.map(c => (
-                    <button type="button" key={c.id} className={`chip${category === c.id ? ' on' : ''}`}
-                            aria-pressed={category === c.id} onClick={() => { setCategory(c.id); setCatTouched(true); setFromRule(false) }}>
-                      {categoryName(c, t)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </fieldset>
-
-        <label className="field">
-          <span>{t('tx.description')}</span>
-          <input value={description} onChange={e => onDescription(e.target.value)} placeholder={t('tx.descriptionPlaceholder')} />
-          {fromRule && category && <small className="good-text"><Icon name="check" size={16} />{t('tx.fromRule')}</small>}
-        </label>
-
-        <label className="field">
-          <span>{t('tx.date')}</span>
-          <input type="date" value={date} onChange={e => setDate(e.target.value)} required />
-        </label>
-
-        <label className="field">
-          <span>{t('tx.paidFrom')}</span>
-          <select value={paidFrom} onChange={e => setPaidFrom(e.target.value)}>
-            <option value="">{isIncome ? t('tx.paidFromSplit') : t('tx.paidFromDefault')}</option>
-            {settings.buckets.map(b => <option key={b.id} value={b.id}>{bucketName(b, t)}</option>)}
-          </select>
-          <small className="muted">{t('tx.paidFromHint')}</small>
-        </label>
+        <p className="small muted txs-hint">{t('tx.paidFromHint')}</p>
 
         {errors.length > 0 && <ul className="errors" role="alert">{errors.map(e => <li key={e}>{e}</li>)}</ul>}
 
-        <div className="sheet-actions">
+        <div className="txs-actions">
+          <button type="submit" className="btn primary big-btn wide">{t('action.save')}</button>
           {initial && onDelete && (
-            <button type="button" className="btn danger" onClick={() => { if (confirm(t('tx.confirmDelete'))) onDelete(initial.id) }}>
+            <button type="button" className="link-btn danger-link" onClick={() => { if (confirm(t('tx.confirmDelete'))) onDelete(initial.id) }}>
               {t('action.delete')}
             </button>
           )}
-          <button type="button" className="btn" onClick={() => ref.current?.close()}>{t('action.cancel')}</button>
-          <button type="submit" className="btn primary">{t('action.save')}</button>
         </div>
       </form>
     </dialog>
