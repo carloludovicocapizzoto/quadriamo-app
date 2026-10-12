@@ -32,6 +32,7 @@ export interface Setup {
   profiles: boolean | null    // script 0004 (profili) eseguito
   research: boolean | null    // script 0007 (profilo riservato e ricerca anonima) eseguito
   v8: boolean | null          // script 0008 (notifica del mattino, alternative, coorti) eseguito
+  v10: boolean | null         // script 0010 (budget comune) eseguito
   adminKeys: boolean | null   // script 0006 (accesso con nome + codice) eseguito
   adminName: string | null    // nome di chi è entrato con il codice
   siteFeedback: boolean | null  // script 0005 (feedback dal sito) eseguito
@@ -73,7 +74,7 @@ export const loadPush = () => rpc<PushSub[]>('admin_push_list')
 
 export async function checkSetup(signedIn: boolean): Promise<Setup> {
   const supabase = db()
-  const s: Setup = { connected: !!supabase, tables: null, profiles: null, research: null, v8: null, siteFeedback: null, adminKeys: null, adminName: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
+  const s: Setup = { connected: !!supabase, tables: null, profiles: null, research: null, v8: null, v10: null, siteFeedback: null, adminKeys: null, adminName: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
     vapidInApp: !!import.meta.env.VITE_VAPID_PUBLIC_KEY }
   if (!supabase || !signedIn) return s
   const { data, error } = await supabase.rpc('is_admin')
@@ -86,6 +87,8 @@ export async function checkSetup(signedIn: boolean): Promise<Setup> {
   s.research = !(rs.error && (rs.error.code === 'PGRST202' || /could not find the function/i.test(rs.error.message)))
   const co = await supabase.rpc('admin_cohorts', { p_weeks: 1 })
   s.v8 = !(co.error && (co.error.code === 'PGRST202' || /could not find the function/i.test(co.error.message)))
+  const sh = await supabase.rpc('is_shared_member', { p_budget: '00000000-0000-0000-0000-000000000000' })
+  s.v10 = !(sh.error && (sh.error.code === 'PGRST202' || /could not find the function/i.test(sh.error.message)))
   const an = await supabase.rpc('admin_name')
   s.adminKeys = !(an.error && (an.error.code === 'PGRST202' || /could not find the function/i.test(an.error.message)))
   s.adminName = (an.data as string | null) ?? null

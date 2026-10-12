@@ -9,14 +9,14 @@ import { BUCKET_COLORS, bucketName, categoryName } from './names'
 import { TxRow } from './TxRow'
 
 // widget disponibili; i primi quattro sono quelli di partenza
-const WIDGETS = ['left', 'today', 'flow', 'recent', 'donut', 'daily', 'categories', 'compare', 'upcoming', 'savings'] as const
+const WIDGETS = ['left', 'today', 'flow', 'recent', 'donut', 'daily', 'categories', 'compare', 'upcoming', 'savings', 'shared'] as const
 type WidgetId = typeof WIDGETS[number]
 const DEFAULT_HOME: WidgetId[] = ['left', 'today', 'flow', 'recent']
 const isWidget = (x: string): x is WidgetId => (WIDGETS as readonly string[]).includes(x)
 
 /** Home: solo l'essenziale, a widget che ognuno sceglie e ordina (la scelta si salva e si sincronizza). */
-export function HomeView({ data, r, today, onOpen, onAll }: {
-  data: AppData; r: MonthResult; today: string; onOpen: (tx: ClassifiedTx) => void; onAll: () => void
+export function HomeView({ data, r, today, onOpen, onAll, onShared }: {
+  data: AppData; r: MonthResult; today: string; onOpen: (tx: ClassifiedTx) => void; onAll: () => void; onShared: () => void
 }) {
   const { t } = useI18n()
   const { dispatch } = useStore()
@@ -44,7 +44,7 @@ export function HomeView({ data, r, today, onOpen, onAll }: {
                 <button className="icon-btn" aria-label={t('action.delete')} onClick={() => save(active.filter(x => x !== id))}>✕</button>
               </div>}
             </div>
-            <Widget id={id} data={data} r={r} today={today} onOpen={onOpen} onAll={onAll} />
+            <Widget id={id} data={data} r={r} today={today} onOpen={onOpen} onAll={onAll} onShared={onShared} />
           </section>
         ))}
       </div>
@@ -68,8 +68,8 @@ export function HomeView({ data, r, today, onOpen, onAll }: {
   )
 }
 
-function Widget({ id, data, r, today, onOpen, onAll }: {
-  id: WidgetId; data: AppData; r: MonthResult; today: string; onOpen: (tx: ClassifiedTx) => void; onAll: () => void
+function Widget({ id, data, r, today, onOpen, onAll, onShared }: {
+  id: WidgetId; data: AppData; r: MonthResult; today: string; onOpen: (tx: ClassifiedTx) => void; onAll: () => void; onShared: () => void
 }) {
   const { t, money, date, lang } = useI18n()
   const s = data.settings
@@ -158,6 +158,8 @@ function Widget({ id, data, r, today, onOpen, onAll }: {
           <span>{x.description || categoryName(s.categories.find(c => c.id === x.category), t)}</span><b>{money(x.amountIn || x.amount || 0, cur)}</b></li>)}
       </ul>
     }
+    case 'shared':
+      return <><p className="muted small">{t('w.sharedNone')}</p><button className="btn small-btn" onClick={onShared}>👥 {t('w.sharedOpen')} →</button></>
     case 'savings': {
       const keep = r.buckets.slice(2)
       return <>

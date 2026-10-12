@@ -22,6 +22,7 @@ import { ConsentCard } from './ui/beta/ConsentCard'
 import { FeedbackCard } from './ui/beta/FeedbackCard'
 import { ProfileForm } from './ui/ProfileForm'
 import { HomeView } from './ui/HomeView'
+import { SharedView } from './ui/shared/SharedView'
 import { saveMorningSnapshot } from './beta/morning'
 import { bucketName } from './ui/names'
 import { noAccount, profilePrompt, setupPending } from './sync/profile'
@@ -31,7 +32,7 @@ import { LoginScreen } from './ui/AccountSection'
 import { SetupWizard } from './ui/SetupWizard'
 import { guessCurrency } from './ui/names'
 
-type Tab = 'home' | 'month' | 'transactions' | 'year' | 'investments' | 'settings'
+type Tab = 'home' | 'month' | 'transactions' | 'year' | 'investments' | 'settings' | 'shared'
 
 export default function App() {
   const { t, lang, setLang } = useI18n()
@@ -39,7 +40,8 @@ export default function App() {
   const sync = useSync()
   const today = todayIso()
   // ?login=1 / ?signup=1 (pulsanti del sito): si apre direttamente l'area account
-  const [tab, setTab] = useState<Tab>('home')
+  // ?join=CODICE (invito a un budget comune): si apre direttamente il budget comune
+  const [tab, setTab] = useState<Tab>(() => ENTRY.get('join') ? 'shared' : 'home')
   const [ym, setYm] = useState<YearMonth | null>(null)
   const [year, setYear] = useState(() => Number(todayIso().slice(0, 4)))
   // link di inserimento rapido: ?add=1&amount=12,50&desc=Pizza&cat=eatingOut (scorciatoia sull'icona, Comandi Rapidi)
@@ -191,7 +193,9 @@ export default function App() {
           <section className="card"><h3 className="h-plain">{t('prof.promptTitle')}</h3><ProfileForm onDone={() => setAskProfile(false)} /></section>)}
         {tab === 'home' && showFeedback && <FeedbackCard onClose={() => setShowFeedback(false)} />}
         {tab === 'home' && homeResult && <HomeView data={data} r={homeResult} today={today} onOpen={openTx}
-          onAll={() => { setYm(null); setTab('transactions'); window.scrollTo(0, 0) }} />}
+          onAll={() => { setYm(null); setTab('transactions'); window.scrollTo(0, 0) }}
+          onShared={() => { setTab('shared'); window.scrollTo(0, 0) }} />}
+        {tab === 'shared' && <SharedView onBack={() => { setTab('home'); window.scrollTo(0, 0) }} onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} />}
         {(tab === 'month' || tab === 'transactions') && <MonthNav ym={current} onChange={setYm} />}
         {tab === 'year' && <YearNav year={year} onChange={setYear} />}
         {tab === 'year' && <YearView year={year} transactions={data.transactions} settings={data.settings} today={today}
@@ -203,6 +207,9 @@ export default function App() {
                                                    year={year} onYear={setYear} />}
         {tab === 'settings' && <BetaSection onFeedback={() => { setShowFeedback(true); setTab('home'); window.scrollTo(0, 0) }}
                                             onAdmin={() => window.location.assign(`${import.meta.env.BASE_URL}admin/`)} />}
+        {tab === 'settings' && (
+          <section className="card"><h3 className="h-plain">👥 {t('sh.title')}</h3><p className="muted small">{t('w.sharedNone')}</p>
+            <button className="btn" onClick={() => { setTab('shared'); window.scrollTo(0, 0) }}>{t('w.sharedOpen')} →</button></section>)}
         {tab === 'settings' && <SettingsView onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} />}
         <FxAutoUpdate today={today} />
       </main>
@@ -214,7 +221,7 @@ export default function App() {
       )}
 
       <nav className="bottom-nav" aria-label="Quadriamo">
-        {(['home', 'month', 'transactions', 'year', 'investments', 'settings'] as Tab[]).map(k => (
+        {(['home', 'month', 'transactions', 'year', 'investments', 'settings'] as const).map(k => (
           <button key={k} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}
                   onClick={() => { setTab(k); if ((k === 'year' || k === 'investments') && current) setYear(current.year); window.scrollTo(0, 0) }}>
             <span aria-hidden="true">{{ home: '⌂', month: '◧', transactions: '☰', year: '▥', investments: '↗', settings: '⚙' }[k]}</span>

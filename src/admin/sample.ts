@@ -31,6 +31,6 @@ export const sampleResearch: ResearchStats = { answers: 14, min: 5,
   goals: { understand: 10, save: 8, goal: 5, invest: 5, debt: 2, family: 3 }, cards: { bank: 11, Revolut: 6, Satispay: 5, PayPal: 4, credit: 3 },
   invested: { yes: 5, want: 7, no: 2 }, invest_where: { etf: 4, broker: 3, bank: 2, crypto: 1 },
   shares_avg: [53.6, 21.4, 14.6, 10.4], shares_default: 9, shares_custom: 5 }
-export const sampleSetup: Setup = { connected: true, tables: true, profiles: true, research: true, v8: true, siteFeedback: true, adminKeys: true, adminName: null, admin: true, fn: 'ok', cronSecret: true, reminder: true, vapidInApp: true }
+export const sampleSetup: Setup = { connected: true, tables: true, profiles: true, research: true, v8: true, v10: true, siteFeedback: true, adminKeys: true, adminName: null, admin: true, fn: 'ok', cronSecret: true, reminder: true, vapidInApp: true }
 export const sampleCohorts: Cohort[] = [8, 7, 6, 5, 4, 3, 2, 1].map((w, i) => ({ week: day(w * 7 + 3), new_devices: [3, 5, 4, 8, 9, 12, 10, 7][i], back_7: [2, 3, 3, 5, 6, 7, 0, 0][i], ready: w > 1 }))
 export const sampleAlternatives: Record<string, number> = { spreadsheet: 6, nothing: 5, bank_app: 4, notes: 2, other_app: 2 }

@@ -38,7 +38,7 @@ Dopo: import dell'estratto conto (CSV), collegamento con le banche (open banking
 - **Domani anche: notifiche già durante la registrazione.** Appena creato l'account, un passaggio "Attiva le notifiche"
   con il pulsante che apre subito l'avviso del sistema (Consenti). I browser lo permettono solo dopo un tocco dell'utente;
   su iPhone/iPad solo nell'app aperta dall'icona. Per l'app per computer, le notifiche di sistema di Mac e Windows.
-- **Da sviluppare (12/10/2026): budget di coppia o condiviso e report più avanzati.** Condiviso: un budget comune con
+- **Fatto (12/10/2026): budget comune** (0010, src/ui/shared). **Da sviluppare: report più avanzati.** Note originali: Condiviso: un budget comune con
   invito via email, ognuno con il suo account, spese di casa divise (50/50 o in proporzione alle entrate), "chi deve quanto"
   a fine mese, e i budget personali che restano privati. Report: mese e anno in PDF/CSV, andamento per categoria su 12 mesi,
   tasso di risparmio nel tempo, confronto tra periodi.
