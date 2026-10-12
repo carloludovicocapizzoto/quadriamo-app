@@ -24,7 +24,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       for (const [k, v] of Object.entries(vars ?? {})) s = s.replaceAll(`{${k}}`, String(v))
       return s
     },
-    money: (n, currency) => new Intl.NumberFormat(lang, { style: 'currency', currency }).format(n),
+    // separatore delle migliaia anche a 4 cifre (1.330,11 €), come nelle app delle banche
+    money: (n, currency) => new Intl.NumberFormat(lang, { style: 'currency', currency, useGrouping: 'always' as unknown as boolean }).format(n),
     date: (iso, opts = { day: 'numeric', month: 'short' }) =>
       new Intl.DateTimeFormat(lang, { ...opts, timeZone: 'UTC' }).format(new Date(iso + 'T00:00:00Z')),
   }), [lang])

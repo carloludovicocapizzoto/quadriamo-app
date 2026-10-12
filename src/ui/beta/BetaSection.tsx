@@ -4,6 +4,7 @@ import { track } from '../../beta/telemetry'
 import { useI18n } from '../../i18n/core'
 import { supabase } from '../../sync/client'
 import { useSync } from '../../sync/context'
+import { Icon } from '../Icon'
 import { PushToggle } from './PushToggle'
 
 const SITE = 'https://carloludovicocapizzoto.github.io/quadriamo-app/'
@@ -33,9 +34,9 @@ export function BetaSection({ onFeedback, onAdmin }: { onFeedback: () => void; o
   return (
     <section className="card">
       <h3 className="h-plain">{t('beta.section')}</h3>
-      <div className="stack-row">
-        <button className="btn primary" onClick={invite}>↗ {t('beta.invite')}</button>
-        <button className="btn" onClick={onFeedback}>✎ {t('beta.feedback')}</button>
+      <div className="btn-pair">
+        <button className="btn" onClick={invite}><Icon name="share" size={16} />{t('beta.invite')}</button>
+        <button className="btn" onClick={onFeedback}><Icon name="message" size={16} />{t('beta.feedback')}</button>
       </div>
       {note && <p className="small good-text">✓ {note}</p>}
       <div className="top-gap"><PushToggle /></div>

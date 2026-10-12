@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { addDays, STREAK_MILESTONES, type Streak } from '../engine'
 import { useI18n } from '../i18n/core'
+import { Icon } from './Icon'
 import { useStore } from '../store/context'
 
 /** Fiamma disegnata (niente emoji: resta uguale su ogni telefono). */
@@ -33,7 +34,7 @@ export function StreakCard({ s, today }: { s: Streak; today: string }) {
         {s.week.map((on, i) => <li key={i} className={`${on ? 'on' : ''}${i === 6 ? ' today' : ''}`}><i />{day(i)}</li>)}
       </ol>
       <div className="streak-foot">
-        {!s.doneToday && <button className="btn small-btn" onClick={() => dispatch({ type: 'checkIn' })}>✓ {t('streak.checkIn')}</button>}
+        {!s.doneToday && <button className="btn small-btn" onClick={() => dispatch({ type: 'checkIn' })}><Icon name="check" size={16} />{t('streak.checkIn')}</button>}
         <span className="small muted">{next ? t('streak.next', { n: next }) : ''}{s.best > 1 ? ` · ${t('streak.best', { n: s.best })}` : ''}</span>
       </div>
     </section>

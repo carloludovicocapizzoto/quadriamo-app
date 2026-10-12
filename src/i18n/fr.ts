@@ -622,6 +622,8 @@ const fr: Dict = {
   'streak.next': "Prochain palier : {n} jours",
   'streak.best': "record {n}",
   'streak.milestone': "Palier atteint : {n} jours !",
+  'push.title': "Notifications",
+  'push.desc': "Chaque matin, combien vous pouvez dépenser aujourd’hui, et un rappel si vous oubliez de noter vos dépenses.",
   'm.1': 'Janvier', 'm.2': 'Février', 'm.3': 'Mars', 'm.4': 'Avril', 'm.5': 'Mai', 'm.6': 'Juin',
   'm.7': 'Juillet', 'm.8': 'Août', 'm.9': 'Septembre', 'm.10': 'Octobre', 'm.11': 'Novembre', 'm.12': 'Décembre',
 }

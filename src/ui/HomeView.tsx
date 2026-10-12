@@ -7,6 +7,7 @@ import { useStore } from '../store/context'
 import { BucketDonut, DailyChart } from './HomeCharts'
 import { BUCKET_COLORS, bucketName, categoryName } from './names'
 import { StreakCard } from './Streak'
+import { Icon } from './Icon'
 import { TxRow } from './TxRow'
 
 // widget disponibili; i primi quattro sono quelli di partenza
@@ -29,7 +30,7 @@ export function HomeView({ data, r, today, streak, onOpen, onAll, onShared }: {
     <div className="home">
       <div className="home-head">
         <div><h1>{t('home.titleMain')}</h1><p className="muted small">{t(`m.${r.ym.month}` as keyof Dict)} {r.ym.year}</p></div>
-        <button className={`btn small-btn${edit ? ' primary' : ''}`} onClick={() => setEdit(!edit)}>{edit ? `✓ ${t('home.done')}` : `✎ ${t('home.edit')}`}</button>
+        <button className={`btn small-btn${edit ? ' primary' : ''}`} onClick={() => setEdit(!edit)}><Icon name={edit ? 'check' : 'edit'} size={16} />{edit ? t('home.done') : t('home.edit')}</button>
       </div>
       {streak && !edit && <StreakCard s={streak} today={today} />}
       {edit && <p className="muted small">{t('home.editHint')}</p>}
@@ -41,9 +42,9 @@ export function HomeView({ data, r, today, streak, onOpen, onAll, onShared }: {
             <div className="w-head">
               <h3 className="h-plain">{t(`w.${id}` as keyof Dict)}</h3>
               {edit && <div className="w-tools">
-                <button className="icon-btn" aria-label="↑" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
-                <button className="icon-btn" aria-label="↓" disabled={i === active.length - 1} onClick={() => move(i, 1)}>↓</button>
-                <button className="icon-btn" aria-label={t('action.delete')} onClick={() => save(active.filter(x => x !== id))}>✕</button>
+                <button className="icon-btn" aria-label="↑" disabled={i === 0} onClick={() => move(i, -1)}><Icon name="up" size={18} /></button>
+                <button className="icon-btn" aria-label="↓" disabled={i === active.length - 1} onClick={() => move(i, 1)}><Icon name="down" size={18} /></button>
+                <button className="icon-btn" aria-label={t('action.delete')} onClick={() => save(active.filter(x => x !== id))}><Icon name="close" size={18} /></button>
               </div>}
             </div>
             <Widget id={id} data={data} r={r} today={today} onOpen={onOpen} onAll={onAll} onShared={onShared} />
@@ -161,7 +162,7 @@ function Widget({ id, data, r, today, onOpen, onAll, onShared }: {
       </ul>
     }
     case 'shared':
-      return <><p className="muted small">{t('w.sharedNone')}</p><button className="btn small-btn" onClick={onShared}>👥 {t('w.sharedOpen')} →</button></>
+      return <><p className="muted small">{t('w.sharedNone')}</p><button className="btn small-btn" onClick={onShared}><Icon name="users" size={16} />{t('w.sharedOpen')}</button></>
     case 'savings': {
       const keep = r.buckets.slice(2)
       return <>

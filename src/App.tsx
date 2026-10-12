@@ -32,6 +32,7 @@ import { ConfirmedScreen, Gate, Splash } from './ui/Gate'
 import { isStandalone } from './beta/device'
 import { LoginScreen } from './ui/AccountSection'
 import { SetupWizard } from './ui/SetupWizard'
+import { Icon } from './ui/Icon'
 import { guessCurrency } from './ui/names'
 
 type Tab = 'home' | 'month' | 'transactions' | 'year' | 'investments' | 'settings' | 'shared'
@@ -216,7 +217,7 @@ export default function App() {
         {tab === 'settings' && <BetaSection onFeedback={() => { setShowFeedback(true); setTab('home'); window.scrollTo(0, 0) }}
                                             onAdmin={() => window.location.assign(`${import.meta.env.BASE_URL}admin/`)} />}
         {tab === 'settings' && (
-          <section className="card"><h3 className="h-plain">👥 {t('sh.title')}</h3><p className="muted small">{t('w.sharedNone')}</p>
+          <section className="card"><h3 className="h-plain">{t('sh.title')}</h3><p className="muted small">{t('w.sharedNone')}</p>
             <button className="btn" onClick={() => { setTab('shared'); window.scrollTo(0, 0) }}>{t('w.sharedOpen')} →</button></section>)}
         {tab === 'settings' && <SettingsView onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} />}
         <FxAutoUpdate today={today} />
@@ -226,14 +227,14 @@ export default function App() {
       <StreakCelebration s={streak} />
 
       {(tab === 'home' || tab === 'month' || tab === 'transactions') && (
-        <button className="fab" onClick={() => setForm({})} aria-label={t('action.add')}>+</button>
+        <button className="fab" onClick={() => setForm({})} aria-label={t('action.add')}><Icon name="plus" size={26} /></button>
       )}
 
       <nav className="bottom-nav" aria-label="Quadriamo">
         {(['home', 'month', 'transactions', 'year', 'investments', 'settings'] as const).map(k => (
           <button key={k} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}
                   onClick={() => { setTab(k); if ((k === 'year' || k === 'investments') && current) setYear(current.year); window.scrollTo(0, 0) }}>
-            <span aria-hidden="true">{{ home: '⌂', month: '◧', transactions: '☰', year: '▥', investments: '↗', settings: '⚙' }[k]}</span>
+            <Icon name={({ home: 'home', month: 'month', transactions: 'list', year: 'year', investments: 'growth', settings: 'settings' } as const)[k]} size={22} />
             {t(`nav.${k}`)}
           </button>
         ))}

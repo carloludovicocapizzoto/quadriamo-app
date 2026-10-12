@@ -1,6 +1,6 @@
 import { SPLIT, rowIssues, type ClassifiedTx, type Settings } from '../engine'
 import { useI18n } from '../i18n/core'
-import { bucketName, categoryName } from './names'
+import { BUCKET_COLORS, bucketName, categoryName } from './names'
 
 /** Una riga di movimento: tocco per modificarla (i ricorrenti si modificano nelle Impostazioni). */
 export function TxRow({ tx, settings, onOpen }: { tx: ClassifiedTx; settings: Settings; onOpen: (tx: ClassifiedTx) => void }) {
@@ -13,12 +13,15 @@ export function TxRow({ tx, settings, onOpen }: { tx: ClassifiedTx; settings: Se
   return (
     <li>
       <button className={`tx${issues.length ? ' tx-bad' : ''}${tx.upcoming ? ' tx-upcoming' : ''}`} onClick={() => onOpen(tx)}>
-        <span className="tx-date">{tx.date ? date(tx.date) : '—'}</span>
+        <span className="tx-avatar" title={bucket ? bucketName(bucket, t) : undefined} style={{ ['--c' as string]: tx.type === 'income' ? 'var(--good)' : BUCKET_COLORS[Math.max(0, settings.buckets.findIndex(b => b.id === tx.bucket))] ?? 'var(--muted)' }}>
+          {(categoryName(cat, t) || tx.description || '?').trim().charAt(0).toUpperCase()}
+        </span>
         <span className="tx-main">
           <span className="tx-desc">{tx.description || categoryName(cat, t)}</span>
           <span className="tx-meta">
+            <span className="tx-date">{tx.date ? date(tx.date) : '—'}</span>{' · '}
             {tx.category ? categoryName(cat, t) : t('check.missingCategory')}
-            {tx.bucket === SPLIT ? ` · ${t('tx.split')}` : bucket ? ` · ${bucketName(bucket, t)}` : ''}
+            {tx.bucket === SPLIT ? ` · ${t('tx.split')}` : ''}
             {tx.recurring && <em className="tag">{tx.upcoming ? t('tx.upcoming') : t('tx.recurring')}</em>}
           </span>
           {issues.length > 0 && <span className="tx-issue">{issues.map(k => t(`check.${k}`)).join(' · ')}</span>}

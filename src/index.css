@@ -596,3 +596,87 @@ input, select, textarea { font-size: max(16px, 1em); }
 .streak-pop b { font-size: 20px; }
 @keyframes pop-in { from { opacity: 0; transform: translateX(-50%) scale(.6); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .streak-flame, .streak-pop, .streak-pop .streak-flame { animation: none !important; } }
+
+/* ==========================================================================
+   Rifinitura (ottobre 2026): stessa palette, aspetto più sobrio e "da app vera".
+   Icone disegnate al posto dei simboli, gerarchia chiara (etichetta piccola, numero grande),
+   ombre leggere invece dei bordi marcati, cifre allineate.
+   ========================================================================== */
+:root { --shadow-1: 0 1px 2px rgba(31,35,40,.04), 0 2px 8px rgba(31,35,40,.04); --radius: 16px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --shadow-1: 0 1px 2px rgba(0,0,0,.3); } }
+:root[data-theme="dark"] { --shadow-1: 0 1px 2px rgba(0,0,0,.3); }
+
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-feature-settings: "ss01"; }
+.ico { flex: none; display: block; }
+
+/* card: bordo sottile e ombra leggera */
+.card { border-radius: var(--radius); border-color: color-mix(in srgb, var(--line) 75%, transparent); box-shadow: var(--shadow-1); padding: 18px 18px 16px; }
+.widgets { gap: 12px; }
+
+/* titoli dei widget: etichetta piccola, il protagonista è il numero */
+.widget .w-head { margin-bottom: 6px; }
+.widget .w-head h3, .streak .streak-n + p { letter-spacing: 0; }
+.widget .w-head h3.h-plain { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.w-big { font-size: 34px; font-weight: 650; letter-spacing: -.025em; font-variant-numeric: tabular-nums; line-height: 1.1; margin: 2px 0 12px; }
+.w-today strong { font-size: 22px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.w-bars b, .w-flow dd, .w-upcoming b, .tx-list .amount, .num, .money { font-variant-numeric: tabular-nums; }
+.w-flow dd { font-weight: 650; }
+
+/* pulsanti: più compatti e precisi */
+.btn { border-width: 1px; border-radius: 12px; font-weight: 600; letter-spacing: -.005em; transition: background .15s, border-color .15s, transform .1s; }
+.btn:active:not(:disabled) { transform: scale(.98); }
+.btn.primary { box-shadow: 0 1px 2px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.12); }
+.small-btn { min-height: 34px; border-radius: 10px; font-size: 13.5px; }
+.icon-btn { display: inline-grid; place-items: center; color: var(--text); border-radius: 10px; }
+.icon-btn:disabled { opacity: .35; }
+.link-btn { display: inline-flex; align-items: center; gap: 4px; }
+
+/* pulsante + : icona disegnata, ombra morbida */
+.fab { display: grid; place-items: center; width: 56px; height: 56px; box-shadow: 0 8px 24px rgba(184,74,32,.32), 0 2px 6px rgba(0,0,0,.12);
+  transition: transform .15s; }
+.fab:active { transform: scale(.94); }
+
+/* barra in basso: vetro smerigliato, icone a tratto, etichette che stanno sempre */
+.bottom-nav { grid-template-columns: repeat(6, 1fr); background: color-mix(in srgb, var(--surface) 86%, transparent);
+  -webkit-backdrop-filter: saturate(1.6) blur(18px); backdrop-filter: saturate(1.6) blur(18px);
+  border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+.bottom-nav button { gap: 3px; padding: 9px 2px 8px; min-height: 58px; font-size: 10.5px; font-weight: 500; letter-spacing: .01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; align-content: center; }
+.bottom-nav button.on { font-weight: 600; }
+.bottom-nav button .ico { transition: transform .2s; }
+.bottom-nav button.on .ico { transform: translateY(-1px); }
+
+/* intestazione della Home */
+.home-head h1 { letter-spacing: -.01em; }
+.home-head .btn { gap: 6px; }
+
+/* slancio: più sobrio */
+.streak { padding-top: 16px; }
+.streak-n { font-size: 18px; font-weight: 650; letter-spacing: -.01em; }
+@media (max-width: 400px) { .bottom-nav button { font-size: 10px; letter-spacing: -.01em; padding-left: 0; padding-right: 0; } }
+
+/* righe dei movimenti: avatar colorato della parte, data nella riga secondaria */
+.tx { grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding-top: 12px; padding-bottom: 12px; }
+.tx-avatar { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-weight: 650; font-size: 15px;
+  color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
+.tx-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx-meta .tx-date { font-size: inherit; }
+.tx-desc { font-weight: 600; font-size: 15px; }
+.tx-amount { font-weight: 650; font-size: 15px; }
+.tx-meta .tag { margin-left: 6px; }
+
+/* righe delle impostazioni con interruttore */
+.set-row { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; }
+.set-row > div { display: grid; gap: 2px; min-width: 0; }
+.set-ico { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.switch { position: relative; width: 50px; height: 30px; border-radius: 99px; border: 0; padding: 0; cursor: pointer; flex: none;
+  background: color-mix(in srgb, var(--muted) 35%, transparent); transition: background .2s; }
+.switch i { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s cubic-bezier(.3,1.3,.5,1); }
+.switch.on { background: var(--accent); }
+.switch.on i { transform: translateX(20px); }
+.switch:disabled { opacity: .6; }
+.btn-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn-pair .btn { min-width: 0; padding: 0 10px; font-size: 14px; white-space: nowrap; }
+.card > h3.h-plain { font-size: 16px; font-weight: 650; letter-spacing: -.01em; margin-bottom: 8px; }

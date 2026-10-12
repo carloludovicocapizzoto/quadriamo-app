@@ -8,7 +8,7 @@ const it: Dict = {
 
   'nav.month': 'Mese',
   'nav.transactions': 'Movimenti',
-  'nav.settings': 'Impostazioni',
+  'nav.settings': 'Opzioni',
 
   'action.add': 'Aggiungi movimento',
   'action.save': 'Salva',
@@ -622,6 +622,8 @@ const it: Dict = {
   'streak.next': "Prossimo traguardo: {n} giorni",
   'streak.best': "record {n}",
   'streak.milestone': "Traguardo raggiunto: {n} giorni!",
+  'push.title': "Notifiche",
+  'push.desc': "Ogni mattina quanto puoi spendere oggi, e un promemoria se dimentichi di segnare le spese.",
   'm.1': 'Gennaio', 'm.2': 'Febbraio', 'm.3': 'Marzo', 'm.4': 'Aprile', 'm.5': 'Maggio', 'm.6': 'Giugno',
   'm.7': 'Luglio', 'm.8': 'Agosto', 'm.9': 'Settembre', 'm.10': 'Ottobre', 'm.11': 'Novembre', 'm.12': 'Dicembre',
 }
