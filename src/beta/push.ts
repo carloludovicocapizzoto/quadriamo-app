@@ -33,6 +33,8 @@ export async function enablePush(lang: string): Promise<boolean> {
   })
   if (error) throw error
   void track('push_on')
+  // la notifica del mattino è inclusa, salvo che l'utente l'abbia spenta
+  if (localStorage.getItem('q.morning') !== 'off') await supabase!.rpc('set_morning_push', { p_endpoint: sub.endpoint, p_on: true })
   return true
 }
 

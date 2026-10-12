@@ -153,3 +153,9 @@ body { overscroll-behavior: none; }
 input, select, textarea { font-size: max(16px, 1em); }
 .az-lock { max-width: 520px; }
 .az-locked-info { max-width: 620px; }
+.az-cohorts { list-style: none; display: grid; gap: 8px; margin-top: 8px; padding: 0; }
+.az-cohorts li { display: grid; grid-template-columns: 150px 1fr 56px 60px; gap: 10px; align-items: center; font-size: 13.5px; }
+.az-cohorts .track { height: 10px; background: var(--soft); border-radius: 99px; overflow: hidden; }
+.az-cohorts .track span { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.az-cohorts li.pending { opacity: .55; }
+.az-cohorts b { text-align: right; } .az-cohorts .pct { color: var(--grey); font-size: 12px; }

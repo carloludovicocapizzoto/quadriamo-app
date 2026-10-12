@@ -1,6 +1,6 @@
 // Le sezioni dell'area amministratore: componenti "puri" (ricevono i dati), così si provano senza database.
 import { useState } from 'react'
-import { downloadCsv, label, projectRef, type Account, type Device, type Feedback, type PushSub, type ResearchStats, type Setup, type Stats } from './data'
+import { downloadCsv, label, projectRef, type Account, type Device, type Feedback, type Cohort, type PushSub, type ResearchStats, type Setup, type Stats } from './data'
 import sql0002 from '../../supabase/migrations/0002_beta_feedback_stats_push.sql?raw'
 import sql0004 from '../../supabase/migrations/0004_profiles.sql?raw'
 import sql0005 from '../../supabase/migrations/0005_site_feedback.sql?raw'
@@ -9,6 +9,8 @@ import tplMagic from '../../supabase/templates/magic_link.html?raw'
 import tplRecovery from '../../supabase/templates/recovery.html?raw'
 import sql0006 from '../../supabase/migrations/0006_admin_key.sql?raw'
 import sql0007 from '../../supabase/migrations/0007_private_profile_anonymous_research.sql?raw'
+import sql0008 from '../../supabase/migrations/0008_morning_push_alternatives_cohorts.sql?raw'
+import sql0009 from '../../supabase/migrations/0009_morning_push_cron.sql?raw'
 import sql0003 from '../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
 import fnCode from '../../supabase/functions/send-push/index.ts?raw'
 
@@ -43,7 +45,7 @@ function Toolbar({ count, onExport, children }: { count: string; onExport?: () =
 }
 
 // ---------- Dashboard ----------
-export function DashboardPanel({ stats, days, setDays }: { stats: Stats; days: number; setDays: (n: number) => void }) {
+export function DashboardPanel({ stats, days, setDays, cohorts = [] }: { stats: Stats; days: number; setDays: (n: number) => void; cohorts?: Cohort[] }) {
   const daily = stats.daily ?? []
   const max = Math.max(1, ...daily.map(x => x.active))
   const funnel: [string, number][] = [['Hanno aperto l’app', stats.devices], ['Hanno registrato almeno un movimento', stats.with_tx],
@@ -79,6 +81,23 @@ export function DashboardPanel({ stats, days, setDays }: { stats: Stats; days: n
           ))}
         </div>
         <p className="az-hint"><i className="lg a" /> attivi · <i className="lg n" /> di cui nuovi · {d(daily[0]?.day ?? null)} → {d(daily.at(-1)?.day ?? null)}</p>
+      </div>
+
+      <div className="az-card">
+        <h3>Tornano dopo 7 giorni, settimana per settimana</h3>
+        <p className="az-hint">Per ogni settimana: quanti dispositivi hanno aperto Quadriamo per la prima volta e quanti sono tornati dopo almeno 7 giorni.
+          È il numero che dice se il vantaggio è reale. Le ultime settimane si completano col tempo.</p>
+        {cohorts.length ? <ul className="az-cohorts">
+          {cohorts.map(c => {
+            const p = c.new_devices ? c.back_7 / c.new_devices : 0
+            return <li key={c.week} className={c.ready ? '' : 'pending'}>
+              <span className="k">sett. del {d(c.week)}</span>
+              <span className="track"><span style={{ width: `${p * 100}%` }} /></span>
+              <b>{c.ready ? `${Math.round(p * 100)}%` : '…'}</b>
+              <span className="pct">{c.back_7}/{c.new_devices}</span>
+            </li>
+          })}
+        </ul> : <p className="az-empty">Ancora nessun dato.</p>}
       </div>
 
       <div className="az-cols">
@@ -215,7 +234,7 @@ export function ResearchPanel({ r, buckets = ['Essenziali', 'Qualità della vita
 }
 
 // ---------- Feedback ----------
-export function FeedbackPanel({ rows }: { rows: Feedback[] }) {
+export function FeedbackPanel({ rows, alternatives = {} }: { rows: Feedback[]; alternatives?: Record<string, number> }) {
   const [stars, setStars] = useState(0)
   const rated = rows.filter(r => r.rating != null)
   const avg = rated.length ? (rated.reduce((s, r) => s + (r.rating ?? 0), 0) / rated.length).toFixed(1) : '—'
@@ -229,25 +248,29 @@ export function FeedbackPanel({ rows }: { rows: Feedback[] }) {
           <div className="az-big">{avg}<span className="sub">su 5 · {rated.length} voti · {withText} commenti</span></div>
         </div>
         <div className="az-card">
+          <h3>Se non ci fosse Quadriamo userebbero…</h3>
+          <Bars items={sorted(alternatives).map(([k, n]) => [label(k), n])} />
+        </div>
+        <div className="az-card">
           <h3>Distribuzione dei voti</h3>
           <Bars items={[5, 4, 3, 2, 1].map(s => [`${'★'.repeat(s)}`, rated.filter(r => r.rating === s).length])} total={Math.max(1, rated.length)} />
         </div>
       </div>
       <Toolbar count={`${list.length} risposte`} onExport={() => downloadCsv('quadriamo-feedback', [
-        ['Data', 'Da', 'Voto', 'Commento', 'Email', 'Lingua', 'Versione', 'Con account'],
-        ...list.map(r => [r.created_at, r.source === 'site' ? 'Sito' : 'App', r.rating, r.message, r.email, label(r.lang), r.app_version, yn(!!r.user_id)])])}>
+        ['Data', 'Da', 'Voto', 'Commento', 'Al posto di Quadriamo', 'Email', 'Lingua', 'Versione', 'Con account'],
+        ...list.map(r => [r.created_at, r.source === 'site' ? 'Sito' : 'App', r.rating, r.message, r.alternative ? `${label(r.alternative)}${r.alternative_other ? `: ${r.alternative_other}` : ''}` : '', r.email, label(r.lang), r.app_version, yn(!!r.user_id)])])}>
         <select value={stars} onChange={e => setStars(Number(e.target.value))} aria-label="Filtra per voto">
           <option value={0}>Tutti i voti</option>{[5, 4, 3, 2, 1].map(s => <option key={s} value={s}>{s} stelle</option>)}
         </select>
       </Toolbar>
       <div className="az-table-wrap">
         <table className="az-table">
-          <thead><tr><th>Data</th><th>Da</th><th>Voto</th><th>Commento</th><th>Email</th><th>Lingua</th><th>Versione</th><th>Account</th></tr></thead>
+          <thead><tr><th>Data</th><th>Da</th><th>Voto</th><th>Commento</th><th>Al posto di Quadriamo</th><th>Email</th><th>Lingua</th><th>Versione</th><th>Account</th></tr></thead>
           <tbody>
             {list.map(r => (
               <tr key={r.id}><td>{dt(r.created_at)}</td><td>{r.source === 'site' ? <span className="az-pill warn">Sito</span> : 'App'}</td>
                 <td className="stars">{r.rating ? <>{'★'.repeat(r.rating)}<span>{'★'.repeat(5 - r.rating)}</span></> : '—'}</td>
-                <td className="wrap">{r.message ?? '—'}</td><td>{r.email ? <a href={`mailto:${r.email}`}>{r.email}</a> : '—'}</td><td>{label(r.lang)}</td><td>{r.app_version ?? '—'}</td><td>{r.user_id ? 'Sì' : '—'}</td></tr>
+                <td className="wrap">{r.message ?? '—'}</td><td>{r.alternative ? `${label(r.alternative)}${r.alternative_other ? `: ${r.alternative_other}` : ''}` : '—'}</td><td>{r.email ? <a href={`mailto:${r.email}`}>{r.email}</a> : '—'}</td><td>{label(r.lang)}</td><td>{r.app_version ?? '—'}</td><td>{r.user_id ? 'Sì' : '—'}</td></tr>
             ))}
           </tbody>
         </table>
@@ -343,11 +366,12 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
   const adminSql = adminKey
     ? `insert into public.admin_keys (name, key_hash)\nvalues ('${adminKey.name.replace(/'/g, "''")}', decode('${adminKey.hash}', 'hex'))\non conflict (key_hash) do update set name = excluded.name;`
     : `insert into public.admins (user_id)\nselect id from auth.users where email = '${email}'\non conflict do nothing;`
-  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n${sql0006}\n${sql0007}\n-- tu sei l'amministratore\n${adminSql}\n`
-  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.research !== false && setup.siteFeedback !== false && setup.adminKeys !== false
+  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n${sql0006}\n${sql0007}\n${sql0008}\n-- tu sei l'amministratore\n${adminSql}\n`
+  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.research !== false && setup.v8 !== false && setup.siteFeedback !== false && setup.adminKeys !== false
   // tabelle già create ma manca qualcosa: solo i pezzi mancanti
-  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.adminKeys === false ? sql0006 : '', setup.research === false ? sql0007 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
+  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.adminKeys === false ? sql0006 : '', setup.research === false ? sql0007 : '', setup.v8 === false ? sql0008 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
   const cronSql = sql0003.replace('<PROJECT_REF>', ref)
+  const morningSql = sql0009.replace('<PROJECT_REF>', ref)
   return (
     <>
       <p className="az-lead">Questa pagina controlla dal vivo cosa è già attivo sul tuo progetto Supabase. Ogni passo ha il codice già pronto:
@@ -409,6 +433,17 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
           </ol>
           <div className="az-u-row"><Copy text={cronSql} label="Copia lo script" />
             <a className="az-btn" href={`${dash}/database/extensions`} target="_blank" rel="noreferrer">↗ Apri Extensions</a></div>
+        </Step>
+        <Step n={7} ok={null} manual={{ done: manual.includes(7), toggle: toggle(7) }} title="Notifica del mattino &quot;Oggi puoi spendere&quot; (facoltativo)">
+          <ol>
+            <li>Aggiorna la funzione <code>send-push</code>: apri <a href={`${dash}/functions`} target="_blank" rel="noreferrer">Edge Functions</a> → send-push → Code,
+              incolla il codice nuovo (pulsante del passo 4) → <b>Deploy</b>.</li>
+            <li>Copia lo script, sostituisci <code>&lt;CRON_SECRET&gt;</code> con il valore del file <code>.vapid.local</code> ed eseguilo in SQL Editor
+              (servono pg_cron e pg_net, come al passo 6).</li>
+          </ol>
+          <p className="az-hint">Ogni mattina alle 7:30 arriva a chi ha le notifiche attive. Il server manda solo la sveglia: il numero lo calcola il telefono.</p>
+          <div className="az-u-row"><Copy text={morningSql} label="Copia lo script" />
+            <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
         </Step>
       </div>
       <div className="az-card">

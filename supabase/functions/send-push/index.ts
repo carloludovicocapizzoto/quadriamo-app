@@ -1,6 +1,8 @@
 // Supabase Edge Function "send-push": invia la notifica "Come ti trovi con Quadriamo?" ai dispositivi iscritti.
 // - mode "manual": la chiama l'amministratore dalla dashboard (serve il suo accesso) -> a tutti gli iscritti
 // - mode "check": solo per l'amministratore, dice se i segreti sono impostati (pagina Configurazione della dashboard)
+// - mode "morning": ogni mattina (serve CRON_SECRET) -> a chi ha attivato "Oggi puoi spendere". Il server manda solo la
+//   "sveglia": il numero lo calcola il telefono con i suoi dati (push-sw.js), così nessun importo passa da qui
 // - mode "scheduled": la chiama il promemoria automatico giornaliero (serve CRON_SECRET) -> a chi non riceve
 //   un promemoria da almeno 10 giorni
 // Segreti da impostare in Supabase (Edge Functions -> Secrets): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, CRON_SECRET.
@@ -33,7 +35,7 @@ Deno.serve(async req => {
   const { mode = 'manual', title, body } = await req.json().catch(() => ({}))
   const url = Deno.env.get('SUPABASE_URL')!
 
-  if (mode === 'scheduled') {
+  if (mode === 'scheduled' || mode === 'morning') {
     if (!Deno.env.get('CRON_SECRET') || req.headers.get('x-cron-secret') !== Deno.env.get('CRON_SECRET')) return json({ error: 'forbidden' }, 403)
   } else {
     // solo l'amministratore: si controlla con il SUO accesso (o con il suo codice x-admin-key), tramite is_admin()
@@ -48,6 +50,7 @@ Deno.serve(async req => {
 
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
   let q = admin.from('push_subscriptions').select('endpoint, p256dh, auth_key, lang, created_at, last_prompt_at')
+  if (mode === 'morning') q = q.eq('morning', true)
   if (mode === 'scheduled') {
     const cutoff = new Date(Date.now() - DAYS * 864e5).toISOString()
     q = q.lt('created_at', cutoff).or(`last_prompt_at.is.null,last_prompt_at.lt.${cutoff}`)
@@ -61,11 +64,13 @@ Deno.serve(async req => {
   let sent = 0, removed = 0, failed = 0
   for (const s of subs ?? []) {
     const t = TEXT[s.lang ?? ''] ?? TEXT.en
-    const payload = JSON.stringify({ title: title || t.title, body: body || t.body, url: APP_URL })
+    const payload = mode === 'morning'
+      ? JSON.stringify({ kind: 'morning', lang: s.lang ?? 'en', url: APP_URL.replace('?feedback=1', '') })
+      : JSON.stringify({ title: title || t.title, body: body || t.body, url: APP_URL })
     try {
       await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth_key } }, payload, { TTL: 86400 })
       sent++
-      await admin.from('push_subscriptions').update({ last_prompt_at: new Date().toISOString() }).eq('endpoint', s.endpoint)
+      if (mode !== 'morning') await admin.from('push_subscriptions').update({ last_prompt_at: new Date().toISOString() }).eq('endpoint', s.endpoint)
     } catch (e) {
       const code = (e as { statusCode?: number }).statusCode
       if (code === 404 || code === 410) { removed++; await admin.from('push_subscriptions').delete().eq('endpoint', s.endpoint) }

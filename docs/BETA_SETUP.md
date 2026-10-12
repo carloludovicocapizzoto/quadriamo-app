@@ -65,3 +65,9 @@ Indipendentemente da questo, l'app stessa mostra il riquadro "Come ti trovi?" og
 - Il servizio email gratuito di Supabase consegna solo agli indirizzi del team. Per gli amici serve un SMTP (Authentication →
   SMTP Settings). Senza dominio: casella Gmail dedicata con "password per le app" (smtp.gmail.com, porta 587), mittente
   "Quadriamo". Con il dominio: Resend (smtp.resend.com, porta 465, utente "resend", password = chiave API).
+
+## Notifica del mattino, domanda ai tester, ritorno dopo 7 giorni (12/10/2026)
+- Configurazione → passo 1: "Copia lo script" include `0008_morning_push_alternatives_cohorts.sql`.
+- Passo 4: aggiorna la funzione `send-push` con il codice nuovo (modalità "morning").
+- Passo 7 (facoltativo): `0009_morning_push_cron.sql` con `<CRON_SECRET>` → ogni mattina alle 7:30 "Oggi puoi spendere…".
+  Il server manda solo la sveglia: il numero lo calcola il telefono (public/push-sw.js), gli importi non passano dal server.

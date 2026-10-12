@@ -9,7 +9,8 @@ export interface Stats {
   daily: { day: string; active: number; new: number }[] | null
   langs: Record<string, number>; platforms: Record<string, number>; events: Record<string, number>
 }
-export interface Feedback { id: number; created_at: string; rating: number | null; message: string | null; lang: string | null; app_version: string | null; user_id: string | null; email?: string | null; source?: 'app' | 'site' }
+export interface Feedback { id: number; created_at: string; rating: number | null; message: string | null; lang: string | null; app_version: string | null; user_id: string | null; email?: string | null; source?: 'app' | 'site'; alternative?: string | null; alternative_other?: string | null }
+export interface Cohort { week: string; new_devices: number; back_7: number; ready: boolean }
 export interface Device {
   device_id: string; first_day: string; last_day: string; active_days: number; platform: string | null; lang: string | null
   standalone: boolean | null; signed_in: boolean | null; tx_count: number | null; months_used: number | null; app_version: string | null
@@ -30,6 +31,7 @@ export interface Setup {
   tables: boolean | null      // script 0002 eseguito (null = non ancora verificabile: serve l'accesso)
   profiles: boolean | null    // script 0004 (profili) eseguito
   research: boolean | null    // script 0007 (profilo riservato e ricerca anonima) eseguito
+  v8: boolean | null          // script 0008 (notifica del mattino, alternative, coorti) eseguito
   adminKeys: boolean | null   // script 0006 (accesso con nome + codice) eseguito
   adminName: string | null    // nome di chi è entrato con il codice
   siteFeedback: boolean | null  // script 0005 (feedback dal sito) eseguito
@@ -48,6 +50,7 @@ export const LABELS: Record<string, string> = {
   cash: 'Soprattutto contanti', other: 'Altro', yes: 'Sì, investe', want: 'No, ma vorrebbe', no: 'No', broker: 'App o broker online', etf: 'ETF',
   stocks: 'Azioni', bonds: 'Titoli di Stato e obbligazioni', pension: 'Fondo pensione', crypto: 'Criptovalute', realestate: 'Immobili',
   lt1000: 'meno di 1.000 €', '1000-1500': '1.000–1.500 €', '1500-2000': '1.500–2.000 €', '2000-3000': '2.000–3.000 €', ge3000: '3.000 € e oltre',
+  nothing: 'Niente, non terrebbe i conti', spreadsheet: 'Excel o un foglio', notes: 'Note o carta', bank_app: 'L’app della banca', other_app: 'Un’altra app',
   ios: 'iPhone / iPad', android: 'Android', desktop: 'Computer', '?': 'Non indicato',
 }
 export const label = (k: string | null | undefined) => LABELS[k ?? '?'] ?? k ?? '—'
@@ -64,11 +67,13 @@ export const loadFeedback = () => rpc<Feedback[]>('admin_feedback', { p_limit: 5
 export const loadDevices = () => rpc<Device[]>('admin_devices', { p_limit: 5000 })
 export const loadAccounts = () => rpc<Account[]>('admin_accounts')
 export const loadResearch = () => rpc<ResearchStats>('admin_research_stats')
+export const loadCohorts = () => rpc<Cohort[]>('admin_cohorts', { p_weeks: 8 })
+export const loadAlternatives = () => rpc<Record<string, number>>('admin_alternatives')
 export const loadPush = () => rpc<PushSub[]>('admin_push_list')
 
 export async function checkSetup(signedIn: boolean): Promise<Setup> {
   const supabase = db()
-  const s: Setup = { connected: !!supabase, tables: null, profiles: null, research: null, siteFeedback: null, adminKeys: null, adminName: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
+  const s: Setup = { connected: !!supabase, tables: null, profiles: null, research: null, v8: null, siteFeedback: null, adminKeys: null, adminName: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
     vapidInApp: !!import.meta.env.VITE_VAPID_PUBLIC_KEY }
   if (!supabase || !signedIn) return s
   const { data, error } = await supabase.rpc('is_admin')
@@ -79,6 +84,8 @@ export async function checkSetup(signedIn: boolean): Promise<Setup> {
   s.profiles = !(pr.error && (pr.error.code === 'PGRST205' || pr.error.code === '42P01'))
   const rs = await supabase.rpc('admin_research_stats')
   s.research = !(rs.error && (rs.error.code === 'PGRST202' || /could not find the function/i.test(rs.error.message)))
+  const co = await supabase.rpc('admin_cohorts', { p_weeks: 1 })
+  s.v8 = !(co.error && (co.error.code === 'PGRST202' || /could not find the function/i.test(co.error.message)))
   const an = await supabase.rpc('admin_name')
   s.adminKeys = !(an.error && (an.error.code === 'PGRST202' || /could not find the function/i.test(an.error.message)))
   s.adminName = (an.data as string | null) ?? null

@@ -4,9 +4,9 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../sync/client'
 import { newCode, saveKey, savedKey, sha256Hex, type AdminKey } from './adminKey'
-import { checkSetup, loadAccounts, loadDevices, loadFeedback, loadPush, loadResearch, loadStats, sendPush,
-  type Account, type Device, type Feedback, type PushSub, type ResearchStats, type Setup, type Stats } from './data'
-import { sampleAccounts, sampleDevices, sampleFeedback, samplePush, sampleResearch, sampleSetup, sampleStats } from './sample'
+import { checkSetup, loadAccounts, loadAlternatives, loadCohorts, loadDevices, loadFeedback, loadPush, loadResearch, loadStats, sendPush,
+  type Account, type Cohort, type Device, type Feedback, type PushSub, type ResearchStats, type Setup, type Stats } from './data'
+import { sampleAccounts, sampleAlternatives, sampleCohorts, sampleDevices, sampleFeedback, samplePush, sampleResearch, sampleSetup, sampleStats } from './sample'
 import { AccountsPanel, DashboardPanel, DevicesPanel, FeedbackPanel, PushPanel, ResearchPanel, SetupPanel } from './panels'
 
 type Panel = 'dashboard' | 'dispositivi' | 'account' | 'ricerca' | 'feedback' | 'notifiche' | 'configurazione'
@@ -134,6 +134,8 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
   const [feedback, setFeedback] = useState<Feedback[]>([])
   const [push, setPush] = useState<PushSub[]>([])
   const [research, setResearch] = useState<ResearchStats | null>(null)
+  const [cohorts, setCohorts] = useState<Cohort[]>([])
+  const [alternatives, setAlternatives] = useState<Record<string, number>>({})
   // la ricerca anonima si vede solo dopo aver reinserito il codice (o la password); si richiude lasciando la sezione
   const [unlocked, setUnlocked] = useState(false)
   const [error, setError] = useState('')
@@ -159,12 +161,14 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
   const load = useCallback(async () => {
     setError('')
     if (demo) {
-      setStats(sampleStats(days)); setDevices(sampleDevices); setAccounts(sampleAccounts); setFeedback(sampleFeedback); setPush(samplePush); setResearch(sampleResearch); return
+      setStats(sampleStats(days)); setDevices(sampleDevices); setAccounts(sampleAccounts); setFeedback(sampleFeedback); setPush(samplePush); setResearch(sampleResearch); setCohorts(sampleCohorts); setAlternatives(sampleAlternatives); return
     }
     try {
       const [st, dv, ac, fb, pu, pr] = await Promise.all([loadStats(days), loadDevices(), loadAccounts(), loadFeedback(), loadPush(),
         loadResearch().catch(() => null)])   // null se lo script 0007 non è ancora stato eseguito
       setStats(st); setDevices(dv); setAccounts(ac); setFeedback(fb); setPush(pu); setResearch(pr)
+      // script 0008: se manca, le due sezioni restano vuote
+      setCohorts(await loadCohorts().catch(() => [])); setAlternatives(await loadAlternatives().catch(() => ({})))
     } catch (e) { setError((e as Error).message) }
   }, [days, demo])
   useEffect(() => {
@@ -209,14 +213,14 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
         {locked && <p className="az-msg error">Completa prima la configurazione.</p>}
         {error && setup?.admin && <p className="az-msg error">Errore nel caricare i dati: {error}</p>}
         {setup && panel === 'configurazione' && <SetupPanel setup={setup} email={email} adminKey={adminKey && keyHash ? { name: adminKey.name, hash: keyHash } : undefined} onRecheck={() => void recheck().then(s => { if (s.admin) void load() })} />}
-        {setup?.admin && panel === 'dashboard' && stats && <DashboardPanel stats={stats} days={days} setDays={setDays} />}
+        {setup?.admin && panel === 'dashboard' && stats && <DashboardPanel stats={stats} days={days} setDays={setDays} cohorts={cohorts} />}
         {setup?.admin && panel === 'dispositivi' && <DevicesPanel rows={devices} />}
         {setup?.admin && panel === 'account' && <AccountsPanel rows={accounts} />}
         {setup?.admin && panel === 'ricerca' && (!research
           ? <p className="az-msg error">Esegui lo script aggiornato (sezione Configurazione, passo 1).</p>
           : unlocked || demo ? <ResearchPanel r={research} />
           : <Unlock adminKey={adminKey} email={email} onOk={() => setUnlocked(true)} />)}
-        {setup?.admin && panel === 'feedback' && <FeedbackPanel rows={feedback} />}
+        {setup?.admin && panel === 'feedback' && <FeedbackPanel rows={feedback} alternatives={alternatives} />}
         {setup?.admin && panel === 'notifiche' && <PushPanel rows={push} setup={setup} onSend={async (t, b) => {
           if (demo) return 'Anteprima: nessuna notifica inviata.'
           const r = await sendPush(t, b); void load()

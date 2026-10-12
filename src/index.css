@@ -540,3 +540,16 @@ input, select, textarea { font-size: max(16px, 1em); }
 .notify-bell { font-size: 56px; animation: ring 1.6s .3s ease-in-out both; transform-origin: 50% 10%; }
 @keyframes ring { 0%, 60%, 100% { transform: rotate(0); } 10%, 30% { transform: rotate(14deg); } 20%, 40% { transform: rotate(-14deg); } 50% { transform: rotate(6deg); } }
 @media (prefers-reduced-motion: reduce) { .notify-bell { animation: none; } }
+.morning-toggle { margin-top: 10px; text-align: left; }
+.morning-toggle .check { align-items: flex-start; gap: 10px; }
+.salary-input { font-size: 28px !important; font-weight: 700; }
+.salary-preview ul { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 8px; }
+.salary-preview li { display: grid; grid-template-columns: 12px 1fr auto; gap: 10px; align-items: center; animation: fade-up .35s both; }
+.salary-preview li i, .salary-today i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; margin-right: 6px; }
+.salary-preview li b { font-variant-numeric: tabular-nums; }
+.salary-today { background: var(--text); color: var(--bg); border-radius: 16px; padding: 14px 16px; display: grid; gap: 6px; animation: pop .45s .2s both; }
+.salary-today .muted { color: color-mix(in srgb, var(--bg) 70%, transparent); }
+.salary-today strong { font-size: 22px; font-variant-numeric: tabular-nums; }
+.salary-today small { font-size: 13px; font-weight: 500; }
+.fb-q { margin: 12px 0 4px; }
+.salary-day { display: grid; gap: 0; } .salary-day span { opacity: .8; }

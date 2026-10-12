@@ -1,5 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { isStandalone } from '../beta/device'
+import { SPLIT, daysBetween, monthOf, periodOf, todayIso } from '../engine'
+import { useStore } from '../store/context'
+import { newId, parseAmount } from '../store/state'
+import { BUCKET_COLORS, bucketName } from './names'
 import { enablePush, pushSupported } from '../beta/push'
 import { useI18n } from '../i18n/core'
 import type { Dict } from '../i18n/en'
@@ -7,6 +11,7 @@ import { useSync } from '../sync/context'
 import { ProfileForm } from './ProfileForm'
 import { SettingsView, type SettingsSection } from './SettingsView'
 import { StepHeader, StepNav } from './Steps'
+import { MorningToggle } from './beta/MorningToggle'
 
 // configurazione iniziale: ogni sezione delle Impostazioni è un passaggio, nell'ordine in cui serve
 const STEPS: [SettingsSection, keyof Dict][] = [
@@ -14,7 +19,7 @@ const STEPS: [SettingsSection, keyof Dict][] = [
   ['recurring', 'settings.recurring'], ['rules', 'rules.title'], ['fx', 'settings.fx'], ['data', 'settings.data'],
 ]
 
-type Kind = { kind: 'notify' } | { kind: 'settings'; section: SettingsSection; title: keyof Dict } | { kind: 'profile' }
+type Kind = { kind: 'notify' } | { kind: 'salary' } | { kind: 'settings'; section: SettingsSection; title: keyof Dict } | { kind: 'profile' }
 const isDesktopApp = () => 'quadriamoDesktop' in window || /QuadriamoDesktop\//.test(navigator.userAgent)
 
 /**
@@ -31,7 +36,10 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
   const [canNotify] = useState(() => !!sync.user && pushSupported() && !isDesktopApp() && (isStandalone() || !/iPhone|iPad|iPod/.test(navigator.userAgent)))
   const steps: Kind[] = [
     ...(canNotify ? [{ kind: 'notify' } as Kind] : []),
-    ...STEPS.map(([section, title]) => ({ kind: 'settings', section, title }) as Kind),
+    // subito dopo valuta e giorno: lo stipendio, per vedere il proprio numero del giorno prima ancora di registrare una spesa
+    ...STEPS.flatMap(([section, title]) => section === 'general'
+      ? [{ kind: 'settings', section, title } as Kind, { kind: 'salary' } as Kind]
+      : [{ kind: 'settings', section, title } as Kind]),
     ...(sync.user ? [{ kind: 'profile' } as Kind] : []),
   ]
   const total = steps.length
@@ -50,7 +58,8 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
       </section>
     )
   }
-  const title = cur.kind === 'notify' ? t('setup.notifyTitle') : cur.kind === 'profile' ? t('setup.profile') : t(cur.title)
+  const title = cur.kind === 'notify' ? t('setup.notifyTitle') : cur.kind === 'salary' ? t('setup.salaryTitle')
+    : cur.kind === 'profile' ? t('setup.profile') : t(cur.title)
   return (
     <section className="card wizard">
       <h1>{t('setup.title')}</h1>
@@ -59,6 +68,7 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
       <div className="step-body" key={step}>
         {cur.kind === 'notify' && <NotifyStep />}
         {cur.kind === 'settings' && <SettingsView only={[cur.section]} wizard />}
+        {cur.kind === 'salary' && <SalaryStep />}
         {cur.kind === 'profile' && <ProfileForm withShares={false} onDone={finish} />}
       </div>
       {cur.kind !== 'profile' && (
@@ -89,7 +99,54 @@ function NotifyStep() {
         ? <p className="good-text"><b>✓ {t('setup.notifyOn')}</b></p>
         : <button type="button" className="btn primary big-btn" disabled={state === 'busy'} onClick={() => void ask()}>🔔 {t('setup.notifyBtn')}</button>}
       {state === 'denied' && <p className="small muted">{t('setup.notifyDenied')}</p>}
+      <MorningToggle />
       <p className="small muted">{t('setup.notifyHint')}</p>
+    </div>
+  )
+}
+
+/** "Il tuo stipendio": scrivi quanto ti entra e vedi subito le quattro parti e quanto puoi spendere al giorno. */
+function SalaryStep() {
+  const { t, money } = useI18n()
+  const { state, dispatch } = useStore()
+  const data = state.data!
+  const today = todayIso()
+  const period = periodOf(monthOf(today, data.settings.monthStartDay), data.settings.monthStartDay)
+  const already = data.transactions.find(x => x.category === 'salary' && x.date && x.date >= period.start && x.date <= period.end)
+  const [raw, setRaw] = useState(already?.amount ? String(already.amount).replace('.', ',') : '')
+  const amount = parseAmount(raw) ?? 0
+  const days = Math.max(1, daysBetween(today, period.end) + 1)
+  const cur = data.settings.currency
+  const save = (v: string) => {
+    setRaw(v)
+    const n = parseAmount(v)
+    if (!n || n <= 0) { if (already) dispatch({ type: 'deleteTx', id: already.id }); return }
+    const tx = { id: already?.id ?? newId(), date: already?.date ?? today, description: t('c.salary'), category: 'salary', amount: n, paidFrom: SPLIT }
+    dispatch({ type: already ? 'updateTx' : 'addTx', tx })
+  }
+  return (
+    <div className="salary-step">
+      <p>{t('setup.salaryText')}</p>
+      <label className="field"><span>{t('setup.salaryLabel')} ({cur})</span>
+        <input className="salary-input" inputMode="decimal" placeholder="1.600" value={raw} onChange={e => save(e.target.value.replace(/[^\d.,]/g, ''))} autoFocus /></label>
+      {amount > 0 && (
+        <div className="salary-preview" key={Math.round(amount)}>
+          <ul>
+            {data.settings.buckets.map((b, i) => (
+              <li key={b.id} style={{ animationDelay: `${i * 70}ms` }}><i style={{ background: BUCKET_COLORS[i] }} /><span>{bucketName(b, t)}</span>
+                <b>{money(amount * b.share, cur)}</b></li>
+            ))}
+          </ul>
+          <div className="salary-today">
+            <span className="muted small">{t('setup.salaryToday')}</span>
+            {data.settings.buckets.slice(0, 2).map((b, i) => (
+              <div key={b.id} className="salary-day"><span className="small"><i style={{ background: BUCKET_COLORS[i] }} />{bucketName(b, t)}</span>
+                <strong>{t('safe.perDay', { amount: money((amount * b.share) / days, cur) })}</strong></div>
+            ))}
+            <span className="muted small">{t('setup.salaryHint', { days })}</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

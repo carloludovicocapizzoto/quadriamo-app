@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { demoAppData } from './demo'
 import { ENTRY, fromSiteAccount } from './entry'
-import { computeMonth, monthOf, todayIso, undated, type ClassifiedTx, type Transaction, type YearMonth } from './engine'
+import { computeMonth, monthOf, safeToSpend, todayIso, undated, type ClassifiedTx, type Transaction, type YearMonth } from './engine'
 import { LANGS, useI18n, type Lang } from './i18n/core'
 import { useStore } from './store/context'
 import { createInitial } from './store/state'
@@ -22,6 +22,8 @@ import { ConsentCard } from './ui/beta/ConsentCard'
 import { FeedbackCard } from './ui/beta/FeedbackCard'
 import { ProfileForm } from './ui/ProfileForm'
 import { HomeView } from './ui/HomeView'
+import { saveMorningSnapshot } from './beta/morning'
+import { bucketName } from './ui/names'
 import { noAccount, profilePrompt, setupPending } from './sync/profile'
 import { ConfirmedScreen, Gate, Splash } from './ui/Gate'
 import { isStandalone } from './beta/device'
@@ -74,6 +76,14 @@ export default function App() {
   const homeResult = useMemo(
     () => data ? computeMonth(monthOf(today, data.settings.monthStartDay), data.transactions, data.settings, today) : null,
     [data, today])
+
+  // riepilogo per la notifica del mattino (resta sul dispositivo)
+  useEffect(() => {
+    if (!data || !homeResult || data.demo) { void saveMorningSnapshot(null); return }
+    const items = safeToSpend(homeResult, data.settings, today).map(x => ({
+      name: bucketName(data.settings.buckets.find(b => b.id === x.bucketId)!, t), free: Math.max(0, x.free) }))
+    void saveMorningSnapshot({ lang, currency: data.settings.currency, end: homeResult.period.end, items, updatedAt: new Date().toISOString() })
+  }, [data, homeResult, today, lang, t])
 
   // statistiche anonime (solo con consenso): una "fotografia" al giorno con soli conteggi
   const ping = (yes = statsConsent() === 'yes') => {
