@@ -27,15 +27,32 @@ export async function enablePush(lang: string): Promise<boolean> {
   const reg = await navigator.serviceWorker.ready
   const sub = (await reg.pushManager.getSubscription()) ??
     await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(VAPID!) as BufferSource })
+  await register(sub, lang)
+  void track('push_on')
+  return true
+}
+
+async function register(sub: PushSubscription, lang: string) {
   const j = sub.toJSON()
   const { error } = await supabase!.rpc('save_push_subscription', {
     p_endpoint: sub.endpoint, p_p256dh: j.keys?.p256dh ?? '', p_auth: j.keys?.auth ?? '', p_device: deviceId(), p_lang: lang,
   })
   if (error) throw error
-  void track('push_on')
   // la notifica del mattino è inclusa, salvo che l'utente l'abbia spenta
-  if (localStorage.getItem('q.morning') !== 'off') await supabase!.rpc('set_morning_push', { p_endpoint: sub.endpoint, p_on: true })
-  return true
+  let on = true
+  try { on = localStorage.getItem('q.morning') !== 'off' } catch { /* niente */ }
+  await supabase!.rpc('set_morning_push', { p_endpoint: sub.endpoint, p_on: on })
+}
+
+/** All'apertura: se le notifiche sono già attive, riallinea l'iscrizione sul server (anche quelle fatte prima che esistesse
+ *  la notifica del mattino, o cancellate dal server). Non chiede mai il permesso. */
+export async function syncPush(lang: string): Promise<void> {
+  try {
+    if (!pushSupported() || Notification.permission !== 'granted') return
+    const reg = await navigator.serviceWorker.getRegistration()
+    const sub = await reg?.pushManager.getSubscription()
+    if (sub) await register(sub, lang)
+  } catch { /* offline: si riprova alla prossima apertura */ }
 }
 
 export async function disablePush(): Promise<void> {

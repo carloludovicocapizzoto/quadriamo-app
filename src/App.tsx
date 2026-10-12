@@ -24,6 +24,7 @@ import { ProfileForm } from './ui/ProfileForm'
 import { HomeView } from './ui/HomeView'
 import { SharedView } from './ui/shared/SharedView'
 import { saveMorningSnapshot } from './beta/morning'
+import { syncPush } from './beta/push'
 import { bucketName } from './ui/names'
 import { noAccount, profilePrompt, setupPending } from './sync/profile'
 import { ConfirmedScreen, Gate, Splash } from './ui/Gate'
@@ -95,6 +96,7 @@ export default function App() {
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- una volta per caricamento dei dati
   useEffect(() => { if (state.loaded) ping() }, [state.loaded, !!data])
+  useEffect(() => { void syncPush(lang) }, [lang])
 
   // nuovo account senza dati su questo dispositivo: si crea il budget e parte la configurazione
   const newAccount = !data && state.loaded && !!sync.user && inSetup
