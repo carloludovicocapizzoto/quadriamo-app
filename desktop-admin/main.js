@@ -1,0 +1,65 @@
+// Quadriamo Admin (Mac e Windows): finestra dedicata all'area amministratore (…/admin/).
+// Il contenuto arriva dal sito e si aggiorna da solo; per la "cornice" l'app controlla se c'è una nuova versione e la propone.
+const path = require('path')
+const fs = require('fs')
+const { app, BrowserWindow, dialog, net, session, shell } = require('electron')
+
+const ADMIN_URL = 'https://carloludovicocapizzoto.github.io/quadriamo-app/admin/'
+const ADMIN_PREFIX = 'https://carloludovicocapizzoto.github.io/quadriamo-app/admin'
+const RELEASES_API = 'https://api.github.com/repos/carloludovicocapizzoto/quadriamo-app/releases?per_page=30'
+
+if (!app.requestSingleInstanceLock()) app.quit()
+
+let win = null
+function createWindow() {
+  win = new BrowserWindow({
+    width: 1280, height: 860, minWidth: 380, minHeight: 600,
+    title: 'Quadriamo Admin', backgroundColor: '#FAF7F2', autoHideMenuBar: true, show: false,
+    webPreferences: { contextIsolation: true, sandbox: true, spellcheck: false },
+  })
+  win.loadURL(ADMIN_URL)
+  win.once('ready-to-show', () => win.show())
+  // Supabase, GitHub, privacy e ogni altro sito si aprono nel browser
+  win.webContents.setWindowOpenHandler(({ url }) => { void shell.openExternal(url); return { action: 'deny' } })
+  win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith(ADMIN_PREFIX)) { e.preventDefault(); void shell.openExternal(url) } })
+}
+
+// a ogni nuova versione si svuota la copia salvata del sito (si riscarica quella aggiornata)
+async function freshSiteOnNewVersion() {
+  const mark = path.join(app.getPath('userData'), 'last-version.txt')
+  let last = ''
+  try { last = fs.readFileSync(mark, 'utf8') } catch { /* primo avvio */ }
+  if (last === app.getVersion()) return
+  await session.defaultSession.clearStorageData({ storages: ['serviceworkers', 'cachestorage'] }).catch(() => {})
+  await session.defaultSession.clearCache().catch(() => {})
+  try { fs.writeFileSync(mark, app.getVersion()) } catch { /* niente */ }
+}
+
+// nuove versioni: release "admin-vX.Y.Z" su GitHub (pubblicate come pre-release, così non toccano i link di Quadriamo)
+const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false }
+async function checkUpdate() {
+  try {
+    const res = await net.fetch(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' } })
+    const list = await res.json()
+    const rel = list.find(r => /^admin-v\d/.test(r.tag_name) && !r.draft)
+    if (!rel) return
+    const v = rel.tag_name.replace('admin-v', '')
+    if (!newer(v, app.getVersion())) return
+    const it = app.getLocale().startsWith('it')
+    const { response } = await dialog.showMessageBox({
+      type: 'info', buttons: it ? ['Scarica', 'Più tardi'] : ['Download', 'Later'], defaultId: 0, cancelId: 1,
+      message: it ? `È disponibile Quadriamo Admin ${v}` : `Quadriamo Admin ${v} is available`,
+      detail: it ? 'Scarica la nuova versione e installala al posto di quella di ora.' : 'Download the new version and install it over the current one.',
+    })
+    if (response === 0) void shell.openExternal(rel.html_url)
+  } catch { /* senza connessione: si riprova al prossimo avvio */ }
+}
+
+app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus() } })
+app.whenReady().then(async () => {
+  await freshSiteOnNewVersion()
+  createWindow()
+  if (app.isPackaged) { setTimeout(checkUpdate, 8000); setInterval(checkUpdate, 6 * 3600_000) }
+  app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
+})
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit() })
