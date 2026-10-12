@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { demoAppData } from './demo'
 import { ENTRY, fromSiteAccount } from './entry'
-import { computeMonth, monthOf, safeToSpend, todayIso, undated, type ClassifiedTx, type Transaction, type YearMonth } from './engine'
+import { computeMonth, monthOf, safeToSpend, streakOf, todayIso, undated, type ClassifiedTx, type Transaction, type YearMonth } from './engine'
 import { LANGS, useI18n, type Lang } from './i18n/core'
 import { useStore } from './store/context'
 import { createInitial } from './store/state'
@@ -24,7 +24,8 @@ import { ProfileForm } from './ui/ProfileForm'
 import { HomeView } from './ui/HomeView'
 import { SharedView } from './ui/shared/SharedView'
 import { saveMorningSnapshot } from './beta/morning'
-import { syncPush } from './beta/push'
+import { syncPush, touchPush } from './beta/push'
+import { StreakCelebration } from './ui/Streak'
 import { bucketName } from './ui/names'
 import { noAccount, profilePrompt, setupPending } from './sync/profile'
 import { ConfirmedScreen, Gate, Splash } from './ui/Gate'
@@ -80,13 +81,18 @@ export default function App() {
     () => data ? computeMonth(monthOf(today, data.settings.monthStartDay), data.transactions, data.settings, today) : null,
     [data, today])
 
+  const streak = useMemo(() => data && !data.demo ? streakOf(data.activity ?? [], today) : null, [data, today])
+  // aggiornato oggi: il server non manda il promemoria "a sorpresa" (riceve solo la data)
+  useEffect(() => { if (streak?.doneToday) void touchPush(today) }, [streak?.doneToday, today])
+
   // riepilogo per la notifica del mattino (resta sul dispositivo)
   useEffect(() => {
     if (!data || !homeResult || data.demo) { void saveMorningSnapshot(null); return }
     const items = safeToSpend(homeResult, data.settings, today).map(x => ({
       name: bucketName(data.settings.buckets.find(b => b.id === x.bucketId)!, t), free: Math.max(0, x.free) }))
-    void saveMorningSnapshot({ lang, currency: data.settings.currency, end: homeResult.period.end, items, updatedAt: new Date().toISOString() })
-  }, [data, homeResult, today, lang, t])
+    void saveMorningSnapshot({ lang, currency: data.settings.currency, end: homeResult.period.end, items, updatedAt: new Date().toISOString(),
+      streak: streak?.count ?? 0, lastActive: data.activity?.at(-1) })
+  }, [data, homeResult, today, lang, t, streak])
 
   // statistiche anonime (solo con consenso): una "fotografia" al giorno con soli conteggi
   const ping = (yes = statsConsent() === 'yes') => {
@@ -194,7 +200,7 @@ export default function App() {
         {tab === 'home' && sync.user && askProfile && !data.demo && !inSetup && (
           <section className="card"><h3 className="h-plain">{t('prof.promptTitle')}</h3><ProfileForm onDone={() => setAskProfile(false)} /></section>)}
         {tab === 'home' && showFeedback && <FeedbackCard onClose={() => setShowFeedback(false)} />}
-        {tab === 'home' && homeResult && <HomeView data={data} r={homeResult} today={today} onOpen={openTx}
+        {tab === 'home' && homeResult && <HomeView data={data} r={homeResult} today={today} streak={streak} onOpen={openTx}
           onAll={() => { setYm(null); setTab('transactions'); window.scrollTo(0, 0) }}
           onShared={() => { setTab('shared'); window.scrollTo(0, 0) }} />}
         {tab === 'shared' && <SharedView onBack={() => { setTab('home'); window.scrollTo(0, 0) }} onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} />}
@@ -217,6 +223,7 @@ export default function App() {
       </main>
 
       {note && <div className="toast" role="status">{note}</div>}
+      <StreakCelebration s={streak} />
 
       {(tab === 'home' || tab === 'month' || tab === 'transactions') && (
         <button className="fab" onClick={() => setForm({})} aria-label={t('action.add')}>+</button>

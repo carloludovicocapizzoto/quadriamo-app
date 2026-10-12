@@ -11,6 +11,8 @@ import sql0006 from '../../supabase/migrations/0006_admin_key.sql?raw'
 import sql0007 from '../../supabase/migrations/0007_private_profile_anonymous_research.sql?raw'
 import sql0008 from '../../supabase/migrations/0008_morning_push_alternatives_cohorts.sql?raw'
 import sql0010 from '../../supabase/migrations/0010_shared_budgets.sql?raw'
+import sql0011 from '../../supabase/migrations/0011_nudge_streak.sql?raw'
+import sql0012 from '../../supabase/migrations/0012_nudge_cron.sql?raw'
 import sql0009 from '../../supabase/migrations/0009_morning_push_cron.sql?raw'
 import sql0003 from '../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
 import fnCode from '../../supabase/functions/send-push/index.ts?raw'
@@ -367,10 +369,10 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
   const adminSql = adminKey
     ? `insert into public.admin_keys (name, key_hash)\nvalues ('${adminKey.name.replace(/'/g, "''")}', decode('${adminKey.hash}', 'hex'))\non conflict (key_hash) do update set name = excluded.name;`
     : `insert into public.admins (user_id)\nselect id from auth.users where email = '${email}'\non conflict do nothing;`
-  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n${sql0006}\n${sql0007}\n${sql0008}\n${sql0010}\n-- tu sei l'amministratore\n${adminSql}\n`
-  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.research !== false && setup.v8 !== false && setup.v10 !== false && setup.siteFeedback !== false && setup.adminKeys !== false
+  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n${sql0006}\n${sql0007}\n${sql0008}\n${sql0010}\n${sql0011}\n-- tu sei l'amministratore\n${adminSql}\n`
+  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.research !== false && setup.v8 !== false && setup.v10 !== false && setup.v11 !== false && setup.siteFeedback !== false && setup.adminKeys !== false
   // tabelle già create ma manca qualcosa: solo i pezzi mancanti
-  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.adminKeys === false ? sql0006 : '', setup.research === false ? sql0007 : '', setup.v8 === false ? sql0008 : '', setup.v10 === false ? sql0010 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
+  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.adminKeys === false ? sql0006 : '', setup.research === false ? sql0007 : '', setup.v8 === false ? sql0008 : '', setup.v10 === false ? sql0010 : '', setup.v11 === false ? sql0011 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
   const cronSql = sql0003.replace('<PROJECT_REF>', ref)
   const morningSql = sql0009.replace('<PROJECT_REF>', ref)
   return (
@@ -449,6 +451,18 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
           <div className="az-u-row"><Copy text={morningSql} label="Copia lo script" />
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
           <p className="az-hint">Ogni mattina alle 7:30 arriva a chi ha le notifiche attive. Il server manda solo la sveglia: il numero lo calcola il telefono.</p>
+        </Step>
+        <Step n={8} ok={null} manual={{ done: manual.includes(8), toggle: toggle(8) }} title="Promemoria a sorpresa per chi non ha aggiornato (facoltativo)">
+          <ol>
+            <li>Serve la funzione <code>send-push</code> aggiornata (pulsante qui sotto → send-push → Code → <b>Cmd+A</b>, <b>Cmd+V</b> → <b>Deploy</b>).</li>
+            <li>Poi copia lo script, incollalo in SQL Editor e premi <b>Run</b>. Non c'è niente da sostituire: riusa il segreto della notifica del mattino (passo 7).</li>
+          </ol>
+          <div className="az-u-row"><Copy text={fnCode} label="Copia il codice della funzione" />
+            <a className="az-btn" href={`${dash}/functions/send-push/code`} target="_blank" rel="noreferrer">↗ Apri send-push → Code</a></div>
+          <div className="az-u-row"><Copy text={sql0012} label="Copia lo script" />
+            <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
+          <p className="az-hint">A un'ora a caso tra le 9 e le 20, al massimo una volta al giorno, solo a chi oggi non ha ancora segnato niente.
+            L'app comunica solo la data dell'ultimo aggiornamento; il testo (con i giorni di slancio) lo scrive il telefono.</p>
         </Step>
       </div>
       <div className="az-card">

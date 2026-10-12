@@ -1,5 +1,5 @@
 // Stato dell'app e sue modifiche: funzioni pure, testate in state.test.ts.
-import { compareYm, daysBetween, defaultSettings, monthOf, normalize, seedRules, suggest, type ImportRow, type Investments, type Rule, type Settings, type Transaction, type YearMonth } from '../engine'
+import { compareYm, withDay, daysBetween, defaultSettings, monthOf, normalize, seedRules, suggest, type ImportRow, type Investments, type Rule, type Settings, type Transaction, type YearMonth } from '../engine'
 
 export interface AppData {
   version: 1
@@ -17,6 +17,7 @@ export interface AppData {
   profileUpdatedAt?: string
   home?: string[]                     // widget della Home scelti dall'utente, nell'ordine in cui li vuole
   homeUpdatedAt?: string
+  activity?: string[]                 // giorni (locali) in cui l'utente ha aggiornato Quadriamo: servono allo "slancio"
 }
 
 /** Entrate, obiettivi, carte, investimenti: dati sensibili, riservati all'utente (vedi sync/research per la ricerca anonima). */
@@ -101,6 +102,7 @@ export type Action =
   | { type: 'togglePayday'; month: string; bucketId: string }
   | { type: 'setProfile'; profile: PrivateProfile | null; at?: string }
   | { type: 'setHome'; widgets: string[]; at?: string }
+  | { type: 'checkIn'; at?: string }                     // "oggi niente spese": tiene vivo lo slancio
   | { type: 'replace'; data: AppData | null }
 
 export interface State { loaded: boolean; data: AppData | null }
@@ -121,7 +123,23 @@ export function migrate(d: AppData | null): AppData | null {
   return { ...d, settings: { ...d.settings, rules: seedRules() } }
 }
 
+/** Giorno locale (YYYY-MM-DD) di un istante. */
+function localDay(at: string): string {
+  const d = new Date(at)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/** Le azioni con cui l'utente aggiorna la sua situazione contano per lo slancio. */
+const ACTIVE: Action['type'][] = ['addTx', 'updateTx', 'deleteTx', 'confirmInbox', 'checkIn']
+
 export function reducer(state: State, a: Action): State {
+  const next = reduce(state, a)
+  if (!ACTIVE.includes(a.type) || !next.data || next.data === state.data || next.data.demo) return next
+  const day = localDay(('at' in a && a.at) || new Date().toISOString())
+  return { ...next, data: { ...next.data, activity: withDay(next.data.activity, day) } }
+}
+
+function reduce(state: State, a: Action): State {
   if (a.type === 'load') return { loaded: true, data: migrate(a.data) }
   if (a.type === 'replace') return { ...state, data: migrate(a.data) }
   const d = state.data
@@ -142,6 +160,8 @@ export function reducer(state: State, a: Action): State {
                                  deleted: { ...d.deleted, [a.id]: at } } }
     case 'setSettings':
       return { ...state, data: { ...d, settings: a.settings, settingsUpdatedAt: at } }
+    case 'checkIn':
+      return { ...state, data: { ...d } }
     case 'setHome':
       return { ...state, data: { ...d, home: a.widgets, homeUpdatedAt: at } }
     case 'setProfile':
@@ -209,7 +229,8 @@ export function parseBackup(text: string): AppData {
            ...(d.investments ? { investments: d.investments, investmentsUpdatedAt: d.investmentsUpdatedAt } : {}),
            inbox: d.inbox ?? [], importDone: d.importDone ?? {}, payday: d.payday ?? {},
            ...(d.profile ? { profile: d.profile, profileUpdatedAt: d.profileUpdatedAt } : {}),
-           ...(Array.isArray(d.home) ? { home: d.home, homeUpdatedAt: d.homeUpdatedAt } : {}) }
+           ...(Array.isArray(d.home) ? { home: d.home, homeUpdatedAt: d.homeUpdatedAt } : {}),
+           ...(Array.isArray(d.activity) ? { activity: d.activity } : {}) }
 }
 
 /** Parse di un importo scritto dall'utente: accetta "12,50", "12.50", "1.234,56", "1,234.56". */
@@ -257,6 +278,7 @@ export function mergeData(a: AppData, b: AppData): AppData {
   const investments = newerInv ? b.investments : (a.investments ?? b.investments)
   const newerHome = (b.homeUpdatedAt ?? '') > (a.homeUpdatedAt ?? '')
   const home = newerHome ? b.home : (a.home ?? b.home)
+  const activity = [...new Set([...(a.activity ?? []), ...(b.activity ?? [])])].sort().slice(-400)
   const newerProfile = (b.profileUpdatedAt ?? '') > (a.profileUpdatedAt ?? '')
   const profile = newerProfile ? b.profile : (a.profileUpdatedAt ? a.profile : (a.profile ?? b.profile))
   return {
@@ -265,6 +287,7 @@ export function mergeData(a: AppData, b: AppData): AppData {
     ...(investments ? { investments, investmentsUpdatedAt: newerInv ? b.investmentsUpdatedAt : a.investmentsUpdatedAt } : {}),
     inbox, importDone, payday,
     ...(home ? { home, homeUpdatedAt: newerHome ? b.homeUpdatedAt : a.homeUpdatedAt } : {}),
+    ...(activity.length ? { activity } : {}),
     ...(profile || a.profileUpdatedAt || b.profileUpdatedAt
       ? { profile, profileUpdatedAt: newerProfile ? b.profileUpdatedAt : a.profileUpdatedAt } : {}),
   }

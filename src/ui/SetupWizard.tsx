@@ -11,7 +11,6 @@ import { useSync } from '../sync/context'
 import { ProfileForm } from './ProfileForm'
 import { SettingsView, type SettingsSection } from './SettingsView'
 import { StepHeader, StepNav } from './Steps'
-import { MorningToggle } from './beta/MorningToggle'
 
 // configurazione iniziale: ogni sezione delle Impostazioni è un passaggio, nell'ordine in cui serve
 const STEPS: [SettingsSection, keyof Dict][] = [
@@ -99,7 +98,6 @@ function NotifyStep() {
         ? <p className="good-text"><b>✓ {t('setup.notifyOn')}</b></p>
         : <button type="button" className="btn primary big-btn" disabled={state === 'busy'} onClick={() => void ask()}>🔔 {t('setup.notifyBtn')}</button>}
       {state === 'denied' && <p className="small muted">{t('setup.notifyDenied')}</p>}
-      <MorningToggle />
       <p className="small muted">{t('setup.notifyHint')}</p>
     </div>
   )

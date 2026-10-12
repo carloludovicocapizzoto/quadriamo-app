@@ -38,10 +38,22 @@ async function register(sub: PushSubscription, lang: string) {
     p_endpoint: sub.endpoint, p_p256dh: j.keys?.p256dh ?? '', p_auth: j.keys?.auth ?? '', p_device: deviceId(), p_lang: lang,
   })
   if (error) throw error
-  // la notifica del mattino è inclusa, salvo che l'utente l'abbia spenta
-  let on = true
-  try { on = localStorage.getItem('q.morning') !== 'off' } catch { /* niente */ }
-  await supabase!.rpc('set_morning_push', { p_endpoint: sub.endpoint, p_on: on })
+  // la notifica del mattino è sempre inclusa nelle notifiche
+  await supabase!.rpc('set_morning_push', { p_endpoint: sub.endpoint, p_on: true })
+}
+
+/** Dice al server che oggi l'utente ha aggiornato Quadriamo (solo la data: niente importi), così non riceve
+ *  il promemoria "a sorpresa". Una volta al giorno per dispositivo. */
+export async function touchPush(day: string): Promise<void> {
+  try {
+    if (localStorage.getItem('q.touched') === day) return
+    if (!pushSupported() || Notification.permission !== 'granted') return
+    const reg = await navigator.serviceWorker.getRegistration()
+    const sub = await reg?.pushManager.getSubscription()
+    if (!sub) return
+    const { error } = await supabase!.rpc('touch_push', { p_endpoint: sub.endpoint, p_day: day })
+    if (!error) localStorage.setItem('q.touched', day)
+  } catch { /* offline: si riprova */ }
 }
 
 /** All'apertura: se le notifiche sono già attive, riallinea l'iscrizione sul server (anche quelle fatte prima che esistesse

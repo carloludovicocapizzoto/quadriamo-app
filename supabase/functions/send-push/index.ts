@@ -3,6 +3,8 @@
 // - mode "check": solo per l'amministratore, dice se i segreti sono impostati (pagina Configurazione della dashboard)
 // - mode "morning": ogni mattina (serve CRON_SECRET) -> a chi ha attivato "Oggi puoi spendere". Il server manda solo la
 //   "sveglia": il numero lo calcola il telefono con i suoi dati (push-sw.js), così nessun importo passa da qui
+// - mode "nudge": ogni ora del pomeriggio (serve CRON_SECRET) -> a caso, al massimo una volta al giorno, a chi oggi non ha
+//   ancora aggiornato Quadriamo (l'app comunica solo la data). Il testo, con i giorni di "slancio", lo scrive il telefono
 // - mode "scheduled": la chiama il promemoria automatico giornaliero (serve CRON_SECRET) -> a chi non riceve
 //   un promemoria da almeno 10 giorni
 // Segreti da impostare in Supabase (Edge Functions -> Secrets): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, CRON_SECRET.
@@ -44,7 +46,7 @@ async function handle(req: Request): Promise<Response> {
   const { mode = 'manual', title, body } = await req.json().catch(() => ({}))
   const url = Deno.env.get('SUPABASE_URL')!
 
-  if (mode === 'scheduled' || mode === 'morning') {
+  if (mode === 'scheduled' || mode === 'morning' || mode === 'nudge') {
     if (!env('CRON_SECRET') || (req.headers.get('x-cron-secret') ?? '').trim() !== env('CRON_SECRET')) return json({ error: 'forbidden' }, 403)
   } else {
     // solo l'amministratore: si controlla con il SUO accesso (o con il suo codice x-admin-key), tramite is_admin()
@@ -58,14 +60,14 @@ async function handle(req: Request): Promise<Response> {
   }
 
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-  let q = admin.from('push_subscriptions').select('endpoint, p256dh, auth_key, lang, created_at, last_prompt_at')
-  if (mode === 'morning') q = q.eq('morning', true)
+  let q = admin.from('push_subscriptions').select('endpoint, p256dh, auth_key, lang, created_at, last_prompt_at, last_active, last_nudge_at')
   if (mode === 'scheduled') {
     const cutoff = new Date(Date.now() - DAYS * 864e5).toISOString()
     q = q.lt('created_at', cutoff).or(`last_prompt_at.is.null,last_prompt_at.lt.${cutoff}`)
   }
-  const { data: subs, error } = await q
+  const { data: all, error } = await q
   if (error) return json({ error: error.message }, 500)
+  const subs = mode === 'nudge' ? (all ?? []).filter(nudgeToday) : all
 
   try {
     webpush.setVapidDetails('https://carloludovicocapizzoto.github.io/quadriamo-app/', env('VAPID_PUBLIC_KEY'), env('VAPID_PRIVATE_KEY'))
@@ -76,13 +78,14 @@ async function handle(req: Request): Promise<Response> {
   let sent = 0, removed = 0, failed = 0, lastError = ''
   for (const s of subs ?? []) {
     const t = TEXT[s.lang ?? ''] ?? TEXT.en
-    const payload = mode === 'morning'
-      ? JSON.stringify({ kind: 'morning', lang: s.lang ?? 'en', url: APP_URL.replace('?feedback=1', '') })
+    const payload = mode === 'morning' || mode === 'nudge'
+      ? JSON.stringify({ kind: mode, lang: s.lang ?? 'en', url: APP_URL.replace('?feedback=1', mode === 'nudge' ? '?add=1' : '') })
       : JSON.stringify({ title: title || t.title, body: body || t.body, url: APP_URL })
     try {
       await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth_key } }, payload, { TTL: 86400 })
       sent++
-      if (mode !== 'morning') await admin.from('push_subscriptions').update({ last_prompt_at: new Date().toISOString() }).eq('endpoint', s.endpoint)
+      if (mode === 'nudge') await admin.from('push_subscriptions').update({ last_nudge_at: new Date().toISOString() }).eq('endpoint', s.endpoint)
+      else if (mode !== 'morning') await admin.from('push_subscriptions').update({ last_prompt_at: new Date().toISOString() }).eq('endpoint', s.endpoint)
     } catch (e) {
       const code = (e as { statusCode?: number }).statusCode
       if (code === 404 || code === 410) { removed++; await admin.from('push_subscriptions').delete().eq('endpoint', s.endpoint) }
@@ -90,4 +93,24 @@ async function handle(req: Request): Promise<Response> {
     }
   }
   return json({ mode, total: subs?.length ?? 0, sent, removed, failed, ...(lastError ? { lastError } : {}) })
+}
+
+// ---------- promemoria a sorpresa ----------
+const ROME = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d)
+const HOUR = (d: Date) => Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', hourCycle: 'h23' }).format(d))
+const FIRST = 9, LAST = 20   // ore italiane in cui può arrivare
+
+interface Sub { created_at: string; last_active: string | null; last_nudge_at: string | null }
+/** Chi riceve il promemoria in questo giro: oggi non ha aggiornato, oggi non l'ha già ricevuto, e la sorte lo sceglie.
+ *  La probabilità cresce con le ore che restano, così arriva a un'ora a caso ma entro sera. */
+function nudgeToday(s: Sub): boolean {
+  const now = new Date(), today = ROME(now), hour = HOUR(now)
+  if (hour < FIRST || hour > LAST) return false
+  if (s.last_active && s.last_active >= today) return false
+  if (s.last_nudge_at && ROME(new Date(s.last_nudge_at)) === today) return false
+  if (Date.now() - Date.parse(s.created_at) < 12 * 3600e3) return false                 // appena iscritto: domani
+  const idle = s.last_active ? (Date.parse(today) - Date.parse(s.last_active)) / 864e5 : 99
+  // chi non apre da più di una settimana: al massimo ogni 3 giorni (niente insistenza)
+  if (idle > 7 && s.last_nudge_at && Date.now() - Date.parse(s.last_nudge_at) < 3 * 864e5) return false
+  return Math.random() < 1 / Math.max(1, LAST - hour + 1)
 }

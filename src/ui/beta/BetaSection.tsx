@@ -4,7 +4,6 @@ import { track } from '../../beta/telemetry'
 import { useI18n } from '../../i18n/core'
 import { supabase } from '../../sync/client'
 import { useSync } from '../../sync/context'
-import { MorningToggle } from './MorningToggle'
 import { PushToggle } from './PushToggle'
 
 const SITE = 'https://carloludovicocapizzoto.github.io/quadriamo-app/'
@@ -40,7 +39,6 @@ export function BetaSection({ onFeedback, onAdmin }: { onFeedback: () => void; o
       </div>
       {note && <p className="small good-text">✓ {note}</p>}
       <div className="top-gap"><PushToggle /></div>
-      <MorningToggle />
       <label className="check top-gap">
         <input type="checkbox" checked={stats} onChange={e => { setStats(e.target.checked); setStatsConsent(e.target.checked ? 'yes' : 'no') }} />
         {t('beta.stats')}

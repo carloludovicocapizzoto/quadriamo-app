@@ -1,11 +1,12 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { computeMonth, dailySpending, daysBetween, prevMonth, safeToSpend, type ClassifiedTx, type MonthResult } from '../engine'
+import { computeMonth, dailySpending, daysBetween, prevMonth, safeToSpend, type ClassifiedTx, type MonthResult, type Streak } from '../engine'
 import type { AppData } from '../store/state'
 import { useI18n } from '../i18n/core'
 import type { Dict } from '../i18n/en'
 import { useStore } from '../store/context'
 import { BucketDonut, DailyChart } from './HomeCharts'
 import { BUCKET_COLORS, bucketName, categoryName } from './names'
+import { StreakCard } from './Streak'
 import { TxRow } from './TxRow'
 
 // widget disponibili; i primi quattro sono quelli di partenza
@@ -15,8 +16,8 @@ const DEFAULT_HOME: WidgetId[] = ['left', 'today', 'flow', 'recent']
 const isWidget = (x: string): x is WidgetId => (WIDGETS as readonly string[]).includes(x)
 
 /** Home: solo l'essenziale, a widget che ognuno sceglie e ordina (la scelta si salva e si sincronizza). */
-export function HomeView({ data, r, today, onOpen, onAll, onShared }: {
-  data: AppData; r: MonthResult; today: string; onOpen: (tx: ClassifiedTx) => void; onAll: () => void; onShared: () => void
+export function HomeView({ data, r, today, streak, onOpen, onAll, onShared }: {
+  data: AppData; r: MonthResult; today: string; streak: Streak | null; onOpen: (tx: ClassifiedTx) => void; onAll: () => void; onShared: () => void
 }) {
   const { t } = useI18n()
   const { dispatch } = useStore()
@@ -30,6 +31,7 @@ export function HomeView({ data, r, today, onOpen, onAll, onShared }: {
         <div><h1>{t('home.titleMain')}</h1><p className="muted small">{t(`m.${r.ym.month}` as keyof Dict)} {r.ym.year}</p></div>
         <button className={`btn small-btn${edit ? ' primary' : ''}`} onClick={() => setEdit(!edit)}>{edit ? `✓ ${t('home.done')}` : `✎ ${t('home.edit')}`}</button>
       </div>
+      {streak && !edit && <StreakCard s={streak} today={today} />}
       {edit && <p className="muted small">{t('home.editHint')}</p>}
       {!active.length && !edit && <p className="muted">{t('home.empty')}</p>}
 
