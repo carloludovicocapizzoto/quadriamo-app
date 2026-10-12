@@ -112,7 +112,7 @@ def build(W, H, story=False):
     eyebrow(img, 60, top, 'Previsione di fine mese')
     y = text_block(img, 60, top + 60, 'Sai già come finisce il mese.', serif(96 if story else 84), INK, 960)
     y = text_block(img, 60, y + 14, 'Al ritmo di oggi, con le bollette in arrivo già contate. Se rischi di sforare lo vedi a metà mese, non alla fine.', sans(36), MUTED, 940)
-    card_from_shot(img, '12-forecast.jpg', (20, 40, 730, 560), 90, y + 60, 900)
+    card_from_shot(img, '12-forecast.jpg', (32, 474, 718, 966), 90, y + 60, 900)
     out.append(save(img, f'{tag}-03-previsione.jpg'))
 
     # 4. slancio
@@ -120,7 +120,7 @@ def build(W, H, story=False):
     eyebrow(img, 60, top, 'Slancio')
     y = text_block(img, 60, top + 60, 'Un minuto al giorno. E non vuoi più fermarti.', serif(96 if story else 84), INK, 960)
     y = text_block(img, 60, y + 14, 'Ogni giorno in cui segni le spese, la fiamma cresce. Niente spese? Basta un tocco su “Oggi niente spese”.', sans(36), MUTED, 940)
-    card_from_shot(img, '11-home.jpg', (20, 292, 730, 636), 90, y + 70, 900)
+    phone(img, '19-streak-sheet.jpg', W / 2, y + 60, 600 if story else 520, 430, 1180)
     out.append(save(img, f'{tag}-04-slancio.jpg'))
 
     # 5. privacy
