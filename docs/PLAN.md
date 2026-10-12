@@ -38,6 +38,14 @@ Dopo: import dell'estratto conto (CSV), collegamento con le banche (open banking
 - **Domani anche: notifiche già durante la registrazione.** Appena creato l'account, un passaggio "Attiva le notifiche"
   con il pulsante che apre subito l'avviso del sistema (Consenti). I browser lo permettono solo dopo un tocco dell'utente;
   su iPhone/iPad solo nell'app aperta dall'icona. Per l'app per computer, le notifiche di sistema di Mac e Windows.
+- **Da sviluppare (12/10/2026): budget di coppia o condiviso e report più avanzati.** Condiviso: un budget comune con
+  invito via email, ognuno con il suo account, spese di casa divise (50/50 o in proporzione alle entrate), "chi deve quanto"
+  a fine mese, e i budget personali che restano privati. Report: mese e anno in PDF/CSV, andamento per categoria su 12 mesi,
+  tasso di risparmio nel tempo, confronto tra periodi.
+- **Contenuti social per la beta, costruiti sul posizionamento** ("sai ogni giorno quanto puoi spendere senza costruire un
+  budget; lo stipendio si divide da solo in quattro parti; i tuoi dati restano tuoi"): una serie di post e reel sui vantaggi
+  concreti (il numero del giorno, il giorno di paga con i pocket, niente collegamento obbligatorio alla banca, privacy) e sul
+  confronto con il "budget fai da te", più la chiamata a provare la beta e dare feedback. Prima campagna già in marketing/.
 - In attesa di una scelta: Free/Pro con abbonamento Stripe, da preparare in modalità test.
 
 - Dominio scelto: **quadriamo.com** (verificato libero l'11/10/2026, anche quadriamo.it): da comprare presto.
