@@ -83,9 +83,9 @@ export default function App() {
     () => data ? computeMonth(monthOf(today, data.settings.monthStartDay), data.transactions, data.settings, today) : null,
     [data, today])
 
-  const streak = useMemo(() => data && !data.demo ? streakOf(data.activity ?? [], today) : null, [data, today])
+  const streak = useMemo(() => data ? streakOf(data.activity ?? [], today) : null, [data, today])
   // aggiornato oggi: il server non manda il promemoria "a sorpresa" (riceve solo la data)
-  useEffect(() => { if (streak?.doneToday) void touchPush(today) }, [streak?.doneToday, today])
+  useEffect(() => { if (streak?.doneToday && !data?.demo) void touchPush(today) }, [streak?.doneToday, today, data?.demo])
 
   // riepilogo per la notifica del mattino (resta sul dispositivo)
   useEffect(() => {
