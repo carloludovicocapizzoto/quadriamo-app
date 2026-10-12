@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { isStandalone } from '../beta/device'
-import { SPLIT, daysBetween, monthOf, periodOf, todayIso } from '../engine'
+import { SPLIT, applyPersona, daysBetween, mainIncome, monthOf, periodOf, todayIso, type Persona } from '../engine'
 import { useStore } from '../store/context'
 import { newId, parseAmount } from '../store/state'
 import { BUCKET_COLORS, bucketName } from './names'
@@ -19,7 +19,7 @@ const STEPS: [SettingsSection, keyof Dict][] = [
   ['recurring', 'settings.recurring'], ['rules', 'rules.title'], ['fx', 'settings.fx'], ['data', 'settings.data'],
 ]
 
-type Kind = { kind: 'notify' } | { kind: 'salary' } | { kind: 'settings'; section: SettingsSection; title: keyof Dict } | { kind: 'profile' }
+type Kind = { kind: 'persona' } | { kind: 'notify' } | { kind: 'salary' } | { kind: 'settings'; section: SettingsSection; title: keyof Dict } | { kind: 'profile' }
 const isDesktopApp = () => 'quadriamoDesktop' in window || /QuadriamoDesktop\//.test(navigator.userAgent)
 
 /**
@@ -34,7 +34,10 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
   // fine della configurazione: un attimo di "Tutto pronto!", poi si entra nell'app
   const finish = () => { setReady(true); window.scrollTo(0, 0); setTimeout(onDone, 1600) }
   const [canNotify] = useState(() => !!sync.user && pushSupported() && !isDesktopApp() && (isStandalone() || !/iPhone|iPad|iPod/.test(navigator.userAgent)))
+  const { state } = useStore()
+  const student = state.data?.settings.persona === 'student'
   const steps: Kind[] = [
+    { kind: 'persona' },
     ...(canNotify ? [{ kind: 'notify' } as Kind] : []),
     // subito dopo valuta e giorno: lo stipendio, per vedere il proprio numero del giorno prima ancora di registrare una spesa
     ...STEPS.flatMap(([section, title]) => section === 'general'
@@ -58,7 +61,8 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
       </section>
     )
   }
-  const title = cur.kind === 'notify' ? t('setup.notifyTitle') : cur.kind === 'salary' ? t('setup.salaryTitle')
+  const title = cur.kind === 'persona' ? t('setup.personaTitle') : cur.kind === 'notify' ? t('setup.notifyTitle')
+    : cur.kind === 'salary' ? t(student ? 'setup.incomeTitle' : 'setup.salaryTitle')
     : cur.kind === 'profile' ? t('setup.profile') : t(cur.title)
   return (
     <section className="card wizard">
@@ -66,6 +70,7 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
       {step === 1 && <p className="muted small">{t('setup.intro')}</p>}
       <StepHeader n={step} total={total} title={title} />
       <div className="step-body" key={step}>
+        {cur.kind === 'persona' && <PersonaStep onPick={() => { window.scrollTo(0, 0); setStep(step + 1) }} />}
         {cur.kind === 'notify' && <NotifyStep />}
         {cur.kind === 'settings' && <SettingsView only={[cur.section]} wizard />}
         {cur.kind === 'salary' && <SalaryStep />}
@@ -79,6 +84,30 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
         </form>
       )}
     </section>
+  )
+}
+
+/** "Chi sei?": lo studente fuori sede parte con regola e categorie pensate per lui (si cambiano quando vuoi). */
+function PersonaStep({ onPick }: { onPick: () => void }) {
+  const { t } = useI18n()
+  const { state, dispatch } = useStore()
+  const cur = state.data?.settings.persona
+  const pick = (p: Persona) => {
+    dispatch({ type: 'setSettings', settings: applyPersona(state.data!.settings, p) })
+    setTimeout(onPick, 180)
+  }
+  const opts: { p: Persona; icon: 'growth' | 'home' | 'user' }[] = [{ p: 'student', icon: 'home' }, { p: 'worker', icon: 'growth' }, { p: 'other', icon: 'user' }]
+  return (
+    <div className="persona">
+      <p className="muted">{t('setup.personaText')}</p>
+      {opts.map(o => (
+        <button key={o.p} type="button" className={`persona-card${cur === o.p ? ' on' : ''}`} onClick={() => pick(o.p)}>
+          <span className="persona-ico"><Icon name={o.icon} size={24} /></span>
+          <span><b>{t(`persona.${o.p}` as keyof Dict)}</b><small>{t(`persona.${o.p}D` as keyof Dict)}</small></span>
+          <Icon name="chevron" size={20} />
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -111,7 +140,19 @@ function SalaryStep() {
   const data = state.data!
   const today = todayIso()
   const period = periodOf(monthOf(today, data.settings.monthStartDay), data.settings.monthStartDay)
-  const already = data.transactions.find(x => x.category === 'salary' && x.date && x.date >= period.start && x.date <= period.end)
+  const income = mainIncome(data.settings)
+  const student = data.settings.persona === 'student'
+  const already = data.transactions.find(x => x.category === income && x.date && x.date >= period.start && x.date <= period.end)
+  const rentName = t('setup.rentName')
+  const rent = data.settings.recurring.find(x => x.name === rentName && x.category === 'fixedCosts')
+  const [rentRaw, setRentRaw] = useState(rent ? String(rent.amount).replace('.', ',') : '')
+  const saveRent = (v: string) => {
+    setRentRaw(v)
+    const n = parseAmount(v)
+    const others = data.settings.recurring.filter(x => x !== rent)
+    const recurring = n && n > 0 ? [...others, { name: rentName, amount: n, category: 'fixedCosts', day: 1, active: true }] : others
+    dispatch({ type: 'setSettings', settings: { ...data.settings, recurring } })
+  }
   const [raw, setRaw] = useState(already?.amount ? String(already.amount).replace('.', ',') : '')
   const amount = parseAmount(raw) ?? 0
   const days = Math.max(1, daysBetween(today, period.end) + 1)
@@ -120,14 +161,17 @@ function SalaryStep() {
     setRaw(v)
     const n = parseAmount(v)
     if (!n || n <= 0) { if (already) dispatch({ type: 'deleteTx', id: already.id }); return }
-    const tx = { id: already?.id ?? newId(), date: already?.date ?? today, description: t('c.salary'), category: 'salary', amount: n, paidFrom: SPLIT }
+    const tx = { id: already?.id ?? newId(), date: already?.date ?? today, description: t(`c.${income}` as keyof Dict), category: income, amount: n, paidFrom: SPLIT }
     dispatch({ type: already ? 'updateTx' : 'addTx', tx })
   }
   return (
     <div className="salary-step">
-      <p>{t('setup.salaryText')}</p>
-      <label className="field"><span>{t('setup.salaryLabel')} ({cur})</span>
-        <input className="salary-input" inputMode="decimal" placeholder="1.600" value={raw} onChange={e => save(e.target.value.replace(/[^\d.,]/g, ''))} autoFocus /></label>
+      <p>{t(student ? 'setup.studentText' : 'setup.salaryText')}</p>
+      <label className="field"><span>{t(student ? 'setup.studentLabel' : 'setup.salaryLabel')} ({cur})</span>
+        <input className="salary-input" inputMode="decimal" placeholder={student ? '900' : '1.600'} value={raw} onChange={e => save(e.target.value.replace(/[^\d.,]/g, ''))} autoFocus /></label>
+      {student && <label className="field"><span>{t('setup.rentLabel')} ({cur})</span>
+        <input inputMode="decimal" placeholder="380" value={rentRaw} onChange={e => saveRent(e.target.value.replace(/[^\d.,]/g, ''))} />
+        <small className="muted">{t('setup.rentHint')}</small></label>}
       {amount > 0 && (
         <div className="salary-preview" key={Math.round(amount)}>
           <ul>

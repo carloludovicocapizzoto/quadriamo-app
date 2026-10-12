@@ -36,6 +36,7 @@ export interface Settings {
   fxManual?: Record<string, number> // cambi scritti a mano: hanno la precedenza su quelli automatici
   fxDate?: string                   // data dei cambi automatici
   rules?: Rule[]                    // regole a parole chiave per riconoscere le transazioni importate
+  persona?: 'student' | 'worker' | 'other'   // risposta a "Chi sei?" al primo avvio
 }
 
 export const SPLIT = 'split' as const   // entrata divisa secondo la regola

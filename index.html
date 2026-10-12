@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Quadriamo — I tuoi soldi, in quattro</title>
-  <meta name="description" content="Dividi lo stipendio in 4 parti con la regola 55-20-15-10, registra una spesa in 5 secondi e sai sempre quanto puoi ancora spendere. Gratis durante la beta.">
+  <meta name="description" content="Per studenti fuori sede e chi inizia a gestire i soldi: scrivi quanto ti arriva e l'affitto, Quadriamo divide il resto e ogni mattina ti dice quanto puoi spendere oggi. Niente Excel, gratis in beta.">
   <meta name="theme-color" content="#1F2328">
   <meta property="og:title" content="Quadriamo — I tuoi soldi, in quattro">
   <meta property="og:description" content="Il budget con la regola 55-20-15-10: semplice, europeo, rispettoso della privacy.">
@@ -73,6 +73,84 @@
         </div>
         <div class="ph-fab">+</div>
       </div>
+    </div>
+  </section>
+
+  <!-- calcolatore: il proprio numero del giorno in 10 secondi -->
+  <section id="calcola" class="alt" aria-labelledby="calc-title">
+    <div class="site-wrap calc">
+      <div class="calc-in">
+        <p class="eyebrow" data-i18n="calc.eyebrow"></p>
+        <h2 id="calc-title" data-i18n="calc.title"></h2>
+        <p class="muted" data-i18n="calc.text"></p>
+        <div class="calc-who" role="radiogroup" aria-label="Profilo">
+          <button type="button" class="on" data-who="student" role="radio" aria-checked="true" data-i18n="calc.student"></button>
+          <button type="button" data-who="worker" role="radio" aria-checked="false" data-i18n="calc.worker"></button>
+        </div>
+        <label class="calc-field"><span data-i18n="calc.income"></span><output id="calc-income-v"></output>
+          <input type="range" id="calc-income" min="300" max="3000" step="10" value="950"></label>
+        <label class="calc-field"><span data-i18n="calc.rent"></span><output id="calc-rent-v"></output>
+          <input type="range" id="calc-rent" min="0" max="1500" step="10" value="380"></label>
+        <label class="calc-field"><span data-i18n="calc.bills"></span><output id="calc-bills-v"></output>
+          <input type="range" id="calc-bills" min="0" max="300" step="5" value="40"></label>
+      </div>
+      <div class="calc-out" aria-live="polite">
+        <p class="calc-label" data-i18n="calc.today"></p>
+        <p class="calc-big" id="calc-day">—</p>
+        <p class="calc-week"><span data-i18n="calc.week"></span> <b id="calc-week">—</b></p>
+        <ul class="calc-parts">
+          <li><i class="c1"></i><span data-i18n="calc.p1"></span><b id="calc-p1"></b><span class="calc-bar"><span id="calc-b1"></span></span></li>
+          <li><i class="c2"></i><span data-i18n="calc.p2"></span><b id="calc-p2"></b><span class="calc-bar"><span id="calc-b2"></span></span></li>
+          <li><i class="c3"></i><span data-i18n="calc.p3"></span><b id="calc-p3"></b><span class="calc-bar"><span id="calc-b3"></span></span></li>
+          <li><i class="c4"></i><span data-i18n="calc.p4"></span><b id="calc-p4"></b><span class="calc-bar"><span id="calc-b4"></span></span></li>
+        </ul>
+        <p class="calc-warn" id="calc-warn" hidden data-i18n="calc.warn"></p>
+        <a class="btn calc-cta" href="inizia.html" data-i18n="calc.cta"></a>
+        <p class="muted small" data-i18n="calc.note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- demo: il telefono resta fermo mentre si scorre e racconta l'app in sei passi -->
+  <section id="demo" class="site-wrap story" aria-labelledby="story-title">
+    <div class="story-head"><p class="eyebrow" data-i18n="story.eyebrow"></p><h2 id="story-title" data-i18n="story.title"></h2></div>
+    <div class="story-grid">
+      <div class="story-phone" aria-hidden="true" data-step="1">
+        <div class="sp-screen">
+          <div class="sp-top"><span class="sp-logo"><i></i><i></i><i></i><i></i></span><span class="sp-flame"><svg viewBox="0 0 24 32" class="sp-fl"><path fill="#F2542D" d="M12 1c1 5 7 8.5 7 16a7 7 0 0 1-14 0c0-3.6 1.8-6 3.6-7.6-.1 2.2.7 3.8 2.1 4.6C10 9.8 10.6 5 12 1Z"/><path fill="#FFD08A" d="M12 15.5c.5 2.4 3.2 3.6 3.2 6.6a3.2 3.2 0 0 1-6.4 0c0-1.9 1-3 2-3.8-.1 1 .3 1.8 1 2.2-.3-1.8 0-3.4.2-5Z"/></svg><b class="sp-streak"><span class="v1">12</span><span class="v2">13</span></b></span></div>
+          <div class="sp-notif"><b data-i18n="story.n1"></b><span data-i18n="story.n1b"></span></div>
+          <div class="sp-hero"><small data-i18n="story.today"></small><b class="sp-num"><span class="v1">21,40 €</span><span class="v2">20,20 €</span></b></div>
+          <div class="sp-parts"><span class="c1"><i></i></span><span class="c2"><i></i></span><span class="c3"><i></i></span><span class="c4"><i></i></span></div>
+          <div class="sp-add"><span class="sp-amt">1,20 €</span><span class="sp-cat" data-i18n="story.coffee"></span><span class="sp-save" data-i18n="story.save"></span></div>
+          <div class="sp-streakcard"><span class="sp-bigflame"><svg viewBox="0 0 24 32" class="sp-fl"><path fill="#F2542D" d="M12 1c1 5 7 8.5 7 16a7 7 0 0 1-14 0c0-3.6 1.8-6 3.6-7.6-.1 2.2.7 3.8 2.1 4.6C10 9.8 10.6 5 12 1Z"/><path fill="#FFD08A" d="M12 15.5c.5 2.4 3.2 3.6 3.2 6.6a3.2 3.2 0 0 1-6.4 0c0-1.9 1-3 2-3.8-.1 1 .3 1.8 1 2.2-.3-1.8 0-3.4.2-5Z"/></svg></span><b data-i18n="story.days"></b><span class="sp-dots"><i></i><i></i><i></i><i></i><i></i><i></i><i class="new"></i></span></div>
+          <div class="sp-shared"><b data-i18n="story.flat"></b><span data-i18n="story.owes"></span></div>
+          <div class="sp-tab"><i></i><i></i><i class="plus">+</i><i></i><i></i></div>
+        </div>
+      </div>
+      <ol class="story-steps">
+        <li data-step="1"><b data-i18n="story.s1t"></b><span data-i18n="story.s1"></span></li>
+        <li data-step="2"><b data-i18n="story.s2t"></b><span data-i18n="story.s2"></span></li>
+        <li data-step="3"><b data-i18n="story.s3t"></b><span data-i18n="story.s3"></span></li>
+        <li data-step="4"><b data-i18n="story.s4t"></b><span data-i18n="story.s4"></span></li>
+        <li data-step="5"><b data-i18n="story.s5t"></b><span data-i18n="story.s5"></span></li>
+        <li data-step="6"><b data-i18n="story.s6t"></b><span data-i18n="story.s6"></span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- numeri, con la fonte -->
+  <section id="numeri" class="alt" aria-labelledby="data-title">
+    <div class="site-wrap">
+      <h2 id="data-title" data-i18n="data.title"></h2>
+      <div class="data-grid">
+        <article class="data-card"><b class="data-n">704 €</b><p data-i18n="data.rent"></p>
+          <a href="https://www.teleborsa.it/DettaglioNews/49_2026-08-11_TLB/Stanze-in-affitto-in-un-anno-i-prezzi-calano-del-62-a-livello-nazionale.html" target="_blank" rel="noopener" data-i18n="data.rentSrc"></a></article>
+        <article class="data-card"><b class="data-n">391.000</b><p data-i18n="data.away"></p>
+          <a href="https://www.orizzontescuola.it/quasi-400mila-studenti-universitari-sono-fuori-sede-basilicata-e-valle-daosta-in-testa-poi-molise-trentino-e-alto-adige/" target="_blank" rel="noopener" data-i18n="data.awaySrc"></a></article>
+        <article class="data-card"><b class="data-n">10,7<small>/20</small></b><p data-i18n="data.lit"></p>
+          <a href="https://www.bancaditalia.it/pubblicazioni/indagini-alfabetizzazione/2023-indagini-alfabetizzazione/index.html" target="_blank" rel="noopener" data-i18n="data.litSrc"></a></article>
+      </div>
+      <p class="data-punch" data-i18n="data.punch"></p>
     </div>
   </section>
 
@@ -222,6 +300,7 @@
   <p class="site-wrap muted small" data-i18n="foot.legal"></p>
 </footer>
 <script src="/home.js"></script>
+<script src="/landing.js"></script>
 <script type="module" src="/src/site/feedback.ts"></script>
 </body>
 </html>

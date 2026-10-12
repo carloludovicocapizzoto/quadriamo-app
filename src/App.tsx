@@ -20,7 +20,7 @@ import { TopBar } from './ui/shell/TopBar'
 import { BottomNav, type MainTab } from './ui/shell/BottomNav'
 import { AnalysisScreen, type AnalysisView } from './ui/screens/AnalysisScreen'
 import { ProfileScreen, type ProfilePage } from './ui/screens/ProfileScreen'
-import { todayBudget } from './engine'
+import { mainIncome, todayBudget } from './engine'
 import { usePlan } from './billing/plan'
 import { BUCKET_COLORS } from './ui/names'
 import { saveMorningSnapshot } from './beta/morning'
@@ -144,9 +144,9 @@ export default function App() {
   // ingresso: chi non ha fatto l'accesso (e non ha scelto di usarla senza account) vede benvenuto e accesso
   if (sync.enabled && !sync.user && !sync.recovery && (!noAccount.get() || (authOpen && !data))) {
     return <Gate hasData={!!data} onLocal={startLocal}
-      onDemo={() => { noAccount.set(); setSetupTick(x => x + 1); dispatch({ type: 'replace', data: demoAppData(today) }) }} />
+      onDemo={() => { noAccount.set(); setSetupTick(x => x + 1); dispatch({ type: 'replace', data: demoAppData(today, lang) }) }} />
   }
-  if (!sync.enabled && !data) return <Gate hasData={false} onLocal={startLocal} onDemo={() => dispatch({ type: 'replace', data: demoAppData(today) })} />
+  if (!sync.enabled && !data) return <Gate hasData={false} onLocal={startLocal} onDemo={() => dispatch({ type: 'replace', data: demoAppData(today, lang) })} />
 
   const header = (
     <header className="top">
@@ -188,7 +188,7 @@ export default function App() {
         {header}
         <Onboarding
           onStart={(currency, startDay) => dispatch({ type: 'replace', data: createInitial(currency, today, startDay) })}
-          onDemo={() => dispatch({ type: 'replace', data: demoAppData(today) })} />
+          onDemo={() => dispatch({ type: 'replace', data: demoAppData(today, lang) })} />
       </div>
     )
   }
@@ -237,7 +237,7 @@ export default function App() {
           <section className="card"><h3 className="h-plain">{t('prof.promptTitle')}</h3><ProfileForm onDone={() => setAskProfile(false)} /></section>)}
         {tab === 'home' && showFeedback && <FeedbackCard onClose={() => setShowFeedback(false)} />}
         {tab === 'home' && homeResult && <HomeScreen data={data} r={homeResult} today={today} streak={streak} reviewed={reviewed}
-          onAdd={kind => setForm(kind === 'income' ? { prefill: { category: 'salary' } } : {})}
+          onAdd={kind => setForm(kind === 'income' ? { prefill: { category: mainIncome(data.settings) } } : {})}
           onOpen={openTx}
           onAll={() => { setYm(null); go('transactions') }}
           onImport={() => { setYm(null); go('transactions'); setTimeout(() => document.querySelector<HTMLInputElement>('input[type=file]')?.click(), 120) }}

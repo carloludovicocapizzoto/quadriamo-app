@@ -387,3 +387,16 @@ body.sheet-open { overflow: hidden; }
 .swipe-hint span:last-child { animation-direction: reverse; }
 @keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
 @media (prefers-reduced-motion: reduce) { .swipe-page.from-left, .swipe-page.from-right, .swipe-hint span { animation: none; } }
+
+/* ---------- chi sei ---------- */
+.persona { display: grid; gap: var(--s3); }
+.persona > p { margin: 0 0 var(--s1); }
+.persona-card { display: grid; grid-template-columns: 48px 1fr 20px; gap: var(--s3); align-items: center; padding: var(--s4); border-radius: var(--r-lg); text-align: left;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; box-shadow: var(--e1);
+  transition: transform .15s var(--spring), border-color .15s; }
+.persona-card:active { transform: scale(.98); }
+.persona-card.on { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent); }
+.persona-card > span:nth-child(2) { display: grid; gap: 2px; }
+.persona-card small { color: var(--muted); font-size: 13px; line-height: 1.35; }
+.persona-card > .ico { color: var(--muted); }
+.persona-ico { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }

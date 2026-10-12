@@ -76,4 +76,13 @@ await shot('15-growing.jpg', scrollTo(byText('.widget', 'Categorie che crescono'
 await click('Profilo', '.tabbar button'); await sleep(900); await shot('17-profile.jpg', clean)
 await shot('22-profile-list.jpg', scrollTo(`document.querySelector('.badges')`))
 await js(`document.querySelector('.tab-add').click()`); await sleep(900); await shot('16-add.jpg')
+// primo avvio senza account: "Chi sei?" e le entrate dello studente
+await js(`indexedDB.deleteDatabase('keyval-store'); localStorage.clear(); localStorage.setItem('quadriamo.lang', '${LANG}')`)
+await cdp('Page.reload'); await sleep(3000)
+await click('Inizia'); await click('Preferisco continuare nel browser'); await click('Continua senza account'); await sleep(1200)
+await shot('31-persona.jpg')
+await js(`document.querySelector('.persona-card').click()`); await sleep(900)
+await js(`[...document.querySelectorAll('button')].find(b => b.textContent.trim().startsWith('Avanti'))?.click()`); await sleep(900)
+await type('.salary-input', '980'); await js(`document.querySelectorAll('.salary-step input')[1].focus()`); await cdp('Input.insertText', { text: '380' }); await sleep(900)
+await shot('32-income.jpg', 'window.scrollTo(0,0)')
 ws.close(); chrome.kill()
