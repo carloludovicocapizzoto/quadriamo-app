@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { isStandalone } from '../beta/device'
+import { enablePush, pushSupported } from '../beta/push'
 import { useI18n } from '../i18n/core'
 import type { Dict } from '../i18n/en'
 import { useSync } from '../sync/context'
@@ -12,7 +14,13 @@ const STEPS: [SettingsSection, keyof Dict][] = [
   ['recurring', 'settings.recurring'], ['rules', 'rules.title'], ['fx', 'settings.fx'], ['data', 'settings.data'],
 ]
 
-/** Configurazione a passaggi dopo la registrazione (o "continua senza account"); ultimo passaggio il profilo, se hai un account. */
+type Kind = { kind: 'notify' } | { kind: 'settings'; section: SettingsSection; title: keyof Dict } | { kind: 'profile' }
+const isDesktopApp = () => 'quadriamoDesktop' in window || /QuadriamoDesktop\//.test(navigator.userAgent)
+
+/**
+ * Configurazione a passaggi dopo la registrazione (o "continua senza account"). Con l'account, il primo passaggio chiede
+ * subito di attivare le notifiche (dove il dispositivo le supporta) e l'ultimo è il profilo facoltativo.
+ */
 export function SetupWizard({ onDone }: { onDone: () => void }) {
   const { t } = useI18n()
   const sync = useSync()
@@ -20,8 +28,14 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
   const [ready, setReady] = useState(false)
   // fine della configurazione: un attimo di "Tutto pronto!", poi si entra nell'app
   const finish = () => { setReady(true); window.scrollTo(0, 0); setTimeout(onDone, 1600) }
-  const total = STEPS.length + (sync.user ? 1 : 0)
-  const isProfile = step > STEPS.length
+  const [canNotify] = useState(() => !!sync.user && pushSupported() && !isDesktopApp() && (isStandalone() || !/iPhone|iPad|iPod/.test(navigator.userAgent)))
+  const steps: Kind[] = [
+    ...(canNotify ? [{ kind: 'notify' } as Kind] : []),
+    ...STEPS.map(([section, title]) => ({ kind: 'settings', section, title }) as Kind),
+    ...(sync.user ? [{ kind: 'profile' } as Kind] : []),
+  ]
+  const total = steps.length
+  const cur = steps[step - 1]
   const next = (e: FormEvent) => {
     e.preventDefault()
     window.scrollTo(0, 0)
@@ -36,16 +50,18 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
       </section>
     )
   }
+  const title = cur.kind === 'notify' ? t('setup.notifyTitle') : cur.kind === 'profile' ? t('setup.profile') : t(cur.title)
   return (
     <section className="card wizard">
       <h1>{t('setup.title')}</h1>
       {step === 1 && <p className="muted small">{t('setup.intro')}</p>}
-      <StepHeader n={step} total={total} title={isProfile ? t('setup.profile') : t(STEPS[step - 1][1])} />
+      <StepHeader n={step} total={total} title={title} />
       <div className="step-body" key={step}>
-        {isProfile ? <ProfileForm withShares={false} onDone={finish} />
-          : <SettingsView only={[STEPS[step - 1][0]]} wizard />}
+        {cur.kind === 'notify' && <NotifyStep />}
+        {cur.kind === 'settings' && <SettingsView only={[cur.section]} wizard />}
+        {cur.kind === 'profile' && <ProfileForm withShares={false} onDone={finish} />}
       </div>
-      {!isProfile && (
+      {cur.kind !== 'profile' && (
         <form onSubmit={next}>
           <StepNav onBack={step > 1 ? () => setStep(step - 1) : undefined}
             next={step < total ? `${t('step.next')} →` : t('setup.finish')}
@@ -53,5 +69,27 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
         </form>
       )}
     </section>
+  )
+}
+
+/** Primo passaggio dopo la registrazione: il pulsante apre subito l'avviso del sistema per consentire le notifiche. */
+function NotifyStep() {
+  const { t, lang } = useI18n()
+  const [state, setState] = useState<'idle' | 'busy' | 'on' | 'denied'>(() =>
+    typeof Notification !== 'undefined' && Notification.permission === 'granted' ? 'on' : 'idle')
+  async function ask() {
+    setState('busy')
+    try { setState((await enablePush(lang)) ? 'on' : 'denied') } catch { setState('denied') }
+  }
+  return (
+    <div className="notify-step">
+      <div className="notify-bell" aria-hidden="true">🔔</div>
+      <p>{t('setup.notifyText')}</p>
+      {state === 'on'
+        ? <p className="good-text"><b>✓ {t('setup.notifyOn')}</b></p>
+        : <button type="button" className="btn primary big-btn" disabled={state === 'busy'} onClick={() => void ask()}>🔔 {t('setup.notifyBtn')}</button>}
+      {state === 'denied' && <p className="small muted">{t('setup.notifyDenied')}</p>}
+      <p className="small muted">{t('setup.notifyHint')}</p>
+    </div>
   )
 }

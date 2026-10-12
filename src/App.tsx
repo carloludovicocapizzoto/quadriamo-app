@@ -21,6 +21,7 @@ import { BetaSection } from './ui/beta/BetaSection'
 import { ConsentCard } from './ui/beta/ConsentCard'
 import { FeedbackCard } from './ui/beta/FeedbackCard'
 import { ProfileForm } from './ui/ProfileForm'
+import { HomeView } from './ui/HomeView'
 import { noAccount, profilePrompt, setupPending } from './sync/profile'
 import { ConfirmedScreen, Gate, Splash } from './ui/Gate'
 import { isStandalone } from './beta/device'
@@ -28,7 +29,7 @@ import { LoginScreen } from './ui/AccountSection'
 import { SetupWizard } from './ui/SetupWizard'
 import { guessCurrency } from './ui/names'
 
-type Tab = 'month' | 'transactions' | 'year' | 'investments' | 'settings'
+type Tab = 'home' | 'month' | 'transactions' | 'year' | 'investments' | 'settings'
 
 export default function App() {
   const { t, lang, setLang } = useI18n()
@@ -36,7 +37,7 @@ export default function App() {
   const sync = useSync()
   const today = todayIso()
   // ?login=1 / ?signup=1 (pulsanti del sito): si apre direttamente l'area account
-  const [tab, setTab] = useState<Tab>('month')
+  const [tab, setTab] = useState<Tab>('home')
   const [ym, setYm] = useState<YearMonth | null>(null)
   const [year, setYear] = useState(() => Number(todayIso().slice(0, 4)))
   // link di inserimento rapido: ?add=1&amount=12,50&desc=Pizza&cat=eatingOut (scorciatoia sull'icona, Comandi Rapidi)
@@ -70,6 +71,9 @@ export default function App() {
   const result = useMemo(
     () => data && current ? computeMonth(current, data.transactions, data.settings, today) : null,
     [data, current, today])
+  const homeResult = useMemo(
+    () => data ? computeMonth(monthOf(today, data.settings.monthStartDay), data.transactions, data.settings, today) : null,
+    [data, today])
 
   // statistiche anonime (solo con consenso): una "fotografia" al giorno con soli conteggi
   const ping = (yes = statsConsent() === 'yes') => {
@@ -156,7 +160,7 @@ export default function App() {
   }
   // la data proposta è oggi se si guarda il mese corrente, altrimenti l'inizio del mese guardato
   const isCurrent = result.period.start <= today && today <= result.period.end
-  const defaultDate = isCurrent ? today : result.period.start
+  const defaultDate = isCurrent || tab === 'home' ? today : result.period.start
 
   return (
     <div className="app has-nav">
@@ -172,10 +176,12 @@ export default function App() {
       )}
 
       <main className="app-enter">
-        {tab === 'month' && <ConsentCard onAnswer={yes => ping(yes)} />}
-        {tab === 'month' && sync.user && askProfile && !data.demo && !inSetup && (
+        {tab === 'home' && <ConsentCard onAnswer={yes => ping(yes)} />}
+        {tab === 'home' && sync.user && askProfile && !data.demo && !inSetup && (
           <section className="card"><h3 className="h-plain">{t('prof.promptTitle')}</h3><ProfileForm onDone={() => setAskProfile(false)} /></section>)}
-        {tab === 'month' && showFeedback && <FeedbackCard onClose={() => setShowFeedback(false)} />}
+        {tab === 'home' && showFeedback && <FeedbackCard onClose={() => setShowFeedback(false)} />}
+        {tab === 'home' && homeResult && <HomeView data={data} r={homeResult} today={today} onOpen={openTx}
+          onAll={() => { setYm(null); setTab('transactions'); window.scrollTo(0, 0) }} />}
         {(tab === 'month' || tab === 'transactions') && <MonthNav ym={current} onChange={setYm} />}
         {tab === 'year' && <YearNav year={year} onChange={setYear} />}
         {tab === 'year' && <YearView year={year} transactions={data.transactions} settings={data.settings} today={today}
@@ -185,7 +191,7 @@ export default function App() {
           <TransactionsView r={result} settings={data.settings} undated={undated(data.transactions)} onOpen={openTx} />}
         {tab === 'investments' && <InvestmentsView settings={data.settings} transactions={data.transactions} today={today}
                                                    year={year} onYear={setYear} />}
-        {tab === 'settings' && <BetaSection onFeedback={() => { setShowFeedback(true); setTab('month'); window.scrollTo(0, 0) }}
+        {tab === 'settings' && <BetaSection onFeedback={() => { setShowFeedback(true); setTab('home'); window.scrollTo(0, 0) }}
                                             onAdmin={() => window.location.assign(`${import.meta.env.BASE_URL}admin/`)} />}
         {tab === 'settings' && <SettingsView onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} />}
         <FxAutoUpdate today={today} />
@@ -193,15 +199,15 @@ export default function App() {
 
       {note && <div className="toast" role="status">{note}</div>}
 
-      {(tab === 'month' || tab === 'transactions') && (
+      {(tab === 'home' || tab === 'month' || tab === 'transactions') && (
         <button className="fab" onClick={() => setForm({})} aria-label={t('action.add')}>+</button>
       )}
 
       <nav className="bottom-nav" aria-label="Quadriamo">
-        {(['month', 'transactions', 'year', 'investments', 'settings'] as Tab[]).map(k => (
+        {(['home', 'month', 'transactions', 'year', 'investments', 'settings'] as Tab[]).map(k => (
           <button key={k} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}
                   onClick={() => { setTab(k); if ((k === 'year' || k === 'investments') && current) setYear(current.year); window.scrollTo(0, 0) }}>
-            <span aria-hidden="true">{{ month: '◧', transactions: '☰', year: '▥', investments: '↗', settings: '⚙' }[k]}</span>
+            <span aria-hidden="true">{{ home: '⌂', month: '◧', transactions: '☰', year: '▥', investments: '↗', settings: '⚙' }[k]}</span>
             {t(`nav.${k}`)}
           </button>
         ))}

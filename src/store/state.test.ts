@@ -214,3 +214,14 @@ describe('profilo riservato: sincronizzazione', () => {
     expect(mergeData(base, a).profile?.monthlyIncome).toBe(1600)
   })
 })
+
+describe('Home a widget', () => {
+  const base = parseBackup(JSON.stringify(createInitial('EUR', '2026-10-01', 1)))
+  it('salva la scelta dei widget e vince la più recente tra i dispositivi', () => {
+    const s = reducer({ loaded: true, data: base }, { type: 'setHome', widgets: ['today', 'recent'], at: '2026-10-12T10:00:00Z' })
+    expect(s.data?.home).toEqual(['today', 'recent'])
+    const other = { ...base, home: ['donut'], homeUpdatedAt: '2026-10-12T11:00:00Z' }
+    expect(mergeData(s.data!, other).home).toEqual(['donut'])
+    expect(mergeData(other, s.data!).home).toEqual(['donut'])
+  })
+})

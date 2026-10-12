@@ -5,9 +5,9 @@ import { BUCKET_COLORS, bucketName } from './names'
 
 const R = 80, C = 2 * Math.PI * R, R2 = 58, C2 = 2 * Math.PI * R2
 
-/** Home: ciambella interattiva dei quattro portafogli e grafico delle spese giorno per giorno. */
-export function HomeCharts({ r, settings, today }: { r: MonthResult; settings: Settings; today: string }) {
-  const { t, money, date } = useI18n()
+/** Ciambella interattiva dei quattro portafogli: tocca una parte per vedere quanto resta e quanto è stato usato. */
+export function BucketDonut({ r, settings }: { r: MonthResult; settings: Settings }) {
+  const { t, money } = useI18n()
   const cur = settings.currency
   const [sel, setSel] = useState(0)
   const rows = r.buckets
@@ -18,20 +18,8 @@ export function HomeCharts({ r, settings, today }: { r: MonthResult; settings: S
   const segs = w.map((f, i) => ({ i, start: w.slice(0, i).reduce((a, x) => a + x, 0) * C, len: f * C }))
   const b = rows[sel]
   const used = b.available > 0 ? Math.min(1, b.spent / b.available) : b.spent > 0 ? 1 : 0
-
-  const days = useMemo(() => dailySpending(r), [r])
-  const maxDay = Math.max(1, ...days.map(d => d.spent))
-  const maxCum = Math.max(1, days.at(-1)?.cumulative ?? 0)
-  const todayIdx = days.findIndex(d => d.day === today)
-  const [day, setDay] = useState<number | null>(null)
-  const shown = day ?? (todayIdx >= 0 ? todayIdx : days.length - 1)
-  const line = days.map((d, i) => `${i + 0.5},${100 - (d.cumulative / maxCum) * 92}`).join(' ')
-  const anySpend = days.some(d => d.spent > 0)
-
   return (
-    <section className="card home-charts">
-      <h3 className="h-plain">{t('home.title')}</h3>
-      <div className="hc-grid">
+    <div className="hc-grid">
         <div className="hc-donut">
           <svg viewBox="0 0 200 200" role="img" aria-label={t('home.title')}>
             <g transform="rotate(-90 100 100)" className="donut-in">
@@ -67,8 +55,24 @@ export function HomeCharts({ r, settings, today }: { r: MonthResult; settings: S
         </ul>
       </div>
 
-      <h4 className="hc-sub">{t('home.daily')}</h4>
-      {anySpend ? <>
+  )
+}
+
+/** Spese giorno per giorno con il totale da inizio mese: tocca (o passa sopra) un giorno per i dettagli. */
+export function DailyChart({ r, settings, today }: { r: MonthResult; settings: Settings; today: string }) {
+  const { t, money, date } = useI18n()
+  const cur = settings.currency
+  const days = useMemo(() => dailySpending(r), [r])
+  const maxDay = Math.max(1, ...days.map(d => d.spent))
+  const maxCum = Math.max(1, days.at(-1)?.cumulative ?? 0)
+  const todayIdx = days.findIndex(d => d.day === today)
+  const [day, setDay] = useState<number | null>(null)
+  const shown = day ?? (todayIdx >= 0 ? todayIdx : days.length - 1)
+  const line = days.map((d, i) => `${i + 0.5},${100 - (d.cumulative / maxCum) * 92}`).join(' ')
+  const anySpend = days.some(d => d.spent > 0)
+  if (!anySpend) return <p className="muted small">{t('home.noSpend')}</p>
+  return (
+    <>
         <p className="hc-tip" aria-live="polite">{t('home.dayTip', { date: date(days[shown].day, { day: 'numeric', month: 'short' }),
           amount: money(days[shown].spent, cur), total: money(days[shown].cumulative, cur) })}</p>
         <div className="hc-bars" role="img" aria-label={t('home.daily')} onMouseLeave={() => setDay(null)}>
@@ -83,7 +87,19 @@ export function HomeCharts({ r, settings, today }: { r: MonthResult; settings: S
           ))}
         </div>
         <p className="hc-legend-line small muted"><i className="lg-bar" /> {t('home.legendDay')} · <i className="lg-line" /> {t('home.legendCum')}</p>
-      </> : <p className="muted small">{t('home.noSpend')}</p>}
+    </>
+  )
+}
+
+/** Mese: ciambella e spese giorno per giorno insieme (in cima alla scheda Mese). */
+export function HomeCharts({ r, settings, today }: { r: MonthResult; settings: Settings; today: string }) {
+  const { t } = useI18n()
+  return (
+    <section className="card home-charts">
+      <h3 className="h-plain">{t('home.title')}</h3>
+      <BucketDonut r={r} settings={settings} />
+      <h4 className="hc-sub">{t('home.daily')}</h4>
+      <DailyChart r={r} settings={settings} today={today} />
     </section>
   )
 }

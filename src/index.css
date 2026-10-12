@@ -494,3 +494,49 @@ input, select, textarea { font-size: max(16px, 1em); }
 .privacy-note { background: var(--good-bg); border-radius: 14px; padding: 12px 14px; margin: 6px 0 12px; }
 .privacy-note p { margin: 0 0 4px; }
 .research-check { align-items: flex-start; gap: 10px; }
+
+/* ---------- Home a widget ---------- */
+.home-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 6px 0 10px; }
+.home-head h1 { font-size: clamp(28px, 7vw, 38px); margin: 0; }
+.home-head p { margin: 2px 0 0; }
+.widgets { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; align-items: start; }
+.widgets .card { margin: 0; }
+.widget { animation: fade-up .45s cubic-bezier(.2,.8,.2,1) both; }
+.widget.editing { outline: 2px dashed var(--line); outline-offset: 3px; }
+.w-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+.w-tools { display: flex; gap: 4px; }
+.w-tools .icon-btn { width: 34px; height: 34px; }
+.w-big { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 2px 0 8px; }
+.w-big small { font-size: 16px; font-weight: 600; }
+.w-bars { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 9px; }
+.w-bars li { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(40px, 0.8fr) auto; gap: 10px; align-items: center; font-size: 14px; }
+.w-bars li > span:first-child { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.w-bars i, .w-today i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; margin-right: 6px; }
+.w-bars .track { height: 8px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+.w-bars .track span { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.w-bars b { font-variant-numeric: tabular-nums; }
+.plain-bars li { grid-template-columns: 1fr 0 auto; }
+.w-today { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.w-today li { display: grid; gap: 2px; }
+.w-today strong { font-size: 22px; font-variant-numeric: tabular-nums; }
+.w-flow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin: 4px 0 12px; }
+.w-flow dt { font-size: 13px; color: var(--muted); }
+.w-flow dd { margin: 0; font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
+.w-meter { height: 10px; border-radius: 99px; background: var(--bg); overflow: hidden; }
+.w-meter span { display: block; height: 100%; background: linear-gradient(90deg, var(--b1), var(--b2)); border-radius: 99px; transition: width .7s cubic-bezier(.2,.8,.2,1); }
+.w-upcoming { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.w-upcoming li { display: grid; grid-template-columns: 60px 1fr auto; gap: 8px; align-items: center; font-size: 14px; }
+.widget .hc-grid { grid-template-columns: 1fr; justify-items: center; }
+.catalog { margin-top: 14px; }
+.catalog ul { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 8px; }
+.catalog li { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.catalog li div { display: grid; gap: 2px; }
+@media (prefers-reduced-motion: reduce) { .widget { animation: none; } }
+/* sei schede: Home, Mese, Movimenti, Anno, Investi, Impostazioni */
+.bottom-nav { grid-template-columns: repeat(6, 1fr); }
+.bottom-nav button { font-size: 12px; padding-left: 0; padding-right: 0; }
+@media (max-width: 380px) { .bottom-nav button { font-size: 10.5px; } }
+.notify-step { display: grid; justify-items: center; text-align: center; gap: 6px; padding: 8px 0; }
+.notify-bell { font-size: 56px; animation: ring 1.6s .3s ease-in-out both; transform-origin: 50% 10%; }
+@keyframes ring { 0%, 60%, 100% { transform: rotate(0); } 10%, 30% { transform: rotate(14deg); } 20%, 40% { transform: rotate(-14deg); } 50% { transform: rotate(6deg); } }
+@media (prefers-reduced-motion: reduce) { .notify-bell { animation: none; } }

@@ -15,6 +15,8 @@ export interface AppData {
   payday?: Record<string, string[]>   // "YYYY-MM" -> bucket già trasferiti nel piano del giorno di paga
   profile?: PrivateProfile            // risposte facoltative del profilo: restano nei dati dell'utente, mai all'amministratore
   profileUpdatedAt?: string
+  home?: string[]                     // widget della Home scelti dall'utente, nell'ordine in cui li vuole
+  homeUpdatedAt?: string
 }
 
 /** Entrate, obiettivi, carte, investimenti: dati sensibili, riservati all'utente (vedi sync/research per la ricerca anonima). */
@@ -98,6 +100,7 @@ export type Action =
   | { type: 'ignoreInbox'; ids: string[]; at?: string }
   | { type: 'togglePayday'; month: string; bucketId: string }
   | { type: 'setProfile'; profile: PrivateProfile | null; at?: string }
+  | { type: 'setHome'; widgets: string[]; at?: string }
   | { type: 'replace'; data: AppData | null }
 
 export interface State { loaded: boolean; data: AppData | null }
@@ -139,6 +142,8 @@ export function reducer(state: State, a: Action): State {
                                  deleted: { ...d.deleted, [a.id]: at } } }
     case 'setSettings':
       return { ...state, data: { ...d, settings: a.settings, settingsUpdatedAt: at } }
+    case 'setHome':
+      return { ...state, data: { ...d, home: a.widgets, homeUpdatedAt: at } }
     case 'setProfile':
       return { ...state, data: { ...d, profile: a.profile ?? undefined, profileUpdatedAt: at } }
     case 'setInvestments':
@@ -203,7 +208,8 @@ export function parseBackup(text: string): AppData {
            deleted: d.deleted ?? {}, settingsUpdatedAt: d.settingsUpdatedAt,
            ...(d.investments ? { investments: d.investments, investmentsUpdatedAt: d.investmentsUpdatedAt } : {}),
            inbox: d.inbox ?? [], importDone: d.importDone ?? {}, payday: d.payday ?? {},
-           ...(d.profile ? { profile: d.profile, profileUpdatedAt: d.profileUpdatedAt } : {}) }
+           ...(d.profile ? { profile: d.profile, profileUpdatedAt: d.profileUpdatedAt } : {}),
+           ...(Array.isArray(d.home) ? { home: d.home, homeUpdatedAt: d.homeUpdatedAt } : {}) }
 }
 
 /** Parse di un importo scritto dall'utente: accetta "12,50", "12.50", "1.234,56", "1,234.56". */
@@ -249,6 +255,8 @@ export function mergeData(a: AppData, b: AppData): AppData {
   const payday: Record<string, string[]> = { ...b.payday, ...a.payday }
   const newerInv = (b.investmentsUpdatedAt ?? '') > (a.investmentsUpdatedAt ?? '')
   const investments = newerInv ? b.investments : (a.investments ?? b.investments)
+  const newerHome = (b.homeUpdatedAt ?? '') > (a.homeUpdatedAt ?? '')
+  const home = newerHome ? b.home : (a.home ?? b.home)
   const newerProfile = (b.profileUpdatedAt ?? '') > (a.profileUpdatedAt ?? '')
   const profile = newerProfile ? b.profile : (a.profileUpdatedAt ? a.profile : (a.profile ?? b.profile))
   return {
@@ -256,6 +264,7 @@ export function mergeData(a: AppData, b: AppData): AppData {
     settingsUpdatedAt: newerSettings ? b.settingsUpdatedAt : a.settingsUpdatedAt,
     ...(investments ? { investments, investmentsUpdatedAt: newerInv ? b.investmentsUpdatedAt : a.investmentsUpdatedAt } : {}),
     inbox, importDone, payday,
+    ...(home ? { home, homeUpdatedAt: newerHome ? b.homeUpdatedAt : a.homeUpdatedAt } : {}),
     ...(profile || a.profileUpdatedAt || b.profileUpdatedAt
       ? { profile, profileUpdatedAt: newerProfile ? b.profileUpdatedAt : a.profileUpdatedAt } : {}),
   }
