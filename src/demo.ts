@@ -39,5 +39,9 @@ export function demoAppData(today: string): AppData {
   })
   // slancio di esempio: 12 giorni di fila fino a oggi
   const activity = Array.from({ length: 12 }, (_, i) => addDays(today, i - 11))
-  return { version: 1, settings, transactions: txs, demo: true, activity }
+  // un obiettivo di esempio: vacanza, a buon punto
+  const goals = [{ id: 'demo-goal', name: 'Holiday in Greece', target: 900, deadline: `${months[3].year + 1}-06`, icon: 'plane',
+    contributions: months.map((m, i) => ({ id: `demo-gc-${i}`, date: makeDate(m.year, m.month, 2), amount: 75 })),
+    createdAt: makeDate(months[0].year, months[0].month, 1), updatedAt: new Date(0).toISOString() }]
+  return { version: 1, settings, transactions: txs, demo: true, activity, goals }
 }

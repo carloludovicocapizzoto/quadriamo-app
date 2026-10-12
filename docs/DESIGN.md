@@ -57,6 +57,8 @@ grafico; Profilo → lo slancio; Nuovo movimento → l'importo.
 │ │Essenziali│ │Qualità   │            │
 │ │369,65 € ◔│ │764,10 € ○│            │
 │ └──────────┘ └──────────┘  …         │
+│ I tuoi obiettivi    + Nuovo obiettivo│  3b. Obiettivi di risparmio: tessere da scorrere di lato
+│ [◔ Vacanza 300 € di 900 € · 67 €/m] [+]│      tocco → pannello: anello, +10/+50/+100, versamenti
 │ Missioni di oggi              2/3    │  4. Missioni del giorno con barra di avanzamento
 │ ✓ Segna le spese di oggi  ▓▓▓▓▓▓     │
 │ ○ Dai un'occhiata alla previsione    │
@@ -191,6 +193,6 @@ Tutte disattivate con "Riduci movimento" del sistema. Vibrazione leggera al tocc
 ## 7. Prossimi passi consigliati
 1. Scorrimento orizzontale tra i mesi in Movimenti e Analisi (swipe).
 2. Ricerca e filtri nei movimenti (categoria, parte, importo).
-3. Obiettivi di risparmio ("Vacanza: 600 € entro giugno") come tessere in Home.
+3. ~~Obiettivi di risparmio~~ fatto (ottobre 2026).
 4. Modalità scura rifinita sul riquadro del giorno e sulle medaglie.
 5. Test con 5 tester: tempo per segnare una spesa e per trovare "quanto posso spendere oggi".

@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
-import { badges, monthOf, monthlyTrend, prevMonth, type Streak } from '../../engine'
+import { badges, goalStatus, monthOf, monthlyTrend, prevMonth, type Streak } from '../../engine'
 import { LANGS, useI18n, type Lang } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import type { AppData } from '../../store/state'
@@ -41,7 +41,8 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onFe
   const list = useMemo(() => {
     // solo i mesi già chiusi (fino a 12)
     const months = monthlyTrend(prevMonth(monthOf(today, data.settings.monthStartDay)), 12, data.transactions, data.settings, today)
-    return badges({ txCount: data.transactions.length, bestStreak: streak?.best ?? 0, imported: Object.keys(data.importDone ?? {}).length > 0, months })
+    const goalsDone = (data.goals ?? []).filter(g => !g.removed && goalStatus(g, today).done).length
+    return badges({ txCount: data.transactions.length, bestStreak: streak?.best ?? 0, imported: Object.keys(data.importDone ?? {}).length > 0, goalsDone, months })
   }, [data, streak?.best, today])
 
   if (page) {

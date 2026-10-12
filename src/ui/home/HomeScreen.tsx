@@ -11,6 +11,7 @@ import { Sheet } from '../kit/Sheet'
 import { BUCKET_COLORS, bucketName } from '../names'
 import { TxRow } from '../TxRow'
 import { HomeView } from '../HomeView'
+import { GoalsStrip } from '../goals/Goals'
 
 /** Home: il numero del giorno, le scorciatoie, le quattro parti, le missioni, le ultime attività e i widget scelti. */
 export function HomeScreen({ data, r, today, streak, reviewed, onAdd, onOpen, onAll, onImport, onShared, onAnalysis }: {
@@ -76,6 +77,9 @@ export function HomeScreen({ data, r, today, streak, reviewed, onAdd, onOpen, on
         })}
       </div>
 
+      {/* obiettivi di risparmio */}
+      <GoalsStrip goals={data.goals} today={today} currency={cur} />
+
       {/* missioni del giorno */}
       <Missions list={missions} cur={cur} onAction={m => {
         if (m.id === 'log') onAdd('expense')
@@ -108,6 +112,9 @@ function QA({ icon, label, onClick, done, badge }: { icon: IconName; label: stri
   )
 }
 
+// "Resta nel numero di oggi": la barra è quanto resta del numero (piena se non hai speso, si accorcia spendendo)
+const barOf = (m: Mission) => m.id === 'under' ? (m.done ? Math.max(0.04, 1 - m.progress) : 1) : m.done ? 1 : m.progress
+
 function Missions({ list, cur, onAction }: { list: Mission[]; cur: string; onAction: (m: Mission) => void }) {
   const { t, money } = useI18n()
   const done = list.filter(m => m.done).length
@@ -122,7 +129,7 @@ function Missions({ list, cur, onAction }: { list: Mission[]; cur: string; onAct
               <span className="m-body">
                 <b>{t(`mis.${m.id}` as keyof Dict, { n: m.value ?? 0 })}</b>
                 {m.id === 'under' && m.limit != null && <small>{t('mis.underDetail', { value: money(m.value ?? 0, cur), limit: money(m.limit, cur) })}</small>}
-                <span className="m-bar"><span style={{ width: `${(m.done && m.id !== 'under' ? 1 : m.progress) * 100}%` }} className={m.id === 'under' && !m.done ? 'bad' : ''} /></span>
+                <span className="m-bar"><span style={{ width: `${barOf(m) * 100}%` }} className={m.id === 'under' && !m.done ? 'bad' : ''} /></span>
               </span>
             </button>
           </li>

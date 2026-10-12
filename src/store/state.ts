@@ -1,5 +1,5 @@
 // Stato dell'app e sue modifiche: funzioni pure, testate in state.test.ts.
-import { compareYm, withDay, daysBetween, defaultSettings, monthOf, normalize, seedRules, suggest, type ImportRow, type Investments, type Rule, type Settings, type Transaction, type YearMonth } from '../engine'
+import { compareYm, mergeGoals, withDay, type Goal, daysBetween, defaultSettings, monthOf, normalize, seedRules, suggest, type ImportRow, type Investments, type Rule, type Settings, type Transaction, type YearMonth } from '../engine'
 
 export interface AppData {
   version: 1
@@ -18,6 +18,7 @@ export interface AppData {
   home?: string[]                     // widget della Home scelti dall'utente, nell'ordine in cui li vuole
   homeUpdatedAt?: string
   activity?: string[]                 // giorni (locali) in cui l'utente ha aggiornato Quadriamo: servono allo "slancio"
+  goals?: Goal[]                      // obiettivi di risparmio (gli eliminati restano con removed: true per la sincronizzazione)
 }
 
 /** Entrate, obiettivi, carte, investimenti: dati sensibili, riservati all'utente (vedi sync/research per la ricerca anonima). */
@@ -103,6 +104,9 @@ export type Action =
   | { type: 'setProfile'; profile: PrivateProfile | null; at?: string }
   | { type: 'setHome'; widgets: string[]; at?: string }
   | { type: 'checkIn'; at?: string }                     // "oggi niente spese": tiene vivo lo slancio
+  | { type: 'saveGoal'; goal: Goal; at?: string }
+  | { type: 'deleteGoal'; id: string; at?: string }
+  | { type: 'goalMoney'; id: string; amount: number; date: string; at?: string }   // versamento (o prelievo se negativo)
   | { type: 'replace'; data: AppData | null }
 
 export interface State { loaded: boolean; data: AppData | null }
@@ -130,7 +134,7 @@ function localDay(at: string): string {
 }
 
 /** Le azioni con cui l'utente aggiorna la sua situazione contano per lo slancio. */
-const ACTIVE: Action['type'][] = ['addTx', 'updateTx', 'deleteTx', 'confirmInbox', 'checkIn']
+const ACTIVE: Action['type'][] = ['addTx', 'updateTx', 'deleteTx', 'confirmInbox', 'checkIn', 'goalMoney']
 
 export function reducer(state: State, a: Action): State {
   const next = reduce(state, a)
@@ -162,6 +166,16 @@ function reduce(state: State, a: Action): State {
       return { ...state, data: { ...d, settings: a.settings, settingsUpdatedAt: at } }
     case 'checkIn':
       return { ...state, data: { ...d } }
+    case 'saveGoal': {
+      const g = { ...a.goal, updatedAt: at }
+      const goals = (d.goals ?? []).some(x => x.id === g.id) ? (d.goals ?? []).map(x => x.id === g.id ? g : x) : [...(d.goals ?? []), g]
+      return { ...state, data: { ...d, goals } }
+    }
+    case 'deleteGoal':
+      return { ...state, data: { ...d, goals: (d.goals ?? []).map(x => x.id === a.id ? { ...x, removed: true, contributions: [], updatedAt: at } : x) } }
+    case 'goalMoney':
+      return { ...state, data: { ...d, goals: (d.goals ?? []).map(x => x.id === a.id
+        ? { ...x, contributions: [...x.contributions, { id: newId(), date: a.date, amount: Math.round(a.amount * 100) / 100 }], updatedAt: at } : x) } }
     case 'setHome':
       return { ...state, data: { ...d, home: a.widgets, homeUpdatedAt: at } }
     case 'setProfile':
@@ -230,7 +244,8 @@ export function parseBackup(text: string): AppData {
            inbox: d.inbox ?? [], importDone: d.importDone ?? {}, payday: d.payday ?? {},
            ...(d.profile ? { profile: d.profile, profileUpdatedAt: d.profileUpdatedAt } : {}),
            ...(Array.isArray(d.home) ? { home: d.home, homeUpdatedAt: d.homeUpdatedAt } : {}),
-           ...(Array.isArray(d.activity) ? { activity: d.activity } : {}) }
+           ...(Array.isArray(d.activity) ? { activity: d.activity } : {}),
+           ...(Array.isArray(d.goals) ? { goals: d.goals } : {}) }
 }
 
 /** Parse di un importo scritto dall'utente: accetta "12,50", "12.50", "1.234,56", "1,234.56". */
@@ -288,6 +303,7 @@ export function mergeData(a: AppData, b: AppData): AppData {
     inbox, importDone, payday,
     ...(home ? { home, homeUpdatedAt: newerHome ? b.homeUpdatedAt : a.homeUpdatedAt } : {}),
     ...(activity.length ? { activity } : {}),
+    ...(a.goals || b.goals ? { goals: mergeGoals(a.goals, b.goals) } : {}),
     ...(profile || a.profileUpdatedAt || b.profileUpdatedAt
       ? { profile, profileUpdatedAt: newerProfile ? b.profileUpdatedAt : a.profileUpdatedAt } : {}),
   }

@@ -33,7 +33,7 @@ export function dailyMissions(r: MonthResult, s: Settings, today: string, opts: 
 export interface Badge { id: string; done: boolean; progress: number; goal: number }
 
 /** Traguardi: si sbloccano usando l'app. `months` sono i mesi già chiusi (dal più vecchio). */
-export function badges(input: { txCount: number; bestStreak: number; imported: boolean; months: { income: number; leftOver: number; saved: number }[] }): Badge[] {
+export function badges(input: { txCount: number; bestStreak: number; imported: boolean; goalsDone?: number; months: { income: number; leftOver: number; saved: number }[] }): Badge[] {
   const saved = input.months.reduce((a, m) => a + Math.max(0, m.saved), 0)
   const positive = input.months.filter(m => m.income > 0 && m.leftOver >= 0).length
   const b = (id: string, value: number, goal: number): Badge => ({ id, done: value >= goal, progress: Math.min(1, value / goal), goal })
@@ -46,5 +46,6 @@ export function badges(input: { txCount: number; bestStreak: number; imported: b
     b('positive', positive, 1),
     b('positive3', positive, 3),
     b('saved1000', saved, 1000),
+    b('goal', input.goalsDone ?? 0, 1),
   ]
 }
