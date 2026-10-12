@@ -27,8 +27,17 @@ const cors = {
 }
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
+// i segreti incollati a mano possono avere spazi, a capo o virgolette in più
+const env = (k: string) => (Deno.env.get(k) ?? '').trim().replace(/^["']|["']$/g, '')
 
 Deno.serve(async req => {
+  try { return await handle(req) } catch (e) {
+    // risposta leggibile invece di "Internal Server Error" (nessun segreto nel messaggio)
+    return json({ error: e instanceof Error ? e.message : String(e) }, 500)
+  }
+})
+
+async function handle(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   if (req.method !== 'POST') return json({ error: 'method' }, 405)
 
@@ -36,7 +45,7 @@ Deno.serve(async req => {
   const url = Deno.env.get('SUPABASE_URL')!
 
   if (mode === 'scheduled' || mode === 'morning') {
-    if (!Deno.env.get('CRON_SECRET') || req.headers.get('x-cron-secret') !== Deno.env.get('CRON_SECRET')) return json({ error: 'forbidden' }, 403)
+    if (!env('CRON_SECRET') || (req.headers.get('x-cron-secret') ?? '').trim() !== env('CRON_SECRET')) return json({ error: 'forbidden' }, 403)
   } else {
     // solo l'amministratore: si controlla con il SUO accesso (o con il suo codice x-admin-key), tramite is_admin()
     const auth = req.headers.get('Authorization') ?? ''
@@ -45,7 +54,7 @@ Deno.serve(async req => {
     const asUser = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers } })
     const { data: ok } = await asUser.rpc('is_admin')
     if (ok !== true) return json({ error: 'forbidden' }, 403)
-    if (mode === 'check') return json({ ok: true, vapid: !!Deno.env.get('VAPID_PUBLIC_KEY') && !!Deno.env.get('VAPID_PRIVATE_KEY'), cron: !!Deno.env.get('CRON_SECRET') })
+    if (mode === 'check') return json({ ok: true, vapid: !!env('VAPID_PUBLIC_KEY') && !!env('VAPID_PRIVATE_KEY'), cron: !!env('CRON_SECRET') })
   }
 
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
@@ -58,10 +67,13 @@ Deno.serve(async req => {
   const { data: subs, error } = await q
   if (error) return json({ error: error.message }, 500)
 
-  webpush.setVapidDetails('https://carloludovicocapizzoto.github.io/quadriamo-app/',
-    Deno.env.get('VAPID_PUBLIC_KEY')!, Deno.env.get('VAPID_PRIVATE_KEY')!)
+  try {
+    webpush.setVapidDetails('https://carloludovicocapizzoto.github.io/quadriamo-app/', env('VAPID_PUBLIC_KEY'), env('VAPID_PRIVATE_KEY'))
+  } catch (e) {
+    return json({ error: `chiavi VAPID non valide (controlla i segreti VAPID_PUBLIC_KEY e VAPID_PRIVATE_KEY): ${(e as Error).message}` }, 500)
+  }
 
-  let sent = 0, removed = 0, failed = 0
+  let sent = 0, removed = 0, failed = 0, lastError = ''
   for (const s of subs ?? []) {
     const t = TEXT[s.lang ?? ''] ?? TEXT.en
     const payload = mode === 'morning'
@@ -74,8 +86,8 @@ Deno.serve(async req => {
     } catch (e) {
       const code = (e as { statusCode?: number }).statusCode
       if (code === 404 || code === 410) { removed++; await admin.from('push_subscriptions').delete().eq('endpoint', s.endpoint) }
-      else failed++
+      else { failed++; lastError = `${code ?? ''} ${(e as Error).message ?? ''}`.trim() }
     }
   }
-  return json({ mode, total: subs?.length ?? 0, sent, removed, failed })
-})
+  return json({ mode, total: subs?.length ?? 0, sent, removed, failed, ...(lastError ? { lastError } : {}) })
+}
