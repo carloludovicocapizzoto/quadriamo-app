@@ -7,27 +7,26 @@ import { useStore } from './store/context'
 import { createInitial } from './store/state'
 import { useSync } from './sync/context'
 import { MonthNav } from './ui/MonthNav'
-import { MonthView } from './ui/MonthView'
 import { Onboarding } from './ui/Onboarding'
-import { SettingsView } from './ui/SettingsView'
 import { TransactionsView } from './ui/TransactionsView'
 import { TxForm } from './ui/TxForm'
-import { YearNav, YearView } from './ui/YearView'
-import { InvestmentsView } from './ui/InvestmentsView'
 import { FxAutoUpdate } from './ui/FxAutoUpdate'
 import { feedbackDue, firstOpenToday, statsConsent } from './beta/device'
 import { track } from './beta/telemetry'
-import { BetaSection } from './ui/beta/BetaSection'
 import { ConsentCard } from './ui/beta/ConsentCard'
 import { FeedbackCard } from './ui/beta/FeedbackCard'
 import { ProfileForm } from './ui/ProfileForm'
-import { HomeView } from './ui/HomeView'
-import { SharedView } from './ui/shared/SharedView'
+import { HomeScreen } from './ui/home/HomeScreen'
+import { TopBar } from './ui/shell/TopBar'
+import { BottomNav, type MainTab } from './ui/shell/BottomNav'
+import { AnalysisScreen, type AnalysisView } from './ui/screens/AnalysisScreen'
+import { ProfileScreen, type ProfilePage } from './ui/screens/ProfileScreen'
+import { todayBudget } from './engine'
+import { usePlan } from './billing/plan'
+import { BUCKET_COLORS } from './ui/names'
 import { saveMorningSnapshot } from './beta/morning'
 import { syncPush, touchPush } from './beta/push'
 import { StreakCelebration } from './ui/Streak'
-import { CategoryChangesReport, TrendReport } from './ui/Reports'
-import { PlanCard, ProGate } from './ui/Pro'
 import { refreshPlan } from './billing/plan'
 import { bucketName } from './ui/names'
 import { noAccount, profilePrompt, setupPending } from './sync/profile'
@@ -35,19 +34,23 @@ import { ConfirmedScreen, Gate, Splash } from './ui/Gate'
 import { isStandalone } from './beta/device'
 import { LoginScreen } from './ui/AccountSection'
 import { SetupWizard } from './ui/SetupWizard'
-import { Icon } from './ui/Icon'
 import { guessCurrency } from './ui/names'
 
-type Tab = 'home' | 'month' | 'transactions' | 'year' | 'investments' | 'settings' | 'shared'
+type Tab = MainTab
 
 export default function App() {
   const { t, lang, setLang } = useI18n()
   const { state, dispatch } = useStore()
   const sync = useSync()
+  const plan = usePlan()
   const today = todayIso()
   // ?login=1 / ?signup=1 (pulsanti del sito): si apre direttamente l'area account
   // ?join=CODICE (invito a un budget comune): si apre direttamente il budget comune
-  const [tab, setTab] = useState<Tab>(() => ENTRY.get('join') ? 'shared' : 'home')
+  const [tab, setTab] = useState<Tab>(() => ENTRY.get('join') ? 'profile' : 'home')
+  const [analysisView, setAnalysisView] = useState<AnalysisView>('month')
+  const [profilePage, setProfilePage] = useState<ProfilePage | null>(() => ENTRY.get('join') ? 'shared' : null)
+  // missione "dai un'occhiata alla previsione": fatta quando si apre Analisi
+  const [reviewed, setReviewed] = useState(() => { try { return localStorage.getItem('q.reviewed') === todayIso() } catch { return false } })
   const [ym, setYm] = useState<YearMonth | null>(null)
   const [year, setYear] = useState(() => Number(todayIso().slice(0, 4)))
   // link di inserimento rapido: ?add=1&amount=12,50&desc=Pizza&cat=eatingOut (scorciatoia sull'icona, Comandi Rapidi)
@@ -77,7 +80,7 @@ export default function App() {
   const [note, setNote] = useState('')
   // "Scopri Pro" da qualsiasi schermata: si apre la scheda del piano in Opzioni
   useEffect(() => {
-    const go = () => { setTab('settings'); setTimeout(() => document.getElementById('plan')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80) }
+    const go = () => { setTab('profile'); setProfilePage('plan'); window.scrollTo(0, 0) }
     window.addEventListener('quadriamo:upgrade', go)
     return () => window.removeEventListener('quadriamo:upgrade', go)
   }, [])
@@ -200,9 +203,25 @@ export default function App() {
   const isCurrent = result.period.start <= today && today <= result.period.end
   const defaultDate = isCurrent || tab === 'home' ? today : result.period.start
 
+  const go = (k: Tab) => {
+    setTab(k); window.scrollTo(0, 0)
+    if (k === 'analysis') {
+      if (current) setYear(current.year)
+      if (!reviewed) { setReviewed(true); try { localStorage.setItem('q.reviewed', today) } catch { /* niente */ } }
+    }
+    if (k === 'profile') setProfilePage(null)
+  }
+  const budget = homeResult ? todayBudget(homeResult, data.settings, today) : null
+  const parts = (budget?.parts ?? []).map(p => {
+    const i = data.settings.buckets.findIndex(b => b.id === p.bucketId)
+    return { name: bucketName(data.settings.buckets[i], t), color: BUCKET_COLORS[i], perDay: p.perDay, over: p.free < 0 }
+  })
+  const initial = (sync.user?.firstName || sync.user?.email || '?').charAt(0).toUpperCase()
+
   return (
-    <div className="app has-nav">
-      {header}
+    <div className="app has-nav app2">
+      <TopBar streak={streak} activity={data.activity ?? []} today={today} todayLeft={budget && budget.parts.length && homeResult?.income ? budget.left : null}
+              parts={parts} currency={data.settings.currency} initial={initial} pro={plan.pro} onProfile={() => go('profile')} />
       {data.demo && (
         <div className="demo-banner">
           <span>{t('demo.banner')}</span>
@@ -213,57 +232,39 @@ export default function App() {
         </div>
       )}
 
-      <main className="app-enter">
+      <main key={tab} className="app-enter tab-in">
         {tab === 'home' && <ConsentCard onAnswer={yes => ping(yes)} />}
         {tab === 'home' && sync.user && askProfile && !data.demo && !inSetup && (
           <section className="card"><h3 className="h-plain">{t('prof.promptTitle')}</h3><ProfileForm onDone={() => setAskProfile(false)} /></section>)}
         {tab === 'home' && showFeedback && <FeedbackCard onClose={() => setShowFeedback(false)} />}
-        {tab === 'home' && homeResult && <HomeView data={data} r={homeResult} today={today} streak={streak} onOpen={openTx}
-          onAll={() => { setYm(null); setTab('transactions'); window.scrollTo(0, 0) }}
-          onShared={() => { setTab('shared'); window.scrollTo(0, 0) }} />}
-        {tab === 'shared' && <ProGate feature="shared"><SharedView onBack={() => { setTab('home'); window.scrollTo(0, 0) }} onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} /></ProGate>}
-        {(tab === 'month' || tab === 'transactions') && <MonthNav ym={current} onChange={setYm} />}
-        {tab === 'year' && <YearNav year={year} onChange={setYear} />}
-        {tab === 'year' && homeResult && year === homeResult.ym.year && (
-          <ProGate feature="reports"><div className="widgets report-grid">
-            <section className="card widget"><div className="w-head"><h3 className="h-plain">{t('w.trend')}</h3></div>
-              <TrendReport r={homeResult} txs={data.transactions} settings={data.settings} today={today} /></section>
-            <section className="card widget"><div className="w-head"><h3 className="h-plain">{t('w.growing')}</h3></div>
-              <CategoryChangesReport r={homeResult} txs={data.transactions} settings={data.settings} today={today} /></section>
-          </div></ProGate>)}
-        {tab === 'year' && <YearView year={year} transactions={data.transactions} settings={data.settings} today={today}
-                                     onYear={setYear} onOpenMonth={m => { setYm(m); setTab('month'); window.scrollTo(0, 0) }} />}
-        {tab === 'month' && <MonthView r={result} settings={data.settings} onOpen={openTx} today={today} />}
-        {tab === 'transactions' &&
-          <TransactionsView r={result} settings={data.settings} undated={undated(data.transactions)} onOpen={openTx} />}
-        {tab === 'investments' && <ProGate feature="investments"><InvestmentsView settings={data.settings} transactions={data.transactions} today={today}
-                                                   year={year} onYear={setYear} /></ProGate>}
-        {tab === 'settings' && <PlanCard onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} />}
-        {tab === 'settings' && <BetaSection onFeedback={() => { setShowFeedback(true); setTab('home'); window.scrollTo(0, 0) }}
-                                            onAdmin={() => window.location.assign(`${import.meta.env.BASE_URL}admin/`)} />}
-        {tab === 'settings' && (
-          <section className="card"><h3 className="h-plain">{t('sh.title')}</h3><p className="muted small">{t('w.sharedNone')}</p>
-            <button className="btn" onClick={() => { setTab('shared'); window.scrollTo(0, 0) }}>{t('w.sharedOpen')}<Icon name="chevron" size={16} /></button></section>)}
-        {tab === 'settings' && <SettingsView onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} />}
+        {tab === 'home' && homeResult && <HomeScreen data={data} r={homeResult} today={today} streak={streak} reviewed={reviewed}
+          onAdd={kind => setForm(kind === 'income' ? { prefill: { category: 'salary' } } : {})}
+          onOpen={openTx}
+          onAll={() => { setYm(null); go('transactions') }}
+          onImport={() => { setYm(null); go('transactions'); setTimeout(() => document.querySelector<HTMLInputElement>('input[type=file]')?.click(), 120) }}
+          onShared={() => { go('profile'); setProfilePage('shared') }}
+          onAnalysis={() => go('analysis')} />}
+
+        {tab === 'transactions' && <div className="screen">
+          <h1 className="screen-title">{t('nav.transactions')}</h1>
+          <MonthNav ym={current} onChange={setYm} />
+          <TransactionsView r={result} settings={data.settings} undated={undated(data.transactions)} onOpen={openTx} />
+        </div>}
+
+        {tab === 'analysis' && homeResult && <AnalysisScreen view={analysisView} onView={setAnalysisView} data={data} result={result}
+          current={current} homeResult={homeResult} today={today} year={year} onYear={setYear} onMonth={setYm} onOpen={openTx} />}
+
+        {tab === 'profile' && <ProfileScreen page={profilePage} onPage={setProfilePage} data={data} streak={streak} today={today}
+          onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }}
+          onFeedback={() => { setShowFeedback(true); go('home') }}
+          onAdmin={() => window.location.assign(`${import.meta.env.BASE_URL}admin/`)} />}
         <FxAutoUpdate today={today} />
       </main>
 
       {note && <div className="toast" role="status">{note}</div>}
       <StreakCelebration s={streak} />
 
-      {(tab === 'home' || tab === 'month' || tab === 'transactions') && (
-        <button className="fab" onClick={() => setForm({})} aria-label={t('action.add')}><Icon name="plus" size={26} /></button>
-      )}
-
-      <nav className="bottom-nav" aria-label="Quadriamo">
-        {(['home', 'month', 'transactions', 'year', 'investments', 'settings'] as const).map(k => (
-          <button key={k} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}
-                  onClick={() => { setTab(k); if ((k === 'year' || k === 'investments') && current) setYear(current.year); window.scrollTo(0, 0) }}>
-            <Icon name={({ home: 'home', month: 'month', transactions: 'list', year: 'year', investments: 'growth', settings: 'settings' } as const)[k]} size={22} />
-            {t(`nav.${k}`)}
-          </button>
-        ))}
-      </nav>
+      <BottomNav tab={tab} onTab={go} onAdd={() => setForm({})} badge={{ transactions: data.inbox?.length ?? 0 }} />
 
       {form && (
         <TxForm

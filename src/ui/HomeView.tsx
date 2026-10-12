@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { computeMonth, dailySpending, daysBetween, prevMonth, safeToSpend, type ClassifiedTx, type MonthResult, type Streak } from '../engine'
+import { computeMonth, dailySpending, daysBetween, prevMonth, safeToSpend, type ClassifiedTx, type MonthResult } from '../engine'
 import type { AppData } from '../store/state'
 import { useI18n } from '../i18n/core'
 import type { Dict } from '../i18n/en'
@@ -8,33 +8,34 @@ import { BucketDonut, DailyChart } from './HomeCharts'
 import { BUCKET_COLORS, bucketName, categoryName } from './names'
 import { CategoryChangesReport, ForecastReport, TrendReport } from './Reports'
 import { ProGate } from './Pro'
-import { StreakCard } from './Streak'
 import { Icon } from './Icon'
 import { TxRow } from './TxRow'
 
 // widget disponibili; quelli di partenza sono in DEFAULT_HOME
 const WIDGETS = ['left', 'today', 'forecast', 'flow', 'recent', 'trend', 'growing', 'donut', 'daily', 'categories', 'compare', 'upcoming', 'savings', 'shared'] as const
 type WidgetId = typeof WIDGETS[number]
-const DEFAULT_HOME: WidgetId[] = ['left', 'today', 'forecast', 'recent']
+const DEFAULT_HOME: WidgetId[] = ['forecast', 'trend']
+// già nella parte fissa della Home (numero del giorno, quattro parti, attività): non si ripetono tra i widget
+const BUILT_IN = new Set<string>(['left', 'today', 'recent'])
+const CATALOG = WIDGETS.filter(w => !BUILT_IN.has(w))
 const isWidget = (x: string): x is WidgetId => (WIDGETS as readonly string[]).includes(x)
 
 /** Home: solo l'essenziale, a widget che ognuno sceglie e ordina (la scelta si salva e si sincronizza). */
-export function HomeView({ data, r, today, streak, onOpen, onAll, onShared }: {
-  data: AppData; r: MonthResult; today: string; streak: Streak | null; onOpen: (tx: ClassifiedTx) => void; onAll: () => void; onShared: () => void
+export function HomeView({ data, r, today, onOpen, onAll, onShared }: {
+  data: AppData; r: MonthResult; today: string; onOpen: (tx: ClassifiedTx) => void; onAll: () => void; onShared: () => void
 }) {
   const { t } = useI18n()
   const { dispatch } = useStore()
   const [edit, setEdit] = useState(false)
-  const active = (data.home ?? DEFAULT_HOME).filter(isWidget)
+  const active = (data.home ?? DEFAULT_HOME).filter(isWidget).filter(w => !BUILT_IN.has(w))
   const save = (w: WidgetId[]) => dispatch({ type: 'setHome', widgets: w })
   const move = (i: number, d: number) => { const w = [...active]; [w[i], w[i + d]] = [w[i + d], w[i]]; save(w) }
   return (
     <div className="home">
-      <div className="home-head">
-        <div><h1>{t('home.titleMain')}</h1><p className="muted small">{t(`m.${r.ym.month}` as keyof Dict)} {r.ym.year}</p></div>
+      <div className="sec-head">
+        <h2 className="sec-title">{t('home.widgets')}</h2>
         <button className={`btn small-btn${edit ? ' primary' : ''}`} onClick={() => setEdit(!edit)}><Icon name={edit ? 'check' : 'edit'} size={16} />{edit ? t('home.done') : t('home.edit')}</button>
       </div>
-      {streak && !edit && <StreakCard s={streak} today={today} />}
       {edit && <p className="muted small">{t('home.editHint')}</p>}
       {!active.length && !edit && <p className="muted">{t('home.empty')}</p>}
 
@@ -57,9 +58,9 @@ export function HomeView({ data, r, today, streak, onOpen, onAll, onShared }: {
       {edit && (
         <section className="card catalog">
           <h3 className="h-plain">{t('home.add')}</h3>
-          {WIDGETS.filter(w => !active.includes(w)).length === 0 && <p className="muted small">{t('home.allAdded')}</p>}
+          {CATALOG.filter(w => !active.includes(w)).length === 0 && <p className="muted small">{t('home.allAdded')}</p>}
           <ul>
-            {WIDGETS.filter(w => !active.includes(w)).map(w => (
+            {CATALOG.filter(w => !active.includes(w)).map(w => (
               <li key={w}>
                 <div><b>{t(`w.${w}` as keyof Dict)}</b><span className="muted small">{t(`w.${w}D` as keyof Dict)}</span></div>
                 <button className="btn small-btn" onClick={() => save([...active, w])}>+ {t('home.addOne')}</button>

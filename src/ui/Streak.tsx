@@ -5,7 +5,7 @@ import { Icon } from './Icon'
 import { useStore } from '../store/context'
 
 /** Fiamma disegnata (niente emoji: resta uguale su ogni telefono). */
-function Flame() {
+export function Flame() {
   return (
     <svg className="streak-flame" viewBox="0 0 24 32" aria-hidden="true">
       <defs><linearGradient id="fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFB547" /><stop offset="1" stopColor="#F2542D" /></linearGradient></defs>
