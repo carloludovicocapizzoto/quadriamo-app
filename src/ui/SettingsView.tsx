@@ -7,6 +7,7 @@ import { fetchRates, FX_SUPPORTED, neededCurrencies } from '../fx'
 import { AccountSection } from './AccountSection'
 import { InstallButton } from './InstallButton'
 import { LegalLinks } from './LegalLinks'
+import { Icon } from './Icon'
 import { BUCKET_COLORS, CURRENCIES, bucketName, categoryName } from './names'
 
 const TYPES: CategoryType[] = ['expense', 'income', 'saving']
@@ -181,8 +182,9 @@ export function SettingsView({ only, wizard = false, onLogin }: { only?: Setting
           ))}
         </div>
         <p className={errors.includes('sharesNot100') ? 'bad-text small' : 'good-text small'}>
+          <Icon name={errors.includes('sharesNot100') ? 'alert' : 'check'} size={15} className="inline-ico" />
           {errors.includes('sharesNot100')
-            ? `⚠ ${t('settings.ruleBad', { n: String(total).replace('.', ',') })}` : `✓ ${t('settings.ruleOk')}`}
+            ? t('settings.ruleBad', { n: String(total).replace('.', ',') }) : t('settings.ruleOk')}
         </p>
       </section>}
 
@@ -276,7 +278,7 @@ export function SettingsView({ only, wizard = false, onLogin }: { only?: Setting
 
       {show('data') && <section className="card">
         <h3 className="h-plain">{t('settings.data')}</h3>
-        <p className="muted small">🔒 {t('settings.dataHint')}</p>
+        <p className="muted small"><Icon name="lock" size={14} />{t('settings.dataHint')}</p>
         {wizard && <p className="small">{t('setup.importHint')}</p>}
         <div className="stack-row">
           {!wizard && <button className="btn" onClick={exportBackup}>{t('settings.export')}</button>}
@@ -294,7 +296,8 @@ export function SettingsView({ only, wizard = false, onLogin }: { only?: Setting
       {(errors.length > 0 || msg) && (
         <div className="save-bar" role="status">
           <span className={errors.length || msg?.bad ? 'bad-text small' : 'good-text small'}>
-            {errors.length ? `⚠ ${t('settings.errors')}` : `${msg?.bad ? '⚠' : '✓'} ${msg?.text}`}</span>
+            <Icon name={errors.length || msg?.bad ? 'alert' : 'check'} size={15} className="inline-ico" />
+            {errors.length ? t('settings.errors') : msg?.text}</span>
         </div>
       )}
     </div>

@@ -6,6 +6,7 @@ import { useStore } from '../store/context'
 import { useSync } from '../sync/context'
 import { profilePrompt, setupPending } from '../sync/profile'
 import { ProfileForm } from './ProfileForm'
+import { Icon } from './Icon'
 import { StepHeader, StepNav } from './Steps'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -18,7 +19,7 @@ export function AccountSection({ onLogin }: { onLogin?: () => void }) {
   if (!sync.enabled) return null
   const body = sync.recovery ? <NewPassword /> : sync.user ? <SignedIn /> : (
     <><p className="muted small">{t('auth.intro')}</p>
-      <button className="btn primary" onClick={onLogin}>👤 {t('onb.account')}</button></>)
+      <button className="btn primary" onClick={onLogin}><Icon name="user" size={16} />{t('onb.account')}</button></>)
   return <section className="card" id="account"><h3 className="h-plain">{t('sync.title')}</h3>{body}</section>
 }
 
@@ -137,7 +138,7 @@ function SignInOrUp() {
                   <a href={`${PAGES.privacy}?lang=${lang}`} target="_blank" rel="noopener">{t('legal.privacy')}</a>)</span></label>
             </>}
           </div>
-          <StepNav onBack={step > 1 ? back : undefined} next={step < 3 ? `${t('step.next')} →` : t('auth.signUp')} busy={busy} />
+          <StepNav onBack={step > 1 ? back : undefined} next={step < 3 ? `${t('step.next')}` : t('auth.signUp')} busy={busy} />
         </form>
       )}
 
@@ -149,7 +150,7 @@ function SignInOrUp() {
             {step === 2 && <label className="field"><span>{t('auth.password')}</span>
               <PasswordInput value={password} onChange={setPassword} autoComplete="current-password" autoFocus /></label>}
           </div>
-          <StepNav onBack={step > 1 ? back : undefined} next={step === 1 ? `${t('step.next')} →` : t('auth.signIn')} busy={busy} />
+          <StepNav onBack={step > 1 ? back : undefined} next={step === 1 ? `${t('step.next')}` : t('auth.signIn')} busy={busy} />
           <div className="stack-row">
             {step === 2 && <button type="button" className="link-btn" disabled={busy} onClick={forgot}>{t('auth.forgot')}</button>}
             <button type="button" className="link-btn" onClick={() => go('link')}>{t('auth.useLink')}</button>
@@ -159,7 +160,7 @@ function SignInOrUp() {
 
       {tab === 'confirm' && (
         <form onSubmit={confirmSignup} className="auth-form step-body" noValidate>
-          <h4 className="step-title">✉️ {t('auth.confirmTitle')}</h4>
+          <h4 className="step-title">{t('auth.confirmTitle')}</h4>
           <p className="small">{t('auth.confirmCode', { email: em })}</p>
           <label className="field"><span>{t('sync.code')}</span>{codeInput}</label>
           <div className="step-nav"><button className="btn primary" disabled={busy || code.length < 6}>{t('auth.confirm')}</button>
@@ -171,11 +172,11 @@ function SignInOrUp() {
 
       {tab === 'reset' && (
         <form onSubmit={confirmReset} className="auth-form step-body" noValidate>
-          <h4 className="step-title">🔑 {t('auth.resetTitle')}</h4>
+          <h4 className="step-title">{t('auth.resetTitle')}</h4>
           <p className="small">{t('auth.resetCode', { email: em })}</p>
           <label className="field"><span>{t('sync.code')}</span>{codeInput}</label>
-          <div className="step-nav"><button className="btn primary" disabled={busy || code.length < 6}>{t('step.next')} →</button>
-            <button type="button" className="link-btn" onClick={() => go('in')}>← {t('step.back')}</button></div>
+          <div className="step-nav"><button className="btn primary" disabled={busy || code.length < 6}>{t('step.next')}<Icon name="chevron" size={16} /></button>
+            <button type="button" className="link-btn" onClick={() => go('in')}><Icon name="back" size={16} />{t('step.back')}</button></div>
         </form>
       )}
 
@@ -246,7 +247,7 @@ function SignedIn() {
 
       {profile && state.data
         ? <div className="profile-box"><h4>{t('prof.title')}</h4><ProfileForm onDone={() => setProfile(false)} /></div>
-        : <button className="btn top-gap" onClick={() => setProfile(true)}>👤 {t('prof.edit')}</button>}
+        : <button className="btn top-gap" onClick={() => setProfile(true)}><Icon name="user" size={16} />{t('prof.edit')}</button>}
 
       {changePw && <div className="profile-box"><NewPassword /></div>}
       <div className="stack-row top-gap">

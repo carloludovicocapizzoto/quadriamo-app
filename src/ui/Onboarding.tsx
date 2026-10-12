@@ -5,6 +5,7 @@ import { setupPending } from '../sync/profile'
 import { LoginScreen } from './AccountSection'
 import { InstallButton } from './InstallButton'
 import { LegalLinks } from './LegalLinks'
+import { Icon } from './Icon'
 import { guessCurrency } from './names'
 
 /** Primo avvio: solo accesso / creazione account. Le impostazioni arrivano dopo, come passaggi (SetupWizard). */
@@ -20,7 +21,7 @@ export function Onboarding({ onStart, onDemo }: { onStart: (currency: string, st
       <section className="card onboarding">
         <h1>{sync.user.firstName ? t('auth.hello', { name: sync.user.firstName }) : t('onb.title')}</h1>
         <p className="lead">{sync.status === 'syncing' ? t('sync.syncing') : t('setup.intro')}</p>
-        <button className="btn primary big-btn" onClick={start}>{t('setup.title')} →</button>
+        <button className="btn primary big-btn" onClick={start}>{t('setup.title')}<Icon name="chevron" size={16} /></button>
       </section>
     )
   }
@@ -30,12 +31,12 @@ export function Onboarding({ onStart, onDemo }: { onStart: (currency: string, st
       <section className="card onboarding">
         <h1>{t('onb.title')}</h1>
         <p className="lead">{t('onb.text')}</p>
-        <p className="muted small">🔒 {t('onb.privacy')}</p>
+        <p className="muted small"><Icon name="lock" size={14} />{t('onb.privacy')}</p>
         <div className="stack">
-          <button className="btn primary big-btn" onClick={start}>{t('onb.start')} →</button>
+          <button className="btn primary big-btn" onClick={start}>{t('onb.start')}<Icon name="chevron" size={16} /></button>
           <button className="btn" onClick={onDemo}>{t('onb.demo')}</button>
         </div>
-        {sync.enabled && <button className="link-btn top-gap" onClick={() => setLocal(false)}>👤 {t('onb.account')}</button>}
+        {sync.enabled && <button className="link-btn top-gap" onClick={() => setLocal(false)}><Icon name="user" size={16} />{t('onb.account')}</button>}
         <InstallButton />
         <LegalLinks notice />
       </section>
@@ -44,7 +45,7 @@ export function Onboarding({ onStart, onDemo }: { onStart: (currency: string, st
 
   return (
     <LoginScreen footer={<>
-      <button className="link-btn" onClick={() => setLocal(true)}>{t('onb.noAccount')} →</button>
+      <button className="link-btn" onClick={() => setLocal(true)}>{t('onb.noAccount')}<Icon name="chevron" size={16} /></button>
       <small className="muted">{t('onb.noAccountHint')}</small>
       <LegalLinks notice />
     </>} />

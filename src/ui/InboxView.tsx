@@ -4,6 +4,7 @@ import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
 import { duplicateCandidates, newId, planImport, type InboxItem } from '../store/state'
 import { track } from '../beta/telemetry'
+import { Icon } from './Icon'
 import { bucketName, categoryName } from './names'
 
 /** Importa un estratto conto e mostra la casella "Da confermare": tutto si può cambiare prima di confermare. */
@@ -36,16 +37,15 @@ export function InboxView({ settings }: { settings: Settings }) {
     <section className={`card${inbox.length ? ' card-inbox' : ''}`}>
       <div className="card-head">
         <h3 className="h-plain">{inbox.length ? t('inbox.title', { n: inbox.length }) : t('imp.import')}</h3>
-        <label className="btn small-btn">⇪ {t('imp.import')}
+        <label className="btn small-btn"><Icon name="upload" size={16} />{t('imp.import')}
           <input type="file" accept=".csv,text/csv,text/plain" hidden onChange={onFile} /></label>
       </div>
       <p className="muted small">{inbox.length ? t('inbox.hint') : t('imp.hint')}</p>
       {msg && <p className={msg.bad ? 'bad-text small' : 'good-text small'} role="status">{msg.text}</p>}
-      {dups.size > 0 && <p className="dup-note small">⚠ {dups.size === 1 ? t('imp.dupsOne') : t('imp.dups', { n: dups.size })}</p>}
+      {dups.size > 0 && <p className="dup-note small"><Icon name="alert" size={15} />{dups.size === 1 ? t('imp.dupsOne') : t('imp.dups', { n: dups.size })}</p>}
 
       {ready.length > 1 && (
-        <button className="btn" onClick={() => dispatch({ type: 'confirmInbox', ids: ready.map(i => i.id), txs: ready.map(toTx) })}>
-          ✓ {t('inbox.confirmAll', { n: ready.length })}
+        <button className="btn" onClick={() => dispatch({ type: 'confirmInbox', ids: ready.map(i => i.id), txs: ready.map(toTx) })}><Icon name="check" size={16} />{t('inbox.confirmAll', { n: ready.length })}
         </button>
       )}
 
@@ -98,7 +98,7 @@ function InboxRow({ item, settings, suggestedCategory, duplicateOf, onChange, on
         </label>
       )}
       {duplicateOf && (
-        <p className="dup-note small" role="note">⚠ {t('inbox.dup', { desc: duplicateOf.description || '—',
+        <p className="dup-note small" role="note"><Icon name="alert" size={15} />{t('inbox.dup', { desc: duplicateOf.description || '—',
           amount: money(duplicateOf.amount ?? 0, duplicateOf.currency || settings.currency), date: duplicateOf.date ? date(duplicateOf.date) : '—' })}</p>
       )}
       <div className="inbox-actions">
@@ -106,14 +106,13 @@ function InboxRow({ item, settings, suggestedCategory, duplicateOf, onChange, on
           <>
             <button className="btn small-btn" disabled={!item.category}
                     onClick={() => onConfirm(item)}>{t('inbox.addAnyway')}</button>
-            <button className="btn small-btn primary" onClick={() => onIgnore(item)}>✓ {t('inbox.same')}</button>
+            <button className="btn small-btn primary" onClick={() => onIgnore(item)}><Icon name="check" size={16} />{t('inbox.same')}</button>
           </>
         ) : (
           <>
             <button className="btn small-btn" onClick={() => onIgnore(item)}>{t('inbox.ignore')}</button>
             <button className="btn small-btn primary" disabled={!item.category}
-                    onClick={() => onConfirm(item, item.category && changed && remember && keyword.trim() ? keyword.trim() : undefined)}>
-              ✓ {t('inbox.confirm')}</button>
+                    onClick={() => onConfirm(item, item.category && changed && remember && keyword.trim() ? keyword.trim() : undefined)}><Icon name="check" size={16} />{t('inbox.confirm')}</button>
           </>
         )}
       </div>

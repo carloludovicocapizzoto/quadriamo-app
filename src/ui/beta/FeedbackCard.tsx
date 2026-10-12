@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { markFeedbackAsked } from '../../beta/device'
 import { sendFeedback, type Alternative } from '../../beta/feedback'
 import { useI18n } from '../../i18n/core'
+import { Icon } from '../Icon'
 import { PushToggle } from './PushToggle'
 
 /** Richiesta di feedback: voto da 1 a 5 e un commento. Compare ogni 10 giorni, o dal link della notifica. */
@@ -19,7 +20,7 @@ export function FeedbackCard({ onClose }: { onClose: () => void }) {
   }
   if (state === 'sent') return (
     <section className="card feedback" role="status">
-      <p className="good-text"><b>✓ {t('fb.thanks')}</b></p>
+      <p className="good-text"><b><Icon name="check" size={16} />{t('fb.thanks')}</b></p>
       <PushToggle compact />
       <button className="link-btn" onClick={onClose}>{t('action.close')}</button>
     </section>

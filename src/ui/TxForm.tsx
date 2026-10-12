@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { fxRate, suggest, type CategoryType, type Settings, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { newId, parseAmount } from '../store/state'
+import { Icon } from './Icon'
 import { CURRENCIES, bucketName, categoryName } from './names'
 
 const GROUPS: CategoryType[] = ['expense', 'income', 'saving']
@@ -125,7 +126,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
         <label className="field">
           <span>{t('tx.description')}</span>
           <input value={description} onChange={e => onDescription(e.target.value)} placeholder={t('tx.descriptionPlaceholder')} />
-          {fromRule && category && <small className="good-text">✓ {t('tx.fromRule')}</small>}
+          {fromRule && category && <small className="good-text"><Icon name="check" size={16} />{t('tx.fromRule')}</small>}
         </label>
 
         <label className="field">

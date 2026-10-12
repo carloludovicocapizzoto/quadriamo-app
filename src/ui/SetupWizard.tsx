@@ -10,6 +10,7 @@ import type { Dict } from '../i18n/en'
 import { useSync } from '../sync/context'
 import { ProfileForm } from './ProfileForm'
 import { SettingsView, type SettingsSection } from './SettingsView'
+import { Icon } from './Icon'
 import { StepHeader, StepNav } from './Steps'
 
 // configurazione iniziale: ogni sezione delle Impostazioni è un passaggio, nell'ordine in cui serve
@@ -73,7 +74,7 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
       {cur.kind !== 'profile' && (
         <form onSubmit={next}>
           <StepNav onBack={step > 1 ? () => setStep(step - 1) : undefined}
-            next={step < total ? `${t('step.next')} →` : t('setup.finish')}
+            next={step < total ? `${t('step.next')}` : t('setup.finish')}
             extra={<button type="button" className="link-btn" onClick={finish}>{t('setup.skip')}</button>} />
         </form>
       )}
@@ -92,11 +93,11 @@ function NotifyStep() {
   }
   return (
     <div className="notify-step">
-      <div className="notify-bell" aria-hidden="true">🔔</div>
+      <div className="notify-bell" aria-hidden="true"><Icon name="bell" size={30} /></div>
       <p>{t('setup.notifyText')}</p>
       {state === 'on'
-        ? <p className="good-text"><b>✓ {t('setup.notifyOn')}</b></p>
-        : <button type="button" className="btn primary big-btn" disabled={state === 'busy'} onClick={() => void ask()}>🔔 {t('setup.notifyBtn')}</button>}
+        ? <p className="good-text"><b><Icon name="check" size={16} />{t('setup.notifyOn')}</b></p>
+        : <button type="button" className="btn primary big-btn" disabled={state === 'busy'} onClick={() => void ask()}><Icon name="bell" size={18} />{t('setup.notifyBtn')}</button>}
       {state === 'denied' && <p className="small muted">{t('setup.notifyDenied')}</p>}
       <p className="small muted">{t('setup.notifyHint')}</p>
     </div>

@@ -125,7 +125,7 @@ function Widget({ id, data, r, today, onOpen, onAll, onShared }: {
       return <>
         {list.length ? <ul className="tx-list">{list.map(tx => <TxRow key={tx.id} tx={tx} settings={s} onOpen={onOpen} />)}</ul>
           : <p className="muted small">{t('w.noRecent')}</p>}
-        <button className="link-btn" onClick={onAll}>{t('w.seeAll')} →</button>
+        <button className="link-btn" onClick={onAll}>{t('w.seeAll')}<Icon name="chevron" size={16} /></button>
       </>
     }
     case 'donut': return <BucketDonut r={r} settings={s} />

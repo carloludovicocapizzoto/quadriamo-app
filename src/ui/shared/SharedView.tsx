@@ -8,6 +8,7 @@ import { newId, parseAmount } from '../../store/state'
 import { useSync } from '../../sync/context'
 import { createBudget, createInvite, deleteExpense, joinBudget, leaveBudget, loadBudget, myBudgets, saveExpense, settle,
   updateBudget, updateMember, type SBudget, type SFull } from '../../shared/api'
+import { Icon } from '../Icon'
 import { categoryName } from '../names'
 
 const LAST = 'q.sharedBudget'
@@ -31,9 +32,9 @@ export function SharedView({ onBack, onLogin }: { onBack: () => void; onLogin: (
     if (sync.user) void refreshList()
   }, [sync.user, refreshList])
 
-  const head = <div className="sh-head"><button className="link-btn" onClick={onBack}>← {t('sh.back')}</button><h1>{t('sh.title')}</h1></div>
+  const head = <div className="sh-head"><button className="link-btn" onClick={onBack}><Icon name="back" size={16} />{t('sh.back')}</button><h1>{t('sh.title')}</h1></div>
   if (!sync.user) return <div className="shared">{head}<section className="card"><p>{t('sh.needAccount')}</p>
-    <button className="btn primary" onClick={onLogin}>👤 {t('onb.account')}</button></section></div>
+    <button className="btn primary" onClick={onLogin}><Icon name="user" size={16} />{t('onb.account')}</button></section></div>
   if (!list) return <div className="shared">{head}<p className="muted">…</p></div>
   return (
     <div className="shared">
@@ -76,7 +77,7 @@ function StartCard({ first, onReady }: { first: boolean; onReady: (id: string) =
       {first && <><h3 className="h-plain">{t('sh.introTitle')}</h3><p className="muted small">{t('sh.intro')}</p></>}
       <div className="stack-row">
         <button className={`btn${open === 'create' ? ' primary' : ''}`} onClick={() => setOpen('create')}>+ {t('sh.create')}</button>
-        <button className={`btn${open === 'join' ? ' primary' : ''}`} onClick={() => setOpen('join')}>🔑 {t('sh.join')}</button>
+        <button className={`btn${open === 'join' ? ' primary' : ''}`} onClick={() => setOpen('join')}><Icon name="key" size={16} />{t('sh.join')}</button>
       </div>
       {open && (
         <form className="auth-form step-body" key={open} onSubmit={submit}>
@@ -121,7 +122,7 @@ function BudgetDetail({ id, onLeft }: { id: string; onLeft: () => void }) {
     <>
       <section className="card sh-summary">
         <div className="card-head"><h3 className="h-plain">{d.budget.name}</h3>
-          <button className="btn small-btn" onClick={() => setSettings(!settings)}>⚙ {t('sh.settings')}</button></div>
+          <button className="btn small-btn" onClick={() => setSettings(!settings)}><Icon name="settings" size={16} />{t('sh.settings')}</button></div>
         <p className="muted small">{d.members.map(m => m.display_name).join(' · ')} · {t(`sh.mode.${d.budget.split_mode}` as keyof Dict)}</p>
         {plan.length ? (
           <ul className="sh-transfers">
@@ -131,11 +132,11 @@ function BudgetDetail({ id, onLeft }: { id: string; onLeft: () => void }) {
                 <button className="btn small-btn" onClick={async () => {
                   if (!confirm(t('sh.settleConfirm', { from: nameOf(p.from), to: nameOf(p.to), amount: money(p.amount, cur) }))) return
                   await settle(id, p.from, p.to, p.amount); void reload()
-                }}>✓ {t('sh.settle')}</button>
+                }}><Icon name="check" size={16} />{t('sh.settle')}</button>
               </li>
             ))}
           </ul>
-        ) : <p className="good-text"><b>✓ {t('sh.even')}</b></p>}
+        ) : <p className="good-text"><b><Icon name="check" size={16} />{t('sh.even')}</b></p>}
         <dl className="w-flow">
           <div><dt>{t('sh.monthTotal')}</dt><dd>{money(monthTot, cur)}</dd></div>
           {d.members.map(m => <div key={m.user_id}><dt>{t('sh.paidBy', { name: m.display_name })}</dt>
@@ -273,14 +274,14 @@ function BudgetSettings({ d, me, onChange, onLeft }: { d: SFull; me: string; onC
       )}
       <div className="sh-invite">
         <p><b>{t('sh.invite')}</b><br /><span className="small muted">{t('sh.inviteHint')}</span></p>
-        {!code ? <button className="btn" onClick={async () => setCode(await createInvite(d.budget.id))}>🔑 {t('sh.makeCode')}</button> : <>
+        {!code ? <button className="btn" onClick={async () => setCode(await createInvite(d.budget.id))}><Icon name="key" size={16} />{t('sh.makeCode')}</button> : <>
           <p className="sh-code">{code}</p>
           <div className="stack-row">
             <button className="btn" onClick={async () => {
               const text = t('sh.inviteText', { name: d.budget.name, code })
               try { if (navigator.share) await navigator.share({ title: 'Quadriamo', text, url: link }); else { await navigator.clipboard.writeText(`${text} ${link}`); setCopied(true) } } catch { /* annullato */ }
-            }}>↗ {t('sh.shareInvite')}</button>
-            {copied && <span className="small good-text">✓ {t('beta.copied')}</span>}
+            }}><Icon name="share" size={16} />{t('sh.shareInvite')}</button>
+            {copied && <span className="small good-text"><Icon name="check" size={16} />{t('beta.copied')}</span>}
           </div>
         </>}
       </div>

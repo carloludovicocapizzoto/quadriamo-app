@@ -1,4 +1,5 @@
 import type { YearMonth } from '../engine'
+import { Icon } from './Icon'
 import { useI18n } from '../i18n/core'
 
 export function MonthNav({ ym, onChange }: { ym: YearMonth; onChange: (ym: YearMonth) => void }) {
@@ -9,9 +10,9 @@ export function MonthNav({ ym, onChange }: { ym: YearMonth; onChange: (ym: YearM
   }
   return (
     <div className="month-nav">
-      <button className="icon-btn" onClick={() => shift(-1)} aria-label={t('month.prev')}>‹</button>
+      <button className="icon-btn" onClick={() => shift(-1)} aria-label={t('month.prev')}><Icon name="back" size={20} /></button>
       <h2>{t(`m.${ym.month}` as 'm.1')} {ym.year}</h2>
-      <button className="icon-btn" onClick={() => shift(1)} aria-label={t('month.next')}>›</button>
+      <button className="icon-btn" onClick={() => shift(1)} aria-label={t('month.next')}><Icon name="chevron" size={20} /></button>
     </div>
   )
 }

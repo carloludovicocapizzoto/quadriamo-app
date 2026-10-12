@@ -5,6 +5,7 @@ import { isStandalone } from '../beta/device'
 import { installSkip } from '../sync/profile'
 import { LoginScreen } from './AccountSection'
 import { InstallTutorial } from './InstallTutorial'
+import { Icon } from './Icon'
 import { LegalLinks } from './LegalLinks'
 
 /** Il logo di Quadriamo: i quattro blocchi compaiono uno dopo l'altro. */
@@ -61,7 +62,7 @@ export function Gate({ hasData, onLocal, onDemo }: { hasData: boolean; onLocal: 
           <div className="gate-rule" aria-hidden="true">
             <span style={{ flex: 55 }} /><span style={{ flex: 20 }} /><span style={{ flex: 15 }} /><span style={{ flex: 10 }} />
           </div>
-          <button className="btn primary big-btn gate-cta" onClick={go}>{t('gate.start')} →</button>
+          <button className="btn primary big-btn gate-cta" onClick={go}>{t('gate.start')}<Icon name="chevron" size={16} /></button>
         </div>
       </div>
     )
@@ -84,7 +85,7 @@ export function Gate({ hasData, onLocal, onDemo }: { hasData: boolean; onLocal: 
       <div className="gate-panel">
         <button className="gate-mini" onClick={() => setPhase('welcome')} aria-label="Quadriamo"><LogoMark size={40} /><span>Quadriamo<i>.</i></span></button>
         <LoginScreen footer={<>
-          <button className="link-btn" onClick={onLocal}>{t('onb.noAccount')} →</button>
+          <button className="link-btn" onClick={onLocal}>{t('onb.noAccount')}<Icon name="chevron" size={16} /></button>
           <small className="muted">{t('onb.noAccountHint')}</small>
           {!hasData && <button className="link-btn" onClick={onDemo}>{t('onb.demo')}</button>}
           <LegalLinks notice />
@@ -111,7 +112,7 @@ export function ConfirmedScreen({ onContinue }: { onContinue: () => void }) {
             <li><span className="n">2</span><div><b>{t('conf.s2')}</b><p className="small muted">{t('conf.s2d')}</p></div>
               <span className="conf-login">{t('auth.tabSignIn')}</span></li>
           </ol>
-          <button className="link-btn" onClick={onContinue}>{t('conf.here')} →</button>
+          <button className="link-btn" onClick={onContinue}>{t('conf.here')}<Icon name="chevron" size={16} /></button>
         </section>
       </div>
     </div>

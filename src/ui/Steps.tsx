@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Icon } from './Icon'
 import { useI18n } from '../i18n/core'
 
 /** Intestazione di un percorso a passaggi: "Passaggio 2 di 3" e una barra con un segmento per passaggio. */
@@ -18,7 +19,7 @@ export function StepNav({ onBack, next, busy, extra }: { onBack?: () => void; ne
   const { t } = useI18n()
   return (
     <div className="step-nav">
-      {onBack && <button type="button" className="btn" onClick={onBack}>← {t('step.back')}</button>}
+      {onBack && <button type="button" className="btn" onClick={onBack}><Icon name="back" size={16} />{t('step.back')}</button>}
       <button className="btn primary" disabled={busy}>{next}</button>
       {extra}
     </div>

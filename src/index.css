@@ -680,3 +680,28 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 .btn-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .btn-pair .btn { min-width: 0; padding: 0 10px; font-size: 14px; white-space: nowrap; }
 .card > h3.h-plain { font-size: 16px; font-weight: 650; letter-spacing: -.01em; margin-bottom: 8px; }
+
+/* icone dentro il testo (avvisi, conferme, note sulla privacy) */
+p > .ico, b > .ico, strong > .ico, small > .ico, span > .ico, .inline-ico, .pill > .ico { display: inline-block; vertical-align: -.18em; margin-right: 5px; }
+.btn > .ico, .link-btn > .ico { display: block; margin: 0; }
+.link-btn > .ico:last-child { margin-left: 1px; }
+.notify-bell { width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center; margin: 0 auto 8px;
+  color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); font-size: 0; }
+
+/* movimenti da confermare: descrizione in alto, data sotto; selezioni leggibili */
+.inbox-item { border-radius: 14px; padding: 12px; gap: 10px; }
+.inbox-top { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "desc amount" "date amount"; row-gap: 2px; }
+.inbox-top .tx-date { grid-area: date; font-size: 13px; }
+.inbox-top .tx-desc { grid-area: desc; font-size: 14.5px; }
+.inbox-top .tx-amount { grid-area: amount; }
+.inbox-edit select { min-width: 0; font-size: 15px; }
+
+/* campi: freccia delle tendine disegnata, bordi e focus coerenti */
+select { -webkit-appearance: none; appearance: none; padding-right: 30px; text-overflow: ellipsis;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8F96' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 11px center; background-size: 12px; }
+input, select, textarea { border-radius: 12px; transition: border-color .15s, box-shadow .15s; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.inbox-edit select { padding-left: 10px; padding-right: 26px; background-position: right 8px center; }
+.btn { text-align: center; }

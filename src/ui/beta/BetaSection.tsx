@@ -38,14 +38,14 @@ export function BetaSection({ onFeedback, onAdmin }: { onFeedback: () => void; o
         <button className="btn" onClick={invite}><Icon name="share" size={16} />{t('beta.invite')}</button>
         <button className="btn" onClick={onFeedback}><Icon name="message" size={16} />{t('beta.feedback')}</button>
       </div>
-      {note && <p className="small good-text">✓ {note}</p>}
+      {note && <p className="small good-text"><Icon name="check" size={16} />{note}</p>}
       <div className="top-gap"><PushToggle /></div>
       <label className="check top-gap">
         <input type="checkbox" checked={stats} onChange={e => { setStats(e.target.checked); setStatsConsent(e.target.checked ? 'yes' : 'no') }} />
         {t('beta.stats')}
       </label>
       <p className="small muted">{t('beta.statsHint')}</p>
-      {isAdmin && <button className="btn top-gap" onClick={onAdmin}>📊 {t('admin.open')}</button>}
+      {isAdmin && <button className="btn top-gap" onClick={onAdmin}><Icon name="chart" size={16} />{t('admin.open')}</button>}
     </section>
   )
 }

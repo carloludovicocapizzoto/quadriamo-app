@@ -218,7 +218,7 @@ export default function App() {
                                             onAdmin={() => window.location.assign(`${import.meta.env.BASE_URL}admin/`)} />}
         {tab === 'settings' && (
           <section className="card"><h3 className="h-plain">{t('sh.title')}</h3><p className="muted small">{t('w.sharedNone')}</p>
-            <button className="btn" onClick={() => { setTab('shared'); window.scrollTo(0, 0) }}>{t('w.sharedOpen')} →</button></section>)}
+            <button className="btn" onClick={() => { setTab('shared'); window.scrollTo(0, 0) }}>{t('w.sharedOpen')}<Icon name="chevron" size={16} /></button></section>)}
         {tab === 'settings' && <SettingsView onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} />}
         <FxAutoUpdate today={today} />
       </main>

@@ -7,6 +7,7 @@ import { useSync } from '../sync/context'
 import { CARDS, GOALS, WHERE, loadNames, profilePrompt, saveNames, type Names } from '../sync/profile'
 import { syncResearch } from '../sync/research'
 import { bucketName } from './names'
+import { Icon } from './Icon'
 import { StepHeader, StepNav } from './Steps'
 
 const PRESETS = [[55, 20, 15, 10], [50, 25, 15, 10], [60, 15, 15, 10], [50, 20, 15, 15]]
@@ -134,7 +135,7 @@ export function ProfileForm({ onDone, withShares = true }: { onDone: () => void;
         </>}
         {step === TOTAL && <>
           <div className="privacy-note">
-            <p><b>🔒 {t('prof.privTitle')}</b></p>
+            <p><b><Icon name="lock" size={14} />{t('prof.privTitle')}</b></p>
             <p className="small">{t('prof.privText')}</p>
           </div>
           <label className="check wrap-text research-check">
@@ -145,7 +146,7 @@ export function ProfileForm({ onDone, withShares = true }: { onDone: () => void;
       </div>
 
       <StepNav onBack={step > 1 ? () => setStep(step - 1) : undefined} busy={busy}
-        next={step < TOTAL ? `${t('step.next')} →` : t('prof.save')}
+        next={step < TOTAL ? `${t('step.next')}` : t('prof.save')}
         extra={<button type="button" className="link-btn" onClick={() => { profilePrompt.clear(); onDone() }}>{t('prof.skip')}</button>} />
       {step === TOTAL && <button type="button" className="link-btn small" onClick={() => void clear()}>{t('prof.clear')}</button>}
       {msg && <p className={msg.bad ? 'bad-text small' : 'good-text small'} role="status">{msg.text}</p>}

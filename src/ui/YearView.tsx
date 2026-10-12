@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { computeYear, computeYears, type Settings, type Transaction, type YearMonth } from '../engine'
 import { useI18n } from '../i18n/core'
+import { Icon } from './Icon'
 import { BUCKET_COLORS, bucketName, categoryName } from './names'
 
 const pctFmt = (n: number | null, lang: string) =>
@@ -10,9 +11,9 @@ export function YearNav({ year, onChange }: { year: number; onChange: (y: number
   const { t } = useI18n()
   return (
     <div className="month-nav">
-      <button className="icon-btn" onClick={() => onChange(year - 1)} aria-label={t('year.prev')}>‹</button>
+      <button className="icon-btn" onClick={() => onChange(year - 1)} aria-label={t('year.prev')}><Icon name="back" size={20} /></button>
       <h2>{year}</h2>
-      <button className="icon-btn" onClick={() => onChange(year + 1)} aria-label={t('year.next')}>›</button>
+      <button className="icon-btn" onClick={() => onChange(year + 1)} aria-label={t('year.next')}><Icon name="chevron" size={20} /></button>
     </div>
   )
 }
