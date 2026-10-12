@@ -7,6 +7,7 @@ import { useStore } from '../store/context'
 import { BucketDonut, DailyChart } from './HomeCharts'
 import { BUCKET_COLORS, bucketName, categoryName } from './names'
 import { CategoryChangesReport, ForecastReport, TrendReport } from './Reports'
+import { ProGate } from './Pro'
 import { StreakCard } from './Streak'
 import { Icon } from './Icon'
 import { TxRow } from './TxRow'
@@ -129,9 +130,9 @@ function Widget({ id, data, r, today, onOpen, onAll, onShared }: {
         <button className="link-btn" onClick={onAll}>{t('w.seeAll')}<Icon name="chevron" size={16} /></button>
       </>
     }
-    case 'forecast': return <ForecastReport r={r} settings={s} today={today} />
-    case 'trend': return <TrendReport r={r} txs={data.transactions} settings={s} today={today} />
-    case 'growing': return <CategoryChangesReport r={r} txs={data.transactions} settings={s} today={today} />
+    case 'forecast': return <ProGate feature="reports" compact><ForecastReport r={r} settings={s} today={today} /></ProGate>
+    case 'trend': return <ProGate feature="reports" compact><TrendReport r={r} txs={data.transactions} settings={s} today={today} /></ProGate>
+    case 'growing': return <ProGate feature="reports" compact><CategoryChangesReport r={r} txs={data.transactions} settings={s} today={today} /></ProGate>
     case 'donut': return <BucketDonut r={r} settings={s} />
     case 'daily': return <DailyChart r={r} settings={s} today={today} />
     case 'categories': {

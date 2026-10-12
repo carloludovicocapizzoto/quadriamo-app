@@ -46,7 +46,7 @@ Dopo: import dell'estratto conto (CSV), collegamento con le banche (open banking
   budget; lo stipendio si divide da solo in quattro parti; i tuoi dati restano tuoi"): una serie di post e reel sui vantaggi
   concreti (il numero del giorno, il giorno di paga con i pocket, niente collegamento obbligatorio alla banca, privacy) e sul
   confronto con il "budget fai da te", più la chiamata a provare la beta e dare feedback. Prima campagna già in marketing/.
-- In attesa di una scelta: Free/Pro con abbonamento Stripe, da preparare in modalità test.
+- Free/Pro con Stripe pronto in modalità test (12/10/2026): Pro = report, investimenti, budget comune; 2,99 €/mese o 24,99 €/anno (proposta, si cambia in src/billing/plan.ts e su Stripe). Durante la beta Pro gratis per tutti (BETA_ALL_PRO).
 
 - Dominio scelto: **quadriamo.com** (verificato libero l'11/10/2026, anche quadriamo.it): da comprare presto.
   Indirizzi previsti: `admin@quadriamo.com` (accesso amministratore: in Supabase → Authentication → Users si cambia l'email

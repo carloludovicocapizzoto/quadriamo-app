@@ -728,3 +728,28 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 .changes li small { font-size: 12.5px; }
 .changes b { font-variant-numeric: tabular-nums; font-weight: 650; text-align: right; display: grid; white-space: nowrap; }
 .changes b small { font-weight: 500; opacity: .8; }
+
+/* ---------- Free / Pro ---------- */
+.pro-badge { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 99px; font-size: 11.5px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, var(--accent), #E0884F); }
+.pro-badge.free { color: var(--muted); background: color-mix(in srgb, var(--muted) 14%, transparent); }
+.paywall { display: grid; gap: 6px; justify-items: start; padding: 4px 0; }
+.paywall p { margin: 0; }
+.paywall.compact { gap: 8px; }
+.plan-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.pro-list { list-style: none; margin: 10px 0 14px; padding: 0; display: grid; gap: 10px; }
+.pro-list li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; }
+.pro-list li .ico { color: var(--accent); margin-top: 2px; }
+.pro-list span { display: grid; gap: 1px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 4px 0 12px; }
+.seg button { display: grid; gap: 2px; justify-items: start; padding: 12px 14px; border-radius: 14px; cursor: pointer; text-align: left;
+  background: var(--surface); color: var(--text); border: 1.5px solid var(--line); font: inherit; }
+.seg button b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.seg button small { color: var(--muted); font-size: 12.5px; }
+.seg button.on { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent); }
+.btn.wide { width: 100%; }
+.paywall-page { display: grid; justify-items: center; text-align: center; gap: 10px; padding: 34px 22px 28px; margin-top: 18px; }
+.paywall-page h2 { font-size: 26px; margin: 2px 0 0; }
+.paywall-page p { margin: 0 0 6px; max-width: 34ch; }
+.paywall-ico { width: 60px; height: 60px; border-radius: 18px; display: grid; place-items: center; color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent); }

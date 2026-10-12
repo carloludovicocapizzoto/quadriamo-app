@@ -13,6 +13,8 @@ import sql0008 from '../../supabase/migrations/0008_morning_push_alternatives_co
 import sql0010 from '../../supabase/migrations/0010_shared_budgets.sql?raw'
 import sql0011 from '../../supabase/migrations/0011_nudge_streak.sql?raw'
 import sql0012 from '../../supabase/migrations/0012_nudge_cron.sql?raw'
+import sql0013 from '../../supabase/migrations/0013_billing.sql?raw'
+import billingCode from '../../supabase/functions/billing/index.ts?raw'
 import sql0009 from '../../supabase/migrations/0009_morning_push_cron.sql?raw'
 import sql0003 from '../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
 import fnCode from '../../supabase/functions/send-push/index.ts?raw'
@@ -369,10 +371,10 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
   const adminSql = adminKey
     ? `insert into public.admin_keys (name, key_hash)\nvalues ('${adminKey.name.replace(/'/g, "''")}', decode('${adminKey.hash}', 'hex'))\non conflict (key_hash) do update set name = excluded.name;`
     : `insert into public.admins (user_id)\nselect id from auth.users where email = '${email}'\non conflict do nothing;`
-  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n${sql0006}\n${sql0007}\n${sql0008}\n${sql0010}\n${sql0011}\n-- tu sei l'amministratore\n${adminSql}\n`
-  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.research !== false && setup.v8 !== false && setup.v10 !== false && setup.v11 !== false && setup.siteFeedback !== false && setup.adminKeys !== false
+  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n${sql0006}\n${sql0007}\n${sql0008}\n${sql0010}\n${sql0011}\n${sql0013}\n-- tu sei l'amministratore\n${adminSql}\n`
+  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.research !== false && setup.v8 !== false && setup.v10 !== false && setup.v11 !== false && setup.v13 !== false && setup.siteFeedback !== false && setup.adminKeys !== false
   // tabelle già create ma manca qualcosa: solo i pezzi mancanti
-  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.adminKeys === false ? sql0006 : '', setup.research === false ? sql0007 : '', setup.v8 === false ? sql0008 : '', setup.v10 === false ? sql0010 : '', setup.v11 === false ? sql0011 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
+  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.adminKeys === false ? sql0006 : '', setup.research === false ? sql0007 : '', setup.v8 === false ? sql0008 : '', setup.v10 === false ? sql0010 : '', setup.v11 === false ? sql0011 : '', setup.v13 === false ? sql0013 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
   const cronSql = sql0003.replace('<PROJECT_REF>', ref)
   const morningSql = sql0009.replace('<PROJECT_REF>', ref)
   return (
@@ -463,6 +465,34 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
           <p className="az-hint">A un'ora a caso tra le 9 e le 20, al massimo una volta al giorno, solo a chi oggi non ha ancora segnato niente.
             L'app comunica solo la data dell'ultimo aggiornamento; il testo (con i giorni di slancio) lo scrive il telefono.</p>
+        </Step>
+        <Step n={9} ok={setup.billing ? setup.billing.fn && setup.billing.configured && setup.billing.webhook : null} title="Abbonamento Pro con Stripe (modalità di prova)">
+          {setup.billing && <ul className="az-checks">
+            <li className={setup.billing.fn ? 'ok' : 'bad'}>Funzione <code>billing</code> pubblicata</li>
+            <li className={setup.billing.configured ? 'ok' : 'bad'}>Chiave segreta e i due prezzi (mensile, annuale)</li>
+            <li className={setup.billing.webhook ? 'ok' : 'bad'}>Segreto del webhook</li>
+            {setup.billing.configured && <li className={setup.billing.test ? 'ok' : 'bad'}>{setup.billing.test ? 'Modalità di prova (nessun addebito reale)' : 'ATTENZIONE: chiave reale, i pagamenti sono veri'}</li>}
+          </ul>}
+          <ol>
+            <li>Crea un account su <a href="https://dashboard.stripe.com/register" target="_blank" rel="noreferrer">Stripe</a> e lascia attiva la <b>modalità di prova</b> (interruttore "Test mode" in alto).</li>
+            <li>In <a href="https://dashboard.stripe.com/test/products" target="_blank" rel="noreferrer">Prodotti</a> crea <b>Quadriamo Pro</b> con due prezzi ricorrenti: mensile e annuale.
+              Copia i due ID che iniziano con <code>price_</code>.</li>
+            <li>In <a href="https://dashboard.stripe.com/test/apikeys" target="_blank" rel="noreferrer">Sviluppatori → Chiavi API</a> copia la <b>chiave segreta</b> (inizia con <code>sk_test_</code>).</li>
+            <li>Pubblica la funzione: <a href={`${dash}/functions`} target="_blank" rel="noreferrer">Edge Functions</a> → <b>Deploy a new function</b> → <b>Via Editor</b>,
+              nome <code>billing</code>, incolla il codice (pulsante qui sotto) → <b>Deploy</b>. Poi nei dettagli spegni <b>Verify JWT</b>.</li>
+            <li>In <a href="https://dashboard.stripe.com/test/webhooks" target="_blank" rel="noreferrer">Sviluppatori → Webhook</a> aggiungi l'indirizzo
+              <code>{`https://${ref}.supabase.co/functions/v1/billing`}</code> con gli eventi <code>checkout.session.completed</code>,
+              <code>customer.subscription.created</code>, <code>customer.subscription.updated</code>, <code>customer.subscription.deleted</code>.
+              Copia il <b>segreto di firma</b> (inizia con <code>whsec_</code>).</li>
+            <li>In <a href={`${dash}/functions/secrets`} target="_blank" rel="noreferrer">Edge Functions → Secrets</a> aggiungi <code>STRIPE_SECRET_KEY</code>,
+              <code>STRIPE_WEBHOOK_SECRET</code>, <code>STRIPE_PRICE_MONTHLY</code>, <code>STRIPE_PRICE_YEARLY</code>.</li>
+            <li>In <a href="https://dashboard.stripe.com/test/settings/billing/portal" target="_blank" rel="noreferrer">Impostazioni → Portale clienti</a> premi <b>Attiva</b>
+              (serve per "Gestisci abbonamento").</li>
+          </ol>
+          <div className="az-u-row"><Copy text={billingCode} label="Copia il codice della funzione" />
+            <a className="az-btn" href={`${dash}/functions`} target="_blank" rel="noreferrer">↗ Apri Edge Functions</a></div>
+          <p className="az-hint">Durante la beta Pro resta gratis per tutti: il pagamento si prova da Opzioni → Il tuo piano, con la carta di prova 4242 4242 4242 4242.
+            Prima di passare ai pagamenti veri: hosting adatto a un servizio commerciale, dominio, privacy e termini con i dati dell'attività.</p>
         </Step>
       </div>
       <div className="az-card">

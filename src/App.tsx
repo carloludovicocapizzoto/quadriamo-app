@@ -27,6 +27,8 @@ import { saveMorningSnapshot } from './beta/morning'
 import { syncPush, touchPush } from './beta/push'
 import { StreakCelebration } from './ui/Streak'
 import { CategoryChangesReport, TrendReport } from './ui/Reports'
+import { PlanCard, ProGate } from './ui/Pro'
+import { refreshPlan } from './billing/plan'
 import { bucketName } from './ui/names'
 import { noAccount, profilePrompt, setupPending } from './sync/profile'
 import { ConfirmedScreen, Gate, Splash } from './ui/Gate'
@@ -73,6 +75,20 @@ export default function App() {
   const [confirmed, setConfirmed] = useState(() => ENTRY.get('confirmed') === '1' && !isStandalone())
   const inSetup = setupPending.get() && setupTick >= 0
   const [note, setNote] = useState('')
+  // "Scopri Pro" da qualsiasi schermata: si apre la scheda del piano in Opzioni
+  useEffect(() => {
+    const go = () => { setTab('settings'); setTimeout(() => document.getElementById('plan')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80) }
+    window.addEventListener('quadriamo:upgrade', go)
+    return () => window.removeEventListener('quadriamo:upgrade', go)
+  }, [])
+  // ritorno dalla pagina di pagamento di Stripe (la conferma arriva a Stripe → server, quindi si rilegge il piano)
+  useEffect(() => {
+    const pro = ENTRY.get('pro')
+    if (!pro) return
+    setNote(t(pro === 'ok' ? 'pro.welcome' : 'pro.canceled')); setTimeout(() => setNote(''), 4000)
+    if (pro === 'ok') { refreshPlan(); setTimeout(refreshPlan, 4000) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- una volta all'avvio
+  }, [])
   const data = state.data
 
   const current = ym ?? (data ? monthOf(today, data.settings.monthStartDay) : null)
@@ -205,23 +221,24 @@ export default function App() {
         {tab === 'home' && homeResult && <HomeView data={data} r={homeResult} today={today} streak={streak} onOpen={openTx}
           onAll={() => { setYm(null); setTab('transactions'); window.scrollTo(0, 0) }}
           onShared={() => { setTab('shared'); window.scrollTo(0, 0) }} />}
-        {tab === 'shared' && <SharedView onBack={() => { setTab('home'); window.scrollTo(0, 0) }} onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} />}
+        {tab === 'shared' && <ProGate feature="shared"><SharedView onBack={() => { setTab('home'); window.scrollTo(0, 0) }} onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} /></ProGate>}
         {(tab === 'month' || tab === 'transactions') && <MonthNav ym={current} onChange={setYm} />}
         {tab === 'year' && <YearNav year={year} onChange={setYear} />}
         {tab === 'year' && homeResult && year === homeResult.ym.year && (
-          <div className="widgets report-grid">
+          <ProGate feature="reports"><div className="widgets report-grid">
             <section className="card widget"><div className="w-head"><h3 className="h-plain">{t('w.trend')}</h3></div>
               <TrendReport r={homeResult} txs={data.transactions} settings={data.settings} today={today} /></section>
             <section className="card widget"><div className="w-head"><h3 className="h-plain">{t('w.growing')}</h3></div>
               <CategoryChangesReport r={homeResult} txs={data.transactions} settings={data.settings} today={today} /></section>
-          </div>)}
+          </div></ProGate>)}
         {tab === 'year' && <YearView year={year} transactions={data.transactions} settings={data.settings} today={today}
                                      onYear={setYear} onOpenMonth={m => { setYm(m); setTab('month'); window.scrollTo(0, 0) }} />}
         {tab === 'month' && <MonthView r={result} settings={data.settings} onOpen={openTx} today={today} />}
         {tab === 'transactions' &&
           <TransactionsView r={result} settings={data.settings} undated={undated(data.transactions)} onOpen={openTx} />}
-        {tab === 'investments' && <InvestmentsView settings={data.settings} transactions={data.transactions} today={today}
-                                                   year={year} onYear={setYear} />}
+        {tab === 'investments' && <ProGate feature="investments"><InvestmentsView settings={data.settings} transactions={data.transactions} today={today}
+                                                   year={year} onYear={setYear} /></ProGate>}
+        {tab === 'settings' && <PlanCard onLogin={() => { setAuthOpen(true); window.scrollTo(0, 0) }} />}
         {tab === 'settings' && <BetaSection onFeedback={() => { setShowFeedback(true); setTab('home'); window.scrollTo(0, 0) }}
                                             onAdmin={() => window.location.assign(`${import.meta.env.BASE_URL}admin/`)} />}
         {tab === 'settings' && (
