@@ -374,3 +374,16 @@ body.sheet-open { overflow: hidden; }
 .chip-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 6px; }
 .amount-range { display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--s3); align-items: end; }
 .amount-range label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); font-weight: 600; }
+
+/* ---------- scorrimento tra i mesi ---------- */
+.swipe { touch-action: pan-y; overflow-x: clip; }
+.swipe-page { transition: transform .25s var(--ease), opacity .25s; will-change: transform; }
+.swipe-page.from-left { animation: from-left .32s var(--ease) both; }
+.swipe-page.from-right { animation: from-right .32s var(--ease) both; }
+@keyframes from-left { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+@keyframes from-right { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
+.swipe-hint { display: flex; justify-content: center; align-items: center; gap: 8px; margin: -4px 0 var(--s3); font-size: 13px; font-weight: 600; color: var(--muted); }
+.swipe-hint span { color: var(--accent); font-size: 18px; animation: nudge 1.4s ease-in-out infinite; }
+.swipe-hint span:last-child { animation-direction: reverse; }
+@keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
+@media (prefers-reduced-motion: reduce) { .swipe-page.from-left, .swipe-page.from-right, .swipe-hint span { animation: none; } }

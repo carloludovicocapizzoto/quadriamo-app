@@ -194,7 +194,7 @@ Dimensioni: 16 nei pulsanti, 18–20 nelle righe, 22–23 nella barra, 28 nel +.
 Tutte disattivate con "Riduci movimento" del sistema. Vibrazione leggera al tocco su Android.
 
 ## 7. Prossimi passi consigliati
-1. Scorrimento orizzontale tra i mesi in Movimenti e Analisi (swipe).
+1. ~~Scorrimento orizzontale tra i mesi~~ fatto (ottobre 2026): Movimenti, Analisi → Mese e Anno; frecce ← → sul computer.
 2. ~~Ricerca e filtri nei movimenti~~ fatto (ottobre 2026).
 3. ~~Obiettivi di risparmio~~ fatto (ottobre 2026).
 4. Modalità scura rifinita sul riquadro del giorno e sulle medaglie.

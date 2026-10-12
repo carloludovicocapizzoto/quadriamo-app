@@ -788,6 +788,7 @@ const fr: Dict = {
   'srch.min': "De",
   'srch.max': "À",
   'srch.more': "Il y a d’autres mouvements : affinez la recherche pour les voir.",
+  'swipe.hint': "Faites glisser pour changer de mois",
   'm.1': 'Janvier', 'm.2': 'Février', 'm.3': 'Mars', 'm.4': 'Avril', 'm.5': 'Mai', 'm.6': 'Juin',
   'm.7': 'Juillet', 'm.8': 'Août', 'm.9': 'Septembre', 'm.10': 'Octobre', 'm.11': 'Novembre', 'm.12': 'Décembre',
 }

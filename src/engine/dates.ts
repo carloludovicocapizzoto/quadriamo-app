@@ -60,3 +60,7 @@ export function todayIso(): string {
   const d = new Date()
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
+
+export function nextMonth(ym: YearMonth): YearMonth {
+  return ym.month === 12 ? { year: ym.year + 1, month: 1 } : { year: ym.year, month: ym.month + 1 }
+}

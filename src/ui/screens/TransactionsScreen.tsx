@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { activeFilters, daysBetween, filterTransactions, monthsBetween, periodStart, signedTotal, transactionsInMonths, undated, EMPTY_FILTER,
+import { activeFilters, daysBetween, nextMonth, prevMonth, filterTransactions, monthsBetween, periodStart, signedTotal, transactionsInMonths, undated, EMPTY_FILTER,
   type ClassifiedTx, type MonthResult, type Period, type TxFilter, type TxType, type YearMonth } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
@@ -9,6 +9,7 @@ import { Icon } from '../Icon'
 import { tap } from '../kit/motion'
 import { Sheet } from '../kit/Sheet'
 import { MonthNav } from '../MonthNav'
+import { Swipe } from '../kit/Swipe'
 import { BUCKET_COLORS, bucketName, categoryName } from '../names'
 import { TransactionsView } from '../TransactionsView'
 import { TxRow } from '../TxRow'
@@ -72,7 +73,9 @@ export function TransactionsScreen({ data, current, result, today, onMonth, onOp
 
       {!searching ? <>
         <MonthNav ym={current} onChange={onMonth} />
-        <TransactionsView r={result} settings={s} undated={undated(data.transactions)} onOpen={onOpen} />
+        <Swipe id={`${current.year}-${current.month}`} onPrev={() => onMonth(prevMonth(current))} onNext={() => onMonth(nextMonth(current))} hint>
+          <TransactionsView r={result} settings={s} undated={undated(data.transactions)} onOpen={onOpen} />
+        </Swipe>
       </> : <>
         {eff === 'month' && <MonthNav ym={current} onChange={onMonth} />}
         <div className="results-head">

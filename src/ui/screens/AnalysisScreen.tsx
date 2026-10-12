@@ -1,4 +1,5 @@
-import type { ClassifiedTx, MonthResult, YearMonth } from '../../engine'
+import { nextMonth, prevMonth, type ClassifiedTx, type MonthResult, type YearMonth } from '../../engine'
+import { Swipe } from '../kit/Swipe'
 import { useI18n } from '../../i18n/core'
 import type { AppData } from '../../store/state'
 import { tap } from '../kit/motion'
@@ -31,12 +32,15 @@ export function AnalysisScreen({ view, onView, data, result, current, homeResult
       <div key={view} className="view-in">
         {view === 'month' && <>
           <MonthNav ym={current} onChange={onMonth} />
+          <Swipe id={`${current.year}-${current.month}`} onPrev={() => onMonth(prevMonth(current))} onNext={() => onMonth(nextMonth(current))} hint>
           {isNow && <section className="card widget"><div className="w-head"><h3 className="h-plain">{t('w.forecast')}</h3></div>
             <ProGate feature="reports" compact><ForecastReport r={result} settings={data.settings} today={today} /></ProGate></section>}
           <MonthView r={result} settings={data.settings} onOpen={onOpen} today={today} />
+          </Swipe>
         </>}
         {view === 'year' && <>
           <YearNav year={year} onChange={onYear} />
+          <Swipe id={String(year)} onPrev={() => onYear(year - 1)} onNext={() => onYear(year + 1)}>
           {year === homeResult.ym.year && <ProGate feature="reports"><div className="widgets report-grid">
             <section className="card widget"><div className="w-head"><h3 className="h-plain">{t('w.trend')}</h3></div>
               <TrendReport r={homeResult} txs={data.transactions} settings={data.settings} today={today} /></section>
@@ -45,6 +49,7 @@ export function AnalysisScreen({ view, onView, data, result, current, homeResult
           </div></ProGate>}
           <YearView year={year} transactions={data.transactions} settings={data.settings} today={today} onYear={onYear}
                     onOpenMonth={m => { onMonth(m); onView('month'); window.scrollTo(0, 0) }} />
+          </Swipe>
         </>}
         {view === 'investments' && <ProGate feature="investments">
           <InvestmentsView settings={data.settings} transactions={data.transactions} today={today} year={year} onYear={onYear} /></ProGate>}
