@@ -112,3 +112,6 @@
 .split-row i { width: 8px; height: 8px; border-radius: 2px; flex: none; }
 .split-total { margin: 0; font-size: var(--t-sm); color: var(--muted); }
 .split-total.bad { color: var(--bad); }
+.txs-unit { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 0; }
+.txs-unit > input { flex: 1; min-width: 0; }
+.txs-unit > i { font-style: normal; color: var(--muted); }

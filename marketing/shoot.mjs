@@ -68,6 +68,7 @@ await click('Analisi', '.tabbar button'); await sleep(2500); await shot('12-fore
 await click('Anno', '.segmented button'); await sleep(900); await shot('14-trend.jpg', clean)
 await shot('15-growing.jpg', scrollTo(`document.querySelector('.part-rows')?.previousElementSibling`))
 await click('Investi', '.segmented button'); await sleep(1000); await shot('38-invest.jpg', clean)
+await shot('38b-invest-pac.jpg', scrollTo(`document.querySelector('.pac-chart')?.previousElementSibling?.previousElementSibling?.previousElementSibling`))
 // Notizie con contenuti veri (tools/news/sample.json, da: node tools/news/dry-run.ts --sample), senza bisogno del database
 try {
   const { readFileSync } = await import('node:fs')
