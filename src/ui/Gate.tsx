@@ -53,8 +53,7 @@ export function Gate({ hasData, onLocal, onDemo }: { hasData: boolean; onLocal: 
     return (
       <div className={`gate gate-welcome${leaving ? ' leaving' : ''}`}>
         {langSelect}
-        <div className="gate-glow" aria-hidden="true" />
-        <div className="gate-hero">
+          <div className="gate-hero">
           <LogoMark />
           <h1 className="gate-word">Quadriamo<span>.</span></h1>
           <p className="gate-tag">{t('app.tagline')}</p>
@@ -72,8 +71,7 @@ export function Gate({ hasData, onLocal, onDemo }: { hasData: boolean; onLocal: 
     return (
       <div className="gate gate-login">
         {langSelect}
-        <div className="gate-glow" aria-hidden="true" />
-        <div className="gate-panel"><section className="card"><InstallTutorial onContinue={afterInstall} /></section></div>
+          <div className="gate-panel"><section className="card"><InstallTutorial onContinue={afterInstall} /></section></div>
       </div>
     )
   }
@@ -81,9 +79,7 @@ export function Gate({ hasData, onLocal, onDemo }: { hasData: boolean; onLocal: 
   return (
     <div className="gate gate-login">
       {langSelect}
-      <div className="gate-glow" aria-hidden="true" />
       <div className="gate-panel">
-        <button className="gate-mini" onClick={() => setPhase('welcome')} aria-label="Quadriamo"><LogoMark size={40} /><span>Quadriamo<i>.</i></span></button>
         <LoginScreen footer={<>
           <button className="link-btn" onClick={onLocal}>{t('onb.noAccount')}<Icon name="chevron" size={16} /></button>
           <small className="muted">{t('onb.noAccountHint')}</small>
@@ -100,7 +96,6 @@ export function ConfirmedScreen({ onContinue }: { onContinue: () => void }) {
   const { t } = useI18n()
   return (
     <div className="gate gate-login">
-      <div className="gate-glow" aria-hidden="true" />
       <div className="gate-panel">
         <section className="card confirmed">
           <div className="ready-check"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><path d="M13 25l7 7 15-16" /></svg></div>

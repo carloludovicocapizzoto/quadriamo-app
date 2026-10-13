@@ -38,7 +38,7 @@ export function Entry({ children }: { children: ReactNode }) {
   if (!state.loaded || !sync.ready) return <Splash />
   if (confirmed) return <ConfirmedScreen onContinue={() => setConfirmed(false)} />
   // "password dimenticata": prima la nuova password, poi l'app
-  if (sync.recovery) return <div className="gate gate-login"><div className="gate-glow" aria-hidden="true" /><div className="gate-panel"><LoginScreen /></div></div>
+  if (sync.recovery) return <div className="gate gate-login"><div className="gate-panel"><LoginScreen /></div></div>
 
   // senza account: si usa solo su questo dispositivo; se non c'è ancora un budget parte la configurazione
   const startLocal = () => {

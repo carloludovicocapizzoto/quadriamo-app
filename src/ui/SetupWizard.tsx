@@ -68,8 +68,6 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
     : cur.kind === 'profile' ? t('setup.profile') : t(cur.title)
   return (
     <section className="card wizard">
-      <h1>{t('setup.title')}</h1>
-      {step === 1 && <p className="muted small">{t('setup.intro')}</p>}
       <StepHeader n={step} total={total} title={title} />
       <div className="step-body" key={step}>
         {cur.kind === 'persona' && <PersonaStep onPick={() => { window.scrollTo(0, 0); setStep(step + 1) }} />}
@@ -98,17 +96,16 @@ function PersonaStep({ onPick }: { onPick: () => void }) {
     dispatch({ type: 'setSettings', settings: applyPersona(state.data!.settings, p) })
     setTimeout(onPick, 180)
   }
-  const opts: { p: Persona; icon: 'growth' | 'home' | 'user' }[] = [{ p: 'student', icon: 'home' }, { p: 'worker', icon: 'growth' }, { p: 'other', icon: 'user' }]
+  const opts: { p: Persona }[] = [{ p: 'student' }, { p: 'worker' }, { p: 'other' }]
   return (
     <div className="persona">
       <p className="muted">{t('setup.personaText')}</p>
-      {opts.map(o => (
-        <button key={o.p} type="button" className={`persona-card${cur === o.p ? ' on' : ''}`} onClick={() => pick(o.p)}>
-          <span className="persona-ico"><Icon name={o.icon} size={24} /></span>
-          <span><b>{t(`persona.${o.p}` as keyof Dict)}</b><small>{t(`persona.${o.p}D` as keyof Dict)}</small></span>
-          <Icon name="chevron" size={20} />
-        </button>
-      ))}
+      <ul className="group-list">{opts.map(o => (
+        <li key={o.p}><button type="button" className={`row persona-row${cur === o.p ? ' on' : ''}`} onClick={() => pick(o.p)} aria-pressed={cur === o.p}>
+          <span className="row-main"><span>{t(`persona.${o.p}` as keyof Dict)}</span><small>{t(`persona.${o.p}D` as keyof Dict)}</small></span>
+          <Icon name={cur === o.p ? 'check' : 'chevron'} size={18} className="row-chev" />
+        </button></li>
+      ))}</ul>
     </div>
   )
 }
@@ -178,7 +175,7 @@ function SalaryStep() {
         <div className="salary-preview" key={Math.round(amount)}>
           <ul>
             {data.settings.buckets.map((b, i) => (
-              <li key={b.id} style={{ animationDelay: `${i * 70}ms` }}><i style={{ background: BUCKET_COLORS[i] }} /><span>{bucketName(b, t)}</span>
+              <li key={b.id}><i style={{ background: BUCKET_COLORS[i] }} /><span>{bucketName(b, t)}</span>
                 <b>{money(amount * b.share, cur)}</b></li>
             ))}
           </ul>

@@ -110,7 +110,7 @@ await js(`indexedDB.deleteDatabase('keyval-store'); localStorage.clear(); localS
 await cdp('Page.reload'); await sleep(3000)
 await click('Inizia'); await click('Preferisco continuare nel browser'); await click('Continua senza account'); await sleep(1200)
 await shot('31-persona.jpg')
-await js(`document.querySelector('.persona-card').click()`); await sleep(900)
+await js(`document.querySelector('.persona-row').click()`); await sleep(900)
 await js(`[...document.querySelectorAll('button')].find(b => b.textContent.trim().startsWith('Avanti'))?.click()`); await sleep(900)
 await type('.salary-input', '980'); await js(`document.querySelectorAll('.salary-step input')[1].focus()`); await cdp('Input.insertText', { text: '380' }); await sleep(900)
 await shot('32-income.jpg', 'window.scrollTo(0,0)')
