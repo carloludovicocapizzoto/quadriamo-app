@@ -47,3 +47,25 @@ describe('affitto prima delle parti', () => {
     expect(r.buckets.find(b => b.bucket.id === 'essentials')!.spent).toBe(400)
   })
 })
+
+describe('entrate divise a modo mio', () => {
+  const s0 = defaultSettings({ firstMonth: { year: 2026, month: 10 } })
+  const extra = (x: Partial<Transaction> = {}): Transaction => ({ id: 'e', date: '2026-10-05', description: 'Ripetizioni', category: 'extraIncome', amount: 200, ...x })
+  const parts = (r: ReturnType<typeof computeMonth>) => Object.fromEntries(r.buckets.map(b => [b.bucket.id, Math.round(b.fromIncome * 100) / 100]))
+  const ym = { year: 2026, month: 10 }
+  it('senza scelte va con la regola', () => {
+    expect(parts(computeMonth(ym, [extra()], s0, '2026-10-10'))).toEqual({ essentials: 110, qualityOfLife: 40, safetyFund: 30, investments: 20 })
+  })
+  it('la categoria può mandarla tutta in una parte o dividerla con le sue quote', () => {
+    const toFund = { ...s0, categories: s0.categories.map(c => c.id === 'extraIncome' ? { ...c, defaultBucket: 'safetyFund' } : c) }
+    expect(parts(computeMonth(ym, [extra()], toFund, '2026-10-10')).safetyFund).toBe(200)
+    const custom = { ...s0, categories: s0.categories.map(c => c.id === 'extraIncome'
+      ? { ...c, defaultBucket: 'custom', split: { qualityOfLife: 0.5, investments: 0.5 } } : c) }
+    expect(parts(computeMonth(ym, [extra()], custom, '2026-10-10'))).toEqual({ essentials: 0, qualityOfLife: 100, safetyFund: 0, investments: 100 })
+  })
+  it('il singolo movimento vince sulla categoria', () => {
+    const r = computeMonth(ym, [extra({ paidFrom: 'custom', split: { essentials: 0.25, safetyFund: 0.75 } })], s0, '2026-10-10')
+    expect(parts(r)).toEqual({ essentials: 50, qualityOfLife: 0, safetyFund: 150, investments: 0 })
+    expect(parts(computeMonth(ym, [extra({ paidFrom: 'split', split: { essentials: 1 } })], s0, '2026-10-10')).essentials).toBe(110)
+  })
+})

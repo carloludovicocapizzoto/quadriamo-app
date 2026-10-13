@@ -1,7 +1,7 @@
 // Calcolo di un mese: è la traduzione delle formule dei fogli mese dell'Excel di Quadriamo.
 import { compareYm, makeDate, monthOf, parseDate, periodOf, prevMonth, ymKey } from './dates'
 import {
-  FIRST, SPLIT,
+  CUSTOM, FIRST, SPLIT,
   type BucketRow, type CheckKind, type ClassifiedTx, type MonthResult, type Recurring, type Settings,
   type Transaction, type YearMonth,
 } from './types'
@@ -19,10 +19,24 @@ export function classify(tx: Transaction, s: Settings): ClassifiedTx {
   if (tx.category) {
     const cat = s.categories.find(c => c.id === tx.category)
     type = cat ? cat.type : 'unknown'
-    if (type === 'income') bucket = tx.paidFrom || SPLIT
+    if (type === 'income') {
+      // dove va un'entrata: la scelta del movimento, altrimenti quella della categoria, altrimenti la regola
+      const choice = tx.paidFrom || cat?.defaultBucket || SPLIT
+      if (choice === CUSTOM) {
+        const split = tx.paidFrom === CUSTOM ? tx.split : cat?.split
+        return withAmount({ ...tx, split: split ?? null }, s, type, SPLIT)
+      }
+      bucket = choice
+      // quote rimaste da una scelta precedente non contano più
+      if (tx.split) return withAmount({ ...tx, split: null }, s, type, bucket)
+    }
     else if (tx.paidFrom && tx.paidFrom !== SPLIT) bucket = tx.paidFrom
     else bucket = cat?.defaultBucket ?? null
   }
+  return withAmount(tx, s, type, bucket)
+}
+
+function withAmount(tx: Transaction, s: Settings, type: ClassifiedTx['type'], bucket: string | null): ClassifiedTx {
   let amountIn: number | null = null
   if (tx.amount != null) {
     if (!tx.currency || tx.currency === s.currency) amountIn = tx.amount
@@ -61,6 +75,11 @@ export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, t
       }
     })
 }
+
+/** Somma delle quote di un'entrata divisa a modo mio (1 = 100%), arrotondata per non sbagliare sui decimali. */
+export const splitTotal = (split: Record<string, number> | null | undefined) =>
+  Math.round(Object.values(split ?? {}).reduce((a, x) => a + x, 0) * 1000) / 1000
+export const splitOk = (split: Record<string, number> | null | undefined) => splitTotal(split) === 1
 
 /** Rate che restano dal mese `ym` compreso; null se il pagamento non ha una fine. */
 export function installmentsLeft(r: Recurring, ym: YearMonth): number | null {
@@ -120,7 +139,9 @@ export function computeMonth(
 
   const of = (type: string) => txs.filter(t => t.type === type)
   const income = sum(of('income')), spent = sum(of('expense')), saved = sum(of('saving'))
-  const split = sum(of('income').filter(t => t.bucket === SPLIT))
+  // entrate divise con la regola; quelle divise "a modo mio" vanno a ogni parte con le loro quote
+  const split = sum(of('income').filter(t => t.bucket === SPLIT && !t.split))
+  const custom = of('income').filter(t => t.bucket === SPLIT && t.split)
   // spese "prima delle parti" (es. l'affitto): escono dalle entrate prima della divisione. Quelle ancora in arrivo
   // contano con l'importo previsto, così le parti non sembrano più ricche all'inizio del mese
   const paidFirst = txs.filter(t => t.bucket === FIRST && t.type === 'expense')
@@ -129,6 +150,7 @@ export function computeMonth(
 
   const buckets: BucketRow[] = s.buckets.map((b, i) => {
     const fromIncome = Math.max(0, base) * b.share + (i === 0 ? Math.min(0, base) : 0) + sum(of('income').filter(t => t.bucket === b.id))
+      + custom.reduce((a, t) => a + (t.amountIn ?? 0) * (t.split![b.id] ?? 0), 0)
     const out = sum(txs.filter(t => t.bucket === b.id && (t.type === 'expense' || t.type === 'saving')))
     const carried = carriedOver![b.id] ?? 0
     return { bucket: b, carriedOver: carried, fromIncome, spent: out,

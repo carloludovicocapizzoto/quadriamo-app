@@ -14,7 +14,8 @@ export interface Category {
   id: string
   name: string
   type: CategoryType
-  defaultBucket: string | null   // id del bucket; null per le entrate
+  defaultBucket: string | null   // spese: id del bucket o FIRST. Entrate: null = con la regola, id del bucket = tutta lì, CUSTOM = con `split`
+  split?: Record<string, number> // entrate divise "a modo mio": quota per bucket (somma 1)
 }
 
 export interface Recurring {
@@ -44,6 +45,8 @@ export interface Settings {
 export const SPLIT = 'split' as const   // entrata divisa secondo la regola
 /** "Prima delle parti": una spesa (es. l'affitto) pagata con le entrate prima di dividerle nelle quattro parti. */
 export const FIRST = 'first' as const
+/** Entrata divisa "a modo mio": quote scelte dall'utente (sul movimento o sulla categoria) invece della regola. */
+export const CUSTOM = 'custom' as const
 
 export interface Transaction {
   id: string
@@ -52,7 +55,8 @@ export interface Transaction {
   category: string | null           // id categoria
   amount: number | null
   currency?: string | null          // vuota = valuta dell'utente
-  paidFrom?: string | null          // id bucket, oppure SPLIT per le entrate (vuoto = default)
+  paidFrom?: string | null          // id bucket; per le entrate anche SPLIT (la regola) o CUSTOM (con `split`). Vuoto = come la categoria
+  split?: Record<string, number> | null   // quote per bucket quando paidFrom è CUSTOM (somma 1)
   updatedAt?: string                // ISO, ultima modifica: serve alla sincronizzazione tra dispositivi
   fxRate?: number | null            // cambio del giorno in cui è stato registrato (1 unità = fxRate della tua valuta)
 }

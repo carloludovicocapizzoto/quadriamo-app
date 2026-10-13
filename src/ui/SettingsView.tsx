@@ -1,5 +1,5 @@
 import { useRef, useState, type ChangeEvent } from 'react'
-import { DEFAULT_CATEGORIES, FIRST, installmentsLeft, monthOf, seedRules, todayIso, untilAfter, type CategoryType, type Settings } from '../engine'
+import { CUSTOM, DEFAULT_CATEGORIES, FIRST, SPLIT, installmentsLeft, monthOf, seedRules, todayIso, untilAfter, type CategoryType, type Settings } from '../engine'
 import { LANGS, useI18n, type Lang } from '../i18n/core'
 import { useStore } from '../store/context'
 import { newId, parseAmount, parseBackup, toCsv, validateSettings, type AppData } from '../store/state'
@@ -8,6 +8,7 @@ import { AccountSection } from './AccountSection'
 import { InstallButton } from './InstallButton'
 import { LegalLinks } from './LegalLinks'
 import { Icon } from './Icon'
+import { SplitEditor } from './SplitEditor'
 import { BUCKET_COLORS, CURRENCIES, bucketName, categoryName } from './names'
 
 const TYPES: CategoryType[] = ['expense', 'income', 'saving']
@@ -61,7 +62,10 @@ export function SettingsView({ only, wizard = false, onLogin }: { only?: Setting
   const exportBackup = () => download(JSON.stringify(data, null, 2), 'application/json', 'quadriamo-backup')
   const exportCsv = () => download('\ufeff' + toCsv(data, {
     category: id => categoryName(data.settings.categories.find(c => c.id === id), t),
-    bucket: id => { const b = data.settings.buckets.find(x => x.id === id); return b ? bucketName(b, t) : (id ?? '') },
+    bucket: id => {
+      const b = data.settings.buckets.find(x => x.id === id)
+      return b ? bucketName(b, t) : id === SPLIT ? t('split.rule') : id === CUSTOM ? t('split.custom') : id === FIRST ? t('bucket.first') : (id ?? '')
+    },
   }), 'text/csv;charset=utf-8', 'quadriamo-transactions')
 
   async function importBackup(e: ChangeEvent<HTMLInputElement>) {
@@ -210,8 +214,19 @@ export function SettingsView({ only, wizard = false, onLogin }: { only?: Setting
                     {draft.buckets.map(b => <option key={b.id} value={b.id}>{bucketName(b, t)}</option>)}
                     {c.type === 'expense' && <option value={FIRST}>{t('bucket.first')}</option>}
                   </select>
-                : <span />}
+                : <select aria-label={t('settings.incomeTo')} value={c.defaultBucket ?? ''}
+                          onChange={e => edit(s => {
+                            s.categories[i].defaultBucket = e.target.value || null
+                            // a modo mio: si parte dalla regola, così il totale è già 100%
+                            if (e.target.value === CUSTOM && !s.categories[i].split) s.categories[i].split = Object.fromEntries(s.buckets.map(b => [b.id, b.share]))
+                          })}>
+                    <option value="">{t('split.rule')}</option>
+                    {draft.buckets.map(b => <option key={b.id} value={b.id}>{t('split.all', { part: bucketName(b, t) })}</option>)}
+                    <option value={CUSTOM}>{t('split.custom')}</option>
+                  </select>}
               <button className="icon-btn" aria-label={t('action.delete')} onClick={() => deleteCategory(c.id)}>×</button>
+              {c.type === 'income' && c.defaultBucket === CUSTOM &&
+                <SplitEditor buckets={draft.buckets} value={c.split} onChange={v => edit(s => { s.categories[i].split = v })} />}
             </li>
           ))}
         </ul>

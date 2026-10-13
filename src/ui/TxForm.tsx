@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react'
-import { addDays, fxRate, suggest, todayIso, type CategoryType, type Settings, type Transaction } from '../engine'
+import { CUSTOM, SPLIT, addDays, splitOk, splitTotal, fxRate, suggest, todayIso, type CategoryType, type Settings, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { newId, parseAmount } from '../store/state'
 import { Icon } from './Icon'
+import { SplitEditor } from './SplitEditor'
 import { BUCKET_COLORS, CURRENCIES, bucketName, categoryName } from './names'
 
 const GROUPS: CategoryType[] = ['expense', 'income', 'saving']
@@ -42,12 +43,17 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   }
   const [date, setDate] = useState(initial?.date ?? defaultDate)
   const [paidFrom, setPaidFrom] = useState(initial?.paidFrom ?? '')
+  const [split, setSplit] = useState<Record<string, number> | null>(initial?.split ?? null)
   const [currency, setCurrency] = useState(initial?.currency || settings.currency)
   const [errors, setErrors] = useState<string[]>([])
 
 
   const cat = settings.categories.find(c => c.id === category)
   const isIncome = cat?.type === 'income'
+  // un'entrata mostra sempre dove va davvero: la scelta del movimento, altrimenti quella della categoria, altrimenti la regola
+  const incomeTo = paidFrom || cat?.defaultBucket || SPLIT
+  // le quote partono da quelle della categoria, altrimenti dalla regola: il totale è già 100% e si sposta solo ciò che serve
+  const incomeSplit = split ?? (cat?.defaultBucket === CUSTOM ? cat.split : null) ?? Object.fromEntries(settings.buckets.map(b => [b.id, b.share]))
   const parsed = parseAmount(amount)
   const foreign = currency !== settings.currency
   // un movimento già registrato tiene il suo cambio, a meno che non si cambi valuta
@@ -60,11 +66,13 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
     if (parsed == null || parsed <= 0) errs.push(t('tx.errAmount'))
     if (!category) errs.push(t('tx.errCategory'))
     if (!date) errs.push(t('tx.errDate'))
+    if (isIncome && incomeTo === CUSTOM && !splitOk(incomeSplit)) errs.push(t('split.err', { n: String(Math.round(splitTotal(incomeSplit) * 1000) / 10).replace('.', ',') }))
     setErrors(errs)
     if (errs.length) return
     onSave({
       id: initial?.id ?? newId(), date, description: description.trim(), category, amount: parsed,
-      currency: foreign ? currency : null, fxRate: foreign ? rate : null, paidFrom: paidFrom || null,
+      currency: foreign ? currency : null, fxRate: foreign ? rate : null,
+      ...(isIncome ? { paidFrom: incomeTo, split: incomeTo === CUSTOM ? incomeSplit : null } : { paidFrom: paidFrom || null }),
     })
   }
 
@@ -113,7 +121,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
           {settings.categories.filter(c => c.type === kind).map(c => (
             <button type="button" key={c.id} role="radio" aria-checked={category === c.id} className={`cat-tile${category === c.id ? ' on' : ''}`}
                     style={{ ['--cc' as string]: tileColor(c) }}
-                    onClick={() => { setCategory(c.id); setCatTouched(true); setFromRule(false) }}>
+                    onClick={() => { if (c.id !== category && c.type === 'income') { setPaidFrom(''); setSplit(null) } setCategory(c.id); setCatTouched(true); setFromRule(false) }}>
               <span className="cat-dot">{categoryName(c, t).charAt(0).toUpperCase()}</span>
               <span className="cat-name">{categoryName(c, t)}</span>
             </button>
@@ -134,15 +142,23 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
               <input type="date" value={date} onChange={e => setDate(e.target.value)} required aria-label={t('tx.date')} />
             </div>
           </div>
-          <label className="txs-row">
+          {isIncome ? <label className="txs-row">
+            <span>{t('tx.incomeTo')}</span>
+            <select value={incomeTo} onChange={e => setPaidFrom(e.target.value)}>
+              <option value={SPLIT}>{t('split.rule')}</option>
+              {settings.buckets.map(b => <option key={b.id} value={b.id}>{t('split.all', { part: bucketName(b, t) })}</option>)}
+              <option value={CUSTOM}>{t('split.custom')}</option>
+            </select>
+          </label> : <label className="txs-row">
             <span>{t('tx.paidFrom')}</span>
             <select value={paidFrom} onChange={e => setPaidFrom(e.target.value)}>
-              <option value="">{isIncome ? t('tx.paidFromSplit') : t('tx.paidFromDefault')}</option>
+              <option value="">{t('tx.paidFromDefault')}</option>
               {settings.buckets.map(b => <option key={b.id} value={b.id}>{bucketName(b, t)}</option>)}
             </select>
-          </label>
+          </label>}
         </div>
-        <p className="small muted txs-hint">{t('tx.paidFromHint')}</p>
+        {isIncome && incomeTo === CUSTOM && <SplitEditor key={category} buckets={settings.buckets} value={incomeSplit} onChange={setSplit} />}
+        <p className="small muted txs-hint">{isIncome ? t('tx.incomeHint') : t('tx.paidFromHint')}</p>
 
         {errors.length > 0 && <ul className="errors" role="alert">{errors.map(e => <li key={e}>{e}</li>)}</ul>}
 

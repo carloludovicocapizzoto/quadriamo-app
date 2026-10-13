@@ -1,5 +1,5 @@
 // Stato dell'app e sue modifiche: funzioni pure, testate in state.test.ts.
-import { FIRST, OLD_STUDENT_SHARES, STUDENT_SHARES, compareYm, mergeGoals, withDay, type Goal, daysBetween, defaultSettings, monthOf, normalize, seedRules, suggest, type ImportRow, type Investments, type Rule, type Settings, type Transaction, type YearMonth } from '../engine'
+import { CUSTOM, FIRST, OLD_STUDENT_SHARES, splitOk, STUDENT_SHARES, compareYm, mergeGoals, withDay, type Goal, daysBetween, defaultSettings, monthOf, normalize, seedRules, suggest, type ImportRow, type Investments, type Rule, type Settings, type Transaction, type YearMonth } from '../engine'
 
 export interface AppData {
   version: 1
@@ -241,7 +241,7 @@ export function createInitial(currency: string, today: string, monthStartDay = 1
   return { version: 1, settings, transactions: [] }
 }
 
-export type SettingsError = 'sharesNot100' | 'bucketName' | 'startDay' | 'categoryName' | 'recurring'
+export type SettingsError = 'sharesNot100' | 'bucketName' | 'startDay' | 'categoryName' | 'categorySplit' | 'recurring'
 
 export function validateSettings(s: Settings): SettingsError[] {
   const out: SettingsError[] = []
@@ -250,6 +250,7 @@ export function validateSettings(s: Settings): SettingsError[] {
   if (s.buckets.some(b => !b.name.trim())) out.push('bucketName')
   if (!Number.isInteger(s.monthStartDay) || s.monthStartDay < 1 || s.monthStartDay > 28) out.push('startDay')
   if (s.categories.some(c => !c.name.trim())) out.push('categoryName')
+  if (s.categories.some(c => c.type === 'income' && c.defaultBucket === CUSTOM && !splitOk(c.split))) out.push('categorySplit')
   if (s.recurring.some(r => !r.name.trim() || !(r.amount > 0) || !s.categories.some(c => c.id === r.category) ||
                             (r.day != null && (r.day < 1 || r.day > 31)))) out.push('recurring')
   return out
