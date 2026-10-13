@@ -38,8 +38,19 @@ async function register(sub: PushSubscription, lang: string) {
     p_endpoint: sub.endpoint, p_p256dh: j.keys?.p256dh ?? '', p_auth: j.keys?.auth ?? '', p_device: deviceId(), p_lang: lang,
   })
   if (error) throw error
-  // la notifica del mattino è sempre inclusa nelle notifiche
+  // la notifica del mattino è sempre inclusa nelle notifiche; le notizie principali salvo che l'utente le abbia spente
   await supabase!.rpc('set_morning_push', { p_endpoint: sub.endpoint, p_on: true })
+  await supabase!.rpc('set_news_push', { p_endpoint: sub.endpoint, p_on: newsWanted() })
+}
+
+const NEWS_PREF = 'q.newsPush'
+export const newsWanted = () => { try { return localStorage.getItem(NEWS_PREF) !== 'off' } catch { return true } }
+/** Notizie principali sì/no per questo dispositivo. */
+export async function setNewsPush(on: boolean) {
+  try { localStorage.setItem(NEWS_PREF, on ? 'on' : 'off') } catch { /* niente */ }
+  const reg = await navigator.serviceWorker?.getRegistration()
+  const sub = await reg?.pushManager.getSubscription()
+  if (sub && supabase) await supabase.rpc('set_news_push', { p_endpoint: sub.endpoint, p_on: on })
 }
 
 /** Dice al server che oggi l'utente ha aggiornato Quadriamo (solo la data: niente importi), così non riceve

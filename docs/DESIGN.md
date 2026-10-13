@@ -27,13 +27,14 @@ cambiano struttura, gerarchia e componenti. Codice: `src/app-shell.css` (design 
 ┌──────────────── Barra in alto (fissa) ────────────────┐
 │ [logo]                     🔥 12   (€) 56,34   (avatar)│  ← tocchi → pannelli dal basso
 └────────────────────────────────────────────────────────┘
-   Home │ Movimenti │  ( + )  │ Analisi │ Profilo          ← barra in basso (fissa)
+   Home │ Notizie │  ( + )  │ Analisi │ Profilo          ← barra in basso (fissa)
 ```
 
 - **Home** — cosa fare oggi.
-- **Movimenti** — l'elenco del mese e i movimenti importati da confermare (pallino rosso sulla scheda).
+- **Notizie** — titoli di economia (prima quelli "per te") e consigli; le principali arrivano anche come notifica (max 2 al giorno).
+- **Movimenti** — prima scheda di Analisi (e "Tutti i movimenti" / "Importa" dalla Home); pallino rosso su Analisi per quelli da confermare.
 - **+** — sempre al centro, sempre uguale: apre "Nuovo movimento".
-- **Analisi** — Mese · Anno · Investimenti come schede in alto (segmented control).
+- **Analisi** — Movimenti · Mese · Anno · Investi come schede in alto (segmented control).
 - **Profilo** — chi sei, slancio, traguardi, e tutte le impostazioni come elenco.
 
 ### Regola dei 5 secondi

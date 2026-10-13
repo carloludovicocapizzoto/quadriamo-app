@@ -14,6 +14,8 @@ import sql0010 from '../../supabase/migrations/0010_shared_budgets.sql?raw'
 import sql0011 from '../../supabase/migrations/0011_nudge_streak.sql?raw'
 import sql0012 from '../../supabase/migrations/0012_nudge_cron.sql?raw'
 import sql0013 from '../../supabase/migrations/0013_billing.sql?raw'
+import sql0014 from '../../supabase/migrations/0014_news_push.sql?raw'
+import sql0015 from '../../supabase/migrations/0015_news_cron.sql?raw'
 import billingCode from '../../supabase/functions/billing/index.ts?raw'
 import newsCode from '../../supabase/functions/news/index.ts?raw'
 import sql0009 from '../../supabase/migrations/0009_morning_push_cron.sql?raw'
@@ -372,10 +374,10 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
   const adminSql = adminKey
     ? `insert into public.admin_keys (name, key_hash)\nvalues ('${adminKey.name.replace(/'/g, "''")}', decode('${adminKey.hash}', 'hex'))\non conflict (key_hash) do update set name = excluded.name;`
     : `insert into public.admins (user_id)\nselect id from auth.users where email = '${email}'\non conflict do nothing;`
-  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n${sql0006}\n${sql0007}\n${sql0008}\n${sql0010}\n${sql0011}\n${sql0013}\n-- tu sei l'amministratore\n${adminSql}\n`
-  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.research !== false && setup.v8 !== false && setup.v10 !== false && setup.v11 !== false && setup.v13 !== false && setup.siteFeedback !== false && setup.adminKeys !== false
+  const fullSql = `${sql0002}\n${sql0004}\n${sql0005}\n${sql0006}\n${sql0007}\n${sql0008}\n${sql0010}\n${sql0011}\n${sql0013}\n${sql0014}\n-- tu sei l'amministratore\n${adminSql}\n`
+  const step1 = !!setup.tables && setup.admin && !!setup.profiles && setup.research !== false && setup.v8 !== false && setup.v10 !== false && setup.v11 !== false && setup.v13 !== false && setup.v14 !== false && setup.siteFeedback !== false && setup.adminKeys !== false
   // tabelle già create ma manca qualcosa: solo i pezzi mancanti
-  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.adminKeys === false ? sql0006 : '', setup.research === false ? sql0007 : '', setup.v8 === false ? sql0008 : '', setup.v10 === false ? sql0010 : '', setup.v11 === false ? sql0011 : '', setup.v13 === false ? sql0013 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
+  const partialSql = [setup.profiles === false ? sql0004 : '', setup.siteFeedback === false ? sql0005 : '', setup.adminKeys === false ? sql0006 : '', setup.research === false ? sql0007 : '', setup.v8 === false ? sql0008 : '', setup.v10 === false ? sql0010 : '', setup.v11 === false ? sql0011 : '', setup.v13 === false ? sql0013 : '', setup.v14 === false ? sql0014 : '', setup.admin ? '' : adminSql].filter(Boolean).join('\n')
   const cronSql = sql0003.replace('<PROJECT_REF>', ref)
   const morningSql = sql0009.replace('<PROJECT_REF>', ref)
   return (
@@ -505,6 +507,18 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
             <a className="az-btn" href={`${dash}/functions`} target="_blank" rel="noreferrer">↗ Apri Edge Functions</a></div>
           <p className="az-hint">Prende solo titolo, testata, data e link dalle notizie di economia (ANSA, Il Sole 24 Ore, Corriere, Repubblica, Money.it; BBC, Le Monde, Expansión nelle altre lingue).
             Nessun segreto da impostare. Finché non c'è, l'app mostra solo il consiglio del giorno.</p>
+        </Step>
+        <Step n={11} ok={null} manual={{ done: manual.includes(11), toggle: toggle(11) }} title="Notifiche delle notizie principali (facoltativo)">
+          <ol>
+            <li>Aggiorna la funzione <code>send-push</code>: pulsante qui sotto → send-push → Code → <b>Cmd+A</b>, <b>Cmd+V</b> → <b>Deploy</b>.</li>
+            <li>Poi copia lo script, incollalo in SQL Editor e premi <b>Run</b>. Non c'è niente da sostituire: riusa il segreto della notifica del mattino (passo 7).</li>
+          </ol>
+          <div className="az-u-row"><Copy text={fnCode} label="Copia il codice della funzione" />
+            <a className="az-btn" href={`${dash}/functions/send-push/code`} target="_blank" rel="noreferrer">↗ Apri send-push → Code</a></div>
+          <div className="az-u-row"><Copy text={sql0015} label="Copia lo script" />
+            <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
+          <p className="az-hint">Ogni 2 ore tra le 9 e le 21 la funzione guarda le notizie delle ultime 3 ore e manda solo quella più importante per il budget
+            (tassi, inflazione, affitti, bollette, carburante, bonus, manovra), al massimo 2 al giorno e mai la stessa due volte. Ognuno può spegnerle da Profilo → Notifiche.</p>
         </Step>
       </div>
       <div className="az-card">

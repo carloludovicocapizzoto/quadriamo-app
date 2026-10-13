@@ -18,8 +18,8 @@ const PERIODS: Period[] = ['month', '3m', 'year', 'all']
 const TYPES: TxType[] = ['expense', 'income', 'saving']
 
 /** Movimenti: ricerca in cima, periodo e filtri; senza ricerca né filtri resta l'elenco del mese con i movimenti da confermare. */
-export function TransactionsScreen({ data, current, result, today, onMonth, onOpen }: {
-  data: AppData; current: YearMonth; result: MonthResult; today: string; onMonth: (ym: YearMonth) => void; onOpen: (tx: ClassifiedTx) => void
+export function TransactionsScreen({ data, current, result, today, onMonth, onOpen, embedded = false }: {
+  embedded?: boolean; data: AppData; current: YearMonth; result: MonthResult; today: string; onMonth: (ym: YearMonth) => void; onOpen: (tx: ClassifiedTx) => void
 }) {
   const { t, money, date } = useI18n()
   const s = data.settings
@@ -54,8 +54,8 @@ export function TransactionsScreen({ data, current, result, today, onMonth, onOp
   ]
 
   return (
-    <div className="screen">
-      <h1 className="screen-title">{t('nav.transactions')}</h1>
+    <div className={embedded ? '' : 'screen'}>
+      {!embedded && <h1 className="screen-title">{t('nav.transactions')}</h1>}
       <div className="search">
         <Icon name="search" size={19} />
         <input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder={t('srch.placeholder')} aria-label={t('srch.placeholder')} enterKeyHint="search" />

@@ -3,12 +3,12 @@ import type { Dict } from '../../i18n/en'
 import { Icon, type IconName } from '../Icon'
 import { tap } from '../kit/motion'
 
-export type MainTab = 'home' | 'transactions' | 'analysis' | 'profile'
+export type MainTab = 'home' | 'news' | 'analysis' | 'profile'
 const ITEMS: { id: MainTab; icon: IconName }[] = [
-  { id: 'home', icon: 'home' }, { id: 'transactions', icon: 'list' }, { id: 'analysis', icon: 'year' }, { id: 'profile', icon: 'user' },
+  { id: 'home', icon: 'home' }, { id: 'news', icon: 'news' }, { id: 'analysis', icon: 'year' }, { id: 'profile', icon: 'user' },
 ]
 
-/** Barra in basso: quattro sezioni e, al centro, il + per aggiungere un movimento. */
+/** Barra in basso: Home, Notizie, + (nuovo movimento), Analisi (con i Movimenti), Profilo. */
 export function BottomNav({ tab, onTab, onAdd, badge }: { tab: string; onTab: (t: MainTab) => void; onAdd: () => void; badge?: Partial<Record<MainTab, number>> }) {
   const { t } = useI18n()
   const btn = (it: typeof ITEMS[number]) => (

@@ -15,7 +15,7 @@ import { ConsentCard } from './ui/beta/ConsentCard'
 import { FeedbackCard } from './ui/beta/FeedbackCard'
 import { ProfileForm } from './ui/ProfileForm'
 import { HomeScreen } from './ui/home/HomeScreen'
-import { TransactionsScreen } from './ui/screens/TransactionsScreen'
+import { NewsScreen } from './ui/screens/NewsScreen'
 import { TopBar } from './ui/shell/TopBar'
 import { BottomNav, type MainTab } from './ui/shell/BottomNav'
 import { AnalysisScreen, type AnalysisView } from './ui/screens/AnalysisScreen'
@@ -45,8 +45,8 @@ export default function App() {
   const today = todayIso()
   // ?login=1 / ?signup=1 (pulsanti del sito): si apre direttamente l'area account
   // ?join=CODICE (invito a un budget comune): si apre direttamente il budget comune
-  const [tab, setTab] = useState<Tab>(() => ENTRY.get('join') ? 'profile' : 'home')
-  const [analysisView, setAnalysisView] = useState<AnalysisView>('month')
+  const [tab, setTab] = useState<Tab>(() => ENTRY.get('join') ? 'profile' : ENTRY.get('tab') === 'news' ? 'news' : 'home')
+  const [analysisView, setAnalysisView] = useState<AnalysisView>('transactions')
   const [profilePage, setProfilePage] = useState<ProfilePage | null>(() => ENTRY.get('join') ? 'shared' : null)
   // missione "dai un'occhiata alla previsione": fatta quando si apre Analisi
   const [reviewed, setReviewed] = useState(() => { try { return localStorage.getItem('q.reviewed') === todayIso() } catch { return false } })
@@ -239,13 +239,21 @@ export default function App() {
         {tab === 'home' && homeResult && <HomeScreen data={data} r={homeResult} today={today} streak={streak} reviewed={reviewed}
           onAdd={kind => setForm(kind === 'income' ? { prefill: { category: mainIncome(data.settings) } } : {})}
           onOpen={openTx}
-          onAll={() => { setYm(null); go('transactions') }}
-          onImport={() => { setYm(null); go('transactions'); setTimeout(() => document.querySelector<HTMLInputElement>('input[type=file]')?.click(), 120) }}
+          onAll={() => { setYm(null); setAnalysisView('transactions'); go('analysis') }}
+          onImport={() => { setYm(null); setAnalysisView('transactions'); go('analysis'); setTimeout(() => document.querySelector<HTMLInputElement>('input[type=file]')?.click(), 120) }}
           onShared={() => { go('profile'); setProfilePage('shared') }}
           onAnalysis={() => go('analysis')}
-          onRecurring={() => { go('profile'); setProfilePage('recurring') }} />}
+          onRecurring={() => { go('profile'); setProfilePage('recurring') }}
+          onNews={() => go('news')} />}
 
-        {tab === 'transactions' && <TransactionsScreen data={data} current={current} result={result} today={today} onMonth={setYm} onOpen={openTx} />}
+        {tab === 'news' && <NewsScreen onAction={a => {
+          if (a === 'add') setForm({})
+          else if (a === 'analysis') { setAnalysisView('month'); go('analysis') }
+          else if (a === 'import') { setAnalysisView('transactions'); go('analysis') }
+          else if (a === 'shared') { go('profile'); setProfilePage('shared') }
+          else if (a === 'recurring') { go('profile'); setProfilePage('recurring') }
+          else go('home')
+        }} />}
 
         {tab === 'analysis' && homeResult && <AnalysisScreen view={analysisView} onView={setAnalysisView} data={data} result={result}
           current={current} homeResult={homeResult} today={today} year={year} onYear={setYear} onMonth={setYm} onOpen={openTx} />}
@@ -260,7 +268,7 @@ export default function App() {
       {note && <div className="toast" role="status">{note}</div>}
       <StreakCelebration s={streak} />
 
-      <BottomNav tab={tab} onTab={go} onAdd={() => setForm({})} badge={{ transactions: data.inbox?.length ?? 0 }} />
+      <BottomNav tab={tab} onTab={go} onAdd={() => setForm({})} badge={{ analysis: data.inbox?.length ?? 0 }} />
 
       {form && (
         <TxForm

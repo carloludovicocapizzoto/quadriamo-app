@@ -9,8 +9,10 @@ import { InvestmentsView } from '../InvestmentsView'
 import { ProGate } from '../Pro'
 import { CategoryChangesReport, ForecastReport, TrendReport } from '../Reports'
 import { YearNav, YearView } from '../YearView'
+import { TransactionsScreen } from './TransactionsScreen'
 
-export type AnalysisView = 'month' | 'year' | 'investments'
+export type AnalysisView = 'transactions' | 'month' | 'year' | 'investments'
+const VIEWS: AnalysisView[] = ['transactions', 'month', 'year', 'investments']
 
 /** Analisi: mese, anno e investimenti in una pagina, con le schede in alto (come le sezioni di un'app). */
 export function AnalysisScreen({ view, onView, data, result, current, homeResult, today, year, onYear, onMonth, onOpen }: {
@@ -18,18 +20,21 @@ export function AnalysisScreen({ view, onView, data, result, current, homeResult
   today: string; year: number; onYear: (y: number) => void; onMonth: (ym: YearMonth) => void; onOpen: (tx: ClassifiedTx) => void
 }) {
   const { t } = useI18n()
+  const inbox = data.inbox?.length ?? 0
   const isNow = current.year === homeResult.ym.year && current.month === homeResult.ym.month
   return (
     <div className="screen">
       <h1 className="screen-title">{t('nav.analysis')}</h1>
       <div className="segmented" role="tablist">
-        {(['month', 'year', 'investments'] as const).map(v => (
+        {VIEWS.map(v => (
           <button key={v} role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => { tap(); onView(v) }}>
-            {t(v === 'month' ? 'ana.month' : v === 'year' ? 'ana.year' : 'ana.invest')}</button>))}
-        <span className="seg-pill" style={{ transform: `translateX(${['month', 'year', 'investments'].indexOf(view) * 100}%)` }} />
+            {t(v === 'transactions' ? 'nav.transactions' : v === 'month' ? 'ana.month' : v === 'year' ? 'ana.year' : 'nav.investments')}
+            {v === 'transactions' && inbox > 0 && <em className="seg-badge">{inbox}</em>}</button>))}
+        <span className="seg-pill" style={{ transform: `translateX(${VIEWS.indexOf(view) * 100}%)` }} />
       </div>
 
       <div key={view} className="view-in">
+        {view === 'transactions' && <TransactionsScreen embedded data={data} current={current} result={result} today={today} onMonth={onMonth} onOpen={onOpen} />}
         {view === 'month' && <>
           <MonthNav ym={current} onChange={onMonth} />
           <Swipe id={`${current.year}-${current.month}`} onPrev={() => onMonth(prevMonth(current))} onNext={() => onMonth(nextMonth(current))} hint>

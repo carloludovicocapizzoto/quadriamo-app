@@ -10,10 +10,10 @@ import { Sheet } from '../kit/Sheet'
 type Act = (a: NonNullable<Tip['action']>) => void
 
 /** Il consiglio di oggi (con la guida alle banche) e le notizie di economia. */
-export function Discover({ today, firstDay, onAction }: { today: string; firstDay?: string; onAction: Act }) {
+export function Discover({ today, firstDay, onAction, onNews }: { today: string; firstDay?: string; onAction: Act; onNews: () => void }) {
   const { lang } = useI18n()
   const tip = tipOfDay(lang, today, firstDay)
-  return <><TipCard tip={tip} onAction={onAction} /><News /></>
+  return <><TipCard tip={tip} onAction={onAction} /><News onAll={onNews} /></>
 }
 
 function TipCard({ tip, onAction }: { tip: Tip; onAction: Act }) {
@@ -65,11 +65,9 @@ function BankGuide() {
   )
 }
 
-function News() {
+function News({ onAll }: { onAll: () => void }) {
   const { t, lang } = useI18n()
   const [items, setItems] = useState<NewsItem[] | null>(null)
-  const [all, setAll] = useState(false)
-  const [mine, setMine] = useState(false)
   const [now, setNow] = useState(0)   // ora del caricamento, per "2 ore fa"
   useEffect(() => { let alive = true; void loadNews(lang).then(x => { if (alive) { setItems(x); setNow(Date.now()) } }); return () => { alive = false } }, [lang])
   if (!items || !items.length) return null
@@ -82,17 +80,12 @@ function News() {
     <li key={n.link}><a href={n.link} target="_blank" rel="noopener noreferrer" onClick={() => tap()}>
       <span className="news-title">{n.title}</span>
       <span className="news-meta">{n.forYou && <em className="news-tag">{t('disc.forYou')}</em>}{n.source} · {ago(n.date)}</span></a></li>)
-  const first = [...items.filter(x => x.forYou).slice(0, 2), ...items.filter(x => !x.forYou)].slice(0, 4)
+  const first = [...items.filter(x => x.forYou).slice(0, 2), ...items.filter(x => !x.forYou)].slice(0, 3)
   return (
     <>
       <div className="sec-head"><h2 className="sec-title">{t('disc.news')}</h2>
-        <button className="link-btn" onClick={() => { tap(); setAll(true) }}>{t('disc.allNews')}<Icon name="chevron" size={16} /></button></div>
+        <button className="link-btn" onClick={() => { tap(); onAll() }}>{t('disc.allNews')}<Icon name="chevron" size={16} /></button></div>
       <section className="card news"><ul>{first.map(row)}</ul><p className="small muted news-note">{t('disc.newsNote')}</p></section>
-      <Sheet open={all} onClose={() => setAll(false)} title={t('disc.news')}>
-        <label className="check small"><input type="checkbox" checked={mine} onChange={e => setMine(e.target.checked)} />{t('disc.onlyForYou')}</label>
-        <div className="news"><ul>{items.filter(x => !mine || x.forYou).map(row)}</ul></div>
-        <p className="small muted news-note">{t('disc.newsNote')}</p>
-      </Sheet>
     </>
   )
 }

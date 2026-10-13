@@ -15,10 +15,10 @@ import { GoalsStrip } from '../goals/Goals'
 import { Discover } from './Discover'
 
 /** Home: il numero del giorno, le scorciatoie, le quattro parti, le missioni, le ultime attività e i widget scelti. */
-export function HomeScreen({ data, r, today, streak, reviewed, onAdd, onOpen, onAll, onImport, onShared, onAnalysis, onRecurring }: {
+export function HomeScreen({ data, r, today, streak, reviewed, onAdd, onOpen, onAll, onImport, onShared, onAnalysis, onRecurring, onNews }: {
   data: AppData; r: MonthResult; today: string; streak: Streak | null; reviewed: boolean
   onAdd: (kind: 'expense' | 'income') => void; onOpen: (tx: ClassifiedTx) => void; onAll: () => void; onImport: () => void
-  onShared: () => void; onAnalysis: () => void; onRecurring: () => void
+  onShared: () => void; onAnalysis: () => void; onRecurring: () => void; onNews: () => void
 }) {
   const { t, money } = useI18n()
   const { dispatch } = useStore()
@@ -89,7 +89,7 @@ export function HomeScreen({ data, r, today, streak, reviewed, onAdd, onOpen, on
       }} />
 
       {/* il consiglio di oggi e le notizie */}
-      <Discover today={today} firstDay={data.activity?.[0]} onAction={a => {
+      <Discover today={today} firstDay={data.activity?.[0]} onNews={onNews} onAction={a => {
         if (a === 'add') onAdd('expense')
         else if (a === 'goals') document.querySelector('.goals')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
         else if (a === 'analysis') onAnalysis()

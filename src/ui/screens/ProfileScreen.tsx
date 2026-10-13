@@ -13,11 +13,13 @@ import { PlanCard, ProGate } from '../Pro'
 import { SettingsView } from '../SettingsView'
 import { SharedView } from '../shared/SharedView'
 import { BetaSection } from '../beta/BetaSection'
+import { NewsPushToggle, PushToggle } from '../beta/PushToggle'
 import { StreakCalendar } from '../shell/StreakCalendar'
 import { Flame } from '../Streak'
 
-export type ProfilePage = 'plan' | 'account' | 'budget' | 'recurring' | 'rules' | 'data' | 'shared' | 'beta' | 'language'
+export type ProfilePage = 'notifications' | 'plan' | 'account' | 'budget' | 'recurring' | 'rules' | 'data' | 'shared' | 'beta' | 'language'
 const ROWS: { id: ProfilePage; icon: IconName; label: keyof Dict }[] = [
+  { id: 'notifications', icon: 'bell', label: 'prof.notifications' },
   { id: 'plan', icon: 'growth', label: 'prof.plan' },
   { id: 'account', icon: 'user', label: 'prof.account' },
   { id: 'budget', icon: 'chart', label: 'prof.budget' },
@@ -49,6 +51,11 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onFe
     const back = <button className="back-btn" onClick={() => { tap(); onPage(null) }}><Icon name="back" size={20} />{t('prof.back')}</button>
     const title = t(ROWS.find(r => r.id === page)!.label)
     const body: Record<ProfilePage, ReactNode> = {
+      notifications: <section className="card notif-page"><PushToggle /><NewsPushToggle />
+        <p className="day-label">{t('notif.which')}</p>
+        <ul className="notif-list">{(['morning', 'nudge', 'news', 'feedback'] as const).map(k => (
+          <li key={k}><b>{t(`notif.${k}` as keyof Dict)}</b><span className="small muted">{t(`notif.${k}D` as keyof Dict)}</span></li>))}</ul>
+        <p className="small muted">{t('notif.privacy')}</p></section>,
       plan: <PlanCard onLogin={onLogin} />,
       account: <AccountSection onLogin={onLogin} />,
       budget: <SettingsView only={['general', 'fx', 'rule', 'categories']} onLogin={onLogin} />,
