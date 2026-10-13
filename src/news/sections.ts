@@ -5,7 +5,7 @@ import type { HubItem } from './hub'
 import type { Interests } from './interests'
 
 export interface Story { lead: HubItem; others: HubItem[]; rank: number }
-export type SectionId = 'today' | 'personal' | 'invest' | 'research' | 'videos' | 'beginner' | 'deep' | 'global'
+export type SectionId = 'today' | 'mine' | 'personal' | 'invest' | 'research' | 'videos' | 'podcasts' | 'beginner' | 'deep' | 'global'
 export interface Section { id: SectionId; stories: Story[] }
 
 const PER_SECTION = 4
@@ -19,6 +19,7 @@ const affinity = (item: HubItem, i: Interests) => {
 
 /** Quanto vale un contenuto adesso: fiducia, freschezza, rilevanza, niente esca; poi lingua dell'utente e gusti. */
 export function rank(item: HubItem, now: number, lang: string, i: Interests): number {
+  // video, podcast e ricerche invecchiano più piano delle notizie
   const base = score({ trust: item.source.trust, ageHours: hours(item, now) / (item.format === 'article' ? 1 : 4), relevance: item.relevance, clickbait: clickbait(item.title) })
   return base * (item.lang === lang ? 1.15 : 1) * affinity(item, i)
 }
@@ -34,16 +35,30 @@ export function stories(items: HubItem[], now: number, lang: string, i: Interest
   }).sort((a, b) => b.rank - a.rank)
 }
 
+// testo senza maiuscole né accenti: "Mutuo" trova "mutui", "economia" trova "economía"
+const plain = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+/** Il contenuto parla di `query`? Ogni parola deve esserci, anche come inizio di parola (mutu → mutuo, mutui). */
+export function matches(item: HubItem, query: string): boolean {
+  const words = plain(query).split(/\s+/).filter(Boolean)
+  if (!words.length) return false
+  const text = plain(`${item.title} ${item.excerpt ?? ''} ${item.source.name}`)
+  return words.every(w => new RegExp(`(^|[^\\p{L}\\p{N}])${escape(w)}`, 'u').test(text))
+}
+
 const PERSONAL = ['personal', 'saving', 'budget', 'pension', 'tax', 'realestate']
 const INVEST = ['etf', 'stocks', 'bonds', 'markets']
 const GLOBAL = ['economy', 'commodities']
 const has = (s: Story, cats: string[]) => s.lead.categories.some(c => cats.includes(c))
 // chi sceglie per primo: le sezioni per formato (ricerche, video) prima di quelle per argomento,
 // così un video sugli ETF sta tra i video e non sparisce tra gli articoli
-const RULES: { id: SectionId; take: (s: Story, now: number) => boolean }[] = [
+// "i tuoi argomenti" sceglie per prima (sono le parole che hai scelto di seguire), ma si legge dopo Oggi
+const RULES: { id: SectionId; take: (s: Story, now: number, topics: string[]) => boolean }[] = [
+  { id: 'mine', take: (s, _now, topics) => topics.some(t => matches(s.lead, t)) },
   { id: 'today', take: (s, now) => s.lead.format === 'article' && hours(s.lead, now) <= 36 },
   { id: 'research', take: s => s.lead.format === 'research' },
   { id: 'videos', take: s => s.lead.format === 'video' },
+  { id: 'podcasts', take: s => s.lead.format === 'podcast' },
   { id: 'beginner', take: s => s.lead.level === 'beginner' },
   { id: 'deep', take: s => s.lead.source.kind === 'independent' },
   { id: 'personal', take: s => has(s, PERSONAL) },
@@ -51,21 +66,25 @@ const RULES: { id: SectionId; take: (s: Story, now: number) => boolean }[] = [
   { id: 'global', take: s => has(s, GLOBAL) },
 ]
 // in che ordine si leggono
-const SHOWN: SectionId[] = ['today', 'personal', 'invest', 'research', 'videos', 'beginner', 'deep', 'global']
+const SHOWN: SectionId[] = ['today', 'mine', 'personal', 'invest', 'research', 'videos', 'podcasts', 'beginner', 'deep', 'global']
 
 /** Le sezioni, in ordine, senza cripto (hanno la loro scheda) e senza ripetizioni. */
-export function buildSections(items: HubItem[], now: number, lang: string, i: Interests): Section[] {
+export function buildSections(items: HubItem[], now: number, lang: string, i: Interests, topics: string[] = []): Section[] {
   const all = stories(items.filter(x => !x.crypto), now, lang, i)
   const used = new Set<string>()
   return RULES.map(r => {
-    const picked = all.filter(s => !used.has(s.lead.id) && r.take(s, now)).slice(0, PER_SECTION)
+    const picked = all.filter(s => !used.has(s.lead.id) && r.take(s, now, topics)).slice(0, PER_SECTION)
     picked.forEach(s => used.add(s.lead.id))
     return { id: r.id, stories: picked }
   }).filter(s => s.stories.length).sort((a, b) => SHOWN.indexOf(a.id) - SHOWN.indexOf(b.id))
 }
 
-/** Una categoria sola (filtro in alto): tutte le sue storie in ordine di valore. "crypto" è la scheda a parte. */
-export function byCategory(items: HubItem[], cat: string, now: number, lang: string, i: Interests): Story[] {
-  const pool = cat === 'crypto' ? items.filter(x => x.crypto) : items.filter(x => !x.crypto && x.categories.includes(cat))
+/** Un filtro in alto: una categoria, un formato ("video", "podcast") o le cripto, che sono la scheda a parte. */
+export const inFilter = (x: HubItem, f: string) =>
+  f === 'crypto' ? x.crypto : f === 'video' || f === 'podcast' ? x.format === f : !x.crypto && x.categories.includes(f)
+
+/** Il filtro in alto e la ricerca per parole, insieme: le storie in ordine di valore. */
+export function find(items: HubItem[], filter: string | null, query: string, now: number, lang: string, i: Interests): Story[] {
+  const pool = items.filter(x => (!filter || inFilter(x, filter)) && (!query.trim() || matches(x, query)))
   return stories(pool, now, lang, i).slice(0, 30)
 }

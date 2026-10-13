@@ -2,7 +2,7 @@
 // Tenuti 20 minuti sul telefono, e anche offline. Se la raccolta non è ancora attiva, null: la schermata usa i titoli di prima.
 import { supabase } from '../sync/client'
 
-export type Format = 'article' | 'research' | 'video'
+export type Format = 'article' | 'research' | 'video' | 'podcast'
 export type Level = 'beginner' | 'intermediate' | 'advanced'
 export interface HubItem {
   id: string; title: string; excerpt: string | null; link: string; thumb: string | null; published: string; lang: string

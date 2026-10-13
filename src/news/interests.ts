@@ -16,3 +16,12 @@ export function remember(item: HubItem) {
   try { localStorage.setItem(KEY, JSON.stringify(learn(loadInterests(), item))) } catch { /* niente */ }
 }
 export function forget() { try { localStorage.removeItem(KEY) } catch { /* niente */ } }
+
+// Gli argomenti che segui: parole scelte da te (es. "ETF", "mutuo", "Tesla"), solo su questo telefono
+const TOPICS = 'q.newsTopics'
+export const loadTopics = (): string[] => { try { const t = JSON.parse(localStorage.getItem(TOPICS) ?? '[]'); return Array.isArray(t) ? t : [] } catch { return [] } }
+function saveTopics(t: string[]) { try { localStorage.setItem(TOPICS, JSON.stringify(t)) } catch { /* niente */ } return t }
+const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
+export const following = (topics: string[], q: string) => topics.some(t => same(t, q))
+export const follow = (q: string) => saveTopics(following(loadTopics(), q) ? loadTopics() : [...loadTopics(), q.trim()].slice(-12))
+export const unfollow = (q: string) => saveTopics(loadTopics().filter(t => !same(t, q)))

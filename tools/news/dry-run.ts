@@ -1,20 +1,23 @@
-// Prova della raccolta del Knowledge Hub su feed veri, senza database: legge le fonti dallo script 0018,
-// scarica e classifica come news-ingest e stampa cosa entrerebbe. Uso: node tools/news/dry-run.ts
+// Prova della raccolta del Knowledge Hub su feed veri, senza database: legge le fonti dagli script 0018 e 0020,
+// scarica e classifica con la stessa funzione di news-ingest e stampa cosa entrerebbe. Uso: node tools/news/dry-run.ts
+// con --sample scrive tools/news/sample.json: contenuti veri nel formato dell'app, per le schermate senza database
 import { readFileSync, writeFileSync } from 'node:fs'
 import { parse } from '../../supabase/functions/_shared/news-feed.ts'
-import { SAME_EVENT, canonical, categorize, cleanTitle, clickbait, isJunk, keywords, level, relevance, similarity } from '../../supabase/functions/_shared/news-rules.ts'
-// con --sample scrive tools/news/sample.json: contenuti veri nel formato dell'app, per le schermate senza database
+import { canonical } from '../../supabase/functions/_shared/news-rules.ts'
+import { toItem, type Recent, type Source } from '../../supabase/functions/_shared/news-item.ts'
 
-const sql = readFileSync(new URL('../../supabase/migrations/0018_news_hub.sql', import.meta.url), 'utf8')
+const sql = ['0018_news_hub.sql', '0020_news_podcasts_images.sql'].map(f => readFileSync(new URL(`../../supabase/migrations/${f}`, import.meta.url), 'utf8')).join('\n')
 const rows = [...sql.matchAll(/\('([^']+)', '((?:[^']|'')+)', '(\w+)', '(\w+)', '([^']+)', '[^']*', '(\w+)', '\w*', (\d), (true|false), array\['(\w+)'\]\)/g)]
-const sources = rows.map(m => ({ id: m[1], name: m[2].replace(/''/g, "'"), kind: m[3], format: m[4], feed: m[5], lang: m[6], trust: +m[7], topics: [m[9]] }))
+const sources: (Source & { paywall: boolean })[] = rows.map(m => ({ id: m[1], name: m[2].replace(/''/g, "'"), kind: m[3], format: m[4], feed: m[5], lang: m[6],
+  trust: +m[7], paywall: m[8] === 'true', topics: [m[9]], images: true }))
+const only = process.argv.find(a => a.startsWith('--only='))?.slice(7)
 const now = Date.now()
-const counts: Record<string, number> = {}, levels: Record<string, number> = {}
-const pool: { source: string; words: string[]; title: string; cluster: string }[] = []
+const counts: Record<string, number> = {}, levels: Record<string, number> = {}, skipped: Record<string, number> = {}
+const pool: Recent[] = []
 const sample: Record<string, unknown>[] = []
-let kept = 0, junk = 0, bait = 0, old = 0, clusters = 0
+let kept = 0, pics = 0
 const fails: string[] = []
-for (const s of sources) {
+for (const s of sources.filter(x => !only || x.id.startsWith(only))) {
   const url = s.format === 'youtube' ? `https://www.youtube.com/feeds/videos.xml?channel_id=${s.feed}` : s.feed
   let raw
   try {
@@ -22,31 +25,21 @@ for (const s of sources) {
     if (!r.ok) { fails.push(`${s.id} HTTP ${r.status}`); continue }
     raw = parse(await r.text())
   } catch (e) { fails.push(`${s.id} ${(e as Error).message}`); continue }
-  let n = 0
-  for (const x0 of raw) {
-    const x = { ...x0, title: cleanTitle(x0.title) }
-    const t = x.date ? new Date(x.date).getTime() : now
-    if (isNaN(t) || now - t > ({ press: 7, independent: 14, video: 21, research: 45, institution: 45 } as Record<string, number>)[s.kind] * 864e5) { if (x.date) { old++; continue } }
-    if (isJunk(x.title)) { junk++; continue }
-    if (clickbait(x.title) >= 0.9) { bait++; continue }
-    const text = `${x.title} ${x.excerpt}`
-    const cats = categorize(text, s.topics)
-    for (const c of cats) counts[c] = (counts[c] ?? 0) + 1
-    const lv = level(text, s.kind); levels[lv] = (levels[lv] ?? 0) + 1
-    const words = keywords(x.title)
-    const twin = pool.find(p => p.source !== s.id && similarity(words, p.words) >= SAME_EVENT)
-    if (twin) { clusters++; if (clusters <= 6) console.log(`  stessa notizia: «${twin.title}» ≈ «${x.title}»`) }
-    const id = canonical(x.link)
-    pool.push({ source: s.id, words, title: x.title, cluster: twin?.cluster ?? id })
-    const format = s.format === 'youtube' ? 'video' : s.kind === 'research' || s.kind === 'institution' ? 'research' : 'article'
-    sample.push({ id, title: x.title, excerpt: x.excerpt || null, link: x.link, thumb: format === 'video' ? x.thumb : null, published: new Date(t).toISOString(),
-      lang: s.lang, format, categories: cats.filter(c => c !== 'crypto'), level: lv, minutes: format === 'research' ? 15 : null, relevance: relevance(cats, s.kind === 'research' || s.kind === 'institution' ? categorize(text).length > 0 : true),
-      cluster: twin?.cluster ?? id, crypto: cats.includes('crypto'), source: { name: s.name, kind: s.kind, paywall: /true/.test(String(rows.find(r => r[1] === s.id)?.[8])), trust: s.trust } })
+  let n = 0, img = 0
+  for (const x of raw) {
+    const out = toItem(s, x, canonical(x.link), now, pool)
+    if ('skip' in out) { skipped[out.skip] = (skipped[out.skip] ?? 0) + 1; continue }
+    const r = out.row as { categories: string[]; level: string; thumb: string | null }
+    for (const c of r.categories) counts[c] = (counts[c] ?? 0) + 1
+    levels[r.level] = (levels[r.level] ?? 0) + 1
+    if (r.thumb) img++
+    sample.push({ ...r, source: { name: s.name, kind: s.kind, paywall: s.paywall, trust: s.trust } })
     n++; kept++
   }
-  console.log(`${s.id.padEnd(22)} ${String(raw.length).padStart(3)} letti, ${String(n).padStart(3)} entrano`)
+  pics += img
+  console.log(`${s.id.padEnd(22)} ${String(raw.length).padStart(3)} letti, ${String(n).padStart(3)} entrano, ${String(img).padStart(3)} con immagine`)
 }
-console.log({ kept, old, junk, bait, clusters, fails })
+console.log({ kept, pics, skipped, clusters: new Set(sample.map(x => x.cluster)).size, fails })
 console.log('categorie', counts)
 console.log('livelli', levels)
 

@@ -8,8 +8,9 @@ psicologia del denaro e ricerca economica, spiegati in modo chiaro. Qualità, no
   e colleghiamo sempre all'originale. Il riassunto nasce da titolo e descrizione del feed, mai dal testo intero
   (rispetta copyright e paywall).
 - **Solo canali che lo consentono**: feed RSS/Atom pubblici, feed dei canali YouTube, API ufficiali.
-- **Niente immagini dei giornali** (diritti delle foto). Le miniature solo per i video YouTube, come previsto dai
-  termini di YouTube quando si collega al video. La sezione resta tipografica, come il resto dell'app.
+- **Immagini: solo quelle che la fonte mette nel suo feed** (decisione di Carlo, 13/10/2026), piccole a lato, caricate dal
+  sito della fonte e mai salvate da noi. Se una fonte lo chiede si spengono con `images = false` sulla sua riga.
+  Senza immagine la voce resta tipografica. Mai il logo della testata, mai i pixel di tracciamento.
 - **Privacy**: la personalizzazione avviene sul telefono. Il server non sa cosa leggi.
 
 ## Architettura
@@ -106,6 +107,17 @@ Le fake news si evitano soprattutto a monte: entrano solo fonti approvate, con f
 - Regole provate su dati veri (`node tools/news/dry-run.ts`): circa 530 contenuti in una giornata; tolti i file di dati
   delle istituzioni, le frasi di servizio dei blog, l'elenco degli autori nei titoli; "ai" in italiano è una preposizione.
 - Finestre: testate 7 giorni, indipendenti 14, video 21, ricerca e istituzioni 45 (escono di rado).
+
+## Fase 1b: podcast, immagini e ricerca (13/10/2026)
+- **Podcast** (13, nelle quattro lingue, verificati uno per uno): tipo di fonte `podcast`, letti dal feed RSS pubblico con
+  copertina e durata. Si ascoltano sul sito del podcast (scelta di Carlo: link esterno, nessun lettore nell'app).
+  Rational Reminder e The Money Guy Show restano come video: stessi episodi.
+- **Ricerca per parole** in alto, senza maiuscole né accenti e anche sull'inizio di una parola (mutu → mutuo, mutui).
+  Un argomento cercato si può **seguire**: diventa la sezione «I tuoi argomenti», subito dopo Oggi. Resta sul telefono.
+- Filtri in alto anche per formato: Podcast, Video.
+- La barra dei filtri e le sezioni compaiono quando la raccolta è attiva (passo 14 dell'area admin); prima l'app mostra
+  i titoli delle testate come prima.
+- Una funzione sola decide cosa entra (`_shared/news-item.ts`): la usano sia news-ingest sia lo script di prova.
 
 ## Fasi
 1. **Fondamenta, senza costi**: registro fonti (circa 40), raccolta ogni 2 ore, doppioni, categorie con regole

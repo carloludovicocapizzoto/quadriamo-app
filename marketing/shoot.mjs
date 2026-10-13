@@ -79,7 +79,13 @@ try {
   await shot('40-news-more.jpg', scrollTo(`document.querySelectorAll('.news-section')[3]`))
   await js(`document.querySelector('.story')?.click()`); await sleep(1000); await shot('41-news-detail.jpg')
   await js(`document.querySelector('.bs-root').click()`); await sleep(500)
-} catch { console.warn('notizie: manca tools/news/sample.json') }
+  // i podcast, poi la ricerca per parole e l'argomento seguito
+  await shot('42-news-podcasts.jpg', scrollTo(`[...document.querySelectorAll('.news-section')].find(x => x.querySelector('.story-thumb.podcast'))`))
+  const search = q => js(`(() => { const el = document.querySelector('.news-search input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, '${q}'); el.dispatchEvent(new Event('input', { bubbles: true })) })()`)
+  await search('ETF'); await sleep(600); await shot('43-news-search.jpg', 'window.scrollTo(0,0)')
+  await js(`document.querySelector('.news-follow').click()`); await search(''); await sleep(600)
+  await shot('44-news-topics.jpg', scrollTo(`document.querySelector('.news-topics')?.parentElement`))
+} catch (e) { console.warn('notizie:', e.message) }
 await click('Profilo', '.tabbar button'); await sleep(900); await shot('17-profile.jpg', clean)
 await shot('22-profile-list.jpg', scrollTo(`document.querySelectorAll('.group')[3]`))
 await js(`location.hash = '#/profile/progress'`); await sleep(1000); await shot('35-progress.jpg', 'window.scrollTo(0,0)')

@@ -61,5 +61,17 @@ describe('Knowledge Hub: lettura dei feed', () => {
     const atom = `<feed><entry><title type='text'>Hotels</title><link rel='alternate' href='https://b.com/y'/><published>2026-10-12T08:00:00-05:00</published></entry></feed>`
     expect(parse(rss)[0]).toMatchObject({ title: 'Rebalance?', link: 'https://a.com/x', excerpt: "It's time to rebalance." })
     expect(parse(atom)[0]).toMatchObject({ title: 'Hotels', link: 'https://b.com/y' })
+    expect(parse('<rss><item><title>Costs &#x2014; and outlook</title><link>https://c.com/z</link></item></rss>')[0].title).toBe('Costs — and outlook')
+  })
+  it('l’immagine del feed (non il logo della testata, non i pixel) e i podcast con copertina e durata', () => {
+    const rss = `<rss><channel><image><url>https://a.com/logo.png</url></image>
+      <item><title>Con foto</title><link>https://a.com/1</link><media:content url="https://a.com/foto.jpg" medium="image"/></item>
+      <item><title>Foto nel testo</title><link>https://a.com/2</link><description><![CDATA[<img src="https://a.com/t.jpg"> Testo]]></description></item>
+      <item><title>Solo pixel</title><link>https://a.com/3</link><description><![CDATA[<img src="https://feeds.feedburner.com/~r/x/~4/abc"> Testo]]></description></item>
+      <item><title>Senza foto</title><link>https://a.com/4</link></item></channel></rss>`
+    expect(parse(rss).map(r => r.thumb)).toEqual(['https://a.com/foto.jpg', 'https://a.com/t.jpg', null, null])
+    const pod = `<rss><channel><itunes:image href="https://p.com/cover.jpg"/><item><title>Episodio 12</title>
+      <enclosure url="https://p.com/12.mp3" type="audio/mpeg" length="1"/><itunes:duration>1:02:30</itunes:duration></item></channel></rss>`
+    expect(parse(pod)[0]).toMatchObject({ link: 'https://p.com/12.mp3', thumb: 'https://p.com/cover.jpg', seconds: 3750 })
   })
 })

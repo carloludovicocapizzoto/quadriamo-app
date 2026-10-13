@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { HubItem } from './hub'
 import { learn } from './interests'
-import { buildSections, byCategory, rank, stories } from './sections'
+import { buildSections, find, matches, rank, stories } from './sections'
 
 const now = Date.parse('2026-10-13T12:00:00Z')
 let n = 0
@@ -29,7 +29,23 @@ describe('Notizie: sezioni', () => {
     expect(new Set(ids).size).toBe(ids.length)
     expect(ids).not.toContain(items[3].id)
     expect(sec.map(s => s.id)).toContain('videos')
-    expect(byCategory(items, 'crypto', now, 'it', {}).map(s => s.lead.id)).toEqual([items[3].id])
+    expect(find(items, 'crypto', '', now, 'it', {}).map(s => s.lead.id)).toEqual([items[3].id])
+  })
+  it('ricerca per parole: senza maiuscole né accenti, anche l’inizio di una parola', () => {
+    const mutuo = item({ title: 'Mutui: i tassi scendono a ottobre' }), eco = item({ title: 'La economía española crece', lang: 'es' })
+    expect(matches(mutuo, 'mutu')).toBe(true)
+    expect(matches(mutuo, 'MUTUI tassi')).toBe(true)
+    expect(matches(mutuo, 'tassi auto')).toBe(false)
+    expect(matches(eco, 'economia')).toBe(true)
+    expect(matches(item({ title: 'Netflix sale in Borsa' }), 'etf')).toBe(false)
+  })
+  it('podcast e argomenti seguiti hanno la loro sezione; il filtro "podcast" prende solo i podcast', () => {
+    const pod = item({ format: 'podcast', categories: ['personal'] }), tesla = item({ title: 'Tesla consegna più auto', categories: ['stocks'] })
+    const sec = buildSections([pod, tesla, item()], now, 'it', {}, ['tesla'])
+    expect(sec.find(s => s.id === 'podcasts')?.stories[0].lead.id).toBe(pod.id)
+    expect(sec.find(s => s.id === 'mine')?.stories[0].lead.id).toBe(tesla.id)
+    expect(find([pod, tesla], 'podcast', '', now, 'it', {}).map(s => s.lead.id)).toEqual([pod.id])
+    expect(find([pod, tesla], null, 'tesla', now, 'it', {}).map(s => s.lead.id)).toEqual([tesla.id])
   })
   it('impara dai gusti: chi apre ETF vede più ETF, e la propria lingua conta', () => {
     const etf = item({ categories: ['etf'] }), eco = item({ categories: ['economy'] })
