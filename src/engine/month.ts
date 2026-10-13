@@ -2,7 +2,7 @@
 import { compareYm, makeDate, monthOf, parseDate, periodOf, prevMonth, ymKey } from './dates'
 import {
   SPLIT,
-  type BucketRow, type CheckKind, type ClassifiedTx, type MonthResult, type Settings,
+  type BucketRow, type CheckKind, type ClassifiedTx, type MonthResult, type Recurring, type Settings,
   type Transaction, type YearMonth,
 } from './types'
 
@@ -49,7 +49,7 @@ export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, t
   const { start } = periodOf(ym, s.monthStartDay)
   const st = parseDate(start)
   return s.recurring
-    .filter(r => r.active && r.name)
+    .filter(r => r.active && r.name && !(r.until && ymKey(ym) > r.until))
     .map((r, i) => {
       const date = r.day == null ? start : makeDate(st.year, st.month + (r.day < st.day ? 1 : 0), r.day)
       const due = date <= today
@@ -60,6 +60,20 @@ export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, t
         upcoming: !due,
       }
     })
+}
+
+/** Rate che restano dal mese `ym` compreso; null se il pagamento non ha una fine. */
+export function installmentsLeft(r: Recurring, ym: YearMonth): number | null {
+  if (!r.until) return null
+  const [y, m] = r.until.split('-').map(Number)
+  return Math.max(0, (y - ym.year) * 12 + m - ym.month + 1)
+}
+
+/** Ultimo mese di un pagamento che ha ancora `n` rate da `ym` compreso; senza n, nessuna fine. */
+export function untilAfter(ym: YearMonth, n: number | null): string | undefined {
+  if (!n || n < 1) return undefined
+  const i = ym.year * 12 + ym.month - 1 + n - 1
+  return ymKey({ year: Math.floor(i / 12), month: i % 12 + 1 })
 }
 
 /** Problemi di una singola riga (le righe rosse dell'Excel). */

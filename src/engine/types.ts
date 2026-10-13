@@ -23,6 +23,7 @@ export interface Recurring {
   category: string         // id categoria
   day: number | null       // giorno del mese; null = primo giorno del periodo
   active: boolean
+  until?: string           // "YYYY-MM": ultimo mese (rata di un finanziamento); senza = continua finché è attivo
 }
 
 export interface Settings {
@@ -37,6 +38,7 @@ export interface Settings {
   fxDate?: string                   // data dei cambi automatici
   rules?: Rule[]                    // regole a parole chiave per riconoscere le transazioni importate
   persona?: 'student' | 'worker' | 'other'   // risposta a "Chi sei?" al primo avvio
+  schema?: number                   // aggiornamenti dei dati già applicati (vedi migrate)
 }
 
 export const SPLIT = 'split' as const   // entrata divisa secondo la regola

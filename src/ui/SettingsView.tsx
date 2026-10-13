@@ -1,5 +1,5 @@
 import { useRef, useState, type ChangeEvent } from 'react'
-import { DEFAULT_CATEGORIES, seedRules, todayIso, type CategoryType, type Settings } from '../engine'
+import { DEFAULT_CATEGORIES, installmentsLeft, monthOf, seedRules, todayIso, untilAfter, type CategoryType, type Settings } from '../engine'
 import { LANGS, useI18n, type Lang } from '../i18n/core'
 import { useStore } from '../store/context'
 import { newId, parseAmount, parseBackup, toCsv, validateSettings, type AppData } from '../store/state'
@@ -23,6 +23,7 @@ export function SettingsView({ only, wizard = false, onLogin }: { only?: Setting
   const { state, dispatch } = useStore()
   const data = state.data!
   const [draft, setDraft] = useState<Settings>(() => structuredClone(data.settings))
+  const nowYm = monthOf(todayIso(), draft.monthStartDay)
   const [shares, setShares] = useState(() => draft.buckets.map(b => pct(b.share)))
   const [msg, setMsg] = useState<{ text: string; bad?: boolean } | null>(null)
   const timer = useRef<number | undefined>(undefined)
@@ -254,15 +255,21 @@ export function SettingsView({ only, wizard = false, onLogin }: { only?: Setting
             <li key={i}>
               <input aria-label={t('settings.name')} value={r.name} aria-invalid={!r.name.trim()}
                      onChange={e => edit(s => { s.recurring[i].name = e.target.value })} />
-              <input aria-label={t('tx.amount')} inputMode="decimal" defaultValue={r.amount ? String(r.amount).replace('.', ',') : ''}
+              <label className="unit"><input aria-label={t('tx.amount')} inputMode="decimal" defaultValue={r.amount ? String(r.amount).replace('.', ',') : ''}
                      aria-invalid={!(r.amount > 0)} placeholder="0,00"
                      onChange={e => edit(s => { s.recurring[i].amount = parseAmount(e.target.value) ?? 0 })} />
+                <span aria-hidden>{draft.currency}</span></label>
               <select aria-label={t('tx.category')} value={r.category}
                       onChange={e => edit(s => { s.recurring[i].category = e.target.value })}>
                 {draft.categories.filter(c => c.type !== 'income').map(c => <option key={c.id} value={c.id}>{categoryName(c, t)}</option>)}
               </select>
-              <input aria-label={t('settings.day')} type="number" inputMode="numeric" min={1} max={31} value={r.day ?? ''}
+              <label className="unit"><input aria-label={t('settings.day')} type="number" inputMode="numeric" min={1} max={31} value={r.day ?? ''}
                      onChange={e => edit(s => { s.recurring[i].day = e.target.value ? Number(e.target.value) : null })} />
+                <span aria-hidden>{t('settings.dayUnit')}</span></label>
+              <label className="unit"><input aria-label={t('settings.left')} placeholder={t('settings.noEnd')} type="number" inputMode="numeric" min={0} max={600}
+                     value={installmentsLeft(r, nowYm) ?? ''}
+                     onChange={e => edit(s => { s.recurring[i].until = untilAfter(nowYm, e.target.value ? Number(e.target.value) : null) })} />
+                {r.until && <span aria-hidden>{t('settings.leftUnit')}</span>}</label>
               <label className="check"><input type="checkbox" checked={r.active}
                      onChange={e => edit(s => { s.recurring[i].active = e.target.checked })} /> {t('settings.active')}</label>
               <button className="icon-btn" aria-label={t('action.delete')}

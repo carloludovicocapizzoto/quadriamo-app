@@ -79,6 +79,11 @@ await shot('15-growing.jpg', scrollTo(byText('.widget', 'Categorie che crescono'
 await click('Profilo', '.tabbar button'); await sleep(900); await shot('17-profile.jpg', clean)
 await shot('22-profile-list.jpg', scrollTo(`document.querySelector('.badges')`))
 await js(`document.querySelector('.tab-add').click()`); await sleep(900); await shot('16-add.jpg')
+await js(`document.querySelector('.bs-root').click()`); await sleep(500)
+// pagamenti ricorrenti: il primo diventa una rata con 8 mesi ancora da pagare
+await js(`location.hash = '#/profile/recurring'`); await sleep(1200)
+await js(`document.querySelector('.edit-list.recurring li:first-child .unit:nth-child(5) input').focus()`)
+await cdp('Input.insertText', { text: '8' }); await sleep(500); await shot('33-recurring.jpg', 'window.scrollTo(0,0)')
 // primo avvio senza account: "Chi sei?" e le entrate dello studente
 await js(`indexedDB.deleteDatabase('keyval-store'); localStorage.clear(); localStorage.setItem('quadriamo.lang', '${LANG}')`)
 await cdp('Page.reload'); await sleep(3000)

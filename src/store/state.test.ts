@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createInitial, duplicateCandidates, mergeData, planImport, parseAmount, parseBackup, reducer, toCsv, validateSettings, type State } from './state'
+import { createInitial, duplicateCandidates, mergeData, migrate, planImport, parseAmount, parseBackup, reducer, toCsv, validateSettings, type State } from './state'
 
 const base = (): State => ({ loaded: true, data: createInitial('EUR', '2026-10-09') })
 
@@ -223,5 +223,20 @@ describe('Home a widget', () => {
     const other = { ...base, home: ['donut'], homeUpdatedAt: '2026-10-12T11:00:00Z' }
     expect(mergeData(s.data!, other).home).toEqual(['donut'])
     expect(mergeData(other, s.data!).home).toEqual(['donut'])
+  })
+})
+
+describe('migrate', () => {
+  it('aggiunge "Rate e finanziamenti" una volta sola, dopo i costi fissi', () => {
+    const d = createInitial('EUR', '2026-10-09')
+    const old = { ...d, settings: { ...d.settings, schema: undefined, categories: d.settings.categories.filter(c => c.id !== 'loans') } }
+    const m = migrate(old)!
+    const ids = m.settings.categories.map(c => c.id)
+    expect(ids.indexOf('loans')).toBe(ids.indexOf('fixedCosts') + 1)
+    expect(m.settings.categories.find(c => c.id === 'loans')!.defaultBucket).toBe('essentials')
+    expect(m.settings.schema).toBe(2)
+    // cancellata dall'utente: non torna
+    const removed = { ...m, settings: { ...m.settings, categories: m.settings.categories.filter(c => c.id !== 'loans') } }
+    expect(migrate(removed)).toBe(removed)
   })
 })

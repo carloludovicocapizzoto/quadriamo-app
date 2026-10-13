@@ -121,10 +121,25 @@ function widenFirstMonth(s: Settings, tx: Transaction): Settings {
   return compareYm(ym, s.firstMonth) < 0 ? { ...s, firstMonth: ym } : s
 }
 
-/** Aggiorna dati salvati con versioni precedenti dell'app (es. regole di partenza mancanti). */
+/**
+ * Aggiorna dati salvati con versioni precedenti dell'app. Ogni passo si applica una volta sola
+ * (`settings.schema`): una categoria aggiunta qui e poi cancellata dall'utente non torna.
+ */
 export function migrate(d: AppData | null): AppData | null {
-  if (!d || d.settings.rules) return d
-  return { ...d, settings: { ...d.settings, rules: seedRules() } }
+  if (!d) return d
+  let s = d.settings
+  if (!s.rules) s = { ...s, rules: seedRules() }
+  if ((s.schema ?? 0) < 2) {
+    // 2: categoria "Rate e finanziamenti", subito dopo i costi fissi
+    const categories = [...s.categories]
+    if (!categories.some(c => c.id === 'loans')) {
+      const bucket = s.buckets.find(b => b.id === 'essentials')?.id ?? s.buckets[0]?.id ?? null
+      const at = categories.findIndex(c => c.id === 'fixedCosts')
+      categories.splice(at + 1, 0, { id: 'loans', name: 'loans', type: 'expense', defaultBucket: bucket })
+    }
+    s = { ...s, categories, schema: 2 }
+  }
+  return s === d.settings ? d : { ...d, settings: s }
 }
 
 /** Giorno locale (YYYY-MM-DD) di un istante. */

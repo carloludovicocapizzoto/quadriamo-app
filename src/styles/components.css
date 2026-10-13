@@ -99,3 +99,9 @@ a.btn { text-decoration: none; color: var(--text); }
 .skel span { height: 14px; border-radius: 6px; background-size: 200% 100%; animation: shimmer 1.2s linear infinite;
   background-image: linear-gradient(90deg, color-mix(in srgb, var(--muted) 12%, transparent), color-mix(in srgb, var(--muted) 22%, transparent), color-mix(in srgb, var(--muted) 12%, transparent)); }
 .skel span:last-child { width: 40%; height: 10px; }
+
+/* Campo numerico con la sua unità dentro ("18 del mese", "8 rate"): la riga si legge senza etichette sopra */
+.unit { position: relative; display: block; min-width: 0; }
+.unit > span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; white-space: nowrap; }
+.unit > input { -moz-appearance: textfield; }
+.unit > input::-webkit-inner-spin-button, .unit > input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }

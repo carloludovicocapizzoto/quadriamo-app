@@ -30,6 +30,7 @@ const SEED: [string, string][] = [
   ['amazon', 'funShopping'], ['zalando', 'funShopping'], ['ikea', 'funShopping'], ['decathlon', 'funShopping'], ['cinema', 'funShopping'],
   ['trade republic', 'investmentsSaving'], ['scalable', 'investmentsSaving'], ['degiro', 'investmentsSaving'], ['directa', 'investmentsSaving'],
   ['stipendio', 'salary'], ['salary', 'salary'], ['payroll', 'salary'], ['emolumenti', 'salary'],
+  ['findomestic', 'loans'], ['agos ducato', 'loans'], ['compass banca', 'loans'], ['klarna', 'loans'], ['scalapay', 'loans'], ['rata mutuo', 'loans'],
 ]
 
 export const seedRules = (): Rule[] =>
