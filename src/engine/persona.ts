@@ -4,8 +4,13 @@ import type { Category, Settings } from './types'
 
 export type Persona = 'student' | 'worker' | 'other'
 
-/** Regola dello studente: niente investimenti obbligati, più spazio alle spese essenziali (affitto, spesa, trasporti). */
-export const STUDENT_SHARES: Record<string, number> = { essentials: 0.6, qualityOfLife: 0.25, safetyFund: 0.15, investments: 0 }
+/**
+ * Regola dello studente: niente investimenti obbligati. L'affitto esce prima della divisione (categoria "Affitto"),
+ * quindi gli Essenziali coprono spesa, trasporti e università, e resta più spazio per vivere e per il fondo.
+ */
+export const STUDENT_SHARES: Record<string, number> = { essentials: 0.45, qualityOfLife: 0.35, safetyFund: 0.2, investments: 0 }
+/** La regola dello studente di prima, quando l'affitto stava negli Essenziali (per aggiornare chi non l'ha cambiata). */
+export const OLD_STUDENT_SHARES: Record<string, number> = { essentials: 0.6, qualityOfLife: 0.25, safetyFund: 0.15, investments: 0 }
 
 const STUDENT_CATEGORIES: Omit<Category, 'name'>[] = [
   { id: 'allowance', type: 'income', defaultBucket: null },

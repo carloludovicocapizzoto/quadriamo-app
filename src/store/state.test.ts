@@ -224,9 +224,23 @@ describe('migrate', () => {
     const ids = m.settings.categories.map(c => c.id)
     expect(ids.indexOf('loans')).toBe(ids.indexOf('fixedCosts') + 1)
     expect(m.settings.categories.find(c => c.id === 'loans')!.defaultBucket).toBe('essentials')
-    expect(m.settings.schema).toBe(2)
+    expect(m.settings.schema).toBe(3)
     // cancellata dall'utente: non torna
     const removed = { ...m, settings: { ...m.settings, categories: m.settings.categories.filter(c => c.id !== 'loans') } }
     expect(migrate(removed)).toBe(removed)
+  })
+})
+
+describe('migrate, affitto', () => {
+  it('aggiunge "Affitto" prima delle parti e ci sposta l\'affitto ricorrente e la sua regola', () => {
+    const d = createInitial('EUR', '2026-10-09')
+    const st = { ...d.settings, schema: 2, categories: d.settings.categories.filter(c => c.id !== 'rent'),
+      recurring: [{ name: 'Affitto', amount: 380, category: 'fixedCosts', day: 1, active: true }, { name: 'Telefono', amount: 8, category: 'fixedCosts', day: 5, active: true }],
+      rules: [{ id: 'r', keyword: 'affitto', category: 'fixedCosts', paidFrom: null, enabled: true }] }
+    const m = migrate({ ...d, settings: st })!.settings
+    expect(m.categories.find(c => c.id === 'rent')?.defaultBucket).toBe('first')
+    expect(m.recurring.map(r => r.category)).toEqual(['rent', 'fixedCosts'])
+    expect(m.rules?.[0].category).toBe('rent')
+    expect(m.schema).toBe(3)
   })
 })

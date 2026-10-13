@@ -1,7 +1,7 @@
 // Calcolo di un mese: è la traduzione delle formule dei fogli mese dell'Excel di Quadriamo.
 import { compareYm, makeDate, monthOf, parseDate, periodOf, prevMonth, ymKey } from './dates'
 import {
-  SPLIT,
+  FIRST, SPLIT,
   type BucketRow, type CheckKind, type ClassifiedTx, type MonthResult, type Recurring, type Settings,
   type Transaction, type YearMonth,
 } from './types'
@@ -121,9 +121,14 @@ export function computeMonth(
   const of = (type: string) => txs.filter(t => t.type === type)
   const income = sum(of('income')), spent = sum(of('expense')), saved = sum(of('saving'))
   const split = sum(of('income').filter(t => t.bucket === SPLIT))
+  // spese "prima delle parti" (es. l'affitto): escono dalle entrate prima della divisione. Quelle ancora in arrivo
+  // contano con l'importo previsto, così le parti non sembrano più ricche all'inizio del mese
+  const paidFirst = txs.filter(t => t.bucket === FIRST && t.type === 'expense')
+    .reduce((a, t) => a + (t.amountIn ?? (t.upcoming ? s.recurring.find(x => x.name === t.description && x.category === t.category)?.amount ?? 0 : 0)), 0)
+  const base = split - paidFirst   // se l'affitto supera le entrate, la differenza pesa sulla prima parte (non sparisce)
 
-  const buckets: BucketRow[] = s.buckets.map(b => {
-    const fromIncome = split * b.share + sum(of('income').filter(t => t.bucket === b.id))
+  const buckets: BucketRow[] = s.buckets.map((b, i) => {
+    const fromIncome = Math.max(0, base) * b.share + (i === 0 ? Math.min(0, base) : 0) + sum(of('income').filter(t => t.bucket === b.id))
     const out = sum(txs.filter(t => t.bucket === b.id && (t.type === 'expense' || t.type === 'saving')))
     const carried = carriedOver![b.id] ?? 0
     return { bucket: b, carriedOver: carried, fromIncome, spent: out,
@@ -147,7 +152,7 @@ export function computeMonth(
 
   const result: MonthResult = {
     ym, period: periodOf(ym, s.monthStartDay), transactions: txs,
-    income, spent, saved, leftOver: income - spent - saved,
+    income, spent, saved, leftOver: income - spent - saved, paidFirst,
     buckets, byCategory, checks, spendingByBucket,
   }
   cache.set(key, result)

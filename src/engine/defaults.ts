@@ -1,5 +1,5 @@
 import { seedRules } from './rules'
-import type { Category, Recurring, Settings } from './types'
+import { FIRST, type Category, type Recurring, type Settings } from './types'
 
 /** Regola consigliata 55-20-15-10. Gli id non cambiano mai; i nomi si traducono o si rinominano. */
 export const DEFAULT_BUCKETS = [
@@ -12,6 +12,7 @@ export const DEFAULT_BUCKETS = [
 export const DEFAULT_CATEGORIES: Omit<Category, 'name'>[] = [
   { id: 'salary', type: 'income', defaultBucket: null },
   { id: 'extraIncome', type: 'income', defaultBucket: null },
+  { id: 'rent', type: 'expense', defaultBucket: FIRST },
   { id: 'fixedCosts', type: 'expense', defaultBucket: 'essentials' },
   { id: 'loans', type: 'expense', defaultBucket: 'essentials' },
   { id: 'groceries', type: 'expense', defaultBucket: 'essentials' },
@@ -48,6 +49,6 @@ export function defaultSettings(opts: {
     recurring: opts.recurring ?? [],
     fxRates: {},
     rules: seedRules(),
-    schema: 2,
+    schema: 3,
   }
 }

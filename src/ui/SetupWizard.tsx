@@ -144,13 +144,13 @@ function SalaryStep() {
   const student = data.settings.persona === 'student'
   const already = data.transactions.find(x => x.category === income && x.date && x.date >= period.start && x.date <= period.end)
   const rentName = t('setup.rentName')
-  const rent = data.settings.recurring.find(x => x.name === rentName && x.category === 'fixedCosts')
+  const rent = data.settings.recurring.find(x => x.name === rentName && x.category === 'rent')
   const [rentRaw, setRentRaw] = useState(rent ? String(rent.amount).replace('.', ',') : '')
   const saveRent = (v: string) => {
     setRentRaw(v)
     const n = parseAmount(v)
     const others = data.settings.recurring.filter(x => x !== rent)
-    const recurring = n && n > 0 ? [...others, { name: rentName, amount: n, category: 'fixedCosts', day: 1, active: true }] : others
+    const recurring = n && n > 0 ? [...others, { name: rentName, amount: n, category: 'rent', day: 1, active: true }] : others
     dispatch({ type: 'setSettings', settings: { ...data.settings, recurring } })
   }
   const [raw, setRaw] = useState(already?.amount ? String(already.amount).replace('.', ',') : '')

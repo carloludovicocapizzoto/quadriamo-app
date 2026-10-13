@@ -29,7 +29,7 @@ export function demoAppData(today: string, lang = 'it'): AppData {
   // spese variabili un po' diverse ogni mese, così andamento e confronti hanno qualcosa da mostrare
   const factor = [1.12, 1.04, 1, 0.93]
   const recurring: Recurring[] = [
-    { name: tx.rent, amount: 380, category: 'fixedCosts', day: 1, active: true },
+    { name: tx.rent, amount: 380, category: 'rent', day: 1, active: true },
     { name: tx.pass, amount: 22, category: 'transport', day: 2, active: true },
     { name: tx.phone, amount: 7.99, category: 'fixedCosts', day: 5, active: true },
     { name: tx.music, amount: 5.99, category: 'fixedCosts', day: 18, active: true },

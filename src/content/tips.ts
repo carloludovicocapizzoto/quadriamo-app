@@ -7,7 +7,7 @@ type L = 'it' | 'en' | 'fr' | 'es'
 const T: Record<L, [string, string][]> = {
   it: [
     ['Una parte, un salvadanaio', 'Crea in banca quattro salvadanai, uno per parte. Quando arrivano le entrate sposti le cifre che ti dice Quadriamo: quello che vedi nell’app è quello che hai davvero.'],
-    ['Segna subito, non la sera', 'Bastano 5 secondi alla cassa. La sera non ti ricordi più il caffè e il biglietto del bus. Se oggi non hai speso niente, tocca “Niente spese”.'],
+    ['Segna subito, non la sera', 'Bastano 5 secondi alla cassa. La sera non ti ricordi più il caffè e il biglietto del bus.'],
     ['Il numero è un tetto, non un obiettivo', 'Se oggi spendi meno, domani il numero sale: quello che avanzi resta tuo e passa ai giorni dopo.'],
     ['Le spese piccole fanno il mese', 'Un caffè da 1,20 € ogni giorno di lezione sono più di 25 € al mese. Non devi rinunciarci: basta vederlo.'],
     ['L’affitto prima di tutto', 'Metti affitto e bollette tra le spese ricorrenti: il numero del giorno li tiene già da parte e non ti sorprendono il primo del mese.'],
@@ -23,7 +23,7 @@ const T: Record<L, [string, string][]> = {
   ],
   en: [
     ['One part, one savings pot', 'Create four pots at your bank, one for each part. When money comes in, move the amounts Quadriamo suggests: what you see in the app is what you really have.'],
-    ['Log it now, not tonight', 'Five seconds at the till is enough. By evening you have forgotten the coffee and the bus ticket. Spent nothing today? Tap “No spending”.'],
+    ['Log it now, not tonight', 'Five seconds at the till is enough. By evening you have forgotten the coffee and the bus ticket.'],
     ['The number is a ceiling, not a target', 'Spend less today and tomorrow’s number goes up: what you save stays yours and rolls into the next days.'],
     ['Small expenses make the month', 'A €1.20 coffee every class day is over €25 a month. You don’t have to give it up: just see it.'],
     ['Rent comes first', 'Add rent and bills as recurring expenses: today’s number already sets them aside, so the 1st of the month holds no surprises.'],
@@ -39,7 +39,7 @@ const T: Record<L, [string, string][]> = {
   ],
   fr: [
     ['Une part, une cagnotte', 'Créez quatre cagnottes dans votre banque, une par part. Quand l’argent arrive, déplacez les montants indiqués par Quadriamo : ce que vous voyez dans l’app correspond à ce que vous avez vraiment.'],
-    ['Notez tout de suite, pas le soir', 'Cinq secondes à la caisse suffisent. Le soir, on oublie le café et le ticket de bus. Rien dépensé ? Touchez « Rien dépensé ».'],
+    ['Notez tout de suite, pas le soir', 'Cinq secondes à la caisse suffisent. Le soir, on oublie le café et le ticket de bus.'],
     ['Le chiffre est un plafond, pas un objectif', 'Dépensez moins aujourd’hui et le chiffre de demain monte : ce que vous économisez reste à vous.'],
     ['Les petites dépenses font le mois', 'Un café à 1,20 € chaque jour de cours, c’est plus de 25 € par mois. Inutile d’y renoncer : il suffit de le voir.'],
     ['Le loyer d’abord', 'Ajoutez loyer et factures aux dépenses récurrentes : le chiffre du jour les met déjà de côté.'],
@@ -55,7 +55,7 @@ const T: Record<L, [string, string][]> = {
   ],
   es: [
     ['Una parte, una hucha', 'Crea cuatro huchas en tu banco, una por parte. Cuando entra el dinero, mueve las cantidades que te indica Quadriamo: lo que ves en la app es lo que tienes de verdad.'],
-    ['Anótalo ya, no por la noche', 'Bastan 5 segundos en la caja. Por la noche ya no recuerdas el café ni el billete de bus. ¿Hoy no has gastado? Toca «Sin gastos».'],
+    ['Anótalo ya, no por la noche', 'Bastan 5 segundos en la caja. Por la noche ya no recuerdas el café ni el billete de bus.'],
     ['El número es un techo, no un objetivo', 'Si hoy gastas menos, mañana el número sube: lo que ahorras sigue siendo tuyo.'],
     ['Los gastos pequeños hacen el mes', 'Un café de 1,20 € cada día de clase son más de 25 € al mes. No tienes que dejarlo: basta con verlo.'],
     ['El alquiler, lo primero', 'Pon alquiler y facturas como gastos recurrentes: el número del día ya los aparta.'],

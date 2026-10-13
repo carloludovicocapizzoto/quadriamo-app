@@ -20,7 +20,7 @@ const SEED: [string, string][] = [
   ['auchan', 'groceries'], ['leclerc', 'groceries'], ['supermercato', 'groceries'], ['supermarket', 'groceries'],
   ['netflix', 'fixedCosts'], ['spotify', 'fixedCosts'], ['disney', 'fixedCosts'], ['icloud', 'fixedCosts'],
   ['vodafone', 'fixedCosts'], ['iliad', 'fixedCosts'], ['tim ', 'fixedCosts'], ['windtre', 'fixedCosts'], ['fastweb', 'fixedCosts'],
-  ['enel', 'fixedCosts'], ['affitto', 'fixedCosts'], ['rent', 'fixedCosts'],
+  ['enel', 'fixedCosts'], ['affitto', 'rent'], ['rent', 'rent'],
   ['eni', 'transport'], ['q8', 'transport'], ['tamoil', 'transport'], ['esso', 'transport'], ['shell', 'transport'],
   ['trenitalia', 'transport'], ['italo', 'transport'], ['atm', 'transport'], ['uber', 'transport'], ['flixbus', 'transport'],
   ['ryanair', 'transport'], ['easyjet', 'transport'], ['telepass', 'transport'],

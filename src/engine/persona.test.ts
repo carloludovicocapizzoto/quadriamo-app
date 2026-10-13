@@ -5,7 +5,7 @@ const base = defaultSettings({ currency: 'EUR', firstMonth: { year: 2026, month:
 describe('chi sei', () => {
   it('studente: regola senza investimenti, categorie da studente, una volta sola', () => {
     const s = applyPersona(applyPersona(base, 'student'), 'student')
-    expect(s.buckets.map(b => b.share)).toEqual([0.6, 0.25, 0.15, 0])
+    expect(s.buckets.map(b => b.share)).toEqual([0.45, 0.35, 0.2, 0])
     expect(s.buckets.reduce((a, b) => a + b.share, 0)).toBeCloseTo(1)
     expect(s.categories.filter(c => ['allowance', 'partTime', 'university'].includes(c.id))).toHaveLength(3)
     expect(s.categories[0].id).toBe('allowance')

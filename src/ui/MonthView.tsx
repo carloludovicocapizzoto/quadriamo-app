@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { paydayPlan, safeToSpend, ymKey, type ClassifiedTx, type MonthResult, type Settings } from '../engine'
+import { FIRST, paydayPlan, safeToSpend, ymKey, type ClassifiedTx, type MonthResult, type Settings } from '../engine'
 import { useStore } from '../store/context'
 import { useI18n } from '../i18n/core'
 import { Checks } from './Checks'
@@ -49,6 +49,8 @@ export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; sett
             {plan.every(p => moved.includes(p.bucketId)) && <span className="pill good">{t('pay.done')}</span>}
           </div>
           <p className="muted small">{t('pay.hint')}</p>
+          {r.paidFirst > 0 && <p className="pay-first">{t('pay.first', { amount: money(r.paidFirst, settings.currency),
+            what: settings.categories.filter(c => c.defaultBucket === FIRST).map(c => categoryName(c, t)).join(', ') })}</p>}
           <ul className="pay-list">
             {plan.map(p => (
               <li key={p.bucketId}>

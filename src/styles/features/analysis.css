@@ -51,6 +51,7 @@ table.data .link-btn { padding: 0; }
 .safe-name i, .pay-list i { width: 10px; height: 10px; border-radius: var(--r-sm); display: inline-block; flex: none; }
 .safe-amount { font-size: 24px; font-variant-numeric: tabular-nums; }
 .safe .bad-text { color: #FCA5A5; }
+.pay-first { margin: var(--s3) 0 0; font-weight: 600; }
 .pay-list { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px; }
 .pay-list .check { white-space: normal; font-size: 15px; gap: 10px; }
 .pay-list .done { text-decoration: line-through; opacity: .6; }

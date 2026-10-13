@@ -42,6 +42,8 @@ export interface Settings {
 }
 
 export const SPLIT = 'split' as const   // entrata divisa secondo la regola
+/** "Prima delle parti": una spesa (es. l'affitto) pagata con le entrate prima di dividerle nelle quattro parti. */
+export const FIRST = 'first' as const
 
 export interface Transaction {
   id: string
@@ -89,6 +91,7 @@ export interface MonthResult {
   spent: number
   saved: number
   leftOver: number
+  paidFirst: number                 // spese "prima delle parti" del mese (quelle in arrivo contano già): si tolgono dalle entrate da dividere
   buckets: BucketRow[]
   byCategory: { category: Category; amount: number; share: number }[]
   checks: Record<CheckKind, number>

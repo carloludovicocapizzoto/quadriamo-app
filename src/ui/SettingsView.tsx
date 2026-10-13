@@ -1,5 +1,5 @@
 import { useRef, useState, type ChangeEvent } from 'react'
-import { DEFAULT_CATEGORIES, installmentsLeft, monthOf, seedRules, todayIso, untilAfter, type CategoryType, type Settings } from '../engine'
+import { DEFAULT_CATEGORIES, FIRST, installmentsLeft, monthOf, seedRules, todayIso, untilAfter, type CategoryType, type Settings } from '../engine'
 import { LANGS, useI18n, type Lang } from '../i18n/core'
 import { useStore } from '../store/context'
 import { newId, parseAmount, parseBackup, toCsv, validateSettings, type AppData } from '../store/state'
@@ -208,6 +208,7 @@ export function SettingsView({ only, wizard = false, onLogin }: { only?: Setting
                 ? <select aria-label={t('settings.bucket')} value={c.defaultBucket ?? ''}
                           onChange={e => edit(s => { s.categories[i].defaultBucket = e.target.value })}>
                     {draft.buckets.map(b => <option key={b.id} value={b.id}>{bucketName(b, t)}</option>)}
+                    {c.type === 'expense' && <option value={FIRST}>{t('bucket.first')}</option>}
                   </select>
                 : <span />}
               <button className="icon-btn" aria-label={t('action.delete')} onClick={() => deleteCategory(c.id)}>×</button>
