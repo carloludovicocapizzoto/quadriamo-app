@@ -57,6 +57,7 @@ export const SECTIONS: { title: keyof Dict; items: Item[] }[] = [
     { page: 'delete', label: 'prof.deleteLocal', danger: true, when: c => !c.signedIn },
   ] },
   { title: 'prof.sec.support', items: [
+    { page: 'help', label: 'prof.help' },
     { href: c => `mailto:${c.contactEmail}`, label: 'prof.contact', when: c => !!c.contactEmail },
     { page: 'feedback', label: 'prof.feedback' },
     { action: c => c.invite(), label: 'beta.invite' },

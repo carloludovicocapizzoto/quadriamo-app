@@ -1,0 +1,360 @@
+{
+ "_note": "Centro assistenza dell'app e del sito (help.html): un solo file. 'contact' = email di contatto (quella del nuovo dominio); vuota = 'Contattaci' non compare.",
+ "contact": "",
+ "it": {
+  "title": "Centro assistenza",
+  "intro": "Le risposte alle domande più frequenti. Non trovi quello che cerchi? Scrivici.",
+  "contactTitle": "Contattaci",
+  "contactText": "Rispondiamo di solito entro due giorni lavorativi.",
+  "contactSoon": "L'indirizzo email arriva a breve. Intanto, dall'app: Profilo → Segnala un problema.",
+  "sections": [
+   {
+    "title": "Per iniziare",
+    "items": [
+     {
+      "q": "Cos'è Quadriamo?",
+      "a": "Un'app per il budget personale: divide le tue entrate in quattro parti (essenziali, qualità della vita, fondo di sicurezza, investimenti) e ogni giorno ti dice quanto puoi ancora spendere senza rovinare il mese."
+     },
+     {
+      "q": "Serve un account?",
+      "a": "No. Senza account i dati restano su questo telefono. Con un account li ritrovi su ogni dispositivo e non li perdi se cambi telefono."
+     },
+     {
+      "q": "Come la installo sul telefono?",
+      "a": "Si installa dal browser, in un minuto. Su iPhone: Safari → Condividi → Aggiungi alla schermata Home. Su Android: Chrome → menu → Installa app. La guida passo passo è nella pagina Scarica del sito."
+     }
+    ]
+   },
+   {
+    "title": "Il budget",
+    "items": [
+     {
+      "q": "Come si calcola il numero del giorno?",
+      "a": "È quello che resta nelle parti di spesa, diviso i giorni che mancano alla fine del mese. I pagamenti ricorrenti in arrivo (bollette, abbonamenti, rate) sono già tenuti da parte."
+     },
+     {
+      "q": "Cos'è la regola 55-20-15-10? Posso cambiarla?",
+      "a": "È la divisione di partenza: 55% essenziali, 20% qualità della vita, 15% fondo di sicurezza, 10% investimenti. Si cambia in Profilo → Budget, regola e categorie."
+     },
+     {
+      "q": "Perché l'affitto è fuori dalle quattro parti?",
+      "a": "Perché è una spesa fissa e grande: si toglie dalle entrate prima di dividerle, così le parti mostrano quello che puoi davvero usare. Se preferisci, in Profilo → Budget, regola e categorie puoi rimettere la categoria Affitto negli Essenziali."
+     },
+     {
+      "q": "Come divido un'entrata extra?",
+      "a": "Nel nuovo movimento scegli Entrate, poi Dove va: con la tua regola, tutta in una parte, oppure Dividi a modo mio con le percentuali che vuoi."
+     },
+     {
+      "q": "Come registro una rata o un finanziamento?",
+      "a": "In Profilo → Spese ricorrenti aggiungi la rata con importo, giorno e quante rate mancano. Dopo l'ultima smette da sola di contare."
+     }
+    ]
+   },
+   {
+    "title": "Movimenti",
+    "items": [
+     {
+      "q": "Come importo l'estratto conto?",
+      "a": "Esporta un file CSV dalla tua banca e sceglilo in Analisi → Movimenti → Importa estratto conto. Il file viene letto sul telefono e non viene inviato a nessuno."
+     },
+     {
+      "q": "Ho sbagliato un movimento.",
+      "a": "Toccalo per modificarlo o eliminarlo. I pagamenti ricorrenti si cambiano in Profilo → Spese ricorrenti."
+     },
+     {
+      "q": "Come funziona lo slancio?",
+      "a": "Sono i giorni di fila in cui hai aggiornato Quadriamo. Si aggiorna da solo quando aggiungi, modifichi o importi un movimento."
+     }
+    ]
+   },
+   {
+    "title": "Account e privacy",
+    "items": [
+     {
+      "q": "Chi vede i miei dati?",
+      "a": "Solo tu. I dati sono su server nell'Unione europea, niente pubblicità e niente vendita di dati. La foto profilo è in uno spazio privato che può leggere solo il tuo account."
+     },
+     {
+      "q": "Ho dimenticato la password.",
+      "a": "Nella schermata di accesso tocca Password dimenticata: ti arriva un codice per sceglierne una nuova. Puoi anche accedere con un codice via email, senza password."
+     },
+     {
+      "q": "Come esporto o cancello i miei dati?",
+      "a": "In Profilo → Privacy e dati: Esporta e importa per una copia, Elimina account e dati per cancellare tutto."
+     },
+     {
+      "q": "Le notifiche non arrivano.",
+      "a": "Attivale in Profilo → Notifiche. Su iPhone servono iOS 16.4 o successivo e l'app installata nella schermata Home."
+     }
+    ]
+   }
+  ]
+ },
+ "en": {
+  "title": "Help centre",
+  "intro": "Answers to the most common questions. Can't find what you're looking for? Write to us.",
+  "contactTitle": "Contact us",
+  "contactText": "We usually reply within two working days.",
+  "contactSoon": "Our email address is coming soon. In the meantime, from the app: Profile → Report a problem.",
+  "sections": [
+   {
+    "title": "Getting started",
+    "items": [
+     {
+      "q": "What is Quadriamo?",
+      "a": "A personal budget app: it splits your income into four parts (essentials, quality of life, safety fund, investments) and tells you every day how much you can still spend without ruining the month."
+     },
+     {
+      "q": "Do I need an account?",
+      "a": "No. Without an account your data stays on this phone. With an account you find it on every device and don't lose it if you change phone."
+     },
+     {
+      "q": "How do I install it on my phone?",
+      "a": "It installs from the browser in a minute. On iPhone: Safari → Share → Add to Home Screen. On Android: Chrome → menu → Install app. The step-by-step guide is on the Download page of the website."
+     }
+    ]
+   },
+   {
+    "title": "The budget",
+    "items": [
+     {
+      "q": "How is today's number calculated?",
+      "a": "It's what's left in your spending parts, divided by the days until the end of the month. Upcoming recurring payments (bills, subscriptions, instalments) are already set aside."
+     },
+     {
+      "q": "What is the 55-20-15-10 rule? Can I change it?",
+      "a": "It's the starting split: 55% essentials, 20% quality of life, 15% safety fund, 10% investments. Change it in Profile → Budget, rule and categories."
+     },
+     {
+      "q": "Why is rent outside the four parts?",
+      "a": "Because it's a large fixed cost: it comes off your income before the split, so the parts show what you can really use. If you prefer, in Profile → Budget, rule and categories you can put the Rent category back into Essentials."
+     },
+     {
+      "q": "How do I split extra income?",
+      "a": "In a new transaction choose Income, then Goes to: with your rule, all into one part, or Split my way with the percentages you want."
+     },
+     {
+      "q": "How do I record an instalment or a loan?",
+      "a": "In Profile → Recurring expenses add the instalment with amount, day and how many are left. After the last one it stops counting by itself."
+     }
+    ]
+   },
+   {
+    "title": "Transactions",
+    "items": [
+     {
+      "q": "How do I import a bank statement?",
+      "a": "Export a CSV file from your bank and pick it in Insights → Transactions → Import bank statement. The file is read on your phone and never sent anywhere."
+     },
+     {
+      "q": "I entered a transaction wrong.",
+      "a": "Tap it to edit or delete it. Recurring payments are changed in Profile → Recurring expenses."
+     },
+     {
+      "q": "How does the streak work?",
+      "a": "It's the number of days in a row you've updated Quadriamo. It updates by itself when you add, edit or import a transaction."
+     }
+    ]
+   },
+   {
+    "title": "Account and privacy",
+    "items": [
+     {
+      "q": "Who can see my data?",
+      "a": "Only you. Data is on servers in the European Union, with no ads and no selling of data. Your profile photo is in a private space only your account can read."
+     },
+     {
+      "q": "I forgot my password.",
+      "a": "On the sign-in screen tap Forgot your password?: you'll get a code to choose a new one. You can also sign in with an email code, without a password."
+     },
+     {
+      "q": "How do I export or delete my data?",
+      "a": "In Profile → Privacy and data: Export and import for a copy, Delete account and data to erase everything."
+     },
+     {
+      "q": "Notifications don't arrive.",
+      "a": "Turn them on in Profile → Notifications. On iPhone you need iOS 16.4 or later and the app installed on the Home Screen."
+     }
+    ]
+   }
+  ]
+ },
+ "es": {
+  "title": "Centro de ayuda",
+  "intro": "Respuestas a las preguntas más frecuentes. ¿No encuentras lo que buscas? Escríbenos.",
+  "contactTitle": "Contáctanos",
+  "contactText": "Solemos responder en dos días laborables.",
+  "contactSoon": "La dirección de correo llega pronto. Mientras tanto, desde la app: Perfil → Informar de un problema.",
+  "sections": [
+   {
+    "title": "Primeros pasos",
+    "items": [
+     {
+      "q": "¿Qué es Quadriamo?",
+      "a": "Una app de presupuesto personal: divide tus ingresos en cuatro partes (esenciales, calidad de vida, fondo de seguridad, inversiones) y cada día te dice cuánto puedes gastar todavía sin estropear el mes."
+     },
+     {
+      "q": "¿Necesito una cuenta?",
+      "a": "No. Sin cuenta los datos se quedan en este teléfono. Con una cuenta los encuentras en cada dispositivo y no los pierdes si cambias de teléfono."
+     },
+     {
+      "q": "¿Cómo la instalo en el teléfono?",
+      "a": "Se instala desde el navegador en un minuto. En iPhone: Safari → Compartir → Añadir a pantalla de inicio. En Android: Chrome → menú → Instalar app. La guía paso a paso está en la página Descargar del sitio."
+     }
+    ]
+   },
+   {
+    "title": "El presupuesto",
+    "items": [
+     {
+      "q": "¿Cómo se calcula el número del día?",
+      "a": "Es lo que queda en las partes de gasto, dividido por los días que faltan para fin de mes. Los pagos recurrentes que llegan (facturas, suscripciones, cuotas) ya están apartados."
+     },
+     {
+      "q": "¿Qué es la regla 55-20-15-10? ¿Puedo cambiarla?",
+      "a": "Es el reparto inicial: 55% esenciales, 20% calidad de vida, 15% fondo de seguridad, 10% inversiones. Se cambia en Perfil → Presupuesto, regla y categorías."
+     },
+     {
+      "q": "¿Por qué el alquiler está fuera de las cuatro partes?",
+      "a": "Porque es un gasto fijo y grande: se resta de los ingresos antes del reparto, así las partes muestran lo que de verdad puedes usar. Si prefieres, en Perfil → Presupuesto, regla y categorías puedes volver a poner la categoría Alquiler en Esenciales."
+     },
+     {
+      "q": "¿Cómo reparto un ingreso extra?",
+      "a": "En el nuevo movimiento elige Ingresos y luego Adónde va: con tu regla, todo en una parte o Dividir a mi manera con los porcentajes que quieras."
+     },
+     {
+      "q": "¿Cómo registro una cuota o un préstamo?",
+      "a": "En Perfil → Gastos recurrentes añade la cuota con importe, día y cuántas quedan. Después de la última deja de contar sola."
+     }
+    ]
+   },
+   {
+    "title": "Movimientos",
+    "items": [
+     {
+      "q": "¿Cómo importo el extracto bancario?",
+      "a": "Exporta un archivo CSV desde tu banco y elígelo en Análisis → Movimientos → Importar extracto. El archivo se lee en el teléfono y no se envía a nadie."
+     },
+     {
+      "q": "Me equivoqué en un movimiento.",
+      "a": "Tócalo para modificarlo o eliminarlo. Los pagos recurrentes se cambian en Perfil → Gastos recurrentes."
+     },
+     {
+      "q": "¿Cómo funciona la racha?",
+      "a": "Son los días seguidos en que has actualizado Quadriamo. Se actualiza sola cuando añades, modificas o importas un movimiento."
+     }
+    ]
+   },
+   {
+    "title": "Cuenta y privacidad",
+    "items": [
+     {
+      "q": "¿Quién ve mis datos?",
+      "a": "Solo tú. Los datos están en servidores de la Unión Europea, sin publicidad y sin venta de datos. La foto de perfil está en un espacio privado que solo puede leer tu cuenta."
+     },
+     {
+      "q": "Olvidé la contraseña.",
+      "a": "En la pantalla de acceso toca ¿Has olvidado la contraseña?: te llega un código para elegir una nueva. También puedes entrar con un código por correo, sin contraseña."
+     },
+     {
+      "q": "¿Cómo exporto o borro mis datos?",
+      "a": "En Perfil → Privacidad y datos: Exportar e importar para una copia, Eliminar cuenta y datos para borrarlo todo."
+     },
+     {
+      "q": "No llegan las notificaciones.",
+      "a": "Actívalas en Perfil → Notificaciones. En iPhone necesitas iOS 16.4 o posterior y la app instalada en la pantalla de inicio."
+     }
+    ]
+   }
+  ]
+ },
+ "fr": {
+  "title": "Centre d'aide",
+  "intro": "Les réponses aux questions les plus fréquentes. Vous ne trouvez pas ? Écrivez-nous.",
+  "contactTitle": "Nous contacter",
+  "contactText": "Nous répondons en général sous deux jours ouvrés.",
+  "contactSoon": "Notre adresse e-mail arrive bientôt. En attendant, depuis l'app : Profil → Signaler un problème.",
+  "sections": [
+   {
+    "title": "Pour commencer",
+    "items": [
+     {
+      "q": "Qu'est-ce que Quadriamo ?",
+      "a": "Une app de budget personnel : elle divise vos revenus en quatre parts (essentiels, qualité de vie, fonds de sécurité, investissements) et vous dit chaque jour combien vous pouvez encore dépenser sans gâcher le mois."
+     },
+     {
+      "q": "Faut-il un compte ?",
+      "a": "Non. Sans compte, les données restent sur ce téléphone. Avec un compte, vous les retrouvez sur chaque appareil et ne les perdez pas en changeant de téléphone."
+     },
+     {
+      "q": "Comment l'installer sur mon téléphone ?",
+      "a": "Elle s'installe depuis le navigateur en une minute. Sur iPhone : Safari → Partager → Sur l'écran d'accueil. Sur Android : Chrome → menu → Installer l'application. Le guide pas à pas est sur la page Télécharger du site."
+     }
+    ]
+   },
+   {
+    "title": "Le budget",
+    "items": [
+     {
+      "q": "Comment est calculé le chiffre du jour ?",
+      "a": "C'est ce qui reste dans les parts de dépense, divisé par les jours jusqu'à la fin du mois. Les paiements récurrents à venir (factures, abonnements, mensualités) sont déjà mis de côté."
+     },
+     {
+      "q": "Qu'est-ce que la règle 55-20-15-10 ? Puis-je la changer ?",
+      "a": "C'est la répartition de départ : 55 % essentiels, 20 % qualité de vie, 15 % fonds de sécurité, 10 % investissements. Elle se change dans Profil → Budget, règle et catégories."
+     },
+     {
+      "q": "Pourquoi le loyer est-il hors des quatre parts ?",
+      "a": "Parce que c'est une grosse dépense fixe : elle est retirée des revenus avant la répartition, pour que les parts montrent ce que vous pouvez vraiment utiliser. Si vous préférez, dans Profil → Budget, règle et catégories, vous pouvez remettre la catégorie Loyer dans les Essentiels."
+     },
+     {
+      "q": "Comment répartir un revenu supplémentaire ?",
+      "a": "Dans le nouveau mouvement, choisissez Revenus puis Va vers : avec votre règle, tout dans une part, ou Répartir à ma façon avec les pourcentages voulus."
+     },
+     {
+      "q": "Comment enregistrer une mensualité ou un prêt ?",
+      "a": "Dans Profil → Dépenses récurrentes, ajoutez la mensualité avec montant, jour et nombre restant. Après la dernière, elle cesse de compter toute seule."
+     }
+    ]
+   },
+   {
+    "title": "Mouvements",
+    "items": [
+     {
+      "q": "Comment importer un relevé bancaire ?",
+      "a": "Exportez un fichier CSV depuis votre banque et choisissez-le dans Analyse → Opérations → Importer un relevé. Le fichier est lu sur le téléphone et n'est envoyé nulle part."
+     },
+     {
+      "q": "J'ai fait une erreur dans un mouvement.",
+      "a": "Touchez-le pour le modifier ou le supprimer. Les paiements récurrents se changent dans Profil → Dépenses récurrentes."
+     },
+     {
+      "q": "Comment fonctionne la série ?",
+      "a": "Ce sont les jours d'affilée où vous avez mis à jour Quadriamo. Elle se met à jour toute seule quand vous ajoutez, modifiez ou importez une opération."
+     }
+    ]
+   },
+   {
+    "title": "Compte et confidentialité",
+    "items": [
+     {
+      "q": "Qui voit mes données ?",
+      "a": "Vous seul. Les données sont sur des serveurs dans l'Union européenne, sans publicité ni vente de données. La photo de profil est dans un espace privé que seul votre compte peut lire."
+     },
+     {
+      "q": "J'ai oublié mon mot de passe.",
+      "a": "Sur l'écran de connexion, touchez Mot de passe oublié : vous recevez un code pour en choisir un nouveau. Vous pouvez aussi vous connecter avec un code par e-mail, sans mot de passe."
+     },
+     {
+      "q": "Comment exporter ou supprimer mes données ?",
+      "a": "Dans Profil → Confidentialité et données : Exporter et importer pour une copie, Supprimer le compte et les données pour tout effacer."
+     },
+     {
+      "q": "Les notifications n'arrivent pas.",
+      "a": "Activez-les dans Profil → Notifications. Sur iPhone, il faut iOS 16.4 ou plus récent et l'app installée sur l'écran d'accueil."
+     }
+    ]
+   }
+  ]
+ }
+}

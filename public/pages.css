@@ -46,3 +46,15 @@ footer { margin-top: 40px; font-size: 14px; color: var(--muted); }
 html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body { overscroll-behavior: none; }
 input, select, textarea { font-size: max(16px, 1em); }
+
+/* centro assistenza: domande che si aprono al tocco, righe separate da una linea */
+.faq { border-top: 1px solid var(--line); margin: 0 0 8px; }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { list-style: none; cursor: pointer; padding: 14px 28px 14px 0; position: relative; font-weight: 600; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: ''; position: absolute; right: 6px; top: 50%; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: translateY(-70%) rotate(45deg); transition: transform .25s ease; }
+.faq details[open] summary::after { transform: translateY(-30%) rotate(225deg); }
+.faq details p { margin: 0 0 16px; color: var(--muted); }
+.contact { margin-top: 40px; }
+.contact-mail { font-size: 22px; font-weight: 600; }

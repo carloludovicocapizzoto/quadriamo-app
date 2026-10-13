@@ -7,6 +7,7 @@ import type { Dict } from '../../i18n/en'
 import { setPrefs, usePrefs } from '../../app/prefs'
 import { removeAvatar, setAvatar, useAvatar } from '../../profile/avatar'
 import { countries, countryName } from '../../profile/countries'
+import { useHelp } from '../../profile/help'
 import { LICENSES } from '../../profile/licenses'
 import { useStore } from '../../store/context'
 import type { AppData } from '../../store/state'
@@ -219,4 +220,27 @@ export function Licenses() {
   return <Group foot={t('lic.intro')}>
     {LICENSES.map(l => <Row key={l.name} label={l.name} detail={`${l.license} · ${l.by}`} href={l.url} />)}
   </Group>
+}
+
+/** Centro assistenza: le domande per argomento (si aprono al tocco), poi come scriverci. */
+export function HelpCenter({ onReport }: { onReport: () => void }) {
+  const { t, lang } = useI18n()
+  const help = useHelp()
+  if (!help) return <p className="muted">{t('app.loading')}</p>
+  const h = help[lang]
+  return <>
+    <p className="muted">{h.intro}</p>
+    {h.sections.map(s => (
+      <section key={s.title} className="group">
+        <h2 className="group-title">{s.title}</h2>
+        <ul className="group-list faq">{s.items.map(i => (
+          <li key={i.q}><details><summary className="row"><span className="row-main">{i.q}</span><Icon name="chevron" size={18} className="row-chev" /></summary>
+            <p>{i.a}</p></details></li>))}</ul>
+      </section>
+    ))}
+    <Group title={h.contactTitle} foot={help.contact ? h.contactText : h.contactSoon}>
+      {help.contact && <Row label={help.contact} href={`mailto:${help.contact}?subject=Quadriamo`} />}
+      <Row label={t('prof.feedback')} onClick={onReport} />
+    </Group>
+  </>
 }

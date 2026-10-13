@@ -46,7 +46,7 @@
       'faq.q4': 'Posso cambiare le percentuali?', 'faq.a4': 'Certo: la 55-20-15-10 è quella consigliata, ma puoi impostare la regola che preferisci, purché faccia 100%.',
       'faq.q5': 'Quanto costa?', 'faq.a5': 'Durante la beta è gratis. Più avanti ci sarà un piano Pro facoltativo; la versione gratuita resterà.',
       'faq.q6': 'È una consulenza finanziaria?', 'faq.a6': 'No: Quadriamo è uno strumento per organizzare il budget. Le decisioni sui tuoi soldi restano tue.',
-      'foot.tag': 'I tuoi soldi, in quattro.', 'foot.privacy': 'Privacy', 'foot.terms': 'Termini d’uso',
+      'foot.tag': 'I tuoi soldi, in quattro.', 'foot.help': 'Assistenza', 'foot.contact': 'Contattaci', 'foot.privacy': 'Privacy', 'foot.terms': 'Termini d’uso',
       'foot.legal': '© 2026 Quadriamo · Strumento per il budget, non consulenza finanziaria.'
     },
     en: {
@@ -94,7 +94,7 @@
       'faq.q4': 'Can I change the percentages?', 'faq.a4': 'Of course: 55-20-15-10 is the recommended split, but you can set any rule you like, as long as it adds up to 100%.',
       'faq.q5': 'How much does it cost?', 'faq.a5': 'It is free during the beta. Later there will be an optional Pro plan; the free version will stay.',
       'faq.q6': 'Is it financial advice?', 'faq.a6': 'No: Quadriamo is a tool to organise your budget. Decisions about your money remain yours.',
-      'foot.tag': 'Your money, in four.', 'foot.privacy': 'Privacy', 'foot.terms': 'Terms of use',
+      'foot.tag': 'Your money, in four.', 'foot.help': 'Help', 'foot.contact': 'Contact us', 'foot.privacy': 'Privacy', 'foot.terms': 'Terms of use',
       'foot.legal': '© 2026 Quadriamo · A budgeting tool, not financial advice.'
     },
     fr: {
@@ -142,7 +142,7 @@
       'faq.q4': 'Puis-je changer les pourcentages ?', 'faq.a4': 'Bien sûr : le 55-20-15-10 est conseillé, mais vous pouvez choisir votre règle, tant qu’elle fait 100 %.',
       'faq.q5': 'Combien ça coûte ?', 'faq.a5': 'C’est gratuit pendant la bêta. Plus tard, une offre Pro facultative ; la version gratuite restera.',
       'faq.q6': 'Est-ce un conseil financier ?', 'faq.a6': 'Non : Quadriamo est un outil pour organiser votre budget. Les décisions restent les vôtres.',
-      'foot.tag': 'Votre argent, en quatre.', 'foot.privacy': 'Confidentialité', 'foot.terms': 'Conditions',
+      'foot.tag': 'Votre argent, en quatre.', 'foot.help': 'Aide', 'foot.contact': 'Nous contacter', 'foot.privacy': 'Confidentialité', 'foot.terms': 'Conditions',
       'foot.legal': '© 2026 Quadriamo · Outil de budget, pas un conseil financier.'
     },
     es: {
@@ -190,7 +190,7 @@
       'faq.q4': '¿Puedo cambiar los porcentajes?', 'faq.a4': 'Claro: el 55-20-15-10 es el recomendado, pero puedes poner la regla que quieras, siempre que sume 100 %.',
       'faq.q5': '¿Cuánto cuesta?', 'faq.a5': 'Es gratis durante la beta. Más adelante habrá un plan Pro opcional; la versión gratuita seguirá.',
       'faq.q6': '¿Es asesoramiento financiero?', 'faq.a6': 'No: Quadriamo es una herramienta para organizar tu presupuesto. Las decisiones son tuyas.',
-      'foot.tag': 'Tu dinero, en cuatro.', 'foot.privacy': 'Privacidad', 'foot.terms': 'Términos',
+      'foot.tag': 'Tu dinero, en cuatro.', 'foot.help': 'Ayuda', 'foot.contact': 'Contáctanos', 'foot.privacy': 'Privacidad', 'foot.terms': 'Términos',
       'foot.legal': '© 2026 Quadriamo · Herramienta de presupuesto, no asesoramiento financiero.'
     }
   }
@@ -432,7 +432,7 @@
     document.querySelectorAll('[data-i18n-html]').forEach(function (el) { var k = el.getAttribute('data-i18n-html'); if (d[k] != null) el.innerHTML = d[k] })
     var sel = document.querySelector('.lang-select'); if (sel) sel.value = l
     // i link verso l'app e le pagine portano la lingua scelta
-    document.querySelectorAll('a[href^="install.html"], a[href^="inizia.html"], a[href^="privacy.html"], a[href^="terms.html"]').forEach(function (a) {
+    document.querySelectorAll('a[href^="install.html"], a[href^="inizia.html"], a[href^="privacy.html"], a[href^="terms.html"], a[href^="help.html"]').forEach(function (a) {
       a.href = a.getAttribute('href').split('?')[0] + '?lang=' + l
     })
   }

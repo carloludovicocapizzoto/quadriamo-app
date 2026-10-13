@@ -4,7 +4,8 @@ import { useI18n } from '../../i18n/core'
 import { usePrefs } from '../../app/prefs'
 import { APP_VERSION, setStatsConsent, statsConsent } from '../../beta/device'
 import { track } from '../../beta/telemetry'
-import { FEEDBACK_EMAIL, PAGES as LEGAL } from '../../config'
+import { PAGES as LEGAL } from '../../config'
+import { useHelp } from '../../profile/help'
 import type { ProfilePage } from '../../profile/pages'
 import type { AppData } from '../../store/state'
 import { supabase } from '../../sync/client'
@@ -29,6 +30,7 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
   const sync = useSync()
   const plan = usePlan()
   const prefs = usePrefs()
+  const help = useHelp()
   const [stats, setStats] = useState(statsConsent() === 'yes')
   const [isAdmin, setIsAdmin] = useState(false)
   useEffect(() => {
@@ -45,12 +47,12 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
 
   if (page) return (
     <Page title={t(pageLabel(page, !!sync.user))} onBack={() => open(null)}>
-      {PAGES[page]({ data, streak, today, badges: list, onBack: () => open(null), onLogin, onHome: () => open(null) })}
+      {PAGES[page]({ data, streak, today, badges: list, onBack: () => open(null), onLogin, onHome: () => open(null), onPage: open })}
     </Page>
   )
 
   const ctx: Ctx = {
-    signedIn: !!sync.user, isAdmin, prefs, contactEmail: FEEDBACK_EMAIL, version: APP_VERSION, stats,
+    signedIn: !!sync.user, isAdmin, prefs, contactEmail: help?.contact ?? '', version: APP_VERSION, stats,
     privacyUrl: `${LEGAL.privacy}?lang=${lang}`, termsUrl: `${LEGAL.terms}?lang=${lang}`, t,
     setStats: on => { setStats(on); setStatsConsent(on ? 'yes' : 'no') },
     invite: async () => {

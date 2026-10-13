@@ -8,11 +8,11 @@ import { GoalsStrip } from '../goals/Goals'
 import { PlanCard, ProGate } from '../Pro'
 import { SettingsView } from '../SettingsView'
 import { SharedView } from '../shared/SharedView'
-import { Accessibility, Appearance, Delete, Language, Licenses, Motion, Notifications, Personal, Progress, Security } from './pages'
+import { Accessibility, Appearance, Delete, HelpCenter, Language, Licenses, Motion, Notifications, Personal, Progress, Security } from './pages'
 
 export interface PageProps {
   data: AppData; streak: Streak | null; today: string; badges: Badge[]
-  onBack: () => void; onLogin: () => void; onHome: () => void
+  onBack: () => void; onLogin: () => void; onHome: () => void; onPage: (p: ProfilePage) => void
 }
 
 export const PAGES: Record<ProfilePage, (p: PageProps) => ReactNode> = {
@@ -32,6 +32,7 @@ export const PAGES: Record<ProfilePage, (p: PageProps) => ReactNode> = {
   accessibility: () => <Accessibility />,
   data: p => <SettingsView only={['data']} onLogin={p.onLogin} />,
   delete: p => <Delete onDone={p.onHome} />,
+  help: p => <HelpCenter onReport={() => p.onPage('feedback')} />,
   feedback: p => <FeedbackCard onClose={p.onBack} />,
   licenses: () => <Licenses />,
 }

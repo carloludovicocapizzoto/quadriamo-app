@@ -123,3 +123,10 @@ button.row:active, a.row:active { opacity: .6; }
 .form-end { display: flex; justify-content: flex-end; align-items: center; gap: var(--s3); margin: var(--s3) 0 0; }
 .btn.danger-fill { background: var(--bad); color: var(--on-accent); }
 .btn.danger-fill:disabled { background: var(--fill); color: var(--faint); opacity: 1; }
+
+/* domande frequenti: la riga si apre al tocco e la freccia ruota verso il basso */
+.faq details > summary { list-style: none; }
+.faq details > summary::-webkit-details-marker { display: none; }
+.faq details > summary .row-chev { transition: transform var(--d-spring) var(--spring-snappy); }
+.faq details[open] > summary .row-chev { transform: rotate(90deg); }
+.faq details > p { margin: 0 0 var(--s4); color: var(--muted); font-size: 15px; line-height: 1.55; }

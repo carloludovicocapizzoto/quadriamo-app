@@ -673,6 +673,7 @@ const fr: Dict = {
   'prof.delete': "Supprimer le compte et les données",
   'prof.deleteLocal': "Effacer les données",
   'prof.feedback': "Signaler un problème",
+  'prof.help': "Centre d'aide",
   'prof.contact': "Nous contacter",
   'prof.licenses': "Licences open source",
   'prof.version': "Version",

@@ -673,6 +673,7 @@ const en = {
   'prof.delete': "Delete account and data",
   'prof.deleteLocal': "Erase data",
   'prof.feedback': "Report a problem",
+  'prof.help': "Help centre",
   'prof.contact': "Contact us",
   'prof.licenses': "Open source licences",
   'prof.version': "Version",

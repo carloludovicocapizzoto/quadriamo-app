@@ -673,6 +673,7 @@ const es: Dict = {
   'prof.delete': "Eliminar cuenta y datos",
   'prof.deleteLocal': "Borrar los datos",
   'prof.feedback': "Informar de un problema",
+  'prof.help': "Centro de ayuda",
   'prof.contact': "Contáctanos",
   'prof.licenses': "Licencias de código abierto",
   'prof.version': "Versión",
