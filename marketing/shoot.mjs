@@ -68,6 +68,16 @@ await click('Analisi', '.tabbar button'); await sleep(2500); await shot('12-fore
 await click('Anno', '.segmented button'); await sleep(900); await shot('14-trend.jpg', clean)
 await shot('15-growing.jpg', scrollTo(`document.querySelector('.part-rows')?.previousElementSibling`))
 await click('Investi', '.segmented button'); await sleep(1000); await shot('38-invest.jpg', clean)
+// Notizie con contenuti veri (tools/news/sample.json, da: node tools/news/dry-run.ts --sample), senza bisogno del database
+try {
+  const { readFileSync } = await import('node:fs')
+  const sample = readFileSync(new URL('../tools/news/sample.json', import.meta.url), 'utf8')
+  await js(`localStorage.setItem('q.hub', JSON.stringify({ lang: '${LANG}', at: Date.now(), items: ${sample}.filter(x => x.lang === '${LANG}' || x.lang === 'en') }))`)
+  await click('Notizie', '.tabbar button'); await sleep(1200); await shot('39-news.jpg', clean)
+  await shot('40-news-more.jpg', scrollTo(`document.querySelectorAll('.news-section')[3]`))
+  await js(`document.querySelector('.story')?.click()`); await sleep(1000); await shot('41-news-detail.jpg')
+  await js(`document.querySelector('.bs-root').click()`); await sleep(500)
+} catch { console.warn('notizie: manca tools/news/sample.json') }
 await click('Profilo', '.tabbar button'); await sleep(900); await shot('17-profile.jpg', clean)
 await shot('22-profile-list.jpg', scrollTo(`document.querySelectorAll('.group')[3]`))
 await js(`location.hash = '#/profile/progress'`); await sleep(1000); await shot('35-progress.jpg', 'window.scrollTo(0,0)')

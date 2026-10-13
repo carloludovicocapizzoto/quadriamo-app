@@ -1,27 +1,33 @@
-.tip { margin-top: var(--s6); }
-.tip-head { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s2); }
-.tip-ico { width: 36px; height: 36px; border-radius: 11px; flex: none; display: grid; place-items: center; color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
-.tip-title { letter-spacing: -.01em; font-size: 18px; font-weight: 600; margin: 0 0 4px; }
-.tip-text { margin: 0 0 var(--s3); color: var(--muted); line-height: 1.5; }
-.tip-actions { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; }
-.tip-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s4); }
-.tip-list li { display: grid; grid-template-columns: 36px 1fr; gap: var(--s3); }
-.tip-list p { margin: 2px 0 0; color: var(--muted); font-size: 14.5px; }
-.tip-list .link-btn { padding: 4px 0 0; font-size: 14px; }
-.bank-guide > p:first-child { margin-top: 0; }
-.bank-steps { margin: 0 0 var(--s3); padding-left: 20px; display: grid; gap: var(--s2); }
-.bank-list { list-style: none; margin: 0 0 var(--s3); padding: 0; display: grid; gap: var(--s2); }
-.bank-list li { display: grid; grid-template-columns: 40px 1fr; gap: var(--s3); align-items: center; padding: var(--s3); border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--line); }
-.bank-list div { display: grid; gap: 1px; }
-.bank-list div span { font-size: 14px; }
-.bank-logo { width: 40px; height: 40px; border-radius: var(--r-md); display: grid; place-items: center; font-weight: 600; color: var(--surface); background: var(--text); }
-.news ul { list-style: none; margin: 0; padding: 0; }
-.news li + li a { border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
-.news a { display: grid; gap: 4px; padding: var(--s3) 0; color: var(--text); text-decoration: none; }
-.news a:active { opacity: .7; }
-.news-title { font-weight: 600; line-height: 1.35; }
-.news-meta { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-.news-tag { font-style: normal; font-weight: 600; font-size: 11px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 1px 7px; border-radius: var(--r-full); }
-.news-note { margin: var(--s2) 0 0; }
-.news-intro { margin: -4px 0 var(--s3); }
-.tips-page { padding: var(--s4); }
+/* Notizie: si legge, si scopre, si impara. Niente riquadri: storie come righe, i filtri scorrono in orizzontale. */
+.news-filters { display: flex; gap: var(--s2); overflow-x: auto; margin: 0 calc(-1 * var(--gutter)) var(--s2); padding: 0 var(--gutter) var(--s1);
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.news-filters::-webkit-scrollbar { display: none; }
+.news-filters button { flex: none; min-height: 36px; padding: 0 14px; border: 0; border-radius: var(--r-md); background: var(--fill); color: var(--text);
+  font: inherit; font-size: 15px; cursor: pointer; white-space: nowrap; transition: background var(--d-fast), color var(--d-fast); }
+.news-filters button.on { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.news-filters button.apart { margin-left: var(--s3); }   /* le cripto, separate dal resto */
+
+.stories { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.stories > li { border-bottom: 1px solid var(--line); }
+.story { display: flex; gap: var(--s3); align-items: flex-start; width: 100%; padding: var(--s4) 0; border: 0; background: none; color: var(--text);
+  font: inherit; text-align: left; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.story:active { opacity: .6; }
+.story-text { display: grid; gap: 6px; min-width: 0; }
+.story-title { font-size: var(--t-body); font-weight: 600; line-height: 1.35; letter-spacing: -.01em; }
+.story-meta { font-size: var(--t-sm); color: var(--muted); }
+.story-thumb { flex: none; width: 104px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--r-sm); background: var(--fill); }
+/* Oggi: titoli più grandi, è la parte da leggere per prima */
+.stories.lead .story-title { font-size: var(--t-h2); line-height: 1.3; letter-spacing: -.02em; }
+.news-section .sec-title { margin-top: var(--s8); }
+.news-empty { padding: var(--s6) 0; }
+.news-note { margin-top: var(--s8); }
+.news-loading { display: grid; gap: var(--s4); margin-top: var(--s4); }
+
+/* il dettaglio nel foglio */
+.story-detail h2 { font-size: var(--t-h2); line-height: 1.3; margin: var(--s2) 0 var(--s4); }
+.story-detail .group-title { margin-top: var(--s4); }
+.story-excerpt { margin: 0 0 var(--s5); line-height: 1.55; }
+.story-hero { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--r-sm); margin: 0 0 var(--s4); }
+.story-detail .btn.primary { gap: var(--s2); text-decoration: none; }
+.story-detail .others-title { margin-top: var(--s8); }
+.tip-act { padding: 0 0 var(--s4); }

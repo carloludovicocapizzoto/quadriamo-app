@@ -28,3 +28,4 @@ desktop/node_modules
 desktop/dist
 desktop-admin/node_modules
 desktop-admin/dist
+tools/news/sample.json

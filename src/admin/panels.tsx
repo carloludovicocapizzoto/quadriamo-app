@@ -20,6 +20,11 @@ import sql0016 from '../../supabase/migrations/0016_nudge_until_midnight.sql?raw
 import sql0017 from '../../supabase/migrations/0017_avatars.sql?raw'
 import billingCode from '../../supabase/functions/billing/index.ts?raw'
 import newsCode from '../../supabase/functions/news/index.ts?raw'
+import ingestCode from '../../supabase/functions/news-ingest/index.ts?raw'
+import feedCode from '../../supabase/functions/_shared/news-feed.ts?raw'
+import rulesCode from '../../supabase/functions/_shared/news-rules.ts?raw'
+import sql0018 from '../../supabase/migrations/0018_news_hub.sql?raw'
+import sql0019 from '../../supabase/migrations/0019_news_hub_cron.sql?raw'
 import sql0009 from '../../supabase/migrations/0009_morning_push_cron.sql?raw'
 import sql0003 from '../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
 import fnCode from '../../supabase/functions/send-push/index.ts?raw'
@@ -55,6 +60,10 @@ function Toolbar({ count, onExport, children }: { count: string; onExport?: () =
 }
 
 // ---------- Dashboard ----------
+// l'editor delle funzioni di Supabase accetta un file solo: regole e lettura dei feed (condivise con i test) nello stesso file
+const ingestBundle = [ingestCode.replace(/^import .*_shared\/.*\n/gm, ''), '// ---------- lettura dei feed (_shared/news-feed.ts) ----------', feedCode,
+  '// ---------- regole (_shared/news-rules.ts) ----------', rulesCode].join('\n')
+
 export function DashboardPanel({ stats, days, setDays, cohorts = [] }: { stats: Stats; days: number; setDays: (n: number) => void; cohorts?: Cohort[] }) {
   const daily = stats.daily ?? []
   const max = Math.max(1, ...daily.map(x => x.active))
@@ -543,6 +552,22 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
           <p className="az-hint">Crea lo spazio privato <code>avatars</code>: ognuno vede e cambia solo la propria foto (256×256, ridotta sul telefono).
             Finché non c'è, la foto resta solo sul dispositivo di chi la sceglie.</p>
+        </Step>
+        <Step n={14} ok={null} manual={{ done: manual.includes(14), toggle: toggle(14) }} title="Notizie: il Knowledge Hub (raccolta ogni 2 ore)">
+          <ol>
+            <li>Copia il primo script, incollalo in SQL Editor e premi <b>Run</b>: crea l'elenco delle fonti approvate (44) e l'archivio dei contenuti.</li>
+            <li>Apri <a href={`${dash}/functions`} target="_blank" rel="noreferrer">Edge Functions</a> → <b>Deploy a new function</b> → <b>Via Editor</b>.
+              Nome: <code>news-ingest</code>. Cancella il codice di esempio, incolla quello copiato da qui → <b>Deploy</b>. Nei dettagli spegni <b>Verify JWT</b>.</li>
+            <li>Copia il secondo script, incollalo in SQL Editor e premi <b>Run</b>: la raccolta parte subito e poi ogni 2 ore.</li>
+          </ol>
+          <div className="az-u-row"><Copy text={sql0018} label="1 · Copia lo script delle fonti" />
+            <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
+          <div className="az-u-row"><Copy text={ingestBundle} label="2 · Copia il codice della funzione" />
+            <a className="az-btn" href={`${dash}/functions`} target="_blank" rel="noreferrer">↗ Apri Edge Functions</a></div>
+          <div className="az-u-row"><Copy text={sql0019} label="3 · Copia lo script della raccolta" /></div>
+          <p className="az-hint">Usa lo stesso segreto delle notifiche (passo 5), niente da sostituire. Si salvano solo titolo, estratto del feed, link e
+            miniatura dei video, mai il testo degli articoli. Finché non è attivo, l'app mostra i titoli delle testate come prima.
+            Per controllare: in SQL Editor <code>select id, last_ok, last_count, last_error from news_sources order by last_error nulls last;</code></p>
         </Step>
       </div>
       <div className="az-card">
