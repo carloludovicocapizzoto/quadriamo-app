@@ -2,7 +2,7 @@
 
 Immagini e video in `marketing/out/`. Le schermate usano i dati di esempio dell'app.
 Link da mettere in bio: https://carloludovicocapizzoto.github.io/quadriamo-app/ (quando ci sarà: quadriamo.com).
-I reel sono senza audio: aggiungi una musica dalla libreria di Instagram/TikTok (non usare brani protetti fuori dalle loro librerie).
+I reel hanno la voce narrante (Sara, voce sintetica generata sul Mac con Kokoro: niente diritti da pagare). Se aggiungi una musica dalla libreria di Instagram/TikTok, tienila bassa sotto la voce.
 
 ## Instagram — carosello (7 immagini, `out/instagram/`)
 I tuoi soldi, in quattro. 🟧🟧🟧⬜
@@ -23,8 +23,8 @@ Provala e dimmi cosa ne pensi: ogni feedback finisce dritto nella prossima versi
 3. «Gratis durante la beta» — adesivo link al sito
 
 ## Reel / TikTok / Shorts (`out/video/`)
-**reel-01-quadriamo.mp4** — testo: «L’app che ti dice quanto puoi spendere oggi, senza fogli di calcolo. Gratis in beta, link in bio.»
-**reel-02-metodo.mp4** — testo: «55-20-15-10: il metodo per far durare lo stipendio fino a fine mese. Lo fa l’app per te.»
+**reel-01-quadriamo.mp4** (16 s, con voce) — didascalia: «L’app che ti dice quanto puoi spendere oggi, senza fogli di calcolo. Gratis in beta, link in bio.»
+**reel-02-metodo.mp4** (16 s, con voce) — didascalia: «55-20-15-10: il metodo per far durare lo stipendio fino a fine mese. Lo fa l’app per te.»
 Hashtag: #finanzapersonale #risparmiare #budgeting #soldi #appconsigliate
 
 ## Pinterest (`out/pinterest/`, 1000x1500)

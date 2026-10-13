@@ -2,7 +2,7 @@
 
 Immagini e video in `marketing/out/beta/` (copia in `~/Desktop/Quadriamo/Campagna app/Beta`).
 Le schermate usano i **dati di esempio** dell'app. Link in bio: https://carloludovicocapizzoto.github.io/quadriamo-app/
-Il reel è senza audio: aggiungi una musica dalla libreria di Instagram o TikTok.
+Il reel ha la voce narrante (Sara, voce sintetica generata sul Mac). Se aggiungi una musica dalla libreria di Instagram o TikTok, tienila bassa sotto la voce.
 
 **Il messaggio, in una riga:** Quadriamo non ti dice quanto hai speso, ti dice quanto puoi ancora spendere oggi.
 Ogni contenuto porta su questo, poi su un motivo per fidarsi (metodo, previsione, slancio, privacy), poi la richiesta: provala.
@@ -44,7 +44,7 @@ Beta gratuita, link in bio.
 
 ## 4 · Slancio (`post-04-slancio.jpg`)
 Il segreto per tenere un budget non è il foglio di calcolo perfetto: è aprirlo ogni giorno.
-In Quadriamo ogni giorno in cui segni le spese, la fiamma cresce. Niente spese? Un tocco su «Oggi niente spese» e la serie continua.
+In Quadriamo ogni giorno in cui segni una spesa, la fiamma cresce da sola: non c'è niente da spuntare.
 
 Quanti giorni di fila riesci a fare? Link in bio.
 
@@ -70,8 +70,10 @@ Link in bio. Se conosci qualcuno che arriva sempre al 20 del mese senza soldi, m
 
 **Storia** — adesivo link al sito + adesivo «Aggiungi il tuo» per far condividere.
 
-## Reel (`reel-beta.mp4`, 18 secondi)
-Testo sul video o didascalia: «L'app che ogni mattina ti dice quanto puoi spendere oggi. Cerco 50 tester, gratis: link in bio.»
+## Reel (`reel-beta.mp4`, 24 secondi, con voce)
+Didascalia: «L'app che ogni mattina ti dice quanto puoi spendere oggi. Cerco 50 tester, gratis: link in bio.»
+
+La voce dice: «Ogni mattina, Quadriamo ti dice quanto puoi spendere oggi. Lo stipendio si divide da solo: prima l'affitto, poi quattro parti. E sai già come finisce il mese, prima di arrivarci. Un minuto al giorno, e lo slancio cresce. I tuoi soldi restano affari tuoi. È gratis durante la beta. Cerco cinquanta tester: il link è nella bio.»
 #finanzapersonale #risparmiare #budgeting #appconsigliate #soldi
 
 ---

@@ -1,0 +1,4 @@
+file '/Users/carloludovico/GitHub/quadriamo-app/marketing/out/video/_work/r2/v0.mp4'
+file '/Users/carloludovico/GitHub/quadriamo-app/marketing/out/video/_work/r2/v1.mp4'
+file '/Users/carloludovico/GitHub/quadriamo-app/marketing/out/video/_work/r2/v2.mp4'
+file '/Users/carloludovico/GitHub/quadriamo-app/marketing/out/video/_work/r2/v3.mp4'

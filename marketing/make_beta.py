@@ -1,9 +1,10 @@
 """Contenuti social per lanciare la BETA di Quadriamo, costruiti sul posizionamento:
 "oggi puoi spendere", lo stipendio diviso da solo in quattro parti, la previsione di fine mese, lo slancio, la privacy.
 
-Escono in marketing/out/beta/: 6 post 1080x1350 (carosello o post singoli), 6 storie 1080x1920 e un reel da 18 secondi.
+Escono in marketing/out/beta/: 6 post 1080x1350 (carosello o post singoli), 6 storie 1080x1920 e un reel con la voce narrante.
 Le schermate (marketing/shots/1*.jpg) sono fatte con i DATI DI ESEMPIO dell'app: node marketing/shoot.mjs
-Uso (dalla cartella quadriamo-app):  python3 marketing/make_beta.py      Richiede Pillow e ffmpeg.
+Uso (dalla cartella quadriamo-app):  <python con kokoro-onnx> marketing/make_beta.py
+Richiede Pillow, ffmpeg, kokoro-onnx e soundfile (python3 -m venv .venv && .venv/bin/pip install pillow kokoro-onnx soundfile).
 """
 import os, subprocess
 from PIL import Image, ImageDraw, ImageFilter
@@ -71,7 +72,7 @@ def foot(img, w, h, light=True):
     ImageDraw.Draw(img).text((w - 60, h - 78), 'Beta gratuita', font=sans(28, 600), fill=MUTED if light else SOFT, anchor='rm')
 
 
-PARTS = [('55%', 'Essenziali', 'Affitto, spesa, bollette, trasporti', ACCENT), ('20%', 'Qualità della vita', 'Uscite, hobby, viaggi, regali', B2),
+PARTS = [('55%', 'Essenziali', 'Spesa, bollette, trasporti', ACCENT), ('20%', 'Qualità della vita', 'Uscite, hobby, viaggi, regali', B2),
          ('15%', 'Fondo di sicurezza', 'Il cuscinetto per gli imprevisti', (200, 160, 110)), ('10%', 'Investimenti', 'Il tuo futuro: ETF, PAC', B4)]
 PRIVACY = ['Funziona anche senza account: i dati restano sul telefono', 'Server nell’Unione europea, connessioni cifrate',
            'Gli importi delle notifiche li calcola il tuo telefono', 'Niente pubblicità, niente vendita di dati', 'Esporti o cancelli tutto quando vuoi']
@@ -96,7 +97,7 @@ def build(W, H, story=False):
     img = canvas(W, H)
     eyebrow(img, 60, top, 'Il metodo')
     y = text_block(img, 60, top + 60, 'Lo stipendio si divide da solo.', serif(96 if story else 84), INK, 960)
-    y = text_block(img, 60, y + 14, 'Quattro parti, ognuna con un compito. La regola 55-20-15-10 è di partenza: la cambi quando vuoi.', sans(36), MUTED, 940)
+    y = text_block(img, 60, y + 14, 'Prima l’affitto, poi quattro parti, ognuna con un compito. La regola 55-20-15-10 è di partenza: la cambi quando vuoi.', sans(36), MUTED, 940)
     rule_bar(img, 60, y + 40, 960, 26)
     d = ImageDraw.Draw(img)
     for i, (p, n, s_, col) in enumerate(PARTS):
@@ -112,15 +113,15 @@ def build(W, H, story=False):
     eyebrow(img, 60, top, 'Previsione di fine mese')
     y = text_block(img, 60, top + 60, 'Sai già come finisce il mese.', serif(96 if story else 84), INK, 960)
     y = text_block(img, 60, y + 14, 'Al ritmo di oggi, con le bollette in arrivo già contate. Se rischi di sforare lo vedi a metà mese, non alla fine.', sans(36), MUTED, 940)
-    card_from_shot(img, '12-forecast.jpg', (32, 474, 718, 966), 90, y + 60, 900)
+    card_from_shot(img, '12-forecast.jpg', (32, 480, 718, 840), 90, y + 60, 900)
     out.append(save(img, f'{tag}-03-previsione.jpg'))
 
     # 4. slancio
     img = canvas(W, H)
     eyebrow(img, 60, top, 'Slancio')
     y = text_block(img, 60, top + 60, 'Un minuto al giorno. E non vuoi più fermarti.', serif(96 if story else 84), INK, 960)
-    y = text_block(img, 60, y + 14, 'Ogni giorno in cui segni le spese, la fiamma cresce. Niente spese? Basta un tocco su “Oggi niente spese”.', sans(36), MUTED, 940)
-    phone(img, '19-streak-sheet.jpg', W / 2, y + 60, 600 if story else 520, 430, 1180)
+    y = text_block(img, 60, y + 14, 'Ogni giorno in cui segni una spesa, la fiamma cresce. Da sola: non c’è niente da spuntare.', sans(36), MUTED, 940)
+    phone(img, '17-profile.jpg', W / 2, y + 60, 600 if story else 520, 400, 840)
     out.append(save(img, f'{tag}-04-slancio.jpg'))
 
     # 5. privacy
@@ -152,7 +153,7 @@ def build(W, H, story=False):
 posts = build(1080, 1350)
 stories = build(1080, 1920, story=True)
 
-# ---------- reel 18 secondi (le sei storie, 3 secondi l'una, con un lento zoom) ----------
+# ---------- reel con la voce: le sei storie, ognuna dura quanto la sua frase, con un lento zoom ----------
 FPS = 30
 
 
@@ -165,12 +166,13 @@ def clip(src, seconds, out):
     return out
 
 
-parts = [clip(s, 3, os.path.join(WORK, f'b{i}.mp4')) for i, s in enumerate(stories)]
-lst = os.path.join(WORK, 'list.txt')
-with open(lst, 'w') as f:
-    f.writelines(f"file '{p}'\n" for p in parts)
-reel = os.path.join(DST, 'reel-beta.mp4')
-subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', '-movflags', '+faststart', reel], check=True)
-print(reel)
+from voice import narrated_reel
+LINES = ['Ogni mattina, Quadriamo ti dice quanto puoi spendere oggi.',
+         'Lo stipendio si divide da solo: prima l’affitto, poi quattro parti.',
+         'E sai già come finisce il mese, prima di arrivarci.',
+         'Un minuto al giorno, e lo slancio cresce.',
+         'I tuoi soldi restano affari tuoi.',
+         'È gratis durante la beta. Cerco cinquanta tester: il link è nella bio.']
+reel = narrated_reel(list(zip(stories, LINES)), os.path.join(DST, 'reel-beta.mp4'), WORK, clip)
 import shutil
 shutil.rmtree(WORK, ignore_errors=True)   # i pezzi intermedi del video non servono

@@ -1,8 +1,9 @@
 """Campagna social dell'app Quadriamo (beta): carosello Instagram 1080x1350, storie 1080x1920, pin Pinterest 1000x1500
-e due reel da 15 secondi (1080x1920, senza audio: la musica si aggiunge in Instagram/TikTok/CapCut).
+e due reel 1080x1920 con la voce narrante (voice.py); la musica, se vuoi, si aggiunge in Instagram/TikTok/CapCut.
 
 Le schermate in marketing/shots/ sono fatte con i DATI DI ESEMPIO dell'app (nessun dato reale).
-Uso (dalla cartella quadriamo-app):  python3 marketing/make_campaign.py      Richiede Pillow e ffmpeg.
+Uso (dalla cartella quadriamo-app):  <python con kokoro-onnx> marketing/make_campaign.py
+Richiede Pillow, ffmpeg, kokoro-onnx e soundfile (python3 -m venv .venv && .venv/bin/pip install pillow kokoro-onnx soundfile).
 """
 import os, subprocess
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -140,7 +141,7 @@ d = ImageDraw.Draw(img)
 d.text((60, 250), 'I tuoi soldi,', font=serif(104), fill=INK)
 d.text((60, 360), 'in quattro.', font=serif(104), fill=ACCENT)
 text_block(img, 60, 500, 'Dividi lo stipendio in 4 parti e sai sempre quanto puoi ancora spendere.', sans(38), MUTED, 520)
-phone(img, '01-home.jpg', 830, 150, 450)
+phone(img, '11-home.jpg', 830, 150, 450)
 ImageDraw.Draw(img).rounded_rectangle([60, 700, 360, 770], radius=35, fill=ACCENT)
 ImageDraw.Draw(img).text((210, 735), 'Beta gratuita', font=sans(32, 700), fill=(255, 255, 255), anchor='mm')
 d.text((60, 1150), 'Scorri →', font=sans(36, 700), fill=INK)
@@ -150,9 +151,9 @@ slides.append(save(img, 'instagram/01-copertina.jpg'))
 img = canvas(W, H)
 eyebrow(img, 60, 90, 'Il metodo')
 y = text_block(img, 60, 150, 'Ogni euro ha un compito', serif(92), INK, 960)
-text_block(img, 60, y + 20, 'Quando arriva lo stipendio, Quadriamo lo divide da solo in quattro parti. La regola la puoi cambiare quando vuoi.', sans(36), MUTED, 940)
+text_block(img, 60, y + 20, 'Quando arriva lo stipendio, Quadriamo toglie l’affitto e divide il resto in quattro parti. La regola la puoi cambiare quando vuoi.', sans(36), MUTED, 940)
 rule_bar(img, 60, 520, 960, 26)
-rows = [('55%', 'Essenziali', 'Affitto, spesa, bollette, trasporti', ACCENT), ('20%', 'Qualità della vita', 'Uscite, hobby, viaggi, regali', B2),
+rows = [('55%', 'Essenziali', 'Spesa, bollette, trasporti', ACCENT), ('20%', 'Qualità della vita', 'Uscite, hobby, viaggi, regali', B2),
         ('15%', 'Fondo di sicurezza', 'Il cuscinetto per gli imprevisti', B3), ('10%', 'Investimenti', 'Il tuo futuro: ETF, PAC', B4)]
 d = ImageDraw.Draw(img)
 for i, (p, n, s_, col) in enumerate(rows):
@@ -175,9 +176,9 @@ def feature(n, ey, title, body, shot, crop_top=0, crop_h=None, name=''):
     return save(img, f'instagram/{n:02d}-{name}.jpg')
 
 
-slides.append(feature(3, 'Ogni giorno', 'Sai quanto puoi ancora spendere', 'Un numero chiaro al giorno per ogni parte, tenendo già da parte le bollette in arrivo.', '02-safe.jpg', 120, 1504, 'oggi'))
-slides.append(feature(4, 'A colpo d’occhio', 'Il tuo mese in un grafico', 'Tocca una parte della ciambella: vedi quanto ti resta e quanto hai già usato. Sotto, le spese giorno per giorno.', '01-home.jpg', 0, 1490, 'grafici'))
-slides.append(feature(5, 'Veloce', 'Una spesa in 5 secondi', 'Importo, categoria, fatto. Oppure importi l’estratto conto e le regole smistano tutto da sole.', '05-add.jpg', 120, 1500, 'spesa'))
+slides.append(feature(3, 'Ogni giorno', 'Sai quanto puoi ancora spendere', 'Un numero chiaro al giorno per ogni parte, tenendo già da parte le bollette in arrivo.', '11-home.jpg', 0, 1500, 'oggi'))
+slides.append(feature(4, 'A colpo d’occhio', 'Il tuo mese in un grafico', 'Tocca una parte della ciambella: vedi quanto ti resta e quanto hai già usato. Sotto, le spese giorno per giorno.', '13-month.jpg', 0, 1500, 'grafici'))
+slides.append(feature(5, 'Veloce', 'Una spesa in 5 secondi', 'Importo, categoria, fatto. Oppure importi l’estratto conto e le regole smistano tutto da sole.', '16-add.jpg', 205, 1419, 'spesa'))
 
 img = canvas(W, H)
 eyebrow(img, 60, 90, 'Privacy')
@@ -216,13 +217,13 @@ d = ImageDraw.Draw(img)
 d.text((W2 / 2, 720), 'I tuoi soldi, in quattro.', font=serif(70), fill=INK, anchor='mm')
 text_block(img, W2 / 2, 800, 'Dividi lo stipendio in 4 parti e sai sempre quanto puoi ancora spendere.', sans(42), MUTED, 820, anchor='ma')
 rule_bar(img, W2 / 2 - 330, 1000, 660, 22)
-phone(img, '00-welcome.jpg', W2 / 2, 1100, 520, 300, 1000)
+phone(img, '10-welcome.jpg', W2 / 2, 1100, 520, 300, 1000)
 stories.append(save(img, 'stories/01-intro.jpg'))
 
 img = canvas(W2, H2)
 eyebrow(img, W2 / 2, 200, 'Ogni giorno', anchor='ma')
 text_block(img, W2 / 2, 260, 'Quanto puoi ancora spendere oggi?', serif(96), INK, 900, anchor='ma')
-phone(img, '02-safe.jpg', W2 / 2, 560, 640, 120, 1300)
+phone(img, '11-home.jpg', W2 / 2, 560, 640, 0, 1300)
 stories.append(save(img, 'stories/02-oggi.jpg'))
 
 img = Image.new('RGBA', (W2, H2), INK + (255,))
@@ -239,9 +240,9 @@ stories.append(save(img, 'stories/03-scarica.jpg'))
 # ---------- Pinterest 1000x1500 ----------
 W3, H3 = 1000, 1500
 for i, (title, body, shot, ct, ch, name) in enumerate([
-        ('Il metodo 55-20-15-10 per gestire lo stipendio', 'Essenziali, qualità della vita, fondo di sicurezza, investimenti: ogni euro ha un compito.', '01-home.jpg', 0, 1490, 'metodo'),
-        ('Sai sempre quanto puoi spendere oggi', 'Un numero al giorno per ogni parte del budget, con le bollette già tenute da parte.', '02-safe.jpg', 120, 1260, 'oggi'),
-        ('Registra una spesa in 5 secondi', 'Importo, categoria, fatto. Oppure importa l’estratto conto della banca.', '05-add.jpg', 120, 1500, 'spesa')], 1):
+        ('Il metodo 55-20-15-10 per gestire lo stipendio', 'Essenziali, qualità della vita, fondo di sicurezza, investimenti: ogni euro ha un compito.', '11-home.jpg', 0, 1490, 'metodo'),
+        ('Sai sempre quanto puoi spendere oggi', 'Un numero al giorno per ogni parte del budget, con le bollette già tenute da parte.', '11-home.jpg', 0, 1260, 'oggi'),
+        ('Registra una spesa in 5 secondi', 'Importo, categoria, fatto. Oppure importa l’estratto conto della banca.', '16-add.jpg', 205, 1419, 'spesa')], 1):
     img = canvas(W3, H3)
     y = text_block(img, 70, 90, title, serif(76), INK, 860)
     y = text_block(img, 70, y + 16, body, sans(34), MUTED, 860)
@@ -253,7 +254,7 @@ for i, (title, body, shot, ct, ch, name) in enumerate([
     d.text((W3 - 70, H3 - 75), 'Gratis · beta', font=sans(32, 700), fill=CREAM, anchor='rm')
     save(img, f'pinterest/{i:02d}-{name}.jpg')
 
-# ---------- Reel 15 secondi (1080x1920) ----------
+# ---------- Reel con la voce narrante (1080x1920): ogni scena dura quanto la sua frase ----------
 FPS = 30
 WORK = os.path.join(OUT, 'video', '_work')
 os.makedirs(WORK, exist_ok=True)
@@ -278,20 +279,19 @@ def pad_story(src, name):
     return p
 
 
-def concat(parts, out):
-    lst = os.path.join(WORK, os.path.basename(out) + '.txt')
-    with open(lst, 'w') as f:
-        f.writelines(f"file '{p}'\n" for p in parts)
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', '-movflags', '+faststart', out], check=True)
-    print(out)
 
 
+from voice import narrated_reel
 # reel 1: storia completa (intro, oggi, grafici, spesa, scarica)
-parts = [clip(stories[0], 3, os.path.join(WORK, 'r1a.mp4')), clip(stories[1], 3, os.path.join(WORK, 'r1b.mp4')),
-         clip(pad_story(slides[3], 'g.jpg'), 3, os.path.join(WORK, 'r1c.mp4')), clip(pad_story(slides[4], 's.jpg'), 3, os.path.join(WORK, 'r1d.mp4')),
-         clip(stories[2], 3, os.path.join(WORK, 'r1e.mp4'))]
-concat(parts, os.path.join(OUT, 'video', 'reel-01-quadriamo.mp4'))
+narrated_reel([(stories[0], 'Quadriamo. I tuoi soldi, in quattro.'),
+               (stories[1], 'Ogni giorno sai quanto puoi ancora spendere.'),
+               (pad_story(slides[3], 'g.jpg'), 'E vedi il tuo mese in un grafico.'),
+               (pad_story(slides[4], 's.jpg'), 'Una spesa si segna in cinque secondi.'),
+               (stories[2], 'È gratis durante la beta. Il link è nella bio.')],
+              os.path.join(OUT, 'video', 'reel-01-quadriamo.mp4'), os.path.join(WORK, 'r1'), clip)
 # reel 2: il metodo (metodo, oggi, privacy, scarica)
-parts = [clip(pad_story(slides[1], 'm.jpg'), 4, os.path.join(WORK, 'r2a.mp4')), clip(stories[1], 4, os.path.join(WORK, 'r2b.mp4')),
-         clip(pad_story(slides[5], 'p.jpg'), 4, os.path.join(WORK, 'r2c.mp4')), clip(stories[2], 3, os.path.join(WORK, 'r2d.mp4'))]
-concat(parts, os.path.join(OUT, 'video', 'reel-02-metodo.mp4'))
+narrated_reel([(pad_story(slides[1], 'm.jpg'), 'Cinquantacinque, venti, quindici, dieci: ogni euro ha un compito, fino a fine mese.'),
+               (stories[1], 'I conti li fa l’app: ogni giorno sai quanto puoi spendere.'),
+               (pad_story(slides[5], 'p.jpg'), 'E i tuoi soldi restano affari tuoi.'),
+               (stories[2], 'Gratis durante la beta. Link nella bio.')],
+              os.path.join(OUT, 'video', 'reel-02-metodo.mp4'), os.path.join(WORK, 'r2'), clip)
