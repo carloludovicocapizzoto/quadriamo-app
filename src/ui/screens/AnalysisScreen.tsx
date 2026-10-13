@@ -11,8 +11,7 @@ import { CategoryChangesReport, ForecastReport, TrendReport } from '../Reports'
 import { YearNav, YearView } from '../YearView'
 import { TransactionsScreen } from './TransactionsScreen'
 
-import type { AnalysisView } from '../../app/router'
-const VIEWS: AnalysisView[] = ['transactions', 'month', 'year', 'investments']
+import { ANALYSIS_VIEWS, type AnalysisView } from '../../app/router'
 
 /** Analisi: mese, anno e investimenti in una pagina, con le schede in alto (come le sezioni di un'app). */
 export function AnalysisScreen({ view, onView, data, result, current, homeResult, today, year, onYear, onMonth, onOpen }: {
@@ -26,11 +25,11 @@ export function AnalysisScreen({ view, onView, data, result, current, homeResult
     <div className="screen">
       <h1 className="screen-title">{t('nav.analysis')}</h1>
       <div className="segmented" role="tablist">
-        {VIEWS.map(v => (
+        {ANALYSIS_VIEWS.map(v => (
           <button key={v} role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => { tap(); onView(v) }}>
             {t(v === 'transactions' ? 'nav.transactions' : v === 'month' ? 'ana.month' : v === 'year' ? 'ana.year' : 'nav.investments')}
             {v === 'transactions' && inbox > 0 && <em className="seg-badge">{inbox}</em>}</button>))}
-        <span className="seg-pill" style={{ transform: `translateX(${VIEWS.indexOf(view) * 100}%)` }} />
+        <span className="seg-pill" style={{ transform: `translateX(${ANALYSIS_VIEWS.indexOf(view) * 100}%)` }} />
       </div>
 
       <div key={view} className="view-in">

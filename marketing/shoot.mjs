@@ -56,7 +56,7 @@ await shot('11-home.jpg', clean)
 await shot('12-home-parts.jpg', scrollTo(`document.querySelector('.today')`))
 await js(`document.querySelector('.block').click()`); await sleep(1100); await shot('20-part-sheet.jpg')
 await js(`document.querySelector('.bs-root').click()`); await sleep(500)
-await click('Analisi', '.tabbar button'); await sleep(1200); await shot('21-transactions.jpg', clean)
+await click('Analisi', '.tabbar button'); await click('Movimenti', '.segmented button'); await sleep(900); await shot('21-transactions.jpg', clean)
 // ricerca: si scrive come farebbe una persona (React riceve l'evento input)
 const type = async (sel, text) => { await js(`document.querySelector('${sel}').focus()`); await cdp('Input.insertText', { text }); await sleep(700) }
 await type('.search input', 'super'); await shot('28-search.jpg', 'window.scrollTo(0,0)')

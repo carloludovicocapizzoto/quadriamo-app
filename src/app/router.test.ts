@@ -10,7 +10,7 @@ describe('router', () => {
   it('indirizzi sconosciuti o rovinati portano a una pagina valida', () => {
     expect(parse('')).toEqual({ tab: 'home' })
     expect(parse('#/boh')).toEqual({ tab: 'home' })
-    expect(parse('#/analysis/xyz?m=99')).toEqual({ tab: 'analysis', view: 'transactions' })
+    expect(parse('#/analysis/xyz?m=99')).toEqual({ tab: 'analysis', view: 'month' })
     expect(parse('#/profile/hack')).toEqual({ tab: 'profile' })
   })
 })

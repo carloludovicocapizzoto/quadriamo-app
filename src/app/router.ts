@@ -12,7 +12,8 @@ export type Route =
   | { tab: 'analysis'; view: AnalysisView; month?: string; year?: number }   // month: "YYYY-MM"
   | { tab: 'profile'; page?: ProfilePage }
 
-const VIEWS: AnalysisView[] = ['transactions', 'month', 'year', 'investments']
+/** Le viste di Analisi nell'ordine delle schede: prima le letture del mese e dell'anno, i movimenti in fondo. La prima è quella di partenza. */
+export const ANALYSIS_VIEWS: AnalysisView[] = ['month', 'year', 'investments', 'transactions']
 const PAGES: ProfilePage[] = ['notifications', 'plan', 'account', 'budget', 'recurring', 'rules', 'data', 'shared', 'beta', 'language']
 
 export function parse(hash: string): Route {
@@ -21,7 +22,7 @@ export function parse(hash: string): Route {
   const q = new URLSearchParams(query)
   if (a === 'news') return { tab: 'news' }
   if (a === 'analysis') {
-    const view = VIEWS.includes(b as AnalysisView) ? b as AnalysisView : 'transactions'
+    const view = ANALYSIS_VIEWS.includes(b as AnalysisView) ? b as AnalysisView : ANALYSIS_VIEWS[0]
     const month = /^\d{4}-\d{2}$/.test(q.get('m') ?? '') ? q.get('m')! : undefined
     const year = /^\d{4}$/.test(q.get('y') ?? '') ? Number(q.get('y')) : undefined
     return { tab: 'analysis', view, ...(month ? { month } : {}), ...(year ? { year } : {}) }

@@ -19,7 +19,7 @@ import { closeComposer, openComposer, useComposer } from './composer'
 import { useBootstrap, useDailyPing, useMorningSnapshot, useProReturn, usePushSync } from './effects'
 import { useEntry } from './entryContext'
 import { closeFeedback, openFeedback, useFeedbackOpen } from './prompts'
-import { navigate, useRoute, type Route } from './router'
+import { ANALYSIS_VIEWS, navigate, useRoute, type Route } from './router'
 import { toast, useToast } from './toast'
 import { useModel, ymKey } from './useModel'
 import { SectionBoundary } from './SectionBoundary'
@@ -108,7 +108,7 @@ export function AppShell() {
 
       {note && <div key={note.id} className="toast" role="status">{note.text}</div>}
       <StreakCelebration s={streak} />
-      <BottomNav tab={route.tab} onTab={tab => go(tab === 'analysis' ? { tab, view: 'transactions' } : { tab } as Route)} onAdd={() => openComposer()} badge={{ analysis: data.inbox?.length ?? 0 }} />
+      <BottomNav tab={route.tab} onTab={tab => go(tab === 'analysis' ? { tab, view: ANALYSIS_VIEWS[0] } : { tab } as Route)} onAdd={() => openComposer()} badge={{ analysis: data.inbox?.length ?? 0 }} />
 
       <Sheet open={composer.open} onClose={closeComposer} label={composer.value.tx ? t('tx.edit') : t('tx.new')}>
         <TxForm key={composer.key} settings={data.settings} initial={composer.value.tx} prefill={composer.value.prefill} defaultDate={defaultDate}
