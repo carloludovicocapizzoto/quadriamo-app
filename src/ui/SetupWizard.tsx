@@ -25,7 +25,7 @@ type Kind = { kind: 'persona' } | { kind: 'notify' } | { kind: 'salary' } | { ki
 const isDesktopApp = () => 'quadriamoDesktop' in window || /QuadriamoDesktop\//.test(navigator.userAgent)
 
 /**
- * Configurazione a passaggi dopo la registrazione (o "continua senza account"). Con l'account, il primo passaggio chiede
+ * Configurazione a passaggi dopo la registrazione (o senza il server, in sviluppo). Con l'account, il primo passaggio chiede
  * subito di attivare le notifiche (dove il dispositivo le supporta) e l'ultimo è il profilo facoltativo.
  */
 export function SetupWizard({ onDone }: { onDone: () => void }) {

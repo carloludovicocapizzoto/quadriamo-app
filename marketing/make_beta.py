@@ -61,7 +61,7 @@ def foot(img, w, h, light=True):
 
 PARTS = [('55%', 'Essenziali', 'Spesa, bollette, trasporti', ACCENT), ('20%', 'Qualità della vita', 'Uscite, hobby, viaggi, regali', B2),
          ('15%', 'Fondo di sicurezza', 'Il cuscinetto per gli imprevisti', (200, 160, 110)), ('10%', 'Investimenti', 'Il tuo futuro: ETF, PAC', B4)]
-PRIVACY = ['Funziona anche senza account: i dati restano sul telefono', 'Server nell’Unione europea, connessioni cifrate',
+PRIVACY = ['I tuoi dati li vedi solo tu, nel tuo account', 'Server nell’Unione europea, connessioni cifrate',
            'Gli importi delle notifiche li calcola il tuo telefono', 'Niente pubblicità, niente vendita di dati', 'Esporti o cancelli tutto quando vuoi']
 
 

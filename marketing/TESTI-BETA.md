@@ -54,7 +54,7 @@ Quanti giorni di fila riesci a fare? Link in bio.
 
 ## 5 · Privacy (`post-05-privacy.jpg`)
 I tuoi soldi sono affari tuoi.
-→ Funziona anche senza account: i dati restano sul telefono
+→ I tuoi dati li vedi solo tu, nel tuo account
 → Server nell'Unione europea, connessioni cifrate
 → Gli importi delle notifiche li calcola il tuo telefono
 → Niente pubblicità, niente vendita di dati

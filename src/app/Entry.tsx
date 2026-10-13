@@ -8,7 +8,7 @@ import { LANGS, useI18n, type Lang } from '../i18n/core'
 import { useStore } from '../store/context'
 import { createInitial } from '../store/state'
 import { useSync } from '../sync/context'
-import { noAccount, setupPending } from '../sync/profile'
+import { setupPending } from '../sync/profile'
 import { isStandalone } from '../beta/device'
 import { LoginScreen } from '../ui/AccountSection'
 import { ConfirmedScreen, Gate, Splash } from '../ui/Gate'
@@ -40,14 +40,16 @@ export function Entry({ children }: { children: ReactNode }) {
   // "password dimenticata": prima la nuova password, poi l'app
   if (sync.recovery) return <div className="gate gate-login"><div className="gate-panel"><LoginScreen /></div></div>
 
-  // senza account: si usa solo su questo dispositivo; se non c'è ancora un budget parte la configurazione
+  // senza il server (copia locale di sviluppo): solo su questo dispositivo; se non c'è ancora un budget parte la configurazione
   const startLocal = () => {
-    noAccount.set(); setAuthOpen(false)
+    setAuthOpen(false)
     if (!data) { setupPending.set(); dispatch({ type: 'replace', data: createInitial(guessCurrency(), today, 1) }) }
     refresh()
   }
-  const demo = () => { noAccount.set(); refresh(); dispatch({ type: 'replace', data: demoAppData(today, lang) }) }
-  if (sync.enabled && !sync.user && (!noAccount.get() || (authOpen && !data))) return <Gate hasData={!!data} onLocal={startLocal} onDemo={demo} />
+  const demo = () => { refresh(); dispatch({ type: 'replace', data: demoAppData(today, lang) }) }
+  // serve l'account per usare l'app: senza, solo i dati di esempio (che non vanno mai online).
+  // Chi aveva già dati su questo telefono li ritrova nell'account appena accede.
+  if (sync.enabled && !sync.user && !data?.demo) return <Gate hasData={!!data} onLocal={startLocal} onDemo={demo} />
   if (!sync.enabled && !data) return <Gate hasData={false} onLocal={startLocal} onDemo={demo} />
 
   if (data && inSetup && !data.demo) return <PreApp><SetupWizard onDone={() => { setupPending.clear(); refresh(); window.scrollTo(0, 0) }} /></PreApp>

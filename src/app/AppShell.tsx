@@ -66,7 +66,8 @@ export function AppShell() {
         <div className="demo-banner">
           <span>{t('demo.banner')}</span>
           <button className="btn small-btn" onClick={() => {
-            dispatch({ type: 'replace', data: createInitial(data.settings.currency, today, data.settings.monthStartDay) }); go({ tab: 'home' })
+            // senza account si torna all'accesso: i propri dati si inseriscono solo con l'account
+            dispatch({ type: 'replace', data: sync.enabled && !sync.user ? null : createInitial(data.settings.currency, today, data.settings.monthStartDay) }); go({ tab: 'home' })
           }}>{t('demo.clear')}</button>
         </div>
       )}

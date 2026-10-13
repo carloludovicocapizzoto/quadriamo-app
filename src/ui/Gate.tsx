@@ -81,9 +81,8 @@ export function Gate({ hasData, onLocal, onDemo }: { hasData: boolean; onLocal: 
       {langSelect}
       <div className="gate-panel">
         <LoginScreen footer={<>
-          <button className="link-btn" onClick={onLocal}>{t('onb.noAccount')}<Icon name="chevron" size={16} /></button>
-          <small className="muted">{t('onb.noAccountHint')}</small>
-          {!hasData && <button className="link-btn" onClick={onDemo}>{t('onb.demo')}</button>}
+          {hasData ? <small className="muted">{t('gate.keepData')}</small>
+            : <button className="link-btn" onClick={onDemo}>{t('onb.demo')}</button>}
           <LegalLinks notice />
         </>} />
       </div>

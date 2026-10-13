@@ -8,6 +8,7 @@ import { join } from 'node:path'
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const APP = process.env.APP_URL ?? 'http://localhost:5173/app/'
+const LOCAL = process.env.LOCAL_URL ?? 'http://localhost:5180/app/'
 // OUT_DIR: cartella diversa (es. per il controllo visivo prima/dopo una modifica)
 const OUT = process.env.OUT_DIR ? process.env.OUT_DIR.replace(/\/?$/, '/') : new URL('./shots/', import.meta.url).pathname
 const PORT = 9333
@@ -106,10 +107,11 @@ await js(`document.querySelector('.bs-root').click()`); await sleep(500)
 await js(`location.hash = '#/profile/recurring'`); await sleep(1200)
 await js(`document.querySelector('.edit-list.recurring li:first-child .unit:nth-child(5) input').focus()`)
 await cdp('Input.insertText', { text: '8' }); await sleep(500); await shot('33-recurring.jpg', 'window.scrollTo(0,0)')
-// primo avvio senza account: "Chi sei?" e le entrate dello studente
-await js(`indexedDB.deleteDatabase('keyval-store'); localStorage.clear(); localStorage.setItem('quadriamo.lang', '${LANG}')`)
-await cdp('Page.reload'); await sleep(3000)
-await click('Inizia'); await click('Preferisco continuare nel browser'); await click('Continua senza account'); await sleep(1200)
+// configurazione iniziale: "Chi sei?" e le entrate dello studente. Serve l'account, che qui non si crea:
+// si usa una copia dell'app senza server (LOCAL_URL, avviata con VITE_SUPABASE_URL vuoto), dove si entra direttamente
+await cdp('Page.navigate', { url: LOCAL }); await sleep(1500)
+await js(`localStorage.setItem('quadriamo.lang', '${LANG}')`); await cdp('Page.reload'); await sleep(3000)
+await click('Inizia'); await click('Preferisco continuare nel browser'); await sleep(1200)
 await shot('31-persona.jpg')
 await js(`document.querySelector('.persona-row').click()`); await sleep(900)
 await js(`[...document.querySelectorAll('button')].find(b => b.textContent.trim().startsWith('Avanti'))?.click()`); await sleep(900)

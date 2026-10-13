@@ -17,7 +17,7 @@
      },
      {
       "q": "Serve un account?",
-      "a": "No. Senza account i dati restano su questo telefono. Con un account li ritrovi su ogni dispositivo e non li perdi se cambi telefono."
+      "a": "Sì, per usare l'app serve un account gratuito: così ritrovi i dati su ogni dispositivo e non li perdi se cambi telefono. Puoi provarla prima con i dati di esempio, senza registrarti."
      },
      {
       "q": "Come la installo sul telefono?",
@@ -106,7 +106,7 @@
      },
      {
       "q": "Do I need an account?",
-      "a": "No. Without an account your data stays on this phone. With an account you find it on every device and don't lose it if you change phone."
+      "a": "Yes, you need a free account to use the app: that way you find your data on every device and don't lose it if you change phone. You can try it first with sample data, without signing up."
      },
      {
       "q": "How do I install it on my phone?",
@@ -195,7 +195,7 @@
      },
      {
       "q": "¿Necesito una cuenta?",
-      "a": "No. Sin cuenta los datos se quedan en este teléfono. Con una cuenta los encuentras en cada dispositivo y no los pierdes si cambias de teléfono."
+      "a": "Sí, para usar la app necesitas una cuenta gratuita: así encuentras tus datos en cada dispositivo y no los pierdes si cambias de teléfono. Puedes probarla antes con datos de ejemplo, sin registrarte."
      },
      {
       "q": "¿Cómo la instalo en el teléfono?",
@@ -284,7 +284,7 @@
      },
      {
       "q": "Faut-il un compte ?",
-      "a": "Non. Sans compte, les données restent sur ce téléphone. Avec un compte, vous les retrouvez sur chaque appareil et ne les perdez pas en changeant de téléphone."
+      "a": "Oui, il faut un compte gratuit pour utiliser l'app : vous retrouvez ainsi vos données sur chaque appareil et ne les perdez pas en changeant de téléphone. Vous pouvez d'abord l'essayer avec des données d'exemple, sans vous inscrire."
      },
      {
       "q": "Comment l'installer sur mon téléphone ?",
