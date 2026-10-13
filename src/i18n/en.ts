@@ -628,6 +628,7 @@ const en = {
   'pro.f.sharedD': "Couple or household spending: who owes whom, split the way you choose.",
   'nav.analysis': "Insights",
   'nav.profile': "Profile",
+  'nav.add': "Add",
   'home.heroSub': "to spend today · {n} days left this month",
   'home.heroLast': "to spend today · last day of the month",
   'home.nothingToday': "No spending today",

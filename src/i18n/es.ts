@@ -628,6 +628,7 @@ const es: Dict = {
   'pro.f.sharedD': "Gastos de pareja o de casa: quién debe cuánto a quién, con el reparto que elijáis.",
   'nav.analysis': "Análisis",
   'nav.profile': "Perfil",
+  'nav.add': "Añadir",
   'home.heroSub': "para gastar hoy · quedan {n} días del mes",
   'home.heroLast': "para gastar hoy · último día del mes",
   'home.nothingToday': "Ningún gasto hoy",

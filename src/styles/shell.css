@@ -28,9 +28,8 @@
 .tabbar > button:active .nav-ico { transform: scale(.9); }
 .nav-badge { position: absolute; top: -2px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--bad); color: var(--on-accent);
   font-size: var(--t-cap); font-style: normal; font-weight: 600; display: grid; place-items: center; }
-.tab-add > span { width: 44px; height: 44px; border-radius: var(--r-md); display: grid; place-items: center; color: var(--on-accent); background: var(--accent);
-  transition: transform 120ms var(--ease); }
-.tab-add:active > span { transform: scale(.92); }
+.tabbar > .tab-add { color: var(--text); }
+.tab-add .nav-ico { border-radius: var(--r-md); color: var(--on-accent); background: var(--accent); }
 
 /* ---------- pagine ---------- */
 .screen { padding-top: 0; }

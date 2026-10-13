@@ -20,7 +20,10 @@ export function BottomNav({ tab, onTab, onAdd, badge }: { tab: string; onTab: (t
   return (
     <nav className="tabbar" aria-label="Quadriamo">
       {ITEMS.slice(0, 2).map(btn)}
-      <button className="tab-add" onClick={() => { tap(); onAdd() }} aria-label={t('action.add')}><span><Icon name="plus" size={28} /></span></button>
+      {/* stessa struttura delle altre voci (forma + nome): così il + sta sulla loro riga, centrato su ogni dispositivo */}
+      <button className="tab-add" onClick={() => { tap(); onAdd() }} aria-label={t('action.add')}>
+        <span className="nav-ico"><Icon name="plus" size={22} /></span><span className="nav-label" aria-hidden="true">{t('nav.add')}</span>
+      </button>
       {ITEMS.slice(2).map(btn)}
     </nav>
   )

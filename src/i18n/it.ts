@@ -628,6 +628,7 @@ const it: Dict = {
   'pro.f.sharedD': "Spese di coppia o di casa: chi deve quanto a chi, con la divisione che scegliete voi.",
   'nav.analysis': "Analisi",
   'nav.profile': "Profilo",
+  'nav.add': "Aggiungi",
   'home.heroSub': "da spendere oggi · {n} giorni alla fine del mese",
   'home.heroLast': "da spendere oggi · ultimo giorno del mese",
   'home.nothingToday': "Nessuna spesa oggi",

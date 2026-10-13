@@ -628,6 +628,7 @@ const fr: Dict = {
   'pro.f.sharedD': "Dépenses de couple ou du foyer : qui doit combien à qui, partagé comme vous voulez.",
   'nav.analysis': "Analyse",
   'nav.profile': "Profil",
+  'nav.add': "Ajouter",
   'home.heroSub': "à dépenser aujourd’hui · encore {n} jours ce mois-ci",
   'home.heroLast': "à dépenser aujourd’hui · dernier jour du mois",
   'home.nothingToday': "Aucune dépense aujourd’hui",
