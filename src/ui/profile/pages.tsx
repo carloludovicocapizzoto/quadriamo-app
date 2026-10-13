@@ -5,6 +5,7 @@ import { type Badge, type Streak } from '../../engine'
 import { LANGS, useI18n, type Lang } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import { setPrefs, usePrefs } from '../../app/prefs'
+import { removeAvatar, setAvatar, useAvatar } from '../../profile/avatar'
 import { countries, countryName } from '../../profile/countries'
 import { LICENSES } from '../../profile/licenses'
 import { useStore } from '../../store/context'
@@ -13,6 +14,7 @@ import { useSync } from '../../sync/context'
 import { NewsPushToggle, PushToggle } from '../beta/PushToggle'
 import { Icon } from '../Icon'
 import { Group, Row } from '../kit/List'
+import { Avatar } from './Avatar'
 import { StreakCalendar } from '../shell/StreakCalendar'
 import { Flame } from '../Streak'
 
@@ -57,7 +59,23 @@ export function Personal({ onLogin }: { onLogin: () => void }) {
         {list.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
       </select></label>
   )
+  const avatar = useAvatar()
+  const [photoErr, setPhotoErr] = useState('')
+  const pickPhoto = async (f: File | undefined) => {
+    if (!f) return
+    setPhotoErr('')
+    try { await setAvatar(f, sync.user?.id ?? null) } catch { setPhotoErr(t('photo.err')) }
+  }
   return <>
+    <div className="photo">
+      <Avatar name={sync.user ? (first || sync.user.email) : null} size={88} />
+      <div className="photo-actions">
+        <label className="link-btn">{avatar ? t('photo.change') : t('photo.add')}
+          <input type="file" accept="image/*" hidden onChange={e => { void pickPhoto(e.target.files?.[0]); e.target.value = '' }} /></label>
+        {avatar && <button className="link-btn danger-link" onClick={() => { void removeAvatar(sync.user?.id ?? null) }}>{t('photo.remove')}</button>}
+        <small className="muted">{photoErr ? <span className="bad-text">{photoErr}</span> : t('photo.private')}</small>
+      </div>
+    </div>
     {sync.user ? <form className="txs-rows" onSubmit={save}>
       <label className="txs-row"><span>{t('auth.firstName')}</span>
         <input autoComplete="given-name" maxLength={80} value={first} onChange={e => { setFirst(e.target.value); setNote('') }} /></label>

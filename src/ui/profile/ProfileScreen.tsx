@@ -10,8 +10,8 @@ import type { AppData } from '../../store/state'
 import { supabase } from '../../sync/client'
 import { useSync } from '../../sync/context'
 import { usePlan } from '../../billing/plan'
-import { Icon } from '../Icon'
 import { Group, Page, Row } from '../kit/List'
+import { Avatar } from './Avatar'
 import { PAGES } from './registry'
 import { SECTIONS, pageLabel, type Ctx } from './sections'
 
@@ -69,7 +69,7 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
   return (
     <div className="screen">
       <header className="me">
-        <span className="me-avatar" aria-hidden="true">{sync.user ? name.charAt(0).toUpperCase() : <Icon name="user" size={28} />}</span>
+        <Avatar name={sync.user ? name : null} />
         <div className="me-text">
           <h1>{name}{plan.pro && <span className="pro-badge">Pro</span>}</h1>
           <p>{sync.user ? <>{sync.user.email}{!sync.user.emailConfirmed && <span className="warn-text"> · {t('personal.unverified')}</span>}</> : t('prof.guestHint')}</p>

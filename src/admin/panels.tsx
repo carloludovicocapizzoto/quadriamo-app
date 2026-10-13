@@ -17,6 +17,7 @@ import sql0013 from '../../supabase/migrations/0013_billing.sql?raw'
 import sql0014 from '../../supabase/migrations/0014_news_push.sql?raw'
 import sql0015 from '../../supabase/migrations/0015_news_cron.sql?raw'
 import sql0016 from '../../supabase/migrations/0016_nudge_until_midnight.sql?raw'
+import sql0017 from '../../supabase/migrations/0017_avatars.sql?raw'
 import billingCode from '../../supabase/functions/billing/index.ts?raw'
 import newsCode from '../../supabase/functions/news/index.ts?raw'
 import sql0009 from '../../supabase/migrations/0009_morning_push_cron.sql?raw'
@@ -533,6 +534,15 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
           <p className="az-hint">Chi oggi non ha ancora segnato niente riceve il primo promemoria nel pomeriggio, poi, finché non lo fa, uno alle 21 e l'ultimo alle 23
             ("a mezzanotte la giornata si chiude"). Al massimo 3 al giorno; chi non apre l'app da più di una settimana ne riceve al massimo uno ogni 3 giorni.
             Un promemoria non consegnato entro mezzanotte non arriva più.</p>
+        </Step>
+        <Step n={13} ok={null} manual={{ done: manual.includes(13), toggle: toggle(13) }} title="Foto profilo (spazio privato)">
+          <ol>
+            <li>Copia lo script, incollalo in SQL Editor e premi <b>Run</b>. Non c'è niente da sostituire.</li>
+          </ol>
+          <div className="az-u-row"><Copy text={sql0017} label="Copia lo script" />
+            <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
+          <p className="az-hint">Crea lo spazio privato <code>avatars</code>: ognuno vede e cambia solo la propria foto (256×256, ridotta sul telefono).
+            Finché non c'è, la foto resta solo sul dispositivo di chi la sceglie.</p>
         </Step>
       </div>
       <div className="az-card">

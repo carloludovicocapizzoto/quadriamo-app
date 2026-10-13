@@ -5,6 +5,7 @@ import { useStore } from '../store/context'
 import { mergeData, type AppData } from '../store/state'
 import { supabase } from './client'
 import { SyncContext, type SyncApi, type SyncStatus } from './context'
+import { forgetAvatar, loadAvatar, removeAvatar } from '../profile/avatar'
 import { saveNames } from './profile'
 import { fetchRemote, pushRemote } from './remote'
 
@@ -38,6 +39,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     })
     return () => sub.subscription.unsubscribe()
   }, [])
+
+  // la propria foto profilo arriva su questo dispositivo all'accesso
+  useEffect(() => { if (user?.id) void loadAvatar(user.id) }, [user?.id])
 
   const syncNow = useCallback(async () => {
     const sb = supabase
@@ -156,10 +160,12 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     },
     signOut: async () => {
       await supabase!.auth.signOut()
+      forgetAvatar()
       lastPushed.current = ''
       setStatus('idle'); setLastSync(null)
     },
     deleteAccount: async () => {
+      if (user) await removeAvatar(user.id).catch(() => { /* senza foto: niente da togliere */ })
       const { error } = await supabase!.rpc('delete_my_account')
       if (error) throw error
       await supabase!.auth.signOut()

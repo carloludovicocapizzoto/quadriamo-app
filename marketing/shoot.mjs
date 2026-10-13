@@ -71,7 +71,11 @@ await shot('15-growing.jpg', scrollTo(byText('.widget', 'Categorie che crescono'
 await click('Profilo', '.tabbar button'); await sleep(900); await shot('17-profile.jpg', clean)
 await shot('22-profile-list.jpg', scrollTo(`document.querySelectorAll('.group')[3]`))
 await js(`location.hash = '#/profile/progress'`); await sleep(1000); await shot('35-progress.jpg', 'window.scrollTo(0,0)')
-await js(`location.hash = '#/profile/personal'`); await sleep(1000); await shot('36-personal.jpg', 'window.scrollTo(0,0)')
+await js(`location.hash = '#/profile/personal'`); await sleep(1000)
+// una foto profilo, caricata come farebbe una persona (il file passa dal campo "Aggiungi una foto")
+{ const { root } = (await cdp('DOM.getDocument')).result; const { nodeId } = (await cdp('DOM.querySelector', { nodeId: root.nodeId, selector: '.photo input[type=file]' })).result
+  if (nodeId) { await cdp('DOM.setFileInputFiles', { nodeId, files: [new URL('../public/icons/icon-512.png', import.meta.url).pathname] }); await sleep(1200) } }
+await shot('36-personal.jpg', 'window.scrollTo(0,0)')
 await js(`location.hash = '#/profile/goals'`); await sleep(1000); await shot('25-goals.jpg', 'window.scrollTo(0,0)')
 await js(`document.querySelector('.goal:not(.goal-add)').click()`); await sleep(1200); await shot('26-goal-detail.jpg')
 await js(`document.querySelector('.bs-root').click()`); await sleep(500)
