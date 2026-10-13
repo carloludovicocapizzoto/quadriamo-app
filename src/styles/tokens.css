@@ -1,41 +1,45 @@
+/* ==========================================================================
+   Token di Quadriamo. Ogni valore ha un significato; i componenti usano solo questi.
+   Colori: carta, inchiostro, una sola tinta d'azione (--accent) e le quattro parti (--b1…--b4).
+   ========================================================================== */
 @font-face { font-family: "DM Sans"; src: url("/fonts/DMSans.ttf") format("truetype"); font-weight: 100 1000; font-display: swap; }
 @font-face { font-family: "DM Serif Display"; src: url("/fonts/DMSerifDisplay-Regular.ttf") format("truetype"); font-display: swap; }
+
 :root {
+  /* colore */
   --bg: #FAF7F2; --surface: #FFFDF9; --text: #1F2328; --muted: #5B6068; --line: #E6DFD3;
-  --accent: #C2410C; --good: #15803D; --bad: #B42318; --bad-bg: #FDECEA; --good-bg: #E7F5EC;
+  --accent: #C2410C; --accent-2: #E0884F;
+  --good: #15803D; --good-bg: #E7F5EC; --bad: #B42318; --bad-bg: #FDECEA; --warn: #B45309; --warn-bg: #FEF3C7;
   --b1: #C2410C; --b2: #E89A6C; --b3: #E9C9A6; --b4: #8A8F98;
+  --gold: #E3A008;
+  /* spazio (griglia 4/8) e raggi */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px;
+  --r-md: 12px; --r-lg: 16px; --r-xl: 24px; --r-full: 999px;
+  /* profondità: a riposo, galleggiante */
+  --e1: 0 1px 2px rgba(31,35,40,.05), 0 1px 6px rgba(31,35,40,.04);
+  --e3: 0 16px 48px rgba(31,35,40,.18), 0 4px 12px rgba(31,35,40,.08);
+  /* movimento */
+  --ease: cubic-bezier(.2,.8,.2,1); --spring: cubic-bezier(.3,1.4,.5,1);
+  /* testo */
+  --t-title: 30px; --t-h2: 19px; --t-cap: 12px;
+  /* struttura */
+  --bar-h: 64px; --top-h: 56px;
   color-scheme: light;
   font: 16px/1.5 "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #14171B; --surface: #1F2328; --text: #F1ECE4; --muted: #B5B0A8; --line: #2E333A;
-    --accent: #F07A42; --good: #4ADE80; --bad: #F87171; --bad-bg: #3A1F1F; --good-bg: #16301F;
+    --accent: #F07A42; --good: #4ADE80; --good-bg: #16301F; --bad: #F87171; --bad-bg: #3A1F1F; --warn: #FBBF24; --warn-bg: #3A2E12;
     --b1: #F07A42; --b2: #E89A6C; --b3: #D9B48C; --b4: #9CA3AF;
+    --e1: 0 1px 2px rgba(0,0,0,.35); --e3: 0 18px 50px rgba(0,0,0,.55);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #14171B; --surface: #1F2328; --text: #F1ECE4; --muted: #B5B0A8; --line: #2E333A;
-  --accent: #F07A42; --good: #4ADE80; --bad: #F87171; --bad-bg: #3A1F1F; --good-bg: #16301F;
+  --accent: #F07A42; --good: #4ADE80; --good-bg: #16301F; --bad: #F87171; --bad-bg: #3A1F1F; --warn: #FBBF24; --warn-bg: #3A2E12;
   --b1: #F07A42; --b2: #E89A6C; --b3: #D9B48C; --b4: #9CA3AF;
+  --e1: 0 1px 2px rgba(0,0,0,.35); --e3: 0 18px 50px rgba(0,0,0,.55);
   color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .dup-note { background: #3A2E12; color: #FCD34D; } }
-:root { --shadow-1: 0 1px 2px rgba(31,35,40,.04), 0 2px 8px rgba(31,35,40,.04); --radius: 16px; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --shadow-1: 0 1px 2px rgba(0,0,0,.3); } }
-:root[data-theme="dark"] { --shadow-1: 0 1px 2px rgba(0,0,0,.3); }
-:root {
-  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px;
-  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 24px; --r-full: 999px;
-  --e1: 0 1px 2px rgba(31,35,40,.05), 0 1px 6px rgba(31,35,40,.04);
-  --e2: 0 4px 16px rgba(31,35,40,.08), 0 1px 3px rgba(31,35,40,.06);
-  --e3: 0 16px 48px rgba(31,35,40,.18), 0 4px 12px rgba(31,35,40,.08);
-  --ease: cubic-bezier(.2,.8,.2,1); --spring: cubic-bezier(.3,1.4,.5,1);
-  --t-title: 30px; --t-h2: 19px; --t-body: 16px; --t-sub: 14px; --t-cap: 12px;
-  --accent-2: #E0884F; --gold: #E3A008; --blue: #2F80ED;
-  --bar-h: 64px; --top-h: 56px;
-}
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --e1: 0 1px 2px rgba(0,0,0,.35); --e2: 0 6px 18px rgba(0,0,0,.4); --e3: 0 18px 50px rgba(0,0,0,.55); } }
-:root[data-theme="dark"] { --e1: 0 1px 2px rgba(0,0,0,.35); --e2: 0 6px 18px rgba(0,0,0,.4); --e3: 0 18px 50px rgba(0,0,0,.55); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .warn-text { color: #FBBF24; } }

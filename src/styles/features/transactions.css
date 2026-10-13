@@ -28,7 +28,7 @@
 .inbox-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .remember { flex-wrap: wrap; white-space: normal; }
 .kw-input { min-height: 34px; padding: 4px 8px; width: auto; flex: 1; min-width: 120px; }
-.dup-note { background: #FEF3C7; color: #92400E; border-radius: 8px; padding: 6px 10px; margin: 6px 0; }
+.dup-note { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 6px 10px; margin: 6px 0; }
 .inbox-item.dup { border-color: #D97706; }
 .tx { grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding-top: 12px; padding-bottom: 12px; }
 .tx-avatar { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-weight: 650; font-size: 15px;

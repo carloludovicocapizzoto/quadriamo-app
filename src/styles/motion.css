@@ -1,58 +1,54 @@
-@keyframes pulse { to { opacity: .3; } }
-@media (prefers-reduced-motion: reduce) { .dot.syncing { animation: none; } }
-@keyframes step-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .step-body { animation: none; } }
-@keyframes donut-spin { from { transform: rotate(-200deg) scale(.85); opacity: 0; } to { transform: rotate(-90deg) scale(1); opacity: 1; } }
-@keyframes seg-in { from { opacity: 0; } }
-@keyframes bar-up { from { transform: scaleY(0); } }
-@keyframes draw { to { stroke-dashoffset: 0; } }
+/* Movimento: un solo vocabolario di animazioni, ognuna con un nome che dice cosa fa.
+   "Riduci movimento" del sistema: tutto arriva subito allo stato finale (una regola sola, non eccezioni sparse). */
+
+/* entrate e uscite */
+@keyframes fade { from { opacity: 0; } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
 @keyframes fade-up { from { opacity: 0; transform: translateY(6px); } }
-@media (prefers-reduced-motion: reduce) {
-  .donut-in, .hc-donut .seg, .hc-bars .bar, .hc-center { animation: none; }
-  .hc-line polyline { animation: none; stroke-dashoffset: 0; }
-}
-@keyframes glow { to { transform: translate(3%, -2%) rotate(6deg) scale(1.05); } }
-@keyframes grow-x { from { transform: scaleX(0); opacity: 0; } }
+@keyframes tab-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes sub-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+@keyframes panel-in { from { opacity: 0; transform: translateY(24px); } }
+@keyframes step-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+@keyframes from-left { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+@keyframes from-right { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
 @keyframes leave { to { opacity: 0; transform: translateY(-18px) scale(.98); } }
-@keyframes pop { from { transform: scale(.6); opacity: 0; } }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+@keyframes sheet-down { to { transform: translateY(100%); } }
+/* conferme e attenzione */
+@keyframes pop { 0% { transform: scale(.6); } 100% { transform: scale(1); } }
+@keyframes pop-in { from { opacity: 0; transform: translateX(-50%) scale(.6); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
 @keyframes block-in { from { transform: scale(0); opacity: 0; } }
 @keyframes breathe { 50% { transform: scale(.94); } }
-@keyframes panel-in { from { opacity: 0; transform: translateY(24px); } }
-main.app-enter { animation: fade-up .5s cubic-bezier(.2,.8,.2,1) both; }
-@media (prefers-reduced-motion: reduce) {
-  .gate *, .gate, .wizard, .ready *, main.app-enter, .logo-mark, .logo-mark .lm { animation: none !important; }
-  .ready-check path { stroke-dashoffset: 0; }
-}
 @keyframes ping { 0% { opacity: .9; transform: scale(.9); } 100% { opacity: 0; transform: scale(1.35); } }
-@keyframes sheet-up { from { transform: translateY(100%); } }
+@keyframes ring { 0%, 60%, 100% { transform: rotate(0); } 10%, 30% { transform: rotate(14deg); } 20%, 40% { transform: rotate(-14deg); } 50% { transform: rotate(6deg); } }
+@keyframes flame { 0%, 100% { transform: scale(1) rotate(-3deg); } 50% { transform: scale(1.08) rotate(3deg); } }
+@keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
+@keyframes pulse { to { opacity: .3; } }
+@keyframes shimmer { to { background-position: -200% 0; } }
+/* dati che si riempiono */
+@keyframes grow { from { transform: scaleX(0); } }
+@keyframes grow-x { from { transform: scaleX(0); opacity: 0; } }
+@keyframes bar-up { from { transform: scaleY(0); } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes ring-in { from { stroke-dashoffset: var(--c); } }
+@keyframes seg-in { from { opacity: 0; } }
+@keyframes donut-spin { from { transform: rotate(-200deg) scale(.85); opacity: 0; } to { transform: rotate(-90deg) scale(1); opacity: 1; } }
+/* ingresso e tutorial */
+@keyframes glow { to { transform: translate(3%, -2%) rotate(6deg) scale(1.05); } }
 @keyframes bob-down { 50% { transform: translateX(-50%) translateY(10px) rotate(90deg); } }
 @keyframes bob-ur { 50% { transform: translate(6px, -8px) rotate(-60deg); } }
 @keyframes bob-ul { 50% { transform: translate(-6px, -8px) rotate(-120deg); } }
-@media (prefers-reduced-motion: reduce) { .inst-arrow, .hl::after, .m-sheet, .m-menu, .m-preview, .m-app.q, .m-dialog { animation: none !important; } }
 @keyframes bob-dr { 50% { transform: translate(6px, 8px) rotate(60deg); } }
-@media (prefers-reduced-motion: reduce) { .widget { animation: none; } }
-@keyframes ring { 0%, 60%, 100% { transform: rotate(0); } 10%, 30% { transform: rotate(14deg); } 20%, 40% { transform: rotate(-14deg); } 50% { transform: rotate(6deg); } }
-@media (prefers-reduced-motion: reduce) { .notify-bell { animation: none; } }
-@keyframes fade-in { from { opacity: 0; } }
-@keyframes flame { 0%, 100% { transform: scale(1) rotate(-3deg); } 50% { transform: scale(1.08) rotate(3deg); } }
-@keyframes pop-in { from { opacity: 0; transform: translateX(-50%) scale(.6); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
-@media (prefers-reduced-motion: reduce) { .streak-flame, .streak-pop, .streak-pop .streak-flame { animation: none !important; } }
+
+/* pagine */
 .tab-in { animation: tab-in .32s var(--ease) both; }
-@keyframes tab-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* la pagina non resta "trasformata" a fine animazione (romperebbe gli elementi fissi al suo interno) */
 .app-enter.tab-in { animation-fill-mode: backwards; }
-.sub-in { animation: sub-in .3s var(--ease) both; }
-@keyframes sub-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 .view-in { animation: tab-in .28s var(--ease) both; }
-@keyframes grow { from { transform: scaleX(0); } }
-@keyframes ring-in { from { stroke-dashoffset: var(--c); } }
-@keyframes pop { 0% { transform: scale(.6); } 100% { transform: scale(1); } }
-@keyframes fade { from { opacity: 0; } }
-@keyframes fade-out { to { opacity: 0; } }
-@keyframes sheet-up { from { transform: translateY(100%); } }
-@keyframes sheet-down { to { transform: translateY(100%); } }
-@media (prefers-reduced-motion: reduce) { .tab-in, .sub-in, .view-in, .hero, .part, .badge, .hero-day span, .ring-v, .bs, .bs-root { animation: none !important; } }
-@keyframes from-left { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
-@keyframes from-right { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
-@keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
-@media (prefers-reduced-motion: reduce) { .swipe-page.from-left, .swipe-page.from-right, .swipe-hint span { animation: none; } }
-@keyframes shimmer { to { background-position: -200% 0; } }
+.sub-in { animation: sub-in .3s var(--ease) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important;
+    transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
