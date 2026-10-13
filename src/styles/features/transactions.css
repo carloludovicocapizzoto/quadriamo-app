@@ -2,15 +2,15 @@
 .checks ul { margin: 4px 0 0; padding-left: 18px; }
 .card-bad { border-color: var(--bad); }
 .tx-list { list-style: none; margin: 8px 0 0; padding: 0; }
-.tx { display: grid; grid-template-columns: 56px 1fr auto; gap: 10px; align-items: center; width: 100%; text-align: left;
+.tx { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; width: 100%; text-align: left;
   background: none; border: 0; border-top: 1px solid var(--line); padding: 12px 2px; cursor: pointer; min-height: 56px; }
 .tx-list li:first-child .tx { border-top: 0; }
 .tx-date { color: var(--muted); font-size: 13px; }
 .tx-main { display: grid; min-width: 0; }
-.tx-desc { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tx-meta { color: var(--muted); font-size: 13px; }
+.tx-desc { font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx-meta { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tx-issue { color: var(--bad); font-size: 13px; font-weight: 600; }
-.tx-amount { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tx-amount { font-weight: 650; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tx-amount.income { color: var(--good); }
 .tx-bad { background: var(--bad-bg); border-radius: 8px; padding-left: 8px; padding-right: 8px; }
 .tx-upcoming { opacity: .6; }
@@ -20,31 +20,23 @@
 .currency-field select { min-height: 60px; font-weight: 700; }
 .card-inbox { border-color: var(--accent); }
 .inbox-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 10px; }
-.inbox-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: grid; gap: 8px; }
+.inbox-item { border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 10px; }
 .inbox-item.needs { border-color: var(--bad); }
-.inbox-top { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
-.inbox-top .tx-desc { white-space: normal; overflow-wrap: anywhere; font-size: 15px; }
+.inbox-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "desc amount" "date amount"; gap: 2px 8px; align-items: center; }
+.inbox-top .tx-desc { grid-area: desc; white-space: normal; overflow-wrap: anywhere; font-size: 14.5px; }
 .inbox-edit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .inbox-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .remember { flex-wrap: wrap; white-space: normal; }
 .kw-input { min-height: 34px; padding: 4px 8px; width: auto; flex: 1; min-width: 120px; }
 .dup-note { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 6px 10px; margin: 6px 0; }
 .inbox-item.dup { border-color: #D97706; }
-.tx { grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding-top: 12px; padding-bottom: 12px; }
 .tx-avatar { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-weight: 650; font-size: 15px;
   color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
-.tx-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tx-meta .tx-date { font-size: inherit; }
-.tx-desc { font-weight: 600; font-size: 15px; }
-.tx-amount { font-weight: 650; font-size: 15px; }
 .tx-meta .tag { margin-left: 6px; }
-.inbox-item { border-radius: 14px; padding: 12px; gap: 10px; }
-.inbox-top { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "desc amount" "date amount"; row-gap: 2px; }
 .inbox-top .tx-date { grid-area: date; font-size: 13px; }
-.inbox-top .tx-desc { grid-area: desc; font-size: 14.5px; }
 .inbox-top .tx-amount { grid-area: amount; }
-.inbox-edit select { min-width: 0; font-size: 15px; }
-.inbox-edit select { padding-left: 10px; padding-right: 26px; background-position: right 8px center; }
+.inbox-edit select { min-width: 0; font-size: 15px; padding-left: 10px; padding-right: 26px; background-position: right 8px center; }
 .tx-sheet { background: var(--bg); border-radius: var(--r-xl) var(--r-xl) 0 0; box-shadow: var(--e3); animation: sheet-up .32s var(--ease) both; }
 .tx-sheet::backdrop { background: rgba(15,17,20,.42); animation: fade .2s ease both; }
 @media (min-width: 640px) { .tx-sheet { border-radius: var(--r-xl); } }
@@ -59,7 +51,7 @@
 .txs-amount .amount-input::placeholder { color: color-mix(in srgb, var(--muted) 45%, transparent); }
 .txs-amount .amount-input:focus-visible { box-shadow: none; }
 .txs-amount.income .amount-input { color: var(--good); }
-.txs-cur { width: auto; min-height: 32px; padding: 0 26px 0 10px; border-radius: var(--r-full); font-size: 14px !important; font-weight: 700;
+.txs-cur { width: auto; min-height: 32px; padding: 0 26px 0 10px; border-radius: var(--r-full); font-size: 14px; font-weight: 700;
   background-color: color-mix(in srgb, var(--muted) 12%, transparent); border: 0; background-position: right 8px center; }
 .txs-fx { text-align: center; margin: 0; }
 .txs-label { margin: var(--s5) 0 var(--s2); font-size: var(--t-cap); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
@@ -80,12 +72,11 @@
 .txs-row input { padding-right: 0; }
 .txs-row input:focus-visible, .txs-row select:focus-visible { box-shadow: none; }
 .txs-date { display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
-.txs-date input { width: auto; }
 .txs-hint { margin: var(--s2) var(--s1) 0; }
 .txs-actions { position: sticky; bottom: 0; display: grid; justify-items: center; gap: var(--s1); padding: var(--s4) 0 calc(var(--s4) + env(safe-area-inset-bottom));
   margin-top: var(--s3); background: linear-gradient(to top, var(--bg) 70%, transparent); }
 @media (max-width: 360px) { .cat-grid { grid-template-columns: repeat(3, 1fr); } }
-.txs-date input { font-size: 15px !important; padding: 0; min-height: 30px; }
+.txs-date input { width: auto; font-size: 15px; padding: 0; min-height: 30px; }
 .txs-date .mini-chip { flex: none; }
 .search { position: relative; display: flex; align-items: center; margin-bottom: var(--s3); }
 .search > .ico { position: absolute; left: 14px; color: var(--muted); pointer-events: none; }

@@ -1,15 +1,10 @@
-.m-bar { display: flex; align-items: center; justify-content: space-around; gap: 8px; padding: 8px 10px; background: var(--surface); border-top: 1px solid var(--line); font-size: 18px; }
-.home-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 6px 0 10px; }
-.home-head h1 { font-size: clamp(28px, 7vw, 38px); margin: 0; }
-.home-head p { margin: 2px 0 0; }
-.widgets { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; align-items: start; }
+.widgets { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; align-items: start; }
 .widgets .card { margin: 0; }
 .widget { animation: fade-up .45s cubic-bezier(.2,.8,.2,1) both; }
 .widget.editing { outline: 2px dashed var(--line); outline-offset: 3px; }
 .w-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
 .w-tools { display: flex; gap: 4px; }
 .w-tools .icon-btn { width: 34px; height: 34px; }
-.w-big { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 2px 0 8px; }
 .w-big small { font-size: 16px; font-weight: 600; }
 .w-bars { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 9px; }
 .w-bars li { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(40px, 0.8fr) auto; gap: 10px; align-items: center; font-size: 14px; }
@@ -21,10 +16,9 @@
 .plain-bars li { grid-template-columns: 1fr 0 auto; }
 .w-today { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
 .w-today li { display: grid; gap: 2px; }
-.w-today strong { font-size: 22px; font-variant-numeric: tabular-nums; }
 .w-flow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin: 4px 0 12px; }
 .w-flow dt { font-size: 13px; color: var(--muted); }
-.w-flow dd { margin: 0; font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
+.w-flow dd { margin: 0; font-weight: 650; font-size: 18px; font-variant-numeric: tabular-nums; }
 .w-meter { height: 10px; border-radius: 99px; background: var(--bg); overflow: hidden; }
 .w-meter span { display: block; height: 100%; background: linear-gradient(90deg, var(--b1), var(--b2)); border-radius: 99px; transition: width .7s cubic-bezier(.2,.8,.2,1); }
 .w-upcoming { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
@@ -34,16 +28,12 @@
 .catalog ul { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 8px; }
 .catalog li { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
 .catalog li div { display: grid; gap: 2px; }
-.widgets { gap: 12px; }
 .widget .w-head { margin-bottom: 6px; }
 .widget .w-head h3, .streak .streak-n + p { letter-spacing: 0; }
 .widget .w-head h3.h-plain { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .w-big { font-size: 34px; font-weight: 650; letter-spacing: -.025em; font-variant-numeric: tabular-nums; line-height: 1.1; margin: 2px 0 12px; }
 .w-today strong { font-size: 22px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .w-bars b, .w-flow dd, .w-upcoming b, .tx-list .amount, .num, .money { font-variant-numeric: tabular-nums; }
-.w-flow dd { font-weight: 650; }
-.home-head h1 { letter-spacing: -.01em; }
-.home-head .btn { gap: 6px; }
 .home2 { display: grid; }
 .hero { position: relative; overflow: hidden; border-radius: var(--r-xl); padding: var(--s5) var(--s5) var(--s4); color: #fff; margin-top: var(--s2);
   background: radial-gradient(120% 140% at 100% 0%, #E9925C 0%, transparent 55%), linear-gradient(150deg, #D3561F, #A8360A);
@@ -82,19 +72,17 @@
 .missions li button { width: 100%; display: grid; grid-template-columns: 40px 1fr; gap: var(--s3); align-items: center; padding: var(--s2) 0; border: 0;
   background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .missions li button:disabled { cursor: default; }
-.m-ico { width: 40px; height: 40px; border-radius: var(--r-md); display: grid; place-items: center; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
-.missions li.done .m-ico { color: #fff; background: var(--good); animation: pop .4s var(--spring); }
-.m-body { display: grid; gap: 4px; }
-.m-body b { font-size: 15px; font-weight: 600; }
-.missions li.done .m-body b { color: var(--muted); }
-.m-body small { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.m-bar { height: 8px; border-radius: var(--r-full); background: color-mix(in srgb, var(--muted) 16%, transparent); overflow: hidden; }
-.m-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .8s var(--ease); animation: grow .8s var(--ease) both; transform-origin: left; }
-.missions li.done .m-bar span { background: var(--good); }
-.m-bar span.bad { background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
-.m-all { margin: var(--s2) 0 0; }
+.mis-ico { width: 40px; height: 40px; border-radius: var(--r-md); display: grid; place-items: center; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.missions li.done .mis-ico { color: #fff; background: var(--good); animation: pop .4s var(--spring); }
+.mis-body { display: grid; gap: 4px; }
+.mis-body b { font-size: 15px; font-weight: 600; }
+.missions li.done .mis-body b { color: var(--muted); }
+.mis-body small { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.mis-bar { display: block; height: 8px; border-radius: var(--r-full); background: color-mix(in srgb, var(--muted) 16%, transparent); overflow: hidden; }
+.mis-bar > span { display: block; height: 8px; border-radius: inherit; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .8s var(--ease); animation: grow .8s var(--ease) both; transform-origin: left; }
+.missions li.done .mis-bar > span { background: var(--good); }
+.mis-bar > span.bad { background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
+.mis-all { margin: var(--s2) 0 0; }
 .activity { padding-top: var(--s2); }
 .activity .tx-list { margin-top: 0; }
 .home2 .home { margin-top: var(--s2); }
-.m-bar { display: block; height: 8px; }
-.m-bar > span { height: 8px; }

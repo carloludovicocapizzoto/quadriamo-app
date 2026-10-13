@@ -136,17 +136,17 @@ function Missions({ list, cur, onAction }: { list: Mission[]; cur: string; onAct
         {list.map(m => (
           <li key={m.id} className={m.done ? 'done' : ''}>
             <button onClick={() => { if (!m.done) onAction(m) }} disabled={m.done && m.id !== 'under'}>
-              <span className="m-ico"><Icon name={m.done ? 'check' : ({ log: 'edit', under: 'chart', inbox: 'upload', review: 'growth' } as const)[m.id]} size={18} /></span>
-              <span className="m-body">
+              <span className="mis-ico"><Icon name={m.done ? 'check' : ({ log: 'edit', under: 'chart', inbox: 'upload', review: 'growth' } as const)[m.id]} size={18} /></span>
+              <span className="mis-body">
                 <b>{t(`mis.${m.id}` as keyof Dict, { n: m.value ?? 0 })}</b>
                 {m.id === 'under' && m.limit != null && <small>{t('mis.underDetail', { value: money(m.value ?? 0, cur), limit: money(m.limit, cur) })}</small>}
-                <span className="m-bar"><span style={{ width: `${barOf(m) * 100}%` }} className={m.id === 'under' && !m.done ? 'bad' : ''} /></span>
+                <span className="mis-bar"><span style={{ width: `${barOf(m) * 100}%` }} className={m.id === 'under' && !m.done ? 'bad' : ''} /></span>
               </span>
             </button>
           </li>
         ))}
       </ul>
-      {done === list.length && <p className="small good-text m-all">{t('mis.allDone')}</p>}
+      {done === list.length && <p className="small good-text mis-all">{t('mis.allDone')}</p>}
     </section>
   )
 }
