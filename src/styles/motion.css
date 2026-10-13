@@ -49,3 +49,8 @@
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important;
     transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* "Riduci animazioni" scelto nell'app (Profilo -> Vibrazione e movimento): la stessa regola, anche se il sistema non lo chiede */
+:root[data-motion="reduce"] *, :root[data-motion="reduce"] *::before, :root[data-motion="reduce"] *::after {
+  animation-duration: .01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important;
+  transition-duration: .01ms !important; scroll-behavior: auto !important; }

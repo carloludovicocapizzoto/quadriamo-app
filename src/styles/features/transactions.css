@@ -66,8 +66,9 @@
 
 /* righe di dettaglio: etichetta a sinistra, valore a destra, una linea tra l'una e l'altra */
 .txs-rows { margin-top: var(--s6); border-top: 1px solid var(--line); }
-.txs-row { display: grid; grid-template-columns: 96px 1fr; gap: var(--s3); align-items: center; min-height: 52px; border-bottom: 1px solid var(--line); }
-.txs-row > span { font-size: 15px; color: var(--muted); }
+.txs-row { display: grid; grid-template-columns: minmax(96px, max-content) minmax(40%, 1fr); gap: var(--s3); align-items: center; min-height: 52px; border-bottom: 1px solid var(--line); }
+.txs-row > span:first-child { font-size: 15px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.txs-row > .row-value, .txs-row > .row-switch { justify-self: end; }
 .txs-row input, .txs-row select { border: 0; background-color: transparent; padding: 0 22px 0 0; min-height: 44px; text-align: right; border-radius: 0; }
 .txs-row input { padding-right: 0; }
 .txs-row input:focus-visible, .txs-row select:focus-visible { border: 0; }

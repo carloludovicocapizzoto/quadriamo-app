@@ -1,11 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/index.css'
+import { applyPrefs } from './app/prefs'
 import App from './App.tsx'
 import { I18nProvider } from './i18n'
 import { StoreProvider } from './store/StoreProvider'
 import { SyncProvider } from './sync/SyncProvider'
 
+applyPrefs()   // tema, movimento e testo prima del primo disegno: niente lampo di colore
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <I18nProvider>

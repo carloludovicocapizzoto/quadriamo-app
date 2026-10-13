@@ -14,15 +14,15 @@ const GOAL_ICONS: IconName[] = ['target', 'plane', 'home', 'car', 'gift', 'heart
 const live = (goals: Goal[] | undefined) => (goals ?? []).filter(g => !g.removed)
 
 /** Profilo: i tuoi obiettivi di risparmio come tessere da scorrere, più "Nuovo obiettivo". */
-export function GoalsStrip({ goals, today, currency }: { goals: Goal[] | undefined; today: string; currency: string }) {
+export function GoalsStrip({ goals, today, currency, titled = true }: { goals: Goal[] | undefined; today: string; currency: string; titled?: boolean }) {
   const { t, money } = useI18n()
   const [open, setOpen] = useState<string | 'new' | null>(null)
   const list = live(goals)
   const current = list.find(g => g.id === open) ?? null
   return (
     <>
-      <div className="sec-head"><h2 className="sec-title">{t('goal.title')}</h2>
-        {list.length > 0 && <button className="link-btn" onClick={() => { tap(); setOpen('new') }}><Icon name="plus" size={16} />{t('goal.new')}</button>}</div>
+      {titled && <div className="sec-head"><h2 className="sec-title">{t('goal.title')}</h2>
+        {list.length > 0 && <button className="link-btn" onClick={() => { tap(); setOpen('new') }}><Icon name="plus" size={16} />{t('goal.new')}</button>}</div>}
       <div className="goals" role="list">
         {list.map(g => {
           const s = goalStatus(g, today)

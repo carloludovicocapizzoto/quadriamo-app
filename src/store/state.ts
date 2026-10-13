@@ -27,6 +27,8 @@ export interface PrivateProfile {
   invested: 'yes' | 'no' | 'want' | null
   investWhere: string[]
   research: boolean                   // ha scelto di partecipare alla ricerca anonima
+  country?: string | null             // paese di provenienza (ISO, es. "IT"): resta nei dati dell'utente, mai alla ricerca
+  residence?: string | null           // paese in cui vive, se diverso
 }
 
 /** Transazione importata (estratto conto o, in futuro, carta collegata) in attesa di conferma. */

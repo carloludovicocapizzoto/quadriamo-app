@@ -71,54 +71,32 @@
 .paywall-page p { margin: 0 0 6px; max-width: 34ch; }
 .paywall-ico { width: 60px; height: 60px; border-radius: var(--r-lg); display: grid; place-items: center; color: var(--accent);
   background: color-mix(in srgb, var(--accent) 12%, transparent); }
-.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); margin: var(--s4) 0; }
-.stat-row > div { display: grid; justify-items: center; gap: 2px; padding: var(--s3) var(--s2); border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--surface); }
-.stat-row b { font-size: 22px; font-variant-numeric: tabular-nums; }
-.stat-row span:last-child { font-size: var(--t-cap); color: var(--muted); text-align: center; }
-.stat-row.big > div { box-shadow: var(--e1); }
-.stat-ico { height: 28px; display: grid; place-items: center; color: var(--accent); }
-.stat-ico.gold { color: var(--b1); font-size: 22px; }
-.stat-ico.blue { color: var(--good); }
 .cal-title { margin: 0 0 var(--s3); font-weight: 600; text-transform: capitalize; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 6px; text-align: center; }
 .cal-h { font-size: 11.5px; font-weight: 600; color: var(--muted); }
 .cal-d { height: 34px; display: grid; place-items: center; font-size: 13.5px; font-variant-numeric: tabular-nums; position: relative; }
-.cal-d.on { color: var(--on-accent); font-weight: 600; background: var(--accent); border-radius: var(--r-full); }
-.cal-d.on.l { border-top-left-radius: 0; border-bottom-left-radius: 0; }
-.cal-d.on.r { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.cal-d.today:not(.on) { box-shadow: inset 0 0 0 2px var(--accent); border-radius: var(--r-full); }
+/* un giorno in cui hai aggiornato Quadriamo è un piccolo blocco pieno: lo slancio si vede come una fila di blocchi */
+.cal-d.on { font-weight: 600; }
+.cal-d.on::before { content: ''; position: absolute; inset: 3px 5px; border-radius: var(--r-sm); background: color-mix(in srgb, var(--b1) 22%, transparent); z-index: -1; }
+.cal-d { z-index: 0; }
+.cal-d.today { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
 .cal-d.future { color: color-mix(in srgb, var(--muted) 60%, transparent); }
-.prof-head { display: flex; gap: var(--s4); align-items: center; padding: 0 0 var(--s2); }
-.prof-head h1 { font-size: 26px; margin: 0; }
-.prof-head p { margin: 2px 0 6px; }
-.prof-avatar { width: 72px; height: 72px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 30px; font-weight: 600; color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent); }
-.prof-avatar.pro { box-shadow: inset 0 0 0 2px var(--accent); }
-.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: var(--s3); }
-.badge { display: grid; justify-items: center; text-align: center; gap: 4px; padding: var(--s4) var(--s2) var(--s3); border-radius: var(--r-lg); background: var(--surface);
-  border: 1px solid var(--line); }
-.badge b { font-size: 13.5px; line-height: 1.2; }
-.badge small { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
-.badge-medal { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: var(--muted);
-  background: conic-gradient(var(--accent) calc(var(--p) * 360deg), color-mix(in srgb, var(--muted) 16%, transparent) 0); position: relative; }
-.badge-medal::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--surface); }
-.badge-medal .ico { position: relative; }
-.badge.done .badge-medal { color: var(--on-accent); background: var(--b1);  }
-.badge.done .badge-medal::before { display: none; }
-.badge:not(.done) { opacity: .85; }
-.settings-list { list-style: none; padding: var(--s1) 0; margin: 0 0 var(--s6); }
-.settings-list li + li button { border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
-.settings-list button { width: 100%; display: grid; grid-template-columns: 36px 1fr auto; gap: var(--s3); align-items: center; padding: var(--s3) var(--s4);
-  border: 0; background: none; color: var(--text); font: inherit; font-weight: 400; text-align: left; cursor: pointer; min-height: 56px; }
-.settings-list li + li button { border-top-left-radius: 0; }
-.settings-list button:active { background: color-mix(in srgb, var(--text) 5%, transparent); }
-.settings-list .row-chev { color: var(--muted); }
-.settings-list.card { padding: 0; overflow: hidden; }
-.choice-list { list-style: none; margin: 0; padding: 0; }
-.choice-list button { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: var(--s4) 0; border: 0; background: none;
-  color: var(--text); font: inherit; cursor: pointer; border-top: 1px solid var(--line); }
-.choice-list li:first-child button { border-top: 0; }
-.choice-list button.on { color: var(--accent); font-weight: 600; }
 .notif-page .set-row + .set-row { border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
-.notif-list { list-style: none; margin: 0 0 var(--s3); padding: 0; display: grid; gap: var(--s3); }
-.notif-list li { display: grid; gap: 2px; }
+
+/* ---------- Profilo: chi sei, poi le sezioni ---------- */
+.me { display: flex; align-items: center; gap: var(--s4); }
+.me-avatar { width: 64px; height: 64px; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--fill-2);
+  color: var(--text); font-size: 26px; font-weight: 600; overflow: hidden; }
+.me-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.me-text { min-width: 0; }
+.me-text h1 { display: flex; align-items: center; gap: var(--s2); font-size: var(--t-title); line-height: 1.15; margin: 0; }
+.me-text p { margin: 4px 0 0; color: var(--muted); font-size: 15px; overflow-wrap: anywhere; }
+.me-signin { margin-top: var(--s5); }
+.guest-note p { margin: 0 0 var(--s3); }
+.row-switch { display: flex; justify-content: flex-end; }
+
+/* progressi: tre numeri, il calendario, i traguardi come righe */
+.progress-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); margin: 0 0 var(--s6); }
+.progress-row dt { display: flex; align-items: center; gap: 4px; font-size: var(--t-sm); color: var(--muted); }
+.progress-row dt .streak-flame { width: 14px; height: 18px; filter: none; }
+.progress-row dd { margin: 2px 0 0; font-size: var(--t-title); font-weight: 600; letter-spacing: -.03em; }

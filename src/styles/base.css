@@ -30,6 +30,9 @@ select { -webkit-appearance: none; appearance: none; padding-right: 30px; text-o
    in tema scuro le voci sono testo chiaro su bianco. Stesso colore della pagina per elenco e voci */
 option, optgroup { background-color: var(--bg); color: var(--text); }
 
+/* testo più grande (Profilo -> Accessibilità): tutta l'app in proporzione, barre comprese */
+:root[data-text="large"] body { zoom: 1.15; }
+
 /* utilità */
 .muted { color: var(--muted); }
 .small { font-size: var(--t-sm); }

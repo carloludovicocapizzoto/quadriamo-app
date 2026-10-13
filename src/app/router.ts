@@ -1,10 +1,11 @@
 // Navigazione dell'app: un solo modo di cambiare pagina, scritto nell'indirizzo (#/analysis/transactions).
 // Così il tasto Indietro (Android, browser) torna alla pagina precedente come in un'app nativa.
 import { useSyncExternalStore } from 'react'
+import { PROFILE_PAGES, type ProfilePage } from '../profile/pages'
+export type { ProfilePage }
 
 export type Tab = 'home' | 'news' | 'analysis' | 'profile'
 export type AnalysisView = 'transactions' | 'month' | 'year' | 'investments'
-export type ProfilePage = 'notifications' | 'plan' | 'account' | 'budget' | 'recurring' | 'rules' | 'data' | 'shared' | 'beta' | 'language'
 
 export type Route =
   | { tab: 'home' }
@@ -14,7 +15,6 @@ export type Route =
 
 /** Le viste di Analisi nell'ordine delle schede: prima le letture del mese e dell'anno, i movimenti in fondo. La prima è quella di partenza. */
 export const ANALYSIS_VIEWS: AnalysisView[] = ['month', 'year', 'investments', 'transactions']
-const PAGES: ProfilePage[] = ['notifications', 'plan', 'account', 'budget', 'recurring', 'rules', 'data', 'shared', 'beta', 'language']
 
 export function parse(hash: string): Route {
   const [path, query = ''] = hash.replace(/^#\/?/, '').split('?')
@@ -27,7 +27,7 @@ export function parse(hash: string): Route {
     const year = /^\d{4}$/.test(q.get('y') ?? '') ? Number(q.get('y')) : undefined
     return { tab: 'analysis', view, ...(month ? { month } : {}), ...(year ? { year } : {}) }
   }
-  if (a === 'profile') return PAGES.includes(b as ProfilePage) ? { tab: 'profile', page: b as ProfilePage } : { tab: 'profile' }
+  if (a === 'profile') return (PROFILE_PAGES as readonly string[]).includes(b) ? { tab: 'profile', page: b as ProfilePage } : { tab: 'profile' }
   return { tab: 'home' }
 }
 

@@ -18,7 +18,7 @@ import { profilePrompt } from '../sync/profile'
 import { closeComposer, openComposer, useComposer } from './composer'
 import { useBootstrap, useDailyPing, useMorningSnapshot, useProReturn, usePushSync } from './effects'
 import { useEntry } from './entryContext'
-import { closeFeedback, openFeedback, useFeedbackOpen } from './prompts'
+import { closeFeedback, useFeedbackOpen } from './prompts'
 import { ANALYSIS_VIEWS, navigate, useRoute, type Route } from './router'
 import { toast, useToast } from './toast'
 import { useModel, ymKey } from './useModel'
@@ -27,7 +27,7 @@ import { SectionBoundary } from './SectionBoundary'
 // le pagine meno usate si scaricano solo quando servono
 const AnalysisScreen = lazy(() => import('../ui/screens/AnalysisScreen').then(m => ({ default: m.AnalysisScreen })))
 const NewsScreen = lazy(() => import('../ui/screens/NewsScreen').then(m => ({ default: m.NewsScreen })))
-const ProfileScreen = lazy(() => import('../ui/screens/ProfileScreen').then(m => ({ default: m.ProfileScreen })))
+const ProfileScreen = lazy(() => import('../ui/profile/ProfileScreen').then(m => ({ default: m.ProfileScreen })))
 
 export function AppShell() {
   const { t, lang } = useI18n()
@@ -99,7 +99,6 @@ export function AppShell() {
               onOpen={openTx} />}
             {route.tab === 'profile' && <ProfileScreen page={route.page ?? null} onPage={p => go(p ? { tab: 'profile', page: p } : { tab: 'profile' })}
               data={data} streak={streak} today={today} onLogin={entry.openLogin}
-              onFeedback={() => { openFeedback(); go({ tab: 'home' }) }}
               onAdmin={() => window.location.assign(`${import.meta.env.BASE_URL}admin/`)} />}
           </Suspense>
         </SectionBoundary>

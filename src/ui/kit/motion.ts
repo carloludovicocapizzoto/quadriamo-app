@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-
-const reduced = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+import { getPrefs, reducedMotion as reduced } from '../../app/prefs'
 
 /**
  * Numero che passa dal valore di prima a quello nuovo quando cambia: si vede dove va a finire la spesa.
@@ -26,4 +25,4 @@ export function useCountUp(value: number, ms = 500): number {
 }
 
 /** Piccola vibrazione al tocco dove il telefono la supporta (Android). */
-export const tap = () => { try { navigator.vibrate?.(8) } catch { /* niente */ } }
+export const tap = () => { if (!getPrefs().haptics) return; try { navigator.vibrate?.(8) } catch { /* niente */ } }

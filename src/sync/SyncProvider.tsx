@@ -5,6 +5,7 @@ import { useStore } from '../store/context'
 import { mergeData, type AppData } from '../store/state'
 import { supabase } from './client'
 import { SyncContext, type SyncApi, type SyncStatus } from './context'
+import { saveNames } from './profile'
 import { fetchRemote, pushRemote } from './remote'
 
 const DEBOUNCE_MS = 1500
@@ -27,8 +28,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   // sessione
   useEffect(() => {
     if (!supabase) return
-    const toUser = (u: { id: string; email?: string; user_metadata?: { first_name?: string } } | null | undefined) =>
-      (u ? { id: u.id, email: u.email ?? '', firstName: u.user_metadata?.first_name ?? '' } : null)
+    const toUser = (u: { id: string; email?: string; email_confirmed_at?: string; user_metadata?: { first_name?: string; last_name?: string } } | null | undefined) =>
+      (u ? { id: u.id, email: u.email ?? '', firstName: u.user_metadata?.first_name ?? '', lastName: u.user_metadata?.last_name ?? '',
+             emailConfirmed: !!u.email_confirmed_at } : null)
     supabase.auth.getSession().then(({ data }) => { setUser(toUser(data.session?.user)); setReady(true) }, () => setReady(true))
     const { data: sub } = supabase.auth.onAuthStateChange((e, session) => {
       setUser(toUser(session?.user))
@@ -124,6 +126,25 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase!.auth.updateUser({ password })
       if (error) throw error
       setRecovery(false)
+    },
+    changePassword: async (current, next) => {
+      const email = user?.email
+      if (!email) throw new Error('no user')
+      const check = await supabase!.auth.signInWithPassword({ email, password: current })
+      if (check.error) throw Object.assign(new Error('bad current'), { code: 'bad_current' })
+      const { error } = await supabase!.auth.updateUser({ password: next })
+      if (error) throw error
+    },
+    updateNames: async (firstName, lastName) => {
+      if (!user) return
+      const { data, error } = await supabase!.auth.updateUser({ data: { first_name: firstName, last_name: lastName } })
+      if (error) throw error
+      await saveNames(user.id, { first_name: firstName || null, last_name: lastName || null })
+      if (data.user) setUser(u => u && { ...u, firstName, lastName })
+    },
+    signOutOthers: async () => {
+      const { error } = await supabase!.auth.signOut({ scope: 'others' })
+      if (error) throw error
     },
     sendCode: async email => {
       const { error } = await supabase!.auth.signInWithOtp({ email, options: { emailRedirectTo: appUrl } })

@@ -5,7 +5,7 @@ export type SyncStatus = 'idle' | 'syncing' | 'ok' | 'error' | 'offline'
 export interface SyncApi {
   enabled: boolean                       // false se l'app non è collegata a Supabase
   ready: boolean                         // la sessione salvata è stata letta (si sa se hai fatto l'accesso)
-  user: { id: string; email: string; firstName: string } | null
+  user: { id: string; email: string; firstName: string; lastName: string; emailConfirmed: boolean } | null
   recovery: boolean                      // aperto dal link "password dimenticata": va scelta una nuova password
   status: SyncStatus
   lastSync: string | null                // ISO
@@ -20,6 +20,11 @@ export interface SyncApi {
   resendSignup: (email: string) => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updatePassword: (password: string) => Promise<void>
+  /** cambio password dal Profilo: prima si verifica quella attuale (errore 'bad_current' se è sbagliata) */
+  changePassword: (current: string, next: string) => Promise<void>
+  updateNames: (firstName: string, lastName: string) => Promise<void>
+  /** scollega tutte le altre sessioni (telefoni, computer) e tiene questa */
+  signOutOthers: () => Promise<void>
   signOut: () => Promise<void>
   deleteAccount: () => Promise<void>
   syncNow: () => Promise<void>
