@@ -10,6 +10,7 @@ import { LegalLinks } from './LegalLinks'
 import { Icon } from './Icon'
 import { SplitEditor } from './SplitEditor'
 import { BUCKET_COLORS, CURRENCIES, bucketName, categoryName } from './names'
+import { AmountInput } from './kit/AmountInput'
 
 const TYPES: CategoryType[] = ['expense', 'income', 'saving']
 const DEFAULT_IDS = new Set(DEFAULT_CATEGORIES.map(c => c.id))
@@ -180,9 +181,8 @@ export function SettingsView({ only, wizard = false, onLogin }: { only?: Setting
                        setShares(prev => prev.map((x, j) => j === i ? v : x))
                        edit(s => { s.buckets[i].share = (parseAmount(v) ?? 0) / 100 })
                      }} />
-              <input aria-label={t('settings.startingBalance')} placeholder={t('settings.startingBalance')} inputMode="decimal"
-                     defaultValue={b.startingBalance ? String(b.startingBalance).replace('.', ',') : ''}
-                     onChange={e => edit(s => { s.buckets[i].startingBalance = parseAmount(e.target.value) ?? 0 })} />
+              <AmountInput aria-label={t('settings.startingBalance')} placeholder={t('settings.startingBalance')}
+                     defaultValue={b.startingBalance || null} onValue={n => edit(s => { s.buckets[i].startingBalance = n ?? 0 })} />
             </div>
           ))}
         </div>
@@ -271,9 +271,8 @@ export function SettingsView({ only, wizard = false, onLogin }: { only?: Setting
             <li key={i}>
               <input aria-label={t('settings.name')} value={r.name} aria-invalid={!r.name.trim()}
                      onChange={e => edit(s => { s.recurring[i].name = e.target.value })} />
-              <label className="unit"><input aria-label={t('tx.amount')} inputMode="decimal" defaultValue={r.amount ? String(r.amount).replace('.', ',') : ''}
-                     aria-invalid={!(r.amount > 0)} placeholder="0,00"
-                     onChange={e => edit(s => { s.recurring[i].amount = parseAmount(e.target.value) ?? 0 })} />
+              <label className="unit"><AmountInput aria-label={t('tx.amount')} defaultValue={r.amount || null}
+                     aria-invalid={!(r.amount > 0)} placeholder="0,00" onValue={n => edit(s => { s.recurring[i].amount = n ?? 0 })} />
                 <span aria-hidden>{draft.currency}</span></label>
               <select aria-label={t('tx.category')} value={r.category}
                       onChange={e => edit(s => { s.recurring[i].category = e.target.value })}>

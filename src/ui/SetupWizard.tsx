@@ -12,6 +12,8 @@ import { ProfileForm } from './ProfileForm'
 import { SettingsView, type SettingsSection } from './SettingsView'
 import { Icon } from './Icon'
 import { StepHeader, StepNav } from './Steps'
+import { AmountInput } from './kit/AmountInput'
+import { amountText } from './kit/amount'
 
 // configurazione iniziale: ogni sezione delle Impostazioni è un passaggio, nell'ordine in cui serve
 const STEPS: [SettingsSection, keyof Dict][] = [
@@ -135,7 +137,7 @@ function NotifyStep() {
 
 /** "Il tuo stipendio": scrivi quanto ti entra e vedi subito le quattro parti e quanto puoi spendere al giorno. */
 function SalaryStep() {
-  const { t, money } = useI18n()
+  const { t, money, lang } = useI18n()
   const { state, dispatch } = useStore()
   const data = state.data!
   const today = todayIso()
@@ -145,7 +147,7 @@ function SalaryStep() {
   const already = data.transactions.find(x => x.category === income && x.date && x.date >= period.start && x.date <= period.end)
   const rentName = t('setup.rentName')
   const rent = data.settings.recurring.find(x => x.name === rentName && x.category === 'rent')
-  const [rentRaw, setRentRaw] = useState(rent ? String(rent.amount).replace('.', ',') : '')
+  const [rentRaw, setRentRaw] = useState(rent ? amountText(rent.amount, lang) : '')
   const saveRent = (v: string) => {
     setRentRaw(v)
     const n = parseAmount(v)
@@ -153,7 +155,7 @@ function SalaryStep() {
     const recurring = n && n > 0 ? [...others, { name: rentName, amount: n, category: 'rent', day: 1, active: true }] : others
     dispatch({ type: 'setSettings', settings: { ...data.settings, recurring } })
   }
-  const [raw, setRaw] = useState(already?.amount ? String(already.amount).replace('.', ',') : '')
+  const [raw, setRaw] = useState(already?.amount ? amountText(already.amount, lang) : '')
   const amount = parseAmount(raw) ?? 0
   const days = Math.max(1, daysBetween(today, period.end) + 1)
   const cur = data.settings.currency
@@ -168,9 +170,9 @@ function SalaryStep() {
     <div className="salary-step">
       <p>{t(student ? 'setup.studentText' : 'setup.salaryText')}</p>
       <label className="field"><span>{t(student ? 'setup.studentLabel' : 'setup.salaryLabel')} ({cur})</span>
-        <input className="salary-input" inputMode="decimal" placeholder={student ? '900' : '1.600'} value={raw} onChange={e => save(e.target.value.replace(/[^\d.,]/g, ''))} autoFocus /></label>
+        <AmountInput className="salary-input" placeholder={student ? '900' : '1.600'} value={raw} onChange={save} autoFocus /></label>
       {student && <label className="field"><span>{t('setup.rentLabel')} ({cur})</span>
-        <input inputMode="decimal" placeholder="380" value={rentRaw} onChange={e => saveRent(e.target.value.replace(/[^\d.,]/g, ''))} />
+        <AmountInput placeholder="380" value={rentRaw} onChange={saveRent} />
         <small className="muted">{t('setup.rentHint')}</small></label>}
       {amount > 0 && (
         <div className="salary-preview" key={Math.round(amount)}>

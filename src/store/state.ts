@@ -281,8 +281,12 @@ export function parseAmount(raw: string): number | null {
   if (lastComma > -1 && lastDot > -1) {
     const dec = lastComma > lastDot ? ',' : '.'
     s = s.split(dec === ',' ? '.' : ',').join('').replace(dec, '.')
+  } else if (/^-?\d{1,3}(,\d{3})+$/.test(s)) {
+    s = s.split(',').join('')   // "1,200" (inglese): tre cifre dopo la virgola sono migliaia, non centesimi
   } else if (lastComma > -1) {
     s = s.replace(',', '.')
+  } else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) {
+    s = s.split('.').join('')   // "1.200" e "12.500.000": punti delle migliaia, non decimali
   }
   const n = Number(s)
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : null

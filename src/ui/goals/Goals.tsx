@@ -7,6 +7,8 @@ import { Icon, type IconName } from '../Icon'
 import { Ring } from '../kit/Ring'
 import { tap, useCountUp } from '../kit/motion'
 import { Sheet } from '../kit/Sheet'
+import { AmountInput } from '../kit/AmountInput'
+import { amountText } from '../kit/amount'
 
 const GOAL_ICONS: IconName[] = ['target', 'plane', 'home', 'car', 'gift', 'heart', 'growth']
 const live = (goals: Goal[] | undefined) => (goals ?? []).filter(g => !g.removed)
@@ -90,7 +92,7 @@ function GoalDetail({ goal, today, currency, onClose }: { goal: Goal; today: str
       {!s.done && <>
         <div className="gd-quick">{[10, 50, 100].map(n => <button key={n} className="gd-chip" onClick={() => add(n)}>+{money(n, currency).replace(/[,.]00/, '')}</button>)}</div>
         <div className="gd-input">
-          <input inputMode="decimal" placeholder={t('goal.amountPh')} value={raw} onChange={e => setRaw(e.target.value)} aria-label={t('goal.amountPh')} />
+          <AmountInput placeholder={t('goal.amountPh')} value={raw} onChange={setRaw} aria-label={t('goal.amountPh')} />
           <button className="btn primary" disabled={!typed || typed <= 0} onClick={() => add(typed ?? 0)}><Icon name="plus" size={16} />{t('goal.add')}</button>
           <button className="btn" disabled={!typed || typed <= 0 || typed > s.saved} onClick={() => add(-(typed ?? 0))} aria-label={t('goal.take')}><Icon name="minus" size={16} /></button>
         </div>
@@ -113,10 +115,10 @@ function GoalDetail({ goal, today, currency, onClose }: { goal: Goal; today: str
 }
 
 function GoalForm({ goal, today, currency, onDone, onDelete }: { goal?: Goal; today: string; currency: string; onDone: () => void; onDelete?: () => void }) {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const { dispatch } = useStore()
   const [name, setName] = useState(goal?.name ?? '')
-  const [target, setTarget] = useState(goal ? String(goal.target).replace('.', ',') : '')
+  const [target, setTarget] = useState(goal ? amountText(goal.target, lang) : '')
   const [deadline, setDeadline] = useState(goal?.deadline ?? '')
   const [icon, setIcon] = useState(goal?.icon ?? 'target')
   const [err, setErr] = useState('')
@@ -135,7 +137,7 @@ function GoalForm({ goal, today, currency, onDone, onDelete }: { goal?: Goal; to
       </div>
       <div className="txs-rows">
         <label className="txs-row"><span>{t('goal.name')}</span><input value={name} maxLength={40} onChange={e => setName(e.target.value)} placeholder={t('goal.namePh')} /></label>
-        <label className="txs-row"><span>{t('goal.target')}</span><input inputMode="decimal" value={target} onChange={e => setTarget(e.target.value)} placeholder={`600 ${currency === 'EUR' ? '€' : currency}`} /></label>
+        <label className="txs-row"><span>{t('goal.target')}</span><AmountInput value={target} onChange={setTarget} placeholder={`600 ${currency === 'EUR' ? '€' : currency}`} /></label>
         <label className="txs-row"><span>{t('goal.deadline')}</span><input type="month" value={deadline} min={today.slice(0, 7)} onChange={e => setDeadline(e.target.value)} /></label>
       </div>
       <p className="small muted txs-hint">{t('goal.deadlineHint')}</p>

@@ -8,6 +8,7 @@ import { useStore } from '../store/context'
 import { newId, parseAmount } from '../store/state'
 import { CURRENCIES } from './names'
 import { YearNav } from './YearView'
+import { AmountInput } from './kit/AmountInput'
 
 const TYPES = ['etf', 'stock', 'bond', 'fund', 'crypto', 'other'] as const
 const num = (v: number | null | undefined) => (v == null ? '' : String(v).replace('.', ','))
@@ -95,7 +96,7 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
                 <label className="field wide"><span>{t('inv.name')}</span>
                   <input defaultValue={d.name} onChange={e => save(x => { x.deposits[i].name = e.target.value })} /></label>
                 <label className="field"><span>{t('inv.amount')}</span>
-                  <input inputMode="decimal" defaultValue={num(d.amount)} onChange={e => save(x => { x.deposits[i].amount = parseAmount(e.target.value) ?? 0 })} /></label>
+                  <AmountInput defaultValue={d.amount} onValue={n => save(x => { x.deposits[i].amount = n ?? 0 })} /></label>
                 <label className="field"><span>{t('inv.rate')}</span>
                   <input inputMode="decimal" defaultValue={num(Math.round(d.yearlyRate * 10000) / 100)}
                          onChange={e => save(x => { x.deposits[i].yearlyRate = (parseAmount(e.target.value) ?? 0) / 100 })} /></label>
@@ -123,7 +124,7 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
         <h3 className="h-plain">{t('inv.pac')}</h3>
         <div className="inv-grid">
           <label className="field"><span>{t('inv.monthly')} ({cur})</span>
-            <input inputMode="decimal" defaultValue={num(inv.pac.monthly)} onChange={e => save(x => { x.pac.monthly = parseAmount(e.target.value) ?? 0 })} /></label>
+            <AmountInput defaultValue={inv.pac.monthly} onValue={n => save(x => { x.pac.monthly = n ?? 0 })} /></label>
           <label className="field"><span>{t('inv.expected')}</span>
             <input inputMode="decimal" defaultValue={num(Math.round(inv.pac.yearlyReturn * 10000) / 100)}
                    onChange={e => save(x => { x.pac.yearlyReturn = (parseAmount(e.target.value) ?? 0) / 100 })} /></label>

@@ -13,6 +13,8 @@ import { Swipe } from '../kit/Swipe'
 import { BUCKET_COLORS, bucketName, categoryName } from '../names'
 import { TransactionsView } from '../TransactionsView'
 import { TxRow } from '../TxRow'
+import { AmountInput } from '../kit/AmountInput'
+import { amountText } from '../kit/amount'
 
 const PERIODS: Period[] = ['month', '3m', 'year', 'all']
 const TYPES: TxType[] = ['expense', 'income', 'saving']
@@ -113,11 +115,11 @@ function FilterSheet({ value, pool, q, names, data, onApply }: {
   value: TxFilter; pool: ClassifiedTx[]; q: string; names: { category: (id: string | null) => string; bucket: (id: string | null) => string }
   data: AppData; onApply: (f: TxFilter) => void
 }) {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const s = data.settings
   const [d, setD] = useState(value)
-  const [min, setMin] = useState(value.min != null ? String(value.min).replace('.', ',') : '')
-  const [max, setMax] = useState(value.max != null ? String(value.max).replace('.', ',') : '')
+  const [min, setMin] = useState(value.min != null ? amountText(value.min, lang) : '')
+  const [max, setMax] = useState(value.max != null ? amountText(value.max, lang) : '')
   const draft: TxFilter = { ...d, min: min.trim() ? parseAmount(min) : null, max: max.trim() ? parseAmount(max) : null }
   const count = filterTransactions(pool, { ...draft, q }, names).length
   const toggle = <K extends 'types' | 'buckets' | 'categories'>(k: K, v: string) =>
@@ -134,9 +136,9 @@ function FilterSheet({ value, pool, q, names, data, onApply }: {
       <div className="chips">{cats.map(c => <button key={c.id} className={`chip${d.categories.includes(c.id) ? ' on' : ''}`} onClick={() => toggle('categories', c.id)}>{categoryName(c, t)}</button>)}</div>
       <p className="txs-label">{t('srch.amount')}</p>
       <div className="amount-range">
-        <label><span>{t('srch.min')}</span><input inputMode="decimal" value={min} onChange={e => setMin(e.target.value)} placeholder="0" /></label>
+        <label><span>{t('srch.min')}</span><AmountInput value={min} onChange={setMin} placeholder="0" /></label>
         <span className="muted">–</span>
-        <label><span>{t('srch.max')}</span><input inputMode="decimal" value={max} onChange={e => setMax(e.target.value)} placeholder="∞" /></label>
+        <label><span>{t('srch.max')}</span><AmountInput value={max} onChange={setMax} placeholder="∞" /></label>
       </div>
       <div className="txs-actions">
         <button className="btn primary big-btn wide" onClick={() => onApply(draft)}>{count === 1 ? t('srch.showOne') : t('srch.show', { n: count })}</button>

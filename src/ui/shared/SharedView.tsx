@@ -10,6 +10,8 @@ import { createBudget, createInvite, deleteExpense, joinBudget, leaveBudget, loa
   updateBudget, updateMember, type SBudget, type SFull } from '../../shared/api'
 import { Icon } from '../Icon'
 import { categoryName } from '../names'
+import { AmountInput } from '../kit/AmountInput'
+import { amountText } from '../kit/amount'
 
 const LAST = 'q.sharedBudget'
 const remember = (id: string | null) => { try { if (id) localStorage.setItem(LAST, id); else localStorage.removeItem(LAST) } catch { /* niente */ } }
@@ -167,11 +169,11 @@ function BudgetDetail({ id, onLeft }: { id: string; onLeft: () => void }) {
 }
 
 function ExpenseForm({ d, me, initial, onClose, onSaved }: { d: SFull; me: string; initial: SExpense | null; onClose: () => void; onSaved: () => void }) {
-  const { t, money } = useI18n()
+  const { t, money, lang } = useI18n()
   const { state, dispatch } = useStore()
   const settings = state.data?.settings
   const expenseCats = settings?.categories.filter(c => c.type === 'expense') ?? []
-  const [amount, setAmount] = useState(initial ? String(initial.amount).replace('.', ',') : '')
+  const [amount, setAmount] = useState(initial ? amountText(initial.amount, lang) : '')
   const [desc, setDesc] = useState(initial?.description ?? '')
   const [date, setDate] = useState(initial?.date ?? todayIso())
   const [paidBy, setPaidBy] = useState(initial?.paid_by ?? me)
@@ -207,7 +209,7 @@ function ExpenseForm({ d, me, initial, onClose, onSaved }: { d: SFull; me: strin
         <div className="card-head"><h3 className="h-plain">{initial ? t('sh.editExpense') : t('sh.add')}</h3>
           <button type="button" className="icon-btn" onClick={onClose} aria-label={t('action.cancel')}>×</button></div>
         <label className="field"><span>{t('tx.amount')} ({d.budget.currency})</span>
-          <input className="salary-input" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value.replace(/[^\d.,]/g, ''))} autoFocus /></label>
+          <AmountInput className="salary-input" value={amount} onChange={setAmount} autoFocus /></label>
         <label className="field"><span>{t('tx.description')}</span><input maxLength={120} value={desc} onChange={e => setDesc(e.target.value)} placeholder={t('sh.descHint')} /></label>
         <div className="two-col">
           <label className="field"><span>{t('tx.date')}</span><input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
@@ -262,7 +264,7 @@ function BudgetSettings({ d, me, onChange, onLeft }: { d: SFull; me: string; onC
       </fieldset>
       {self && d.budget.split_mode === 'income' && (
         <label className="field"><span>{t('sh.myIncome')}</span>
-          <input inputMode="decimal" defaultValue={self.income != null ? String(self.income).replace('.', ',') : ''}
+          <AmountInput defaultValue={self.income}
             onBlur={async e => { await updateMember(d.budget.id, me, { income: parseAmount(e.target.value) }); onChange() }} />
           <small className="muted">{t('sh.incomeHint')}</small></label>
       )}

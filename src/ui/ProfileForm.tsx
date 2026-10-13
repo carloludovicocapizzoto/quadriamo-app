@@ -9,6 +9,8 @@ import { syncResearch } from '../sync/research'
 import { bucketName } from './names'
 import { Icon } from './Icon'
 import { StepHeader, StepNav } from './Steps'
+import { AmountInput } from './kit/AmountInput'
+import { amountText } from './kit/amount'
 
 const PRESETS = [[55, 20, 15, 10], [50, 25, 15, 10], [60, 15, 15, 10], [50, 20, 15, 15]]
 const num = (s: string) => { const n = Number(s.replace(/\./g, '').replace(',', '.')); return Number.isFinite(n) ? n : NaN }
@@ -21,13 +23,13 @@ const emptyPrivate = (): PrivateProfile => ({ monthlyIncome: null, goals: [], ca
  * `withShares=false`: senza il passaggio sulla divisione (già scelta nella configurazione iniziale).
  */
 export function ProfileForm({ onDone, withShares = true }: { onDone: () => void; withShares?: boolean }) {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const sync = useSync()
   const { state, dispatch } = useStore()
   const settings = state.data!.settings
   const [names, setNames] = useState<Names | null>(null)
   const [pp, setPp] = useState<PrivateProfile>(() => ({ ...emptyPrivate(), ...state.data!.profile }))
-  const [income, setIncome] = useState(() => state.data!.profile?.monthlyIncome != null ? String(state.data!.profile.monthlyIncome).replace('.', ',') : '')
+  const [income, setIncome] = useState(() => state.data!.profile?.monthlyIncome != null ? amountText(state.data!.profile.monthlyIncome, lang) : '')
   const [shares, setShares] = useState<string[]>(() => settings.buckets.map(b => String(Math.round(b.share * 1000) / 10)))
   const [apply, setApply] = useState(true)
   const [step, setStep] = useState(1)
@@ -98,7 +100,7 @@ export function ProfileForm({ onDone, withShares = true }: { onDone: () => void;
               <input autoComplete="family-name" maxLength={80} value={names.last_name ?? ''} onChange={e => setNames({ ...names, last_name: e.target.value })} /></label>
           </div>
           <label className="field"><span>{t('prof.income')} ({settings.currency})</span>
-            <input inputMode="decimal" placeholder="1.600" value={income} onChange={e => setIncome(e.target.value.replace(/[^\d.,]/g, ''))} autoFocus />
+            <AmountInput placeholder="1.600" value={income} onChange={setIncome} autoFocus />
             <small className="muted">{t('prof.incomeHint')}</small></label>
         </>}
 

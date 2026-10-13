@@ -5,6 +5,8 @@ import { newId, parseAmount } from '../store/state'
 import { Icon } from './Icon'
 import { SplitEditor } from './SplitEditor'
 import { BUCKET_COLORS, CURRENCIES, bucketName, categoryName } from './names'
+import { AmountInput } from './kit/AmountInput'
+import { amountText } from './kit/amount'
 
 const GROUPS: CategoryType[] = ['expense', 'income', 'saving']
 
@@ -18,8 +20,8 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   onDelete?: (id: string) => void
   onClose: () => void
 }) {
-  const { t, money } = useI18n()
-  const [amount, setAmount] = useState(initial?.amount != null ? String(initial.amount).replace('.', ',') : (prefill?.amount ?? ''))
+  const { t, money, lang } = useI18n()
+  const [amount, setAmount] = useState(initial?.amount != null ? amountText(initial.amount, lang) : (prefill?.amount ?? ''))
   const [category, setCategory] = useState<string | null>(() => {
     if (initial) return initial.category
     if (prefill?.category && settings.categories.some(c => c.id === prefill.category)) return prefill.category
@@ -103,8 +105,8 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
         )}
 
         <div className={`txs-amount${kind === 'income' ? ' income' : ''}`}>
-          <input className="amount-input" inputMode="decimal" autoComplete="off" placeholder="0,00" autoFocus={!initial} aria-label={t('tx.amount')}
-                 value={amount} onChange={e => setAmount(e.target.value)} aria-invalid={errors.length > 0 && (parsed == null || parsed <= 0)} />
+          <AmountInput className="amount-input" placeholder="0,00" autoFocus={!initial} aria-label={t('tx.amount')}
+                 value={amount} onChange={setAmount} aria-invalid={errors.length > 0 && (parsed == null || parsed <= 0)} />
           <select className="txs-cur" value={currency} onChange={e => setCurrency(e.target.value)} aria-label={t('tx.currency')}>
             {currencies.map(c => <option key={c}>{c}</option>)}
           </select>
