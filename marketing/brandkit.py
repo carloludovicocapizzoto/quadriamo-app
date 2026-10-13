@@ -1,4 +1,6 @@
-"""Funzioni grafiche comuni dei contenuti social di Quadriamo (palette, font, logo, telefono, testo)."""
+"""Funzioni grafiche comuni dei contenuti social di Quadriamo, con il design system dell'app (1.0):
+carta e inchiostro, i quattro blocchi come uniche tinte, Inter per il testo (il serif solo nel marchio),
+niente ombre, aloni o pillole: la profondità viene da spazio, tipografia e contrasto."""
 import os, subprocess
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
@@ -8,8 +10,9 @@ OUT = os.path.join(HERE, 'out')
 FONTS = os.path.join(HERE, '..', 'public', 'fonts')
 QR = os.path.join(HERE, '..', 'public', 'qr.svg')
 SITE = 'carloludovicocapizzoto.github.io/quadriamo-app'
-INK, CREAM, SURF, LINE = (31, 35, 40), (250, 247, 242), (255, 253, 249), (230, 223, 211)
-ACCENT, B2, B3, B4, MUTED = (194, 65, 12), (232, 154, 108), (233, 201, 166), (138, 143, 152), (91, 96, 104)
+# gli stessi valori di src/styles/tokens.css
+INK, CREAM, SURF, LINE, FILL = (23, 24, 26), (246, 244, 239), (246, 244, 239), (226, 223, 216), (234, 232, 226)
+ACCENT, B2, B3, B4, MUTED = (194, 65, 12), (232, 145, 95), (217, 190, 154), (140, 143, 148), (107, 110, 115)
 BLOCKS = [(ACCENT, 13, 13, 20, 18), (B2, 36, 13, 15, 18), (B3, 13, 34, 20, 17), (B4, 36, 34, 15, 17)]
 
 
@@ -18,12 +21,15 @@ def serif(size):
 
 
 def sans(size, weight=400):
-    f = ImageFont.truetype(os.path.join(FONTS, 'DMSans.ttf'), size)
-    try:
-        f.set_variation_by_axes([min(max(size * 0.75, 9), 40), weight])
-    except Exception:
-        pass
+    """Inter, come l'app: due pesi soli (400 testo, 600 titoli e numeri)."""
+    f = ImageFont.truetype(os.path.join(FONTS, 'Inter-latin.woff2'), size)
+    f.set_variation_by_axes([600 if weight >= 600 else 400])
     return f
+
+
+def title(size):
+    """Titoli: Inter 600 (il serif resta solo nel marchio). Un po' più piccolo del serif di prima, che era più stretto."""
+    return sans(int(size * 0.82), 600)
 
 
 def mark(img, x, y, side):
@@ -63,7 +69,7 @@ def text_block(img, x, y, text, font, color, width, gap=1.18, anchor='la'):
 
 
 def phone(img, shot, cx, top, width, crop_top=0, crop_h=None):
-    """Telefono con la schermata (ritagliata) e ombra morbida."""
+    """Telefono con la schermata (ritagliata). Niente ombra: il telefono sta sulla superficie."""
     s = Image.open(os.path.join(SHOTS, shot)).convert('RGB')
     if crop_h:
         s = s.crop((0, crop_top, s.width, min(s.height, crop_top + crop_h)))
@@ -73,9 +79,6 @@ def phone(img, shot, cx, top, width, crop_top=0, crop_h=None):
     s = s.resize((sw, sh), Image.LANCZOS)
     h = sh + 2 * bezel
     x, top = int(cx - width / 2), int(top)
-    shadow = Image.new('RGBA', img.size, (0, 0, 0, 0))
-    ImageDraw.Draw(shadow).rounded_rectangle([x + 10, top + 30, x + width + 10, top + h + 30], radius=int(width * 0.12), fill=(31, 35, 40, 70))
-    img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(28)))
     d = ImageDraw.Draw(img)
     d.rounded_rectangle([x, top, x + width, top + h], radius=int(width * 0.12), fill=INK)
     mask = Image.new('L', (sw, sh), 0)
@@ -85,13 +88,8 @@ def phone(img, shot, cx, top, width, crop_top=0, crop_h=None):
 
 
 def canvas(w, h, bg=CREAM):
-    img = Image.new('RGBA', (w, h), bg + (255,))
-    glow = Image.new('RGBA', (w, h), (0, 0, 0, 0))
-    g = ImageDraw.Draw(glow)
-    g.ellipse([-w * 0.3, -h * 0.2, w * 0.6, h * 0.35], fill=ACCENT + (38,))
-    g.ellipse([w * 0.5, h * 0.62, w * 1.3, h * 1.2], fill=B2 + (46,))
-    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(min(w, h) * 0.12)))
-    return img
+    """Carta piena, senza aloni."""
+    return Image.new('RGBA', (w, h), bg + (255,))
 
 
 def rule_bar(img, x, y, w, h):
@@ -99,12 +97,26 @@ def rule_bar(img, x, y, w, h):
     gap, cx = 8, x
     for share, col in ((55, ACCENT), (20, B2), (15, B3), (10, B4)):
         seg = (w - 3 * gap) * share / 100
-        d.rounded_rectangle([cx, y, cx + seg, y + h], radius=h / 2, fill=col)
+        d.rounded_rectangle([cx, y, cx + seg, y + h], radius=min(6, h / 4), fill=col)   # blocchi, non pillole
         cx += seg + gap
 
 
-def eyebrow(img, x, y, text, color=ACCENT, anchor='la'):
-    ImageDraw.Draw(img).text((x, y), text.upper(), font=sans(30, 700), fill=color, anchor=anchor)
+def eyebrow(img, x, y, text, color=MUTED, anchor='la'):
+    """La riga sopra il titolo: in minuscolo e grigia, come i titoli di sezione dell'app."""
+    ImageDraw.Draw(img).text((x, y), text, font=sans(32, 600), fill=color, anchor=anchor)
+
+
+def button(img, cx, cy, w, h, text, fill=INK, color=CREAM, size=40):
+    """L'azione: un blocco d'inchiostro (raggio dei controlli dell'app), non una pillola arancione."""
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle([cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2], radius=int(h * 0.22), fill=fill)
+    d.text((cx, cy), text, font=sans(size, 600), fill=color, anchor='mm')
+
+
+def check(img, cx, cy, r, color=INK):
+    """Spunta d'inchiostro disegnata (il font dell'app non ha il simbolo ✓), senza cerchio colorato."""
+    ImageDraw.Draw(img).line([(cx - r * .55, cy + r * .02), (cx - r * .15, cy + r * .42), (cx + r * .6, cy - r * .4)],
+                             fill=color, width=max(4, int(r * .18)), joint='curve')
 
 
 def footer(img, w, h, n=None, total=None):

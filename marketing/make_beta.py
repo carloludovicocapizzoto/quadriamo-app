@@ -7,9 +7,9 @@ Uso (dalla cartella quadriamo-app):  <python con kokoro-onnx> marketing/make_bet
 Richiede Pillow, ffmpeg, kokoro-onnx e soundfile (python3 -m venv .venv && .venv/bin/pip install pillow kokoro-onnx soundfile).
 """
 import os, subprocess
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw
 from brandkit import (ACCENT, B2, B3, B4, CREAM, INK, LINE, MUTED, OUT, SHOTS, SITE, SURF, canvas, eyebrow, mark, phone,
-                      rule_bar, sans, serif, text_block, wordmark)
+                      button, check, rule_bar, sans, text_block, title as headline, wordmark)
 
 DST = os.path.join(OUT, 'beta')
 WORK = os.path.join(DST, '_work')
@@ -24,24 +24,18 @@ def save(img, name):
     return p
 
 
-def shadow(img, box, radius, blur=30, alpha=60, dy=24):
-    sh = Image.new('RGBA', img.size, (0, 0, 0, 0))
-    x0, y0, x1, y1 = box
-    ImageDraw.Draw(sh).rounded_rectangle([x0 + 6, y0 + dy, x1 + 6, y1 + dy], radius=radius, fill=(31, 35, 40, alpha))
-    img.alpha_composite(sh.filter(ImageFilter.GaussianBlur(blur)))
-
 
 def card_from_shot(img, shot, box, x, y, width):
-    """Una card dell'app ritagliata dalla schermata e ingrandita, con ombra: il dettaglio diventa il protagonista."""
+    """Un pezzo dell'app ritagliato dalla schermata e ingrandito, con una linea sottile intorno: il dettaglio diventa il protagonista."""
     x, y = int(x), int(y)
     s = Image.open(os.path.join(SHOTS, shot)).convert('RGB').crop(box)
     h = int(s.height * width / s.width)
     s = s.resize((width, h), Image.LANCZOS)
     r = int(width * 0.05)
-    shadow(img, (x, y, x + width, y + h), r)
     m = Image.new('L', s.size, 0)
     ImageDraw.Draw(m).rounded_rectangle([0, 0, s.width - 1, s.height - 1], radius=r, fill=255)
     img.paste(s, (x, y), m)
+    ImageDraw.Draw(img).rounded_rectangle([x, y, x + width, y + h], radius=r, outline=LINE, width=2)
     return y + h
 
 
@@ -49,21 +43,14 @@ def notification(img, x, y, w, title, body, when='ora'):
     x, y = int(x), int(y)
     """Notifica come sulla schermata di blocco dell'iPhone (disegnata, non una foto)."""
     h = 210
-    shadow(img, (x, y, x + w, y + h), 44, blur=26, alpha=45, dy=16)
     ImageDraw.Draw(img).rounded_rectangle([x, y, x + w, y + h], radius=44, fill=(255, 255, 255, 236), outline=LINE, width=2)
     mark(img, x + 34, y + 38, 74)
     d = ImageDraw.Draw(img)
     d.text((x + 132, y + 44), 'QUADRIAMO', font=sans(25, 600), fill=MUTED)
     d.text((x + w - 36, y + 44), when, font=sans(25), fill=MUTED, anchor='ra')
-    d.text((x + 132, y + 82), title, font=sans(38, 700), fill=INK)
+    d.text((x + 132, y + 82), title, font=sans(38, 600), fill=INK)
     text_block(img, x + 132, y + 134, body, sans(31), INK, w - 170)
     return y + h
-
-
-def check(img, cx, cy, r, color=ACCENT):
-    d = ImageDraw.Draw(img)
-    d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=color)
-    d.line([(cx - r * .42, cy + r * .02), (cx - r * .1, cy + r * .34), (cx + r * .45, cy - r * .3)], fill=WHITE, width=max(4, int(r * .2)), joint='curve')
 
 
 def foot(img, w, h, light=True):
@@ -87,7 +74,7 @@ def build(W, H, story=False):
     # 1. ogni mattina, un numero
     img = canvas(W, H)
     eyebrow(img, 60, top, 'Ogni mattina alle 7:30')
-    y = text_block(img, 60, top + 60, 'Sai quanto puoi spendere oggi.', serif(96 if story else 84), INK, 960)
+    y = text_block(img, 60, top + 60, 'Sai quanto puoi spendere oggi.', headline(96 if story else 84), INK, 960)
     y = text_block(img, 60, y + 14, 'Non quanto hai speso: quanto puoi ancora spendere, ogni giorno, per ogni parte.', sans(36), MUTED, 900)
     y = notification(img, 60, y + 50, 960, 'Oggi puoi spendere', 'Essenziali 18,13 € · Qualità della vita 38,21 €')
     phone(img, '11-home.jpg', W / 2, y + 60, 640 if story else 560, 160, 1300)   # esce dal bordo in basso, come in mano
@@ -96,14 +83,15 @@ def build(W, H, story=False):
     # 2. lo stipendio si divide da solo
     img = canvas(W, H)
     eyebrow(img, 60, top, 'Il metodo')
-    y = text_block(img, 60, top + 60, 'Lo stipendio si divide da solo.', serif(96 if story else 84), INK, 960)
+    y = text_block(img, 60, top + 60, 'Lo stipendio si divide da solo.', headline(96 if story else 84), INK, 960)
     y = text_block(img, 60, y + 14, 'Prima l’affitto, poi quattro parti, ognuna con un compito. La regola 55-20-15-10 è di partenza: la cambi quando vuoi.', sans(36), MUTED, 940)
     rule_bar(img, 60, y + 40, 960, 26)
     d = ImageDraw.Draw(img)
     for i, (p, n, s_, col) in enumerate(PARTS):
         y0 = y + 110 + i * (170 if story else 148)
-        d.rounded_rectangle([60, y0, 1020, y0 + 128], radius=24, fill=SURF, outline=LINE, width=2)
-        d.text((100, y0 + 64), p, font=serif(64), fill=col, anchor='lm')
+        d.line([(60, y0), (1020, y0)], fill=LINE, width=2)   # righe con una linea e il blocco della parte, come nell'app
+        d.rounded_rectangle([60, y0 + 40, 108, y0 + 88], radius=6, fill=col)
+        d.text((136, y0 + 64), p, font=headline(64), fill=INK, anchor='lm')
         d.text((290, y0 + 44), n, font=sans(38, 700), fill=INK, anchor='lm')
         d.text((290, y0 + 90), s_, font=sans(30), fill=MUTED, anchor='lm')
     out.append(save(img, f'{tag}-02-metodo.jpg'))
@@ -111,15 +99,15 @@ def build(W, H, story=False):
     # 3. previsione di fine mese
     img = canvas(W, H)
     eyebrow(img, 60, top, 'Previsione di fine mese')
-    y = text_block(img, 60, top + 60, 'Sai già come finisce il mese.', serif(96 if story else 84), INK, 960)
+    y = text_block(img, 60, top + 60, 'Sai già come finisce il mese.', headline(96 if story else 84), INK, 960)
     y = text_block(img, 60, y + 14, 'Al ritmo di oggi, con le bollette in arrivo già contate. Se rischi di sforare lo vedi a metà mese, non alla fine.', sans(36), MUTED, 940)
-    card_from_shot(img, '12-forecast.jpg', (32, 480, 718, 840), 90, y + 60, 900)
+    card_from_shot(img, '12-forecast.jpg', (16, 430, 734, 890), 90, y + 60, 900)
     out.append(save(img, f'{tag}-03-previsione.jpg'))
 
     # 4. slancio
     img = canvas(W, H)
     eyebrow(img, 60, top, 'Slancio')
-    y = text_block(img, 60, top + 60, 'Un minuto al giorno. E non vuoi più fermarti.', serif(96 if story else 84), INK, 960)
+    y = text_block(img, 60, top + 60, 'Un minuto al giorno. E non vuoi più fermarti.', headline(96 if story else 84), INK, 960)
     y = text_block(img, 60, y + 14, 'Ogni giorno in cui segni una spesa, la fiamma cresce. Da sola: non c’è niente da spuntare.', sans(36), MUTED, 940)
     phone(img, '17-profile.jpg', W / 2, y + 60, 600 if story else 520, 400, 840)
     out.append(save(img, f'{tag}-04-slancio.jpg'))
@@ -127,7 +115,7 @@ def build(W, H, story=False):
     # 5. privacy
     img = canvas(W, H)
     eyebrow(img, 60, top, 'Privacy')
-    y = text_block(img, 60, top + 60, 'I tuoi soldi sono affari tuoi.', serif(96 if story else 84), INK, 960)
+    y = text_block(img, 60, top + 60, 'I tuoi soldi sono affari tuoi.', headline(96 if story else 84), INK, 960)
     for i, p in enumerate(PRIVACY):
         y0 = y + 70 + i * (170 if story else 140)
         check(img, 92, y0 + 32, 32)
@@ -140,10 +128,9 @@ def build(W, H, story=False):
     mark(img, W / 2 - 70, cy, 140)
     wordmark(img, W / 2, cy + 290, 110, color=CREAM, dot=(240, 122, 66), anchor='ms')
     d = ImageDraw.Draw(img)
-    d.text((W / 2, cy + 390), 'Cerco 50 tester', font=serif(76), fill=CREAM, anchor='mm')
+    d.text((W / 2, cy + 390), 'Cerco 50 tester', font=headline(76), fill=CREAM, anchor='mm')
     text_block(img, W / 2, cy + 460, 'Gratis durante la beta. Si installa dal browser in un minuto: iPhone, Android, Mac e Windows.', sans(36), SOFT, 800, anchor='ma')
-    d.rounded_rectangle([W / 2 - 300, cy + 640, W / 2 + 300, cy + 740], radius=50, fill=ACCENT)
-    d.text((W / 2, cy + 690), 'Link nella bio' if not story else 'Tocca il link', font=sans(42, 700), fill=WHITE, anchor='mm')
+    button(img, W / 2, cy + 690, 600, 100, 'Link nella bio' if not story else 'Tocca il link', fill=CREAM, color=INK, size=42)
     d.text((W / 2, cy + 810), SITE, font=sans(28), fill=(170, 165, 158), anchor='mm')
     rule_bar(img, W / 2 - 240, cy + 880, 480, 16)
     out.append(save(img, f'{tag}-06-tester.jpg'))

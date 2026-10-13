@@ -7,7 +7,7 @@
 /* Marchio "Quadriamo." (solo il logo) */
 @font-face { font-family: "DM Serif Display"; src: url("/fonts/DMSerifDisplay-Regular.ttf") format("truetype"); font-display: swap; }
 :root {
-  --cream: #FAF7F2; --ink: #1F2328; --grey: #5B6068; --line: #E6DFD3; --accent: #C2410C; --accent-2: #E89A6C;
+  --cream: #F6F4EF; --ink: #17181A; --grey: #6B6E73; --line: #E2DFD8; --accent: #C2410C; --accent-2: #E8915F;
   --soft: #F3EEE6; --good: #15803D; --good-bg: #E7F5EC; --bad: #B42318; --bad-bg: #FDECEA; --warn-bg: #FDF1E4; --warn: #B4720F;
   color-scheme: light;
 }

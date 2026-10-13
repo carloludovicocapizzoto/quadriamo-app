@@ -1,5 +1,6 @@
 """Logo di Quadriamo come file veri: icona (quattro blocchi 55-20-15-10), scritta "Quadriamo." e logo completo,
-in versione chiara e scura, in SVG e PDF vettoriali (le lettere sono tracciati: non serve il font) e PNG.
+in versione chiara e scura, in SVG e PDF vettoriali (le lettere sono tracciati: non serve il font) e PNG,
+più le icone dell'app (public/icons): stessa icona, così logo, schermata Home e scheda del browser sono uguali.
 
 Uso (dalla cartella quadriamo-app):  python3 brand/make_logo.py
 Richiede: fonttools e Pillow  (pip install fonttools pillow)
@@ -14,8 +15,8 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONT = os.path.join(HERE, '..', 'public', 'fonts', 'DMSerifDisplay-Regular.ttf')
 OUT = HERE
-INK, CREAM, ACCENT, ACCENT_DARK = '#1F2328', '#FAF7F2', '#C2410C', '#F07A42'
-BLOCKS = [('#C2410C', 13, 13, 20, 18), ('#E89A6C', 36, 13, 15, 18), ('#E9C9A6', 13, 34, 20, 17), ('#8A8F98', 36, 34, 15, 17)]
+INK, CREAM, ACCENT, ACCENT_DARK = '#17181A', '#F6F4EF', '#C2410C', '#E0602A'
+BLOCKS = [('#C2410C', 13, 13, 20, 18), ('#E8915F', 36, 13, 15, 18), ('#D9BE9A', 13, 34, 20, 17), ('#8C8F94', 36, 34, 15, 17)]
 font = TTFont(FONT)
 glyphs, cmap, hmtx = font.getGlyphSet(), font.getBestCmap(), font['hmtx']
 UPM = font['head'].unitsPerEm
@@ -157,3 +158,32 @@ for kind in ('mark', 'wordmark', 'logo'):
         write_pdf(os.path.join(OUT, name + '.pdf'), W, Ht, pdf)
         png(kind, dark, os.path.join(OUT, name + '.png'))
         print(name)
+
+
+# ---------- icone dell'app (public/icons) ----------
+ICONS = os.path.join(HERE, '..', 'public', 'icons')
+
+
+def app_icon(size, path, full=False, inset=1.0, opaque=False):
+    """L'icona dei quattro blocchi a `size` pixel. full: fondo d'inchiostro a tutta superficie (Android "maskable",
+    iPhone: è il sistema ad arrotondare gli angoli); inset < 1 tiene i blocchi nella zona sicura delle icone maskable."""
+    S = size * 4                                    # disegnata in grande e ridotta: bordi puliti
+    img = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    k = S / 64
+    if full: d.rectangle([0, 0, S, S], fill=INK)
+    else: d.rounded_rectangle([0, 0, S, S], radius=14 * k, fill=INK)
+    c = S / 2
+    for col, bx, by, bw, bh in BLOCKS:
+        x0, y0 = c + (bx - 32) * k * inset, c + (by - 32) * k * inset
+        d.rounded_rectangle([x0, y0, x0 + bw * k * inset, y0 + bh * k * inset], radius=2 * k * inset, fill=col)
+    img = img.resize((size, size), Image.LANCZOS)
+    if opaque: img = img.convert('RGB')
+    img.save(path)
+    print(os.path.relpath(path, os.path.join(HERE, '..')))
+
+
+for n in (64, 192, 512):
+    app_icon(n, os.path.join(ICONS, f'icon-{n}.png'))
+app_icon(512, os.path.join(ICONS, 'maskable-512.png'), full=True, inset=0.8)
+app_icon(180, os.path.join(ICONS, 'apple-touch-icon.png'), full=True, opaque=True)

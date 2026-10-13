@@ -145,14 +145,14 @@ Impostazioni (elenco → pagina con "‹ Indietro")
 ### Colori
 | Ruolo | Chiaro | Scuro |
 |---|---|---|
-| Sfondo `--bg` | #FAF7F2 | #14171B |
-| Superficie `--surface` | #FFFDF9 | #1F2328 |
-| Testo `--text` | #1F2328 | #F1ECE4 |
-| Testo secondario `--muted` | #5B6068 | #B5B0A8 |
-| Bordo `--line` | #E6DFD3 | #2E333A |
-| Primario `--accent` | #C2410C (gradiente con #E0884F) | #F07A42 |
+| Sfondo `--bg` | #F6F4EF | #0F1012 |
+| Superficie `--surface` | #FFFDF9 | #17181A |
+| Testo `--text` | #17181A | #F1ECE4 |
+| Testo secondario `--muted` | #6B6E73 | #B5B0A8 |
+| Bordo `--line` | #E2DFD8 | #2E333A |
+| Primario `--accent` | #C2410C (gradiente con #E0884F) | #E0602A |
 | Successo `--good` / Errore `--bad` | #15803D / #B42318 | #4ADE80 / #F87171 |
-| Le quattro parti `--b1…--b4` | #C2410C · #E89A6C · #E9C9A6 · #8A8F98 | |
+| Le quattro parti `--b1…--b4` | #C2410C · #E8915F · #D9BE9A · #8C8F94 | |
 | Medaglie `--gold` | #E3A008 | |
 
 Uso: l'arancio solo per azioni e per lo stato "attivo"; verde e rosso solo per esiti (avanzo/sforamento); le quattro parti hanno sempre lo stesso colore ovunque.

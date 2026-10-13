@@ -72,7 +72,7 @@
 .inst-skip { margin-top: 14px; }
 .inst .step-body p { margin: 4px 0 12px; }
 .mock { position: relative; margin: 6px auto 4px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; }
-.mock.phone { width: 210px; height: 250px; border-radius: 26px; border-width: 6px; border-color: #1F2328; }
+.mock.phone { width: 210px; height: 250px; border-radius: 26px; border-width: 6px; border-color: #17181A; }
 .mock.desk { width: 100%; max-width: 380px; height: 170px; border-radius: var(--r-md); }
 .m-page { flex: 1; background: repeating-linear-gradient(180deg, transparent 0 18px, color-mix(in srgb, var(--line) 60%, transparent) 18px 26px); margin: 14px; border-radius: var(--r-sm); opacity: .6; }
 .m-bar { display: flex; align-items: center; justify-content: space-around; gap: 8px; padding: 8px 10px; background: var(--surface); border-top: 1px solid var(--line); font-size: 18px; }

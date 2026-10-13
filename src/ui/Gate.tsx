@@ -12,11 +12,11 @@ import { LegalLinks } from './LegalLinks'
 export function LogoMark({ size = 96 }: { size?: number }) {
   return (
     <svg className="logo-mark" width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
-      <rect width="64" height="64" rx="14" fill="#1F2328" className="lm-bg" />
+      <rect width="64" height="64" rx="14" fill="#17181A" className="lm-bg" />
       <rect x="13" y="13" width="20" height="18" rx="2" fill="#C2410C" className="lm lm1" />
-      <rect x="36" y="13" width="15" height="18" rx="2" fill="#E89A6C" className="lm lm2" />
-      <rect x="13" y="34" width="20" height="17" rx="2" fill="#E9C9A6" className="lm lm3" />
-      <rect x="36" y="34" width="15" height="17" rx="2" fill="#8A8F98" className="lm lm4" />
+      <rect x="36" y="13" width="15" height="18" rx="2" fill="#E8915F" className="lm lm2" />
+      <rect x="13" y="34" width="20" height="17" rx="2" fill="#D9BE9A" className="lm lm3" />
+      <rect x="36" y="34" width="15" height="17" rx="2" fill="#8C8F94" className="lm lm4" />
     </svg>
   )
 }

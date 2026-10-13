@@ -22,8 +22,8 @@ export default defineConfig({
         start_url: `${base}app/`,
         scope: base,
         display: 'standalone',
-        background_color: '#FAF7F2',
-        theme_color: '#1F2328',
+        background_color: '#F6F4EF',
+        theme_color: '#17181A',
         shortcuts: [
           { name: 'Aggiungi spesa · Add expense', short_name: '+', url: `${base}app/?add=1`,
             icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },

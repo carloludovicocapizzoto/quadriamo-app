@@ -5,11 +5,11 @@
 @font-face { font-family: "Inter"; src: url("fonts/Inter-latin-ext.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
 /* Marchio "Quadriamo." (solo il logo) */
 @font-face { font-family: "DM Serif Display"; src: url("fonts/DMSerifDisplay-Regular.ttf") format("truetype"); font-display: swap; }
-:root { --bg: #FAF7F2; --surface: #FFFDF9; --text: #1F2328; --muted: #5B6068; --line: #E6DFD3; --accent: #C2410C; color-scheme: light; }
+:root { --bg: #F6F4EF; --surface: #FFFDF9; --text: #17181A; --muted: #6B6E73; --line: #E2DFD8; --accent: #C2410C; color-scheme: light; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --bg: #14171B; --surface: #1F2328; --text: #F1ECE4; --muted: #B5B0A8; --line: #2E333A; --accent: #F07A42; color-scheme: dark; }
+  :root:not([data-theme="light"]) { --bg: #0F1012; --surface: #17181A; --text: #F1ECE4; --muted: #B5B0A8; --line: #2E333A; --accent: #E0602A; color-scheme: dark; }
 }
-:root[data-theme="dark"] { --bg: #14171B; --surface: #1F2328; --text: #F1ECE4; --muted: #B5B0A8; --line: #2E333A; --accent: #F07A42; color-scheme: dark; }
+:root[data-theme="dark"] { --bg: #0F1012; --surface: #17181A; --text: #F1ECE4; --muted: #B5B0A8; --line: #2E333A; --accent: #E0602A; color-scheme: dark; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Inter", system-ui, "Segoe UI", Roboto, sans-serif; }
 .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
