@@ -3,7 +3,7 @@ import type { Dict } from '../../i18n/en'
 import { Icon, type IconName } from '../Icon'
 import { tap } from '../kit/motion'
 
-export type MainTab = 'home' | 'news' | 'analysis' | 'profile'
+import type { Tab as MainTab } from '../../app/router'
 const ITEMS: { id: MainTab; icon: IconName }[] = [
   { id: 'home', icon: 'home' }, { id: 'news', icon: 'news' }, { id: 'analysis', icon: 'year' }, { id: 'profile', icon: 'user' },
 ]

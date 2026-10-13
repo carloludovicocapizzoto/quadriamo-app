@@ -850,6 +850,9 @@ const fr: Dict = {
   'notif.feedback': "Comment ça se passe ?",
   'notif.feedbackD': "Tous les 10 jours pendant la bêta, une demande d’avis.",
   'notif.privacy': "Les montants sont calculés sur votre téléphone : aucun chiffre n’arrive au serveur.",
+  'err.title': "Un problème est survenu",
+  'err.text': "Vos données sont en sécurité sur l’appareil. Rechargez la page pour réessayer.",
+  'err.reload': "Recharger",
   'm.1': 'Janvier', 'm.2': 'Février', 'm.3': 'Mars', 'm.4': 'Avril', 'm.5': 'Mai', 'm.6': 'Juin',
   'm.7': 'Juillet', 'm.8': 'Août', 'm.9': 'Septembre', 'm.10': 'Octobre', 'm.11': 'Novembre', 'm.12': 'Décembre',
 }

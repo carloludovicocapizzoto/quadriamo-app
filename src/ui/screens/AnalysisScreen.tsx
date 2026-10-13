@@ -11,7 +11,7 @@ import { CategoryChangesReport, ForecastReport, TrendReport } from '../Reports'
 import { YearNav, YearView } from '../YearView'
 import { TransactionsScreen } from './TransactionsScreen'
 
-export type AnalysisView = 'transactions' | 'month' | 'year' | 'investments'
+import type { AnalysisView } from '../../app/router'
 const VIEWS: AnalysisView[] = ['transactions', 'month', 'year', 'investments']
 
 /** Analisi: mese, anno e investimenti in una pagina, con le schede in alto (come le sezioni di un'app). */

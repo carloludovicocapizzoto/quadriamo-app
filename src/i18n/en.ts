@@ -850,6 +850,9 @@ const en = {
   'notif.feedback': "How is it going?",
   'notif.feedbackD': "Every 10 days during the beta, a request for feedback.",
   'notif.privacy': "Amounts are worked out on your phone: no figures reach the server.",
+  'err.title': "Something went wrong",
+  'err.text': "Your data is safe on your device. Reload the page to try again.",
+  'err.reload': "Reload",
   'm.1': 'January', 'm.2': 'February', 'm.3': 'March', 'm.4': 'April', 'm.5': 'May', 'm.6': 'June',
   'm.7': 'July', 'm.8': 'August', 'm.9': 'September', 'm.10': 'October', 'm.11': 'November', 'm.12': 'December',
 }

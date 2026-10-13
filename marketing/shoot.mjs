@@ -8,7 +8,8 @@ import { join } from 'node:path'
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const APP = process.env.APP_URL ?? 'http://localhost:5173/app/'
-const OUT = new URL('./shots/', import.meta.url).pathname
+// OUT_DIR: cartella diversa (es. per il controllo visivo prima/dopo una modifica)
+const OUT = process.env.OUT_DIR ? process.env.OUT_DIR.replace(/\/?$/, '/') : new URL('./shots/', import.meta.url).pathname
 const PORT = 9333
 const LANG = process.argv[2] ?? 'it'   // it, en, fr, es
 const sleep = ms => new Promise(r => setTimeout(r, ms))
@@ -61,7 +62,7 @@ await js(`document.querySelector('.streak-chip').click()`); await sleep(900); aw
 await js(`document.querySelector('.bs-root').click()`); await sleep(500)
 await js(`document.querySelector('.part').click()`); await sleep(1100); await shot('20-part-sheet.jpg')
 await js(`document.querySelector('.bs-root').click()`); await sleep(500)
-await click('Movimenti', '.tabbar button'); await shot('21-transactions.jpg', clean)
+await click('Analisi', '.tabbar button'); await sleep(1200); await shot('21-transactions.jpg', clean)
 // ricerca: si scrive come farebbe una persona (React riceve l'evento input)
 const type = async (sel, text) => { await js(`document.querySelector('${sel}').focus()`); await cdp('Input.insertText', { text }); await sleep(700) }
 await type('.search input', 'super'); await shot('28-search.jpg', 'window.scrollTo(0,0)')

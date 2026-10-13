@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../sync/client'
 import { useSync } from '../sync/context'
+import { navigate } from '../app/router'
 
 export const BETA_ALL_PRO = true
 export const PRICE = { month: 2.99, year: 24.99, currency: 'EUR' }
@@ -39,8 +40,8 @@ export function usePlan(): Plan {
   return { pro: paid || beta, beta: beta && !paid, sub, loading: !!supabase && !!user && res?.user !== user }
 }
 
-/** Chiede di aprire la scheda del piano (Opzioni): la ascolta App. */
-export const askUpgrade = () => window.dispatchEvent(new Event('quadriamo:upgrade'))
+/** "Scopri Pro": apre Profilo → Il tuo piano. */
+export const askUpgrade = () => navigate({ tab: 'profile', page: 'plan' })
 
 async function billing(body: Record<string, unknown>): Promise<{ url?: string; error?: string; configured?: boolean; test?: boolean }> {
   if (!supabase) throw new Error('offline')

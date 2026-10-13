@@ -17,7 +17,7 @@ import { NewsPushToggle, PushToggle } from '../beta/PushToggle'
 import { StreakCalendar } from '../shell/StreakCalendar'
 import { Flame } from '../Streak'
 
-export type ProfilePage = 'notifications' | 'plan' | 'account' | 'budget' | 'recurring' | 'rules' | 'data' | 'shared' | 'beta' | 'language'
+import type { ProfilePage } from '../../app/router'
 const ROWS: { id: ProfilePage; icon: IconName; label: keyof Dict }[] = [
   { id: 'notifications', icon: 'bell', label: 'prof.notifications' },
   { id: 'plan', icon: 'growth', label: 'prof.plan' },
