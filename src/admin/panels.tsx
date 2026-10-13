@@ -16,6 +16,7 @@ import sql0012 from '../../supabase/migrations/0012_nudge_cron.sql?raw'
 import sql0013 from '../../supabase/migrations/0013_billing.sql?raw'
 import sql0014 from '../../supabase/migrations/0014_news_push.sql?raw'
 import sql0015 from '../../supabase/migrations/0015_news_cron.sql?raw'
+import sql0016 from '../../supabase/migrations/0016_nudge_until_midnight.sql?raw'
 import billingCode from '../../supabase/functions/billing/index.ts?raw'
 import newsCode from '../../supabase/functions/news/index.ts?raw'
 import sql0009 from '../../supabase/migrations/0009_morning_push_cron.sql?raw'
@@ -519,6 +520,19 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
           <p className="az-hint">Ogni 2 ore tra le 9 e le 21 la funzione guarda le notizie delle ultime 3 ore e manda solo quella più importante per il budget
             (tassi, inflazione, affitti, bollette, carburante, bonus, manovra), al massimo 2 al giorno e mai la stessa due volte. Ognuno può spegnerle da Profilo → Notifiche.</p>
+        </Step>
+        <Step n={12} ok={null} manual={{ done: manual.includes(12), toggle: toggle(12) }} title="Promemoria fino a mezzanotte">
+          <ol>
+            <li>Aggiorna la funzione <code>send-push</code>: pulsante qui sotto → send-push → Code → <b>Cmd+A</b>, <b>Cmd+V</b> → <b>Deploy</b>.</li>
+            <li>Poi copia lo script, incollalo in SQL Editor e premi <b>Run</b>. Non c'è niente da sostituire.</li>
+          </ol>
+          <div className="az-u-row"><Copy text={fnCode} label="Copia il codice della funzione" />
+            <a className="az-btn" href={`${dash}/functions/send-push/code`} target="_blank" rel="noreferrer">↗ Apri send-push → Code</a></div>
+          <div className="az-u-row"><Copy text={sql0016} label="Copia lo script" />
+            <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
+          <p className="az-hint">Chi oggi non ha ancora segnato niente riceve il primo promemoria nel pomeriggio, poi, finché non lo fa, uno alle 21 e l'ultimo alle 23
+            ("a mezzanotte la giornata si chiude"). Al massimo 3 al giorno; chi non apre l'app da più di una settimana ne riceve al massimo uno ogni 3 giorni.
+            Un promemoria non consegnato entro mezzanotte non arriva più.</p>
         </Step>
       </div>
       <div className="az-card">

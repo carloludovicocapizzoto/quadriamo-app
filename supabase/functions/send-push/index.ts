@@ -3,8 +3,9 @@
 // - mode "check": solo per l'amministratore, dice se i segreti sono impostati (pagina Configurazione della dashboard)
 // - mode "morning": ogni mattina (serve CRON_SECRET) -> a chi ha attivato "Oggi puoi spendere". Il server manda solo la
 //   "sveglia": il numero lo calcola il telefono con i suoi dati (push-sw.js), così nessun importo passa da qui
-// - mode "nudge": ogni ora del pomeriggio (serve CRON_SECRET) -> a caso, al massimo una volta al giorno, a chi oggi non ha
-//   ancora aggiornato Quadriamo (l'app comunica solo la data). Il testo, con i giorni di "slancio", lo scrive il telefono
+// - mode "nudge": ogni ora dalle 9 alle 23 (serve CRON_SECRET) -> a chi oggi non ha ancora aggiornato Quadriamo (l'app comunica
+//   solo la data): uno a un'ora a caso entro le 21, poi, finché non lo fa, alle 21 e alle 23 (al massimo 3 al giorno).
+//   Il testo, con i giorni di "slancio", lo scrive il telefono; quello delle 23 dice che a mezzanotte la giornata si chiude
 // - mode "news": ogni 2 ore (serve CRON_SECRET) -> la notizia più importante per il budget delle ultime ore, se c'è,
 //   a chi non ha spento "Notizie principali"; al massimo 2 al giorno per lingua, mai la stessa due volte
 // - mode "scheduled": la chiama il promemoria automatico giornaliero (serve CRON_SECRET) -> a chi non riceve
@@ -82,10 +83,11 @@ async function handle(req: Request): Promise<Response> {
   for (const s of subs ?? []) {
     const t = TEXT[s.lang ?? ''] ?? TEXT.en
     const payload = mode === 'morning' || mode === 'nudge'
-      ? JSON.stringify({ kind: mode, lang: s.lang ?? 'en', url: APP_URL.replace('?feedback=1', mode === 'nudge' ? '?add=1' : '') })
+      ? JSON.stringify({ kind: mode, lang: s.lang ?? 'en', url: APP_URL.replace('?feedback=1', mode === 'nudge' ? '?add=1' : ''),
+                         ...(mode === 'nudge' && HOUR(new Date()) >= LATE ? { late: true } : {}) })
       : JSON.stringify({ title: title || t.title, body: body || t.body, url: APP_URL })
     try {
-      await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth_key } }, payload, { TTL: 86400 })
+      await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth_key } }, payload, { TTL: mode === 'nudge' ? untilMidnight() : 86400 })
       sent++
       if (mode === 'nudge') await admin.from('push_subscriptions').update({ last_nudge_at: new Date().toISOString() }).eq('endpoint', s.endpoint)
       else if (mode !== 'morning') await admin.from('push_subscriptions').update({ last_prompt_at: new Date().toISOString() }).eq('endpoint', s.endpoint)
@@ -101,21 +103,34 @@ async function handle(req: Request): Promise<Response> {
 // ---------- promemoria a sorpresa ----------
 const ROME = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d)
 const HOUR = (d: Date) => Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', hourCycle: 'h23' }).format(d))
-const FIRST = 9, LAST = 20   // ore italiane in cui può arrivare
+const FIRST = 9, LAST = 23        // ore italiane in cui può arrivare
+const EVENING = [21, 23]          // i richiami della sera, se oggi non l'ha ancora fatto
+const LATE = 23                   // l'ultimo: a mezzanotte la giornata (e lo slancio) si chiude
 
 interface Sub { created_at: string; last_active: string | null; last_nudge_at: string | null }
-/** Chi riceve il promemoria in questo giro: oggi non ha aggiornato, oggi non l'ha già ricevuto, e la sorte lo sceglie.
- *  La probabilità cresce con le ore che restano, così arriva a un'ora a caso ma entro sera. */
+/**
+ * Chi riceve il promemoria in questo giro. Solo chi oggi non ha ancora aggiornato Quadriamo:
+ * il primo arriva a un'ora a caso (la probabilità cresce con le ore che restano, così arriva entro le 21);
+ * se poi non lo fa, un richiamo alle 21 e l'ultimo alle 23, mai a meno di 2 ore dal precedente.
+ */
 function nudgeToday(s: Sub): boolean {
   const now = new Date(), today = ROME(now), hour = HOUR(now)
   if (hour < FIRST || hour > LAST) return false
   if (s.last_active && s.last_active >= today) return false
-  if (s.last_nudge_at && ROME(new Date(s.last_nudge_at)) === today) return false
   if (Date.now() - Date.parse(s.created_at) < 12 * 3600e3) return false                 // appena iscritto: domani
   const idle = s.last_active ? (Date.parse(today) - Date.parse(s.last_active)) / 864e5 : 99
-  // chi non apre da più di una settimana: al massimo ogni 3 giorni (niente insistenza)
-  if (idle > 7 && s.last_nudge_at && Date.now() - Date.parse(s.last_nudge_at) < 3 * 864e5) return false
-  return Math.random() < 1 / Math.max(1, LAST - hour + 1)
+  const remindedToday = !!s.last_nudge_at && ROME(new Date(s.last_nudge_at)) === today
+  // chi non apre da più di una settimana: al massimo uno ogni 3 giorni e niente richiami la sera (niente insistenza)
+  if (idle > 7) return !(s.last_nudge_at && Date.now() - Date.parse(s.last_nudge_at) < 3 * 864e5) && Math.random() < 1 / Math.max(1, EVENING[0] - hour)
+  if (!remindedToday) return hour >= EVENING[0] || Math.random() < 1 / Math.max(1, EVENING[0] - hour)
+  return EVENING.includes(hour) && Date.now() - Date.parse(s.last_nudge_at!) >= 2 * 3600e3
+}
+
+/** Secondi fino a mezzanotte (ora italiana): un promemoria arrivato a giorno finito non serve più. */
+function untilMidnight(): number {
+  const now = new Date()
+  const [h, m] = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now).split(':').map(Number)
+  return Math.max(60, (24 * 60 - (h * 60 + m)) * 60)
 }
 
 // ---------- notizie principali ----------

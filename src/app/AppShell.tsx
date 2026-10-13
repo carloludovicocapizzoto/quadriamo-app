@@ -79,7 +79,7 @@ export function AppShell() {
               {sync.user && askProfile && !data.demo && !entry.inSetup && (
                 <section className="card"><h3 className="h-plain">{t('prof.promptTitle')}</h3><ProfileForm onDone={() => setAskProfile(false)} /></section>)}
               {feedback && <FeedbackCard onClose={closeFeedback} />}
-              <HomeScreen data={data} r={thisMonth} today={today} streak={streak}
+              <HomeScreen data={data} r={thisMonth} today={today}
                 onAdd={kind => openComposer(kind === 'income' ? { prefill: { category: mainIncome(data.settings) } } : {})}
                 onOpen={openTx} onAll={toTransactions} />
             </>}

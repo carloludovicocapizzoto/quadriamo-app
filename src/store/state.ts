@@ -100,7 +100,6 @@ export type Action =
   | { type: 'ignoreInbox'; ids: string[]; at?: string }
   | { type: 'togglePayday'; month: string; bucketId: string }
   | { type: 'setProfile'; profile: PrivateProfile | null; at?: string }
-  | { type: 'checkIn'; at?: string }                     // "oggi niente spese": tiene vivo lo slancio
   | { type: 'saveGoal'; goal: Goal; at?: string }
   | { type: 'deleteGoal'; id: string; at?: string }
   | { type: 'goalMoney'; id: string; amount: number; date: string; at?: string }   // versamento (o prelievo se negativo)
@@ -146,7 +145,7 @@ function localDay(at: string): string {
 }
 
 /** Le azioni con cui l'utente aggiorna la sua situazione contano per lo slancio. */
-const ACTIVE: Action['type'][] = ['addTx', 'updateTx', 'deleteTx', 'confirmInbox', 'checkIn', 'goalMoney']
+const ACTIVE: Action['type'][] = ['addTx', 'updateTx', 'deleteTx', 'confirmInbox', 'goalMoney']
 
 export function reducer(state: State, a: Action): State {
   const next = reduce(state, a)
@@ -176,8 +175,6 @@ function reduce(state: State, a: Action): State {
                                  deleted: { ...d.deleted, [a.id]: at } } }
     case 'setSettings':
       return { ...state, data: { ...d, settings: a.settings, settingsUpdatedAt: at } }
-    case 'checkIn':
-      return { ...state, data: { ...d } }
     case 'saveGoal': {
       const g = { ...a.goal, updatedAt: at }
       const goals = (d.goals ?? []).some(x => x.id === g.id) ? (d.goals ?? []).map(x => x.id === g.id ? g : x) : [...(d.goals ?? []), g]

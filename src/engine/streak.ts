@@ -1,5 +1,5 @@
-// Slancio (come la "serie" di Duolingo): giorni di fila in cui hai aggiornato Quadriamo — un movimento aggiunto o
-// modificato, oppure "oggi niente spese". Resta vivo fino a fine giornata: se ieri c'eri e oggi non ancora, è "a rischio".
+// Slancio (come la "serie" di Duolingo): giorni di fila in cui hai aggiornato Quadriamo — un movimento aggiunto,
+// modificato o importato. Si aggiorna da solo: non c'è niente da "segnare". Resta vivo fino a fine giornata: se ieri c'eri e oggi non ancora, è "a rischio".
 import { addDays } from './dates'
 
 export const STREAK_MILESTONES = [3, 7, 14, 30, 50, 100, 200, 365]

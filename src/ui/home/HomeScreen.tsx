@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react'
-import { daysBetween, todayBudget, type BucketRow, type ClassifiedTx, type MonthResult, type Streak } from '../../engine'
+import { daysBetween, todayBudget, type BucketRow, type ClassifiedTx, type MonthResult } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { AppData } from '../../store/state'
-import { useStore } from '../../store/context'
 import { Icon } from '../Icon'
 import { tap, useCountUp } from '../kit/motion'
 import { Money } from '../kit/Money'
@@ -16,8 +15,8 @@ import { TxRow } from '../TxRow'
  * Il numero del giorno è il protagonista; sotto, i quattro blocchi che si svuotano mentre spendi e le spese di oggi.
  * Tutto il resto vive altrove: l'analisi in Analisi, i consigli in Notizie, slancio e traguardi in Profilo.
  */
-export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
-  data: AppData; r: MonthResult; today: string; streak: Streak | null
+export function HomeScreen({ data, r, today, onAdd, onOpen, onAll }: {
+  data: AppData; r: MonthResult; today: string
   onAdd: (kind: 'expense' | 'income') => void; onOpen: (tx: ClassifiedTx) => void; onAll: () => void
 }) {
   const { t, date } = useI18n()
@@ -55,7 +54,7 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
         })}
       </div>
 
-      <Today r={r} today={today} settings={s} streak={streak} onOpen={onOpen} onAll={onAll} />
+      <Today r={r} today={today} settings={s} onOpen={onOpen} onAll={onAll} />
 
       <Sheet open={!!part} onClose={() => setPart(null)} title={part ? bucketName(part.bucket, t) : ''}>
         {part && <PartDetail b={part} r={r} cur={cur} color={BUCKET_COLORS[r.buckets.indexOf(part)]} onOpen={tx => { setPart(null); onOpen(tx) }}
@@ -65,22 +64,17 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
   )
 }
 
-/** Le spese di oggi (al massimo tre) e la strada per tutte le altre. Senza spese, la giornata si può segnare per lo slancio. */
-function Today({ r, today, settings, streak, onOpen, onAll }: {
-  r: MonthResult; today: string; settings: AppData['settings']; streak: Streak | null; onOpen: (tx: ClassifiedTx) => void; onAll: () => void
+/** Le spese di oggi (al massimo tre) e la strada per tutte le altre. Lo slancio si aggiorna da solo a ogni movimento. */
+function Today({ r, today, settings, onOpen, onAll }: {
+  r: MonthResult; today: string; settings: AppData['settings']; onOpen: (tx: ClassifiedTx) => void; onAll: () => void
 }) {
   const { t } = useI18n()
-  const { dispatch } = useStore()
   const list = r.transactions.filter(x => !x.upcoming && x.date === today)
   return (
     <section className="today">
       <h2 className="sec-title">{t('day.today')}</h2>
       {list.length ? <ul className="tx-list">{list.slice(0, 3).map(tx => <TxRow key={tx.id} tx={tx} settings={settings} onOpen={onOpen} />)}</ul>
-        : <div className="today-none">
-          <span className="muted">{t('home.nothingToday')}</span>
-          {streak?.doneToday ? <span className="muted"><Icon name="check" size={16} className="inline-ico" />{t('home.dayMarked')}</span>
-            : <button className="link-btn" onClick={() => { tap(); dispatch({ type: 'checkIn' }) }}>{t('home.markDay')}</button>}
-        </div>}
+        : <p className="today-none muted">{t('home.nothingToday')}</p>}
       <button className="row-link" onClick={onAll}><span>{t('home.allTx')}</span><Icon name="chevron" size={18} /></button>
     </section>
   )

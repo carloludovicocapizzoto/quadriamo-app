@@ -1,8 +1,8 @@
 .streak-flame { width: 30px; height: 40px; flex: none; filter: grayscale(1) opacity(.4); transition: filter .4s; transform-origin: 50% 90%; }
 .streak-pop { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); z-index: 40; display: grid; justify-items: center; gap: 4px;
   background: var(--surface); color: var(--text); padding: 18px 26px; border-radius: var(--r-lg); border: 1px solid var(--line); 
-  animation: pop-in .45s cubic-bezier(.2,1.4,.4,1) both; text-align: center; max-width: calc(100vw - 32px); }
-.streak-pop .streak-flame { filter: none; width: 40px; height: 54px; animation: flame .6s ease-in-out 2; }
+  animation: fade var(--d-fast) var(--ease) both; text-align: center; max-width: calc(100vw - 32px); }
+.streak-pop .streak-flame { filter: none; width: 40px; height: 54px; }
 .streak-pop.big .streak-flame { width: 58px; height: 78px; }
-.streak-pop b { font-size: 20px; }
+.streak-pop b { font-size: var(--t-h2); font-weight: 600; }
 .stat-ico .streak-flame { width: 20px; height: 26px; filter: none; }

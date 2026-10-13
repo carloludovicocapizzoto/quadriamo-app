@@ -1,6 +1,6 @@
 /* Home: data, il numero del giorno, i quattro blocchi, le spese di oggi. Nient'altro. */
 .home { max-width: 520px; }
-.home-date { margin: var(--s2) 0 0; font-size: var(--t-sm); color: var(--muted); }
+.home-date { margin: var(--s2) 0 0; font-size: var(--t-h2); font-weight: 600; letter-spacing: -.02em; }
 
 /* il numero del giorno: il protagonista, senza riquadro */
 .hero { margin: var(--s8) 0 var(--s12); }
@@ -25,7 +25,7 @@
 
 /* oggi */
 .today .tx-list { margin: 0; }
-.today-none { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); padding: var(--s3) 0; border-top: 1px solid var(--line); }
+.today-none { margin: 0; padding: var(--s3) 0; border-top: 1px solid var(--line); }
 .row-link { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: var(--s3) 0; border: 0; border-top: 1px solid var(--line);
   background: none; color: var(--muted); font: inherit; cursor: pointer; }
 

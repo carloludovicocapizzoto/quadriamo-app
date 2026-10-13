@@ -22,7 +22,7 @@
   height: calc(var(--bar-h) + env(safe-area-inset-bottom)); padding: 0 max(var(--s2), calc(50% - 300px)) env(safe-area-inset-bottom);
   background: var(--bg); border-top: 1px solid var(--line); }
 .tabbar > button { height: var(--bar-h); border: 0; background: none; display: grid; justify-items: center; align-content: center; gap: 2px; cursor: pointer;
-  color: var(--faint); font: inherit; font-size: var(--t-cap); font-weight: 600; -webkit-tap-highlight-color: transparent; transition: color var(--d-fast); }
+  color: var(--muted); font: inherit; font-size: var(--t-cap); font-weight: 600; -webkit-tap-highlight-color: transparent; transition: color var(--d-fast); }
 .tabbar > button.on { color: var(--text); }
 .nav-ico { position: relative; display: grid; place-items: center; width: 44px; height: 28px; transition: transform 120ms var(--ease); }
 .tabbar > button:active .nav-ico { transform: scale(.9); }

@@ -26,6 +26,10 @@ select { -webkit-appearance: none; appearance: none; padding-right: 30px; text-o
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8F96' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 11px center; background-size: 12px; }
 
+/* le tendine native (Windows, Android, Chrome) disegnano l'elenco con lo sfondo di sistema: senza questa regola,
+   in tema scuro le voci sono testo chiaro su bianco. Stesso colore della pagina per elenco e voci */
+option, optgroup { background-color: var(--bg); color: var(--text); }
+
 /* utilità */
 .muted { color: var(--muted); }
 .small { font-size: var(--t-sm); }

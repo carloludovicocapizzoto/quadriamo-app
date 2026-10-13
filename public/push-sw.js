@@ -13,38 +13,46 @@ var MORNING = {
 var NUDGE = {
   it: {
     streak: [['Non perdere lo slancio', '{n} giorni di fila: segna le spese di oggi in 10 secondi.'],
-             ['Il tuo slancio ti aspetta', 'Sei a {n} giorni. Basta un movimento, o "Oggi niente spese".']],
+             ['Il tuo slancio ti aspetta', 'Sei a {n} giorni. Basta segnare una spesa.']],
     plain: [['Com’è andata oggi?', 'Segna le spese di oggi: bastano pochi secondi.'],
-            ['Un attimo per Quadriamo', 'Le spese di oggi sono già dentro? Se non hai speso niente, basta un tocco.'],
+            ['Un attimo per Quadriamo', 'Le spese di oggi sono già dentro?'],
             ['Il caffè conta', 'Anche le piccole spese fanno il mese. Segnale adesso, finché te le ricordi.'],
             ['Tutto sotto controllo?', 'Aggiorna Quadriamo e guarda quanto ti resta per oggi.']],
+    late: [['A mezzanotte si chiude la giornata', 'Segna le spese di oggi prima che finisca la giornata.'],
+           ['Lo slancio scade a mezzanotte', '{n} giorni di fila: basta una spesa per tenerli.']],
     safe: ['Slancio al sicuro', '{n} giorni di fila. Continua così.'],
   },
   en: {
     streak: [['Keep your streak alive', '{n} days in a row: log today’s spending in 10 seconds.'],
-             ['Your streak is waiting', 'You’re on {n} days. One entry, or "No spending today", is enough.']],
+             ['Your streak is waiting', 'You’re on {n} days. One entry is enough.']],
     plain: [['How did today go?', 'Log today’s spending: it only takes a few seconds.'],
-            ['A moment for Quadriamo', 'Is today’s spending in? If you didn’t spend anything, one tap does it.'],
+            ['A moment for Quadriamo', 'Is today’s spending in?'],
             ['The coffee counts', 'Small expenses add up. Log them now, while you remember.'],
             ['All under control?', 'Update Quadriamo and see what’s left for today.']],
+    late: [['The day closes at midnight', 'Log today’s spending before the day ends.'],
+           ['Your streak ends at midnight', '{n} days in a row: one entry keeps them.']],
     safe: ['Streak safe', '{n} days in a row. Keep it up.'],
   },
   fr: {
     streak: [['Ne perdez pas votre série', '{n} jours d’affilée : notez les dépenses du jour en 10 secondes.'],
-             ['Votre série vous attend', 'Vous en êtes à {n} jours. Une dépense, ou « Aucune dépense aujourd’hui », suffit.']],
+             ['Votre série vous attend', 'Vous en êtes à {n} jours. Une dépense suffit.']],
     plain: [['Comment s’est passée la journée ?', 'Notez vos dépenses du jour : quelques secondes suffisent.'],
-            ['Un instant pour Quadriamo', 'Les dépenses du jour sont-elles notées ? Sinon, un geste suffit.'],
+            ['Un instant pour Quadriamo', 'Les dépenses du jour sont-elles notées ?'],
             ['Le café compte', 'Les petites dépenses font le mois. Notez-les maintenant.'],
             ['Tout est sous contrôle ?', 'Mettez Quadriamo à jour et voyez ce qu’il reste pour aujourd’hui.']],
+    late: [['La journée se termine à minuit', 'Notez les dépenses du jour avant la fin de la journée.'],
+           ['Votre série s’arrête à minuit', '{n} jours d’affilée : une dépense suffit pour la garder.']],
     safe: ['Série en sécurité', '{n} jours d’affilée. Continuez comme ça.'],
   },
   es: {
     streak: [['No pierdas tu racha', '{n} días seguidos: anota los gastos de hoy en 10 segundos.'],
-             ['Tu racha te espera', 'Llevas {n} días. Basta un movimiento, o «Hoy sin gastos».']],
+             ['Tu racha te espera', 'Llevas {n} días. Basta un movimiento.']],
     plain: [['¿Qué tal ha ido hoy?', 'Anota los gastos de hoy: solo unos segundos.'],
-            ['Un momento para Quadriamo', '¿Ya están los gastos de hoy? Si no gastaste nada, basta un toque.'],
+            ['Un momento para Quadriamo', '¿Ya están los gastos de hoy?'],
             ['El café cuenta', 'Los pequeños gastos hacen el mes. Anótalos ahora que te acuerdas.'],
             ['¿Todo bajo control?', 'Actualiza Quadriamo y mira cuánto te queda para hoy.']],
+    late: [['El día se cierra a medianoche', 'Anota los gastos de hoy antes de que acabe el día.'],
+           ['Tu racha termina a medianoche', '{n} días seguidos: basta un movimiento para mantenerla.']],
     safe: ['Racha a salvo', '{n} días seguidos. Sigue así.'],
   },
 }
@@ -54,13 +62,14 @@ function isoToday() {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
 }
 
-function nudgeNotification(lang) {
+function nudgeNotification(lang, late) {
   return readSnapshot().then(function (s) {
     var w = NUDGE[(s && s.lang) || lang] || NUDGE.en
     var n = (s && s.streak) || 0
     var pick = function (list) { return list[Math.floor(Math.random() * list.length)] }
-    // aggiornato oggi ma il server non lo sapeva ancora (es. offline): solo un complimento
-    var t = s && s.lastActive === isoToday() ? w.safe : n > 0 ? pick(w.streak) : pick(w.plain)
+    // aggiornato oggi ma il server non lo sapeva ancora (es. offline): solo un complimento.
+    // L'ultimo della sera dice che a mezzanotte la giornata (e lo slancio) si chiude
+    var t = s && s.lastActive === isoToday() ? w.safe : late ? w.late[n > 0 ? 1 : 0] : n > 0 ? pick(w.streak) : pick(w.plain)
     return { title: t[0], body: t[1].replace('{n}', String(n)) }
   })
 }
@@ -97,7 +106,7 @@ self.addEventListener('push', function (event) {
   var data = {}
   try { data = event.data ? event.data.json() : {} } catch { data = { title: 'Quadriamo', body: event.data && event.data.text() } }
   var ready = data.kind === 'morning' ? morningNotification(data.lang)
-    : data.kind === 'nudge' ? nudgeNotification(data.lang)
+    : data.kind === 'nudge' ? nudgeNotification(data.lang, !!data.late)
     : Promise.resolve({ title: data.title, body: data.body })
   event.waitUntil(ready.then(function (n) {
     return self.registration.showNotification(n.title || 'Quadriamo', {

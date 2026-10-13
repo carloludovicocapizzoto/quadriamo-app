@@ -22,11 +22,14 @@ export function StreakCelebration({ s }: { s: Streak | null }) {
     if (!s) return
     const was = prev.current
     prev.current = s.doneToday ? s.count : -1
-    if (was == null || !s.doneToday || was === s.count) return
-    setShow(s.count)
-    const id = setTimeout(() => setShow(null), STREAK_MILESTONES.includes(s.count) ? 3200 : 2200)
-    return () => clearTimeout(id)
+    if (was != null && s.doneToday && was !== s.count) setShow(s.count)
   }, [s])
+  // il timer dipende solo da cosa si mostra: un nuovo calcolo dello slancio non deve annullarlo (prima restava a schermo)
+  useEffect(() => {
+    if (show == null) return
+    const id = setTimeout(() => setShow(null), STREAK_MILESTONES.includes(show) ? 2200 : 1400)
+    return () => clearTimeout(id)
+  }, [show])
   if (show == null) return null
   const big = STREAK_MILESTONES.includes(show)
   return (

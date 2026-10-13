@@ -21,12 +21,13 @@ describe('slancio', () => {
 
 import { createInitial, reducer } from '../store/state'
 describe('slancio nello store', () => {
-  it('un movimento o "oggi niente spese" segnano il giorno; cambiare le impostazioni no', () => {
+  it('aggiungere o modificare un movimento segna il giorno da solo; cambiare le impostazioni no', () => {
     const data = createInitial('EUR', '2026-10-12')
     let s = reducer({ loaded: true, data }, { type: 'setSettings', settings: { ...data.settings, currency: 'USD' } })
     expect(s.data!.activity).toBeUndefined()
-    s = reducer(s, { type: 'checkIn', at: '2026-10-12T10:00:00' })
-    s = reducer(s, { type: 'checkIn', at: '2026-10-12T18:00:00' })
+    const tx = { id: 'a', date: '2026-10-12', description: 'Pizza', category: 'eatingOut', amount: 12 }
+    s = reducer(s, { type: 'addTx', tx, at: '2026-10-12T10:00:00' })
+    s = reducer(s, { type: 'updateTx', tx: { ...tx, amount: 14 }, at: '2026-10-12T18:00:00' })
     expect(s.data!.activity).toEqual(['2026-10-12'])
   })
 })
