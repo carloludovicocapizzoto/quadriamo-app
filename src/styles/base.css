@@ -45,3 +45,5 @@ option, optgroup { background-color: var(--bg); color: var(--text); }
 .top-gap { margin-top: 12px; }
 /* icone dentro il testo (avvisi, conferme, note) */
 p > .ico, b > .ico, strong > .ico, small > .ico, span > .ico, .inline-ico, .pill > .ico { display: inline-block; vertical-align: -.18em; margin-right: 5px; }
+/* icone dentro una forma (barra in basso, stati vuoti, impostazioni…): niente margine da "icona nel testo", sempre al centro */
+:is(.nav-ico, .empty-ico, .goal-ico, .goal-plus, .party-ico, .paywall-ico, .persona-ico, .set-ico, .tip-ico) > .ico { display: block; margin: 0; }
