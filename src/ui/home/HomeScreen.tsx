@@ -12,12 +12,13 @@ import { BUCKET_COLORS, bucketName } from '../names'
 import { TxRow } from '../TxRow'
 import { HomeView } from '../HomeView'
 import { GoalsStrip } from '../goals/Goals'
+import { Discover } from './Discover'
 
 /** Home: il numero del giorno, le scorciatoie, le quattro parti, le missioni, le ultime attività e i widget scelti. */
-export function HomeScreen({ data, r, today, streak, reviewed, onAdd, onOpen, onAll, onImport, onShared, onAnalysis }: {
+export function HomeScreen({ data, r, today, streak, reviewed, onAdd, onOpen, onAll, onImport, onShared, onAnalysis, onRecurring }: {
   data: AppData; r: MonthResult; today: string; streak: Streak | null; reviewed: boolean
   onAdd: (kind: 'expense' | 'income') => void; onOpen: (tx: ClassifiedTx) => void; onAll: () => void; onImport: () => void
-  onShared: () => void; onAnalysis: () => void
+  onShared: () => void; onAnalysis: () => void; onRecurring: () => void
 }) {
   const { t, money } = useI18n()
   const { dispatch } = useStore()
@@ -85,6 +86,16 @@ export function HomeScreen({ data, r, today, streak, reviewed, onAdd, onOpen, on
         if (m.id === 'log') onAdd('expense')
         else if (m.id === 'inbox') onImport()
         else if (m.id === 'review') onAnalysis()
+      }} />
+
+      {/* il consiglio di oggi e le notizie */}
+      <Discover today={today} firstDay={data.activity?.[0]} onAction={a => {
+        if (a === 'add') onAdd('expense')
+        else if (a === 'goals') document.querySelector('.goals')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        else if (a === 'analysis') onAnalysis()
+        else if (a === 'import') onImport()
+        else if (a === 'shared') onShared()
+        else if (a === 'recurring') onRecurring()
       }} />
 
       {/* attività */}

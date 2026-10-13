@@ -15,6 +15,7 @@ import sql0011 from '../../supabase/migrations/0011_nudge_streak.sql?raw'
 import sql0012 from '../../supabase/migrations/0012_nudge_cron.sql?raw'
 import sql0013 from '../../supabase/migrations/0013_billing.sql?raw'
 import billingCode from '../../supabase/functions/billing/index.ts?raw'
+import newsCode from '../../supabase/functions/news/index.ts?raw'
 import sql0009 from '../../supabase/migrations/0009_morning_push_cron.sql?raw'
 import sql0003 from '../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
 import fnCode from '../../supabase/functions/send-push/index.ts?raw'
@@ -493,6 +494,17 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
             <a className="az-btn" href={`${dash}/functions`} target="_blank" rel="noreferrer">↗ Apri Edge Functions</a></div>
           <p className="az-hint">Durante la beta Pro resta gratis per tutti: il pagamento si prova da Opzioni → Il tuo piano, con la carta di prova 4242 4242 4242 4242.
             Prima di passare ai pagamenti veri: hosting adatto a un servizio commerciale, dominio, privacy e termini con i dati dell'attività.</p>
+        </Step>
+        <Step n={10} ok={setup.news} title="Notizie di finanza nella Home">
+          <ol>
+            <li>Apri <a href={`${dash}/functions`} target="_blank" rel="noreferrer">Edge Functions</a> → <b>Deploy a new function</b> → <b>Via Editor</b>.</li>
+            <li>Nome: <code>news</code>. Cancella il codice di esempio, incolla quello copiato da qui → <b>Deploy</b>.</li>
+            <li>Nei dettagli della funzione spegni <b>Verify JWT</b> (le notizie le vede anche chi usa l'app senza account).</li>
+          </ol>
+          <div className="az-u-row"><Copy text={newsCode} label="Copia il codice della funzione" />
+            <a className="az-btn" href={`${dash}/functions`} target="_blank" rel="noreferrer">↗ Apri Edge Functions</a></div>
+          <p className="az-hint">Prende solo titolo, testata, data e link dalle notizie di economia (ANSA, Il Sole 24 Ore, Corriere, Repubblica, Money.it; BBC, Le Monde, Expansión nelle altre lingue).
+            Nessun segreto da impostare. Finché non c'è, l'app mostra solo il consiglio del giorno.</p>
         </Step>
       </div>
       <div className="az-card">

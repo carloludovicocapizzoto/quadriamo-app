@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 /**
  * Pannello che sale dal basso (come nelle app native): si chiude toccando fuori, con Esc
@@ -24,7 +25,8 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
     return () => { document.removeEventListener('keydown', key); document.body.classList.remove('sheet-open') }
   }, [shown, onClose])
   if (!shown) return null
-  return (
+  // sempre sopra tutta l'app (fuori dalle pagine animate, che altrimenti lo "ancorerebbero" alla pagina)
+  return createPortal(
     <div className={`bs-root${closing ? ' closing' : ''}`} role="presentation" onClick={onClose}>
       <div className="bs" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}
            style={drag ? { transform: `translateY(${drag}px)`, transition: 'none' } : undefined}>
@@ -35,6 +37,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
         {title && <h2 className="bs-title">{title}</h2>}
         <div className="bs-body">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

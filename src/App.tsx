@@ -242,7 +242,8 @@ export default function App() {
           onAll={() => { setYm(null); go('transactions') }}
           onImport={() => { setYm(null); go('transactions'); setTimeout(() => document.querySelector<HTMLInputElement>('input[type=file]')?.click(), 120) }}
           onShared={() => { go('profile'); setProfilePage('shared') }}
-          onAnalysis={() => go('analysis')} />}
+          onAnalysis={() => go('analysis')}
+          onRecurring={() => { go('profile'); setProfilePage('recurring') }} />}
 
         {tab === 'transactions' && <TransactionsScreen data={data} current={current} result={result} today={today} onMonth={setYm} onOpen={openTx} />}
 

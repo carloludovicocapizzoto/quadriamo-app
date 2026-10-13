@@ -35,6 +35,7 @@ export interface Setup {
   v10: boolean | null         // script 0010 (budget comune) eseguito
   v11: boolean | null         // script 0011 (promemoria a sorpresa, slancio) eseguito
   v13: boolean | null         // script 0013 (abbonamenti Pro) eseguito
+  news: boolean | null        // funzione news pubblicata
   billing: { fn: boolean; configured: boolean; webhook: boolean; test: boolean } | null   // funzione billing e chiavi Stripe
   adminKeys: boolean | null   // script 0006 (accesso con nome + codice) eseguito
   adminName: string | null    // nome di chi è entrato con il codice
@@ -77,7 +78,7 @@ export const loadPush = () => rpc<PushSub[]>('admin_push_list')
 
 export async function checkSetup(signedIn: boolean): Promise<Setup> {
   const supabase = db()
-  const s: Setup = { connected: !!supabase, tables: null, profiles: null, research: null, v8: null, v10: null, v11: null, v13: null, billing: null, siteFeedback: null, adminKeys: null, adminName: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
+  const s: Setup = { connected: !!supabase, tables: null, profiles: null, research: null, v8: null, v10: null, v11: null, v13: null, billing: null, news: null, siteFeedback: null, adminKeys: null, adminName: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
     vapidInApp: !!import.meta.env.VITE_VAPID_PUBLIC_KEY }
   if (!supabase || !signedIn) return s
   const { data, error } = await supabase.rpc('is_admin')
@@ -100,6 +101,8 @@ export async function checkSetup(signedIn: boolean): Promise<Setup> {
   const bf = await supabase.functions.invoke('billing', { body: { action: 'status' } })
   s.billing = bf.error ? { fn: false, configured: false, webhook: false, test: false }
     : { fn: true, configured: !!bf.data?.configured, webhook: !!bf.data?.webhook, test: !!bf.data?.test }
+  const nw = await supabase.functions.invoke('news', { body: { lang: 'it' } })
+  s.news = !nw.error && Array.isArray(nw.data?.items)
   const an = await supabase.rpc('admin_name')
   s.adminKeys = !(an.error && (an.error.code === 'PGRST202' || /could not find the function/i.test(an.error.message)))
   s.adminName = (an.data as string | null) ?? null
