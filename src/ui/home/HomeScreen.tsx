@@ -67,7 +67,7 @@ export function HomeScreen({ data, r, today, streak, reviewed, onAdd, onOpen, on
         {r.buckets.map((b, i) => {
           const used = b.available > 0 ? Math.max(0, Math.min(1, 1 - b.remaining / b.available)) : 0
           return (
-            <button key={b.bucket.id} className="part" style={{ ['--pc' as string]: BUCKET_COLORS[i], animationDelay: `${i * 50}ms` }}
+            <button key={b.bucket.id} className="part" style={{ ['--pc' as string]: BUCKET_COLORS[i] }}
                     onClick={() => { tap(); setPart(b) }}>
               <span className="part-top"><span className="part-name">{bucketName(b.bucket, t)}</span>
                 <Ring value={used} size={34} stroke={4} color={BUCKET_COLORS[i]} /></span>

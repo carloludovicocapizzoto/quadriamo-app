@@ -3,7 +3,7 @@
 .goals::-webkit-scrollbar { display: none; }
 .goal { flex: 0 0 156px; scroll-snap-align: start; display: grid; justify-items: start; gap: 4px; padding: var(--s4); border-radius: var(--r-lg); text-align: left;
   background: var(--surface); border: 1px solid color-mix(in srgb, var(--line) 70%, transparent); box-shadow: var(--e1); color: var(--text); font: inherit;
-  cursor: pointer; animation: tab-in .4s var(--ease) both; transition: transform .15s var(--spring); }
+  cursor: pointer; transition: transform .15s var(--spring); }
 .goal:active { transform: scale(.96); }
 .goal .ring { margin-bottom: var(--s2); color: var(--accent); }
 .goal-ico { color: var(--accent); display: grid; place-items: center; }

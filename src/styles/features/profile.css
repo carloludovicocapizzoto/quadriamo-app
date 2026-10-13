@@ -88,7 +88,7 @@
 .prof-avatar.pro { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent); }
 .badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: var(--s3); }
 .badge { display: grid; justify-items: center; text-align: center; gap: 4px; padding: var(--s4) var(--s2) var(--s3); border-radius: var(--r-lg); background: var(--surface);
-  border: 1px solid var(--line); animation: tab-in .4s var(--ease) both; }
+  border: 1px solid var(--line); }
 .badge b { font-size: 13.5px; line-height: 1.2; }
 .badge small { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
 .badge-medal { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: var(--muted);

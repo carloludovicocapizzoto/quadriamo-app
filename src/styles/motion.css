@@ -35,18 +35,15 @@
 @keyframes seg-in { from { opacity: 0; } }
 @keyframes donut-spin { from { transform: rotate(-200deg) scale(.85); opacity: 0; } to { transform: rotate(-90deg) scale(1); opacity: 1; } }
 /* ingresso e tutorial */
-@keyframes glow { to { transform: translate(3%, -2%) rotate(6deg) scale(1.05); } }
 @keyframes bob-down { 50% { transform: translateX(-50%) translateY(10px) rotate(90deg); } }
 @keyframes bob-ur { 50% { transform: translate(6px, -8px) rotate(-60deg); } }
 @keyframes bob-ul { 50% { transform: translate(-6px, -8px) rotate(-120deg); } }
 @keyframes bob-dr { 50% { transform: translate(6px, 8px) rotate(60deg); } }
 
-/* pagine */
-.tab-in { animation: tab-in .32s var(--ease) both; }
-/* la pagina non resta "trasformata" a fine animazione (romperebbe gli elementi fissi al suo interno) */
-.app-enter.tab-in { animation-fill-mode: backwards; }
-.view-in { animation: tab-in .28s var(--ease) both; }
-.sub-in { animation: sub-in .3s var(--ease) both; }
+/* pagine: il cambio di scheda è istantaneo (come in iOS e Android); si anima solo ciò che spiega qualcosa:
+   la pagina di dettaglio entra da destra (sei "dentro" una voce), le schede di Analisi si scambiano con una dissolvenza */
+.view-in { animation: fade var(--d-fast) var(--ease); }
+.sub-in { animation: sub-in var(--d-spring) var(--spring-snappy) backwards; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important;

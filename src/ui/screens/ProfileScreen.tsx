@@ -91,8 +91,8 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onFe
 
       <h2 className="sec-title">{t('prof.badges')} <small className="muted">{list.filter(b => b.done).length}/{list.length}</small></h2>
       <div className="badges">
-        {list.map((b, i) => (
-          <div key={b.id} className={`badge${b.done ? ' done' : ''}`} style={{ animationDelay: `${i * 40}ms` }}>
+        {list.map(b => (
+          <div key={b.id} className={`badge${b.done ? ' done' : ''}`}>
             <span className="badge-medal" style={{ ['--p' as string]: b.progress }}><Icon name={b.done ? 'check' : 'lock'} size={20} /></span>
             <b>{t(`badge.${b.id}` as keyof Dict)}</b>
             <small>{t(`badge.${b.id}D` as keyof Dict)}</small>

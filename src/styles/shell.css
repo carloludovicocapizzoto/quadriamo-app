@@ -88,5 +88,5 @@
 .swipe-page.from-left { animation: from-left .32s var(--ease) both; }
 .swipe-page.from-right { animation: from-right .32s var(--ease) both; }
 .swipe-hint { display: flex; justify-content: center; align-items: center; gap: 8px; margin: -4px 0 var(--s3); font-size: 13px; font-weight: 600; color: var(--muted); }
-.swipe-hint span { color: var(--accent); font-size: 18px; animation: nudge 1.4s ease-in-out infinite; }
+.swipe-hint span { color: var(--accent); font-size: 18px; animation: nudge 1.4s ease-in-out 3; }
 .swipe-hint span:last-child { animation-direction: reverse; }

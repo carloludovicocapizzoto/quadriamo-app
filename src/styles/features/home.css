@@ -1,6 +1,5 @@
 .widgets { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; align-items: start; }
 .widgets .card { margin: 0; }
-.widget { animation: fade-up .45s cubic-bezier(.2,.8,.2,1) both; }
 .widget.editing { outline: 2px dashed var(--line); outline-offset: 3px; }
 .w-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
 .w-tools { display: flex; gap: 4px; }
@@ -37,7 +36,7 @@
 .home2 { display: grid; }
 .hero { position: relative; overflow: hidden; border-radius: var(--r-xl); padding: var(--s5) var(--s5) var(--s4); color: #fff; margin-top: var(--s2);
   background: radial-gradient(120% 140% at 100% 0%, #E9925C 0%, transparent 55%), linear-gradient(150deg, #D3561F, #A8360A);
-  box-shadow: 0 14px 34px color-mix(in srgb, var(--accent) 34%, transparent); animation: tab-in .45s var(--ease) both; }
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--accent) 34%, transparent); }
 .hero::after { content: ""; position: absolute; right: -40px; bottom: -60px; width: 200px; height: 200px; border-radius: 48px; transform: rotate(18deg);
   background: rgba(255,255,255,.07); pointer-events: none; }
 .hero-eyebrow { margin: 0; font-size: var(--t-cap); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
@@ -60,7 +59,7 @@
 .parts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
 .part { text-align: left; display: grid; gap: 2px; padding: var(--s4); border-radius: var(--r-lg); border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
   background: var(--surface); box-shadow: var(--e1); color: var(--text); font: inherit; cursor: pointer; position: relative; overflow: hidden;
-  animation: tab-in .4s var(--ease) both; transition: transform .15s var(--spring), box-shadow .2s; }
+  transition: transform .15s var(--spring), box-shadow .2s; }
 .part::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--pc); }
 .part:active { transform: scale(.97); }
 .part-top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s2); margin-bottom: var(--s2); }

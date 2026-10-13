@@ -41,7 +41,7 @@ export function HomeView({ data, r, today, onOpen, onAll, onShared }: {
 
       <div className="widgets">
         {active.map((id, i) => (
-          <section key={id} className={`card widget wid-${id}${edit ? ' editing' : ''}`} style={{ animationDelay: `${i * 60}ms` }}>
+          <section key={id} className={`card widget wid-${id}${edit ? ' editing' : ''}`}>
             <div className="w-head">
               <h3 className="h-plain">{t(`w.${id}` as keyof Dict)}</h3>
               {edit && <div className="w-tools">

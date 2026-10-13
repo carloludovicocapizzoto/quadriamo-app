@@ -16,6 +16,7 @@ import { BottomNav } from '../ui/shell/BottomNav'
 import { TopBar } from '../ui/shell/TopBar'
 import { StreakCelebration } from '../ui/Streak'
 import { TxForm } from '../ui/TxForm'
+import { Sheet } from '../ui/kit/Sheet'
 import { profilePrompt } from '../sync/profile'
 import { closeComposer, openComposer, useComposer } from './composer'
 import { useBootstrap, useDailyPing, useMorningSnapshot, useProReturn, usePushSync, useReviewed } from './effects'
@@ -83,7 +84,7 @@ export function AppShell() {
         </div>
       )}
 
-      <main key={route.tab} className="app-enter tab-in">
+      <main key={route.tab}>
         <SectionBoundary>
           <Suspense fallback={<div className="screen-loading" aria-busy="true" />}>
             {route.tab === 'home' && <>
@@ -126,12 +127,12 @@ export function AppShell() {
       <StreakCelebration s={streak} />
       <BottomNav tab={route.tab} onTab={tab => go(tab === 'analysis' ? { tab, view: 'transactions' } : { tab } as Route)} onAdd={() => openComposer()} badge={{ analysis: data.inbox?.length ?? 0 }} />
 
-      {composer && (
-        <TxForm settings={data.settings} initial={composer.tx} prefill={composer.prefill} defaultDate={defaultDate}
+      <Sheet open={composer.open} onClose={closeComposer} label={composer.value.tx ? t('tx.edit') : t('tx.new')}>
+        <TxForm key={composer.key} settings={data.settings} initial={composer.value.tx} prefill={composer.value.prefill} defaultDate={defaultDate}
           onClose={closeComposer}
-          onSave={tx => { dispatch({ type: composer.tx ? 'updateTx' : 'addTx', tx }); closeComposer() }}
+          onSave={tx => { dispatch({ type: composer.value.tx ? 'updateTx' : 'addTx', tx }); closeComposer() }}
           onDelete={id => { dispatch({ type: 'deleteTx', id }); closeComposer() }} />
-      )}
+      </Sheet>
     </div>
   )
 }

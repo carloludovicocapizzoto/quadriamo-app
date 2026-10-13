@@ -37,10 +37,6 @@
 .inbox-top .tx-date { grid-area: date; font-size: 13px; }
 .inbox-top .tx-amount { grid-area: amount; }
 .inbox-edit select { min-width: 0; font-size: 15px; padding-left: 10px; padding-right: 26px; background-position: right 8px center; }
-.tx-sheet { background: var(--bg); border-radius: var(--r-xl) var(--r-xl) 0 0; box-shadow: var(--e3); animation: sheet-up .32s var(--ease) both; }
-.tx-sheet::backdrop { background: rgba(15,17,20,.42); animation: fade .2s ease both; }
-@media (min-width: 640px) { .tx-sheet { border-radius: var(--r-xl); } }
-.tx-sheet form { padding: var(--s3) var(--s5) 0; }
 .txs-head { display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; margin-bottom: var(--s3); }
 .txs-head h2 { font-family: "DM Sans", sans-serif; font-size: 17px; font-weight: 700; text-align: center; margin: 0; }
 .icon-btn.ghost { width: 40px; height: 40px; border: 0; background: none; color: var(--muted); }
@@ -73,7 +69,7 @@
 .txs-row input:focus-visible, .txs-row select:focus-visible { box-shadow: none; }
 .txs-date { display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
 .txs-hint { margin: var(--s2) var(--s1) 0; }
-.txs-actions { position: sticky; bottom: 0; display: grid; justify-items: center; gap: var(--s1); padding: var(--s4) 0 calc(var(--s4) + env(safe-area-inset-bottom));
+.txs-actions { position: sticky; bottom: calc(-1 * (var(--s6) + env(safe-area-inset-bottom))); display: grid; justify-items: center; gap: var(--s1); padding: var(--s4) 0 calc(var(--s6) + env(safe-area-inset-bottom));
   margin-top: var(--s3); background: linear-gradient(to top, var(--bg) 70%, transparent); }
 @media (max-width: 360px) { .cat-grid { grid-template-columns: repeat(3, 1fr); } }
 .txs-date input { width: auto; font-size: 15px; padding: 0; min-height: 30px; }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { addDays, fxRate, suggest, todayIso, type CategoryType, type Settings, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { newId, parseAmount } from '../store/state'
@@ -18,7 +18,6 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   onClose: () => void
 }) {
   const { t, money } = useI18n()
-  const ref = useRef<HTMLDialogElement>(null)
   const [amount, setAmount] = useState(initial?.amount != null ? String(initial.amount).replace('.', ',') : (prefill?.amount ?? ''))
   const [category, setCategory] = useState<string | null>(() => {
     if (initial) return initial.category
@@ -46,10 +45,6 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   const [currency, setCurrency] = useState(initial?.currency || settings.currency)
   const [errors, setErrors] = useState<string[]>([])
 
-  useEffect(() => {
-    const d = ref.current
-    if (d && !d.open) d.showModal()
-  }, [])
 
   const cat = settings.categories.find(c => c.id === category)
   const isIncome = cat?.type === 'income'
@@ -82,10 +77,10 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
     : BUCKET_COLORS[Math.max(0, settings.buckets.findIndex(b => b.id === c.defaultBucket))]
 
   return (
-    <dialog ref={ref} className="sheet tx-sheet" onClose={onClose} aria-labelledby="tx-title">
+    <div className="tx-sheet">
       <form onSubmit={submit} noValidate>
         <div className="txs-head">
-          <button type="button" className="icon-btn ghost" onClick={() => ref.current?.close()} aria-label={t('action.close')}><Icon name="close" size={20} /></button>
+          <button type="button" className="icon-btn ghost" onClick={onClose} aria-label={t('action.close')}><Icon name="close" size={20} /></button>
           <h2 id="tx-title">{initial ? t('tx.edit') : t('tx.new')}</h2>
           <span className="icon-btn ghost" aria-hidden="true" />
         </div>
@@ -160,6 +155,6 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
           )}
         </div>
       </form>
-    </dialog>
+    </div>
   )
 }

@@ -18,8 +18,11 @@
   /* profondità: a riposo, galleggiante */
   --e1: 0 1px 2px rgba(31,35,40,.05), 0 1px 6px rgba(31,35,40,.04);
   --e3: 0 16px 48px rgba(31,35,40,.18), 0 4px 12px rgba(31,35,40,.08);
-  /* movimento */
+  /* movimento: durate, decelerazione standard e due molle (calcolate da rigidità e smorzamento, vedi docs/DESIGN.md) */
+  --d-fast: 150ms; --d-base: 240ms; --d-spring: 420ms;
   --ease: cubic-bezier(.2,.8,.2,1); --spring: cubic-bezier(.3,1.4,.5,1);
+  --spring-snappy: linear(0, .05, .165, .304, .445, .573, .683, .772, .842, .896, .934, .962, .98, .993, 1, 1.004, 1.006, 1.006, 1.006, 1.005, 1.004, 1.004, 1.003, 1.002, 1);
+  --spring-gentle: linear(0, .047, .156, .288, .422, .546, .654, .743, .814, .869, .911, .942, .964, .979, .989, .996, 1, 1.002, 1.003, 1.003, 1.003, 1.003, 1.002, 1.002, 1);
   /* testo */
   --t-title: 30px; --t-h2: 19px; --t-cap: 12px;
   /* struttura */

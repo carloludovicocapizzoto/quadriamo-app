@@ -3,10 +3,11 @@ import { useSyncExternalStore } from 'react'
 import type { Transaction } from '../engine'
 
 export interface ComposerState { tx?: Transaction; prefill?: { amount?: string; description?: string; category?: string } }
-let state: ComposerState | null = null
+// open: visibile; key: cambia a ogni apertura, così il modulo riparte pulito; il contenuto resta mentre il pannello scende
+let state: { open: boolean; key: number; value: ComposerState } = { open: false, key: 0, value: {} }
 const listeners = new Set<() => void>()
-const set = (s: ComposerState | null) => { state = s; listeners.forEach(f => f()) }
+const set = (s: typeof state) => { state = s; listeners.forEach(f => f()) }
 
-export const openComposer = (s: ComposerState = {}) => set(s)
-export const closeComposer = () => set(null)
+export const openComposer = (value: ComposerState = {}) => set({ open: true, key: state.key + 1, value })
+export const closeComposer = () => set({ ...state, open: false })
 export const useComposer = () => useSyncExternalStore(f => { listeners.add(f); return () => { listeners.delete(f) } }, () => state)
