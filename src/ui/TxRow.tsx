@@ -13,9 +13,9 @@ export function TxRow({ tx, settings, onOpen }: { tx: ClassifiedTx; settings: Se
   return (
     <li>
       <button className={`tx${issues.length ? ' tx-bad' : ''}${tx.upcoming ? ' tx-upcoming' : ''}`} onClick={() => onOpen(tx)}>
-        <span className="tx-avatar" title={bucket ? bucketName(bucket, t) : undefined} style={{ ['--c' as string]: tx.type === 'income' ? 'var(--good)' : BUCKET_COLORS[Math.max(0, settings.buckets.findIndex(b => b.id === tx.bucket))] ?? 'var(--muted)' }}>
-          {(categoryName(cat, t) || tx.description || '?').trim().charAt(0).toUpperCase()}
-        </span>
+        {/* il blocco della parte da cui escono i soldi (le entrate non hanno parte) */}
+        <span className="tx-block" title={bucket ? bucketName(bucket, t) : undefined}
+              style={{ ['--c' as string]: tx.type === 'income' ? 'transparent' : BUCKET_COLORS[settings.buckets.findIndex(b => b.id === tx.bucket)] ?? 'var(--fill-2)' }} />
         <span className="tx-main">
           <span className="tx-desc">{tx.description || categoryName(cat, t)}</span>
           <span className="tx-meta">

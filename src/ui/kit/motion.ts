@@ -2,10 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 
 const reduced = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
-/** Numero che sale fino al valore (all'apertura e quando cambia), come i contatori delle app. */
-export function useCountUp(value: number, ms = 700): number {
+/**
+ * Numero che passa dal valore di prima a quello nuovo quando cambia: si vede dove va a finire la spesa.
+ * All'apertura è già al suo posto (contare da zero decorerebbe, non spiegherebbe niente).
+ */
+export function useCountUp(value: number, ms = 500): number {
   const still = reduced()
-  const [shown, setShown] = useState(still ? value : 0)
+  const [shown, setShown] = useState(value)
   const from = useRef(shown)
   useEffect(() => {
     if (still) { from.current = value; return }

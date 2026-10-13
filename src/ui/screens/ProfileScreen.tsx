@@ -15,6 +15,7 @@ import { SharedView } from '../shared/SharedView'
 import { BetaSection } from '../beta/BetaSection'
 import { NewsPushToggle, PushToggle } from '../beta/PushToggle'
 import { StreakCalendar } from '../shell/StreakCalendar'
+import { GoalsStrip } from '../goals/Goals'
 import { Flame } from '../Streak'
 
 import type { ProfilePage } from '../../app/router'
@@ -31,7 +32,7 @@ const ROWS: { id: ProfilePage; icon: IconName; label: keyof Dict }[] = [
   { id: 'data', icon: 'lock', label: 'prof.data' },
 ]
 
-/** Profilo: chi sei, il tuo slancio, i traguardi e tutte le impostazioni come elenco di voci. */
+/** Profilo: chi sei, il tuo slancio, i tuoi obiettivi, i traguardi e tutte le impostazioni come elenco di voci. */
 export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onFeedback, onAdmin }: {
   page: ProfilePage | null; onPage: (p: ProfilePage | null) => void; data: AppData; streak: Streak | null; today: string
   onLogin: () => void; onFeedback: () => void; onAdmin: () => void
@@ -88,6 +89,8 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onFe
       </div>}
 
       <section className="card"><StreakCalendar days={data.activity ?? []} today={today} /></section>
+
+      <GoalsStrip goals={data.goals} today={today} currency={data.settings.currency} />
 
       <h2 className="sec-title">{t('prof.badges')} <small className="muted">{list.filter(b => b.done).length}/{list.length}</small></h2>
       <div className="badges">

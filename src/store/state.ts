@@ -15,8 +15,6 @@ export interface AppData {
   payday?: Record<string, string[]>   // "YYYY-MM" -> bucket già trasferiti nel piano del giorno di paga
   profile?: PrivateProfile            // risposte facoltative del profilo: restano nei dati dell'utente, mai all'amministratore
   profileUpdatedAt?: string
-  home?: string[]                     // widget della Home scelti dall'utente, nell'ordine in cui li vuole
-  homeUpdatedAt?: string
   activity?: string[]                 // giorni (locali) in cui l'utente ha aggiornato Quadriamo: servono allo "slancio"
   goals?: Goal[]                      // obiettivi di risparmio (gli eliminati restano con removed: true per la sincronizzazione)
 }
@@ -102,7 +100,6 @@ export type Action =
   | { type: 'ignoreInbox'; ids: string[]; at?: string }
   | { type: 'togglePayday'; month: string; bucketId: string }
   | { type: 'setProfile'; profile: PrivateProfile | null; at?: string }
-  | { type: 'setHome'; widgets: string[]; at?: string }
   | { type: 'checkIn'; at?: string }                     // "oggi niente spese": tiene vivo lo slancio
   | { type: 'saveGoal'; goal: Goal; at?: string }
   | { type: 'deleteGoal'; id: string; at?: string }
@@ -191,8 +188,6 @@ function reduce(state: State, a: Action): State {
     case 'goalMoney':
       return { ...state, data: { ...d, goals: (d.goals ?? []).map(x => x.id === a.id
         ? { ...x, contributions: [...x.contributions, { id: newId(), date: a.date, amount: Math.round(a.amount * 100) / 100 }], updatedAt: at } : x) } }
-    case 'setHome':
-      return { ...state, data: { ...d, home: a.widgets, homeUpdatedAt: at } }
     case 'setProfile':
       return { ...state, data: { ...d, profile: a.profile ?? undefined, profileUpdatedAt: at } }
     case 'setInvestments':
@@ -258,7 +253,6 @@ export function parseBackup(text: string): AppData {
            ...(d.investments ? { investments: d.investments, investmentsUpdatedAt: d.investmentsUpdatedAt } : {}),
            inbox: d.inbox ?? [], importDone: d.importDone ?? {}, payday: d.payday ?? {},
            ...(d.profile ? { profile: d.profile, profileUpdatedAt: d.profileUpdatedAt } : {}),
-           ...(Array.isArray(d.home) ? { home: d.home, homeUpdatedAt: d.homeUpdatedAt } : {}),
            ...(Array.isArray(d.activity) ? { activity: d.activity } : {}),
            ...(Array.isArray(d.goals) ? { goals: d.goals } : {}) }
 }
@@ -306,8 +300,6 @@ export function mergeData(a: AppData, b: AppData): AppData {
   const payday: Record<string, string[]> = { ...b.payday, ...a.payday }
   const newerInv = (b.investmentsUpdatedAt ?? '') > (a.investmentsUpdatedAt ?? '')
   const investments = newerInv ? b.investments : (a.investments ?? b.investments)
-  const newerHome = (b.homeUpdatedAt ?? '') > (a.homeUpdatedAt ?? '')
-  const home = newerHome ? b.home : (a.home ?? b.home)
   const activity = [...new Set([...(a.activity ?? []), ...(b.activity ?? [])])].sort().slice(-400)
   const newerProfile = (b.profileUpdatedAt ?? '') > (a.profileUpdatedAt ?? '')
   const profile = newerProfile ? b.profile : (a.profileUpdatedAt ? a.profile : (a.profile ?? b.profile))
@@ -316,7 +308,6 @@ export function mergeData(a: AppData, b: AppData): AppData {
     settingsUpdatedAt: newerSettings ? b.settingsUpdatedAt : a.settingsUpdatedAt,
     ...(investments ? { investments, investmentsUpdatedAt: newerInv ? b.investmentsUpdatedAt : a.investmentsUpdatedAt } : {}),
     inbox, importDone, payday,
-    ...(home ? { home, homeUpdatedAt: newerHome ? b.homeUpdatedAt : a.homeUpdatedAt } : {}),
     ...(activity.length ? { activity } : {}),
     ...(a.goals || b.goals ? { goals: mergeGoals(a.goals, b.goals) } : {}),
     ...(profile || a.profileUpdatedAt || b.profileUpdatedAt

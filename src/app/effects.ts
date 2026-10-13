@@ -1,5 +1,5 @@
 // Effetti di contorno dell'app, uno per hook: ognuno fa una cosa sola.
-import { useEffect, useSyncExternalStore } from 'react'
+import { useEffect } from 'react'
 import { safeToSpend, type MonthResult, type Streak } from '../engine'
 import { ENTRY } from '../entry'
 import { saveMorningSnapshot } from '../beta/morning'
@@ -66,16 +66,4 @@ export function useDailyPing(data: AppData | null, loaded: boolean, signedIn: bo
   // eslint-disable-next-line react-hooks/exhaustive-deps -- una volta per caricamento dei dati
   useEffect(() => { if (loaded) ping() }, [loaded, !!data])
   return ping
-}
-
-/** Missione "dai un'occhiata alla previsione": fatta quando si apre Analisi (ricordata per il giorno). */
-const reviewedListeners = new Set<() => void>()
-const reviewedOn = () => { try { return localStorage.getItem('q.reviewed') ?? '' } catch { return '' } }
-export function useReviewed(inAnalysis: boolean, today: string): boolean {
-  useEffect(() => {
-    if (!inAnalysis || reviewedOn() === today) return
-    try { localStorage.setItem('q.reviewed', today) } catch { /* niente */ }
-    reviewedListeners.forEach(f => f())
-  }, [inAnalysis, today])
-  return useSyncExternalStore(f => { reviewedListeners.add(f); return () => { reviewedListeners.delete(f) } }, reviewedOn) === today
 }

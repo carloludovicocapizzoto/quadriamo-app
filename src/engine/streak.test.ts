@@ -21,9 +21,9 @@ describe('slancio', () => {
 
 import { createInitial, reducer } from '../store/state'
 describe('slancio nello store', () => {
-  it('un movimento o "oggi niente spese" segnano il giorno; cambiare la Home no', () => {
+  it('un movimento o "oggi niente spese" segnano il giorno; cambiare le impostazioni no', () => {
     const data = createInitial('EUR', '2026-10-12')
-    let s = reducer({ loaded: true, data }, { type: 'setHome', widgets: ['left'], at: '2026-10-12T10:00:00' })
+    let s = reducer({ loaded: true, data }, { type: 'setSettings', settings: { ...data.settings, currency: 'USD' } })
     expect(s.data!.activity).toBeUndefined()
     s = reducer(s, { type: 'checkIn', at: '2026-10-12T10:00:00' })
     s = reducer(s, { type: 'checkIn', at: '2026-10-12T18:00:00' })

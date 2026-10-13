@@ -1,8 +1,7 @@
-// Missioni del giorno e traguardi (come in Duolingo, ma sui soldi): piccoli obiettivi che rendono l'abitudine visibile.
+// Il numero del giorno e i traguardi: piccoli obiettivi che rendono l'abitudine visibile.
 import { safeToSpend } from './spend'
 import type { MonthResult, Settings } from './types'
 
-export interface Mission { id: 'log' | 'under' | 'inbox' | 'review'; done: boolean; progress: number; value?: number; limit?: number }
 
 /** Quanto si è speso oggi (spese variabili, non i ricorrenti) e quanto si poteva spendere stamattina. */
 export function todayBudget(r: MonthResult, s: Settings, today: string) {
@@ -22,13 +21,6 @@ const spentOn = (r: MonthResult, bucket: string, day: string) => r.transactions
   .reduce((a, t) => a + (t.amountIn ?? 0), 0)
 const round = (n: number) => Math.round(n * 100) / 100
 
-export function dailyMissions(r: MonthResult, s: Settings, today: string, opts: { doneToday: boolean; inbox: number; reviewed: boolean }): Mission[] {
-  const b = todayBudget(r, s, today)
-  const out: Mission[] = [{ id: 'log', done: opts.doneToday, progress: opts.doneToday ? 1 : 0 }]
-  if (b.allowance > 0) out.push({ id: 'under', done: b.spent <= b.allowance, progress: Math.min(1, b.spent / b.allowance), value: b.spent, limit: b.allowance })
-  out.push(opts.inbox > 0 ? { id: 'inbox', done: false, progress: 0, value: opts.inbox } : { id: 'review', done: opts.reviewed, progress: opts.reviewed ? 1 : 0 })
-  return out
-}
 
 export interface Badge { id: string; done: boolean; progress: number; goal: number }
 

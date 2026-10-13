@@ -11,7 +11,7 @@ import { Sheet } from '../kit/Sheet'
 const GOAL_ICONS: IconName[] = ['target', 'plane', 'home', 'car', 'gift', 'heart', 'growth']
 const live = (goals: Goal[] | undefined) => (goals ?? []).filter(g => !g.removed)
 
-/** Home: i tuoi obiettivi di risparmio come tessere da scorrere, più "Nuovo obiettivo". */
+/** Profilo: i tuoi obiettivi di risparmio come tessere da scorrere, più "Nuovo obiettivo". */
 export function GoalsStrip({ goals, today, currency }: { goals: Goal[] | undefined; today: string; currency: string }) {
   const { t, money } = useI18n()
   const [open, setOpen] = useState<string | 'new' | null>(null)

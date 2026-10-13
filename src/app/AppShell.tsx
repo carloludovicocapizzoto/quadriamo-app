@@ -1,25 +1,22 @@
-// L'app vera e propria: barra in alto, pagina corrente (dall'indirizzo), barra in basso, "nuovo movimento", messaggi.
+// L'app vera e propria: pagina corrente (dall'indirizzo), barra in basso, "nuovo movimento", messaggi.
 import { lazy, Suspense, useState } from 'react'
-import { mainIncome, todayBudget, type ClassifiedTx, type Transaction } from '../engine'
+import { mainIncome, type ClassifiedTx, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
 import { createInitial } from '../store/state'
 import { useSync } from '../sync/context'
-import { usePlan } from '../billing/plan'
 import { ConsentCard } from '../ui/beta/ConsentCard'
 import { FeedbackCard } from '../ui/beta/FeedbackCard'
 import { FxAutoUpdate } from '../ui/FxAutoUpdate'
 import { HomeScreen } from '../ui/home/HomeScreen'
-import { BUCKET_COLORS, bucketName } from '../ui/names'
 import { ProfileForm } from '../ui/ProfileForm'
 import { BottomNav } from '../ui/shell/BottomNav'
-import { TopBar } from '../ui/shell/TopBar'
 import { StreakCelebration } from '../ui/Streak'
 import { TxForm } from '../ui/TxForm'
 import { Sheet } from '../ui/kit/Sheet'
 import { profilePrompt } from '../sync/profile'
 import { closeComposer, openComposer, useComposer } from './composer'
-import { useBootstrap, useDailyPing, useMorningSnapshot, useProReturn, usePushSync, useReviewed } from './effects'
+import { useBootstrap, useDailyPing, useMorningSnapshot, useProReturn, usePushSync } from './effects'
 import { useEntry } from './entryContext'
 import { closeFeedback, openFeedback, useFeedbackOpen } from './prompts'
 import { navigate, useRoute, type Route } from './router'
@@ -36,7 +33,6 @@ export function AppShell() {
   const { t, lang } = useI18n()
   const { state, dispatch } = useStore()
   const sync = useSync()
-  const plan = usePlan()
   const route = useRoute()
   const entry = useEntry()
   const data = state.data!
@@ -51,7 +47,6 @@ export function AppShell() {
   useMorningSnapshot(data, thisMonth, streak, today, lang, t)
   usePushSync(lang, !!streak?.doneToday, today, !!data.demo)
   const ping = useDailyPing(data, state.loaded, !!sync.user, today, lang)
-  const reviewed = useReviewed(route.tab === 'analysis', today)
 
   if (!month || !thisMonth || !viewed) return null
   const openTx = (tx: ClassifiedTx | Transaction) => {
@@ -61,20 +56,12 @@ export function AppShell() {
   }
   // la data proposta è oggi se si guarda il mese corrente, altrimenti l'inizio del mese guardato
   const defaultDate = route.tab !== 'analysis' || (month.period.start <= today && today <= month.period.end) ? today : month.period.start
-  const budget = todayBudget(thisMonth, data.settings, today)
-  const parts = budget.parts.map(p => {
-    const i = data.settings.buckets.findIndex(b => b.id === p.bucketId)
-    return { name: bucketName(data.settings.buckets[i], t), color: BUCKET_COLORS[i], perDay: p.perDay, over: p.free < 0 }
-  })
   const go = (r: Route) => navigate(r)
   const toTransactions = () => go({ tab: 'analysis', view: 'transactions' })
   const importStatement = () => { toTransactions(); setTimeout(() => document.querySelector<HTMLInputElement>('input[type=file]')?.click(), 150) }
 
   return (
     <div className="app has-nav app2">
-      <TopBar streak={streak} activity={data.activity ?? []} today={today} todayLeft={budget.parts.length && thisMonth.income ? budget.left : null}
-              parts={parts} currency={data.settings.currency} initial={(sync.user?.firstName || sync.user?.email || '').charAt(0).toUpperCase()}
-              pro={plan.pro} onProfile={() => go({ tab: 'profile' })} />
       {data.demo && (
         <div className="demo-banner">
           <span>{t('demo.banner')}</span>
@@ -92,13 +79,9 @@ export function AppShell() {
               {sync.user && askProfile && !data.demo && !entry.inSetup && (
                 <section className="card"><h3 className="h-plain">{t('prof.promptTitle')}</h3><ProfileForm onDone={() => setAskProfile(false)} /></section>)}
               {feedback && <FeedbackCard onClose={closeFeedback} />}
-              <HomeScreen data={data} r={thisMonth} today={today} streak={streak} reviewed={reviewed}
+              <HomeScreen data={data} r={thisMonth} today={today} streak={streak}
                 onAdd={kind => openComposer(kind === 'income' ? { prefill: { category: mainIncome(data.settings) } } : {})}
-                onOpen={openTx} onAll={toTransactions} onImport={importStatement}
-                onShared={() => go({ tab: 'profile', page: 'shared' })}
-                onAnalysis={() => go({ tab: 'analysis', view: 'month' })}
-                onRecurring={() => go({ tab: 'profile', page: 'recurring' })}
-                onNews={() => go({ tab: 'news' })} />
+                onOpen={openTx} onAll={toTransactions} />
             </>}
             {route.tab === 'news' && <NewsScreen onAction={a => {
               if (a === 'add') openComposer()

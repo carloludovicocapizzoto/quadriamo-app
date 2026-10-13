@@ -1,6 +1,9 @@
 /* ==========================================================================
-   Token di Quadriamo. Ogni valore ha un significato; i componenti usano solo questi.
-   Colori: carta, inchiostro, una sola tinta d'azione (--accent) e le quattro parti (--b1…--b4).
+   Design system di Quadriamo 1.0. Ogni valore ha un significato; i componenti usano solo questi.
+   L'interfaccia è disegnata sulla superficie dello schermo: niente ombre, niente gradienti, niente card.
+   La profondità viene da spazio, tipografia e contrasto.
+   Colore: carta e inchiostro. Le uniche tinte sono i quattro blocchi (--b1…--b4) e il rosso dello sforamento.
+   L'azione principale è inchiostro: così un colore significa sempre una parte del budget.
    ========================================================================== */
 /* Testo: SF Pro su iPhone, iPad e Mac (font di sistema, non si scarica); Inter altrove (licenza OFL, /fonts/Inter-LICENSE.txt).
    Inter si scarica solo dove serve: sui dispositivi Apple il browser usa SF Pro e non la chiede. */
@@ -10,45 +13,50 @@
 @font-face { font-family: "DM Serif Display"; src: url("/fonts/DMSerifDisplay-Regular.ttf") format("truetype"); font-display: swap; }
 
 :root {
-  /* colore */
-  --bg: #FAF7F2; --surface: #FFFDF9; --text: #1F2328; --muted: #5B6068; --line: #E6DFD3;
-  --accent: #C2410C; --accent-2: #E0884F;
-  --good: #15803D; --good-bg: #E7F5EC; --bad: #B42318; --bad-bg: #FDECEA; --warn: #B45309; --warn-bg: #FEF3C7;
-  --b1: #C2410C; --b2: #E89A6C; --b3: #E9C9A6; --b4: #8A8F98;
-  --gold: #E3A008;
-  /* spazio (griglia 4/8) e raggi */
-  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px;
-  --r-md: 12px; --r-lg: 16px; --r-xl: 24px; --r-full: 999px;
-  /* profondità: a riposo, galleggiante */
-  --e1: 0 1px 2px rgba(31,35,40,.05), 0 1px 6px rgba(31,35,40,.04);
-  --e3: 0 16px 48px rgba(31,35,40,.18), 0 4px 12px rgba(31,35,40,.08);
-  /* movimento: durate, decelerazione standard e due molle (calcolate da rigidità e smorzamento, vedi docs/DESIGN.md) */
-  --d-fast: 150ms; --d-base: 240ms; --d-spring: 420ms;
-  --ease: cubic-bezier(.2,.8,.2,1); --spring: cubic-bezier(.3,1.4,.5,1);
-  --spring-snappy: linear(0, .05, .165, .304, .445, .573, .683, .772, .842, .896, .934, .962, .98, .993, 1, 1.004, 1.006, 1.006, 1.006, 1.005, 1.004, 1.004, 1.003, 1.002, 1);
-  --spring-gentle: linear(0, .047, .156, .288, .422, .546, .654, .743, .814, .869, .911, .942, .964, .979, .989, .996, 1, 1.002, 1.003, 1.003, 1.003, 1.003, 1.002, 1.002, 1);
-  /* testo: un font per l'interfaccia, il serif solo per il marchio */
+  /* colore: carta, inchiostro (tre intensità), linea sottile, riempimento dei controlli */
+  --bg: #F6F4EF; --surface: #F6F4EF; --text: #17181A; --muted: #6B6E73; --faint: #A3A5A8;
+  --line: rgba(23,24,26,.09); --fill: rgba(23,24,26,.05); --fill-2: rgba(23,24,26,.09);
+  --accent: #17181A; --on-accent: #F6F4EF;
+  --good: #1F7A45; --good-bg: rgba(31,122,69,.09); --bad: #B42318; --bad-bg: rgba(180,35,24,.08); --warn: #A15C07; --warn-bg: rgba(161,92,7,.09);
+  /* i quattro blocchi: Essenziali, Qualità della vita, Fondo di sicurezza, Investimenti */
+  --b1: #C2410C; --b2: #E8915F; --b3: #D9BE9A; --b4: #8C8F94;
+  /* spazio: griglia di 4 */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px; --s12: 48px; --s16: 64px;
+  /* forma: blocchi, controlli, foglio. Il cerchio solo per ciò che è davvero rotondo (interruttore, punto) */
+  --r-sm: 3px; --r-md: 10px; --r-lg: 16px; --r-xl: 16px; --r-full: 999px;
+  --e1: none; --e3: none;
+  /* tipografia: sei dimensioni, due pesi, numeri tabulari ovunque */
   --font-ui: -apple-system, BlinkMacSystemFont, "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
   --font-brand: "DM Serif Display", Georgia, serif;
-  --t-title: 30px; --t-h2: 19px; --t-cap: 12px;
+  --t-hero: 60px; --t-title: 28px; --t-h2: 20px; --t-body: 16px; --t-sm: 13px; --t-cap: 11px;
+  --w-strong: 600;
+  /* movimento: due molle (calcolate da rigidità e smorzamento, vedi docs/DESIGN.md) e una dissolvenza */
+  --d-fast: 160ms; --d-base: 240ms; --d-spring: 420ms;
+  --ease: cubic-bezier(.2,.8,.2,1);
+  --spring-snappy: linear(0, .05, .165, .304, .445, .573, .683, .772, .842, .896, .934, .962, .98, .993, 1, 1.004, 1.006, 1.006, 1.006, 1.005, 1.004, 1.004, 1.003, 1.002, 1);
+  --spring-gentle: linear(0, .047, .156, .288, .422, .546, .654, .743, .814, .869, .911, .942, .964, .979, .989, .996, 1, 1.002, 1.003, 1.003, 1.003, 1.003, 1.002, 1.002, 1);
+  --spring: var(--spring-snappy);
   /* struttura */
-  --bar-h: 64px; --top-h: 56px;
+  --bar-h: 60px; --top-h: 0px; --gutter: 20px;
   color-scheme: light;
   font: 16px/1.5 var(--font-ui);
+  font-variant-numeric: tabular-nums;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #14171B; --surface: #1F2328; --text: #F1ECE4; --muted: #B5B0A8; --line: #2E333A;
-    --accent: #F07A42; --good: #4ADE80; --good-bg: #16301F; --bad: #F87171; --bad-bg: #3A1F1F; --warn: #FBBF24; --warn-bg: #3A2E12;
-    --b1: #F07A42; --b2: #E89A6C; --b3: #D9B48C; --b4: #9CA3AF;
-    --e1: 0 1px 2px rgba(0,0,0,.35); --e3: 0 18px 50px rgba(0,0,0,.55);
+    --bg: #0F1012; --surface: #0F1012; --text: #EDEBE6; --muted: #9A9DA3; --faint: #5E6166;
+    --line: rgba(237,235,230,.1); --fill: rgba(237,235,230,.06); --fill-2: rgba(237,235,230,.11);
+    --accent: #EDEBE6; --on-accent: #0F1012;
+    --good: #4CC27A; --good-bg: rgba(76,194,122,.12); --bad: #F2675C; --bad-bg: rgba(242,103,92,.12); --warn: #E5A13A; --warn-bg: rgba(229,161,58,.12);
+    --b1: #E0602A; --b2: #E8915F; --b3: #CDB18C; --b4: #8C8F94;
     color-scheme: dark;
-  }
+}
 }
 :root[data-theme="dark"] {
-  --bg: #14171B; --surface: #1F2328; --text: #F1ECE4; --muted: #B5B0A8; --line: #2E333A;
-  --accent: #F07A42; --good: #4ADE80; --good-bg: #16301F; --bad: #F87171; --bad-bg: #3A1F1F; --warn: #FBBF24; --warn-bg: #3A2E12;
-  --b1: #F07A42; --b2: #E89A6C; --b3: #D9B48C; --b4: #9CA3AF;
-  --e1: 0 1px 2px rgba(0,0,0,.35); --e3: 0 18px 50px rgba(0,0,0,.55);
+  --bg: #0F1012; --surface: #0F1012; --text: #EDEBE6; --muted: #9A9DA3; --faint: #5E6166;
+  --line: rgba(237,235,230,.1); --fill: rgba(237,235,230,.06); --fill-2: rgba(237,235,230,.11);
+  --accent: #EDEBE6; --on-accent: #0F1012;
+  --good: #4CC27A; --good-bg: rgba(76,194,122,.12); --bad: #F2675C; --bad-bg: rgba(242,103,92,.12); --warn: #E5A13A; --warn-bg: rgba(229,161,58,.12);
+  --b1: #E0602A; --b2: #E8915F; --b3: #CDB18C; --b4: #8C8F94;
   color-scheme: dark;
 }
