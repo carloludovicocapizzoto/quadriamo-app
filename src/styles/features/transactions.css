@@ -20,10 +20,11 @@
 .amount-row { display: grid; grid-template-columns: 1fr 110px; gap: 10px; align-items: end; }
 .amount-row .field { margin-bottom: 4px; }
 .currency-field select { min-height: 60px; font-weight: 600; }
-.card-inbox { border-color: var(--accent); }
-.inbox-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 10px; }
-.inbox-item { border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px; display: grid; gap: 10px; }
-.inbox-item.needs { border-color: var(--bad); }
+.import-row { margin: 0 0 var(--s4); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.row-lead { color: var(--muted); flex: none; }
+.inbox-list { list-style: none; padding: 0; margin: 10px 0 0; border-top: 1px solid var(--line); }
+.inbox-item { border-bottom: 1px solid var(--line); padding: var(--s3) 0; display: grid; gap: 10px; }
+.inbox-item.needs .tx-desc { color: var(--bad); }
 .inbox-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "desc amount" "date amount"; gap: 2px 8px; align-items: center; }
 .inbox-top .tx-desc { grid-area: desc; white-space: normal; overflow-wrap: anywhere; font-size: 14.5px; }
 .inbox-edit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -31,7 +32,7 @@
 .remember { flex-wrap: wrap; white-space: normal; }
 .kw-input { min-height: 34px; padding: 4px 8px; width: auto; flex: 1; min-width: 120px; }
 .dup-note { background: var(--warn-bg); color: var(--warn); border-radius: var(--r-md); padding: 6px 10px; margin: 6px 0; }
-.inbox-item.dup { border-color: #D97706; }
+.inbox-item.dup .tx-desc { color: var(--warn); }
 .tx-meta .tx-date { font-size: inherit; }
 .tx-meta .tag { margin-left: 6px; }
 .inbox-top .tx-date { grid-area: date; font-size: 13px; }

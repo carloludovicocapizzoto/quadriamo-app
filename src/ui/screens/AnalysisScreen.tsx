@@ -7,7 +7,6 @@ import { MonthNav } from '../MonthNav'
 import { MonthView } from '../MonthView'
 import { InvestmentsView } from '../InvestmentsView'
 import { ProGate } from '../Pro'
-import { CategoryChangesReport, TrendReport } from '../Reports'
 import { YearNav, YearView } from '../YearView'
 import { TransactionsScreen } from './TransactionsScreen'
 
@@ -42,13 +41,7 @@ export function AnalysisScreen({ view, onView, data, result, current, homeResult
         {view === 'year' && <>
           <YearNav year={year} onChange={onYear} />
           <Swipe id={String(year)} onPrev={() => onYear(year - 1)} onNext={() => onYear(year + 1)}>
-          {year === homeResult.ym.year && <ProGate feature="reports"><div className="widgets report-grid">
-            <section className="card widget"><div className="w-head"><h3 className="h-plain">{t('w.trend')}</h3></div>
-              <TrendReport r={homeResult} txs={data.transactions} settings={data.settings} today={today} /></section>
-            <section className="card widget"><div className="w-head"><h3 className="h-plain">{t('w.growing')}</h3></div>
-              <CategoryChangesReport r={homeResult} txs={data.transactions} settings={data.settings} today={today} /></section>
-          </div></ProGate>}
-          <YearView year={year} transactions={data.transactions} settings={data.settings} today={today} onYear={onYear}
+          <YearView year={year} transactions={data.transactions} settings={data.settings} today={today} current={homeResult} onYear={onYear}
                     onOpenMonth={m => { onMonth(m); onView('month'); window.scrollTo(0, 0) }} />
           </Swipe>
         </>}

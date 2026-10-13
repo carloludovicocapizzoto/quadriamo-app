@@ -38,7 +38,6 @@ const shot = async (name, prep = '') => {
   writeFileSync(join(OUT, name), Buffer.from(result.data, 'base64')); console.log(name)
 }
 const scrollTo = sel => `(() => { const el = ${sel}; if (el) { el.scrollIntoView({ block: 'start' }); window.scrollBy(0, -12) } })()`
-const byText = (tag, text) => `[...document.querySelectorAll('${tag}')].find(x => x.textContent.includes(${JSON.stringify(text)}))`
 
 await cdp('Page.enable'); await cdp('Runtime.enable')
 // THEME=dark e WIDTH=1024 per il controllo visivo della modalità scura e del computer
@@ -66,8 +65,9 @@ await js(`[...document.querySelectorAll('.filters .chip')].find(b => b.textConte
 await js(`document.querySelector('.filters .btn.primary').click()`); await sleep(900); await shot('30-filtered.jpg', 'window.scrollTo(0,0)')
 await js(`[...document.querySelectorAll('.link-btn')].find(b => b.textContent.includes('Azzera'))?.click()`); await sleep(400)
 await click('Analisi', '.tabbar button'); await sleep(2500); await shot('12-forecast.jpg', clean); await shot('13-month.jpg', clean + ';' + scrollTo(`document.querySelector('.part-rows')?.previousElementSibling`))
-await click('Anno', '.segmented button'); await sleep(900); await shot('14-trend.jpg', clean + ';' + scrollTo(byText('.widget', 'Andamento')))
-await shot('15-growing.jpg', scrollTo(byText('.widget', 'Categorie che crescono')))
+await click('Anno', '.segmented button'); await sleep(900); await shot('14-trend.jpg', clean)
+await shot('15-growing.jpg', scrollTo(`document.querySelector('.part-rows')?.previousElementSibling`))
+await click('Investi', '.segmented button'); await sleep(1000); await shot('38-invest.jpg', clean)
 await click('Profilo', '.tabbar button'); await sleep(900); await shot('17-profile.jpg', clean)
 await shot('22-profile-list.jpg', scrollTo(`document.querySelectorAll('.group')[3]`))
 await js(`location.hash = '#/profile/progress'`); await sleep(1000); await shot('35-progress.jpg', 'window.scrollTo(0,0)')

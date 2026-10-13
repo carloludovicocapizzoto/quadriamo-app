@@ -3,7 +3,9 @@ import { FIRST, forecastMonth, paydayPlan, ymKey, type ClassifiedTx, type MonthR
 import { useStore } from '../store/context'
 import { useI18n } from '../i18n/core'
 import { usePlan } from '../billing/plan'
+import { ByCategory } from './ByCategory'
 import { Checks } from './Checks'
+import { Outcome } from './Outcome'
 import { DailyChart } from './DailyChart'
 import { Money } from './kit/Money'
 import { BUCKET_COLORS, bucketName, categoryName } from './names'
@@ -15,11 +17,9 @@ import { TxRow } from './TxRow'
  */
 export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; settings: Settings; onOpen: (tx: ClassifiedTx) => void; today: string }) {
   const { t } = useI18n()
-  const cats = r.byCategory.filter(c => c.amount !== 0).sort((a, b) => b.amount - a.amount)
-  const top = cats[0]?.amount ?? 1
   return (
     <>
-      <Outcome r={r} settings={settings} today={today} />
+      <MonthOutcome r={r} settings={settings} today={today} />
 
       <h2 className="sec-title">{t('ana.parts')}</h2>
       <Parts r={r} settings={settings} onOpen={onOpen} />
@@ -27,17 +27,9 @@ export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; sett
       <h2 className="sec-title">{t('ana.daily')}</h2>
       <DailyChart r={r} settings={settings} today={today} />
 
-      {cats.length > 0 && <>
+      {r.byCategory.some(c => c.amount !== 0) && <>
         <h2 className="sec-title">{t('month.byCategory')}</h2>
-        <ul className="by-cat">
-          {cats.map(c => (
-            <li key={c.category.id}>
-              <span className="by-cat-name">{categoryName(c.category, t)}</span>
-              <Money className="by-cat-amount" value={c.amount} currency={settings.currency} />
-              <span className="by-cat-bar" aria-hidden="true"><span style={{ transform: `scaleX(${c.amount / top})` }} /></span>
-            </li>
-          ))}
-        </ul>
+        <ByCategory rows={r.byCategory} currency={settings.currency} />
       </>}
 
       <Payday r={r} settings={settings} />
@@ -46,7 +38,7 @@ export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; sett
 }
 
 /** Come finisce il mese: per quello in corso, la previsione a questo ritmo; per gli altri, com'è andata davvero. */
-function Outcome({ r, settings, today }: { r: MonthResult; settings: Settings; today: string }) {
+function MonthOutcome({ r, settings, today }: { r: MonthResult; settings: Settings; today: string }) {
   const { t, money } = useI18n()
   const plan = usePlan()
   const cur = settings.currency
@@ -56,19 +48,12 @@ function Outcome({ r, settings, today }: { r: MonthResult; settings: Settings; t
   const label = f ? (value < 0 ? t('ana.endOver') : t('ana.endLeft'))
     : now ? (value < 0 ? t('ana.overNow') : t('ana.leftNow')) : (value < 0 ? t('ana.overPast') : t('ana.leftPast'))
   return (
-    <section className="outcome">
-      <Money className={`outcome-amount${value < 0 ? ' bad' : ''}`} value={Math.abs(value)} currency={cur} />
-      <p className="outcome-label">{label}</p>
+    <Outcome value={value} currency={cur} label={label}
+      detail={f && t(f.upcoming > 0 ? 'rep.detail' : 'rep.detailNoUp', { spent: money(f.spentSoFar, cur), upcoming: money(f.upcoming, cur), perDay: money(f.variablePerDay, cur) })}
+      totals={[{ label: t('month.income'), value: r.income }, { label: t('month.spent'), value: r.spent }, { label: t('ana.saved'), value: r.saved }]}>
       <Checks checks={r.checks} />
-      {f && <p className="outcome-detail">{t(f.upcoming > 0 ? 'rep.detail' : 'rep.detailNoUp',
-        { spent: money(f.spentSoFar, cur), upcoming: money(f.upcoming, cur), perDay: money(f.variablePerDay, cur) })}</p>}
-      <dl className="outcome-row">
-        <div><dt>{t('month.income')}</dt><dd><Money value={r.income} currency={cur} /></dd></div>
-        <div><dt>{t('month.spent')}</dt><dd><Money value={r.spent} currency={cur} /></dd></div>
-        <div><dt>{t('ana.saved')}</dt><dd><Money value={r.saved} currency={cur} /></dd></div>
-      </dl>
       {r.transactions.length === 0 && <p className="muted small">{t('month.empty')}</p>}
-    </section>
+    </Outcome>
   )
 }
 

@@ -33,14 +33,24 @@ export function InboxView({ settings }: { settings: Settings }) {
   const dups = state.data ? duplicateCandidates(state.data) : new Map<string, Transaction>()
   const ready = inbox.filter(i => i.category && !dups.has(i.id))      // "conferma tutti" salta i possibili doppioni
 
+  // niente da confermare: una riga sola per importare (il file si sceglie toccandola)
+  if (!inbox.length) return (
+    <div className="import-row">
+      <label className="row"><Icon name="upload" size={20} className="row-lead" />
+        <span className="row-main"><span>{t('imp.import')}</span><small>{t('imp.short')}</small></span>
+        <Icon name="chevron" size={18} className="row-chev" />
+        <input type="file" accept=".csv,text/csv,text/plain" hidden onChange={onFile} /></label>
+      {msg && <p className={msg.bad ? 'bad-text small' : 'good-text small'} role="status">{msg.text}</p>}
+    </div>
+  )
   return (
-    <section className={`card${inbox.length ? ' card-inbox' : ''}`}>
+    <section className="card card-inbox">
       <div className="card-head">
-        <h3 className="h-plain">{inbox.length ? t('inbox.title', { n: inbox.length }) : t('imp.import')}</h3>
+        <h3 className="h-plain">{t('inbox.title', { n: inbox.length })}</h3>
         <label className="btn small-btn"><Icon name="upload" size={16} />{t('imp.import')}
           <input type="file" accept=".csv,text/csv,text/plain" hidden onChange={onFile} /></label>
       </div>
-      <p className="muted small">{inbox.length ? t('inbox.hint') : t('imp.hint')}</p>
+      <p className="muted small">{t('inbox.hint')}</p>
       {msg && <p className={msg.bad ? 'bad-text small' : 'good-text small'} role="status">{msg.text}</p>}
       {dups.size > 0 && <p className="dup-note small"><Icon name="alert" size={15} />{dups.size === 1 ? t('imp.dupsOne') : t('imp.dups', { n: dups.size })}</p>}
 
