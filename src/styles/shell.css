@@ -9,7 +9,7 @@
 .logo span { color: var(--accent); }
 .top a.logo { text-decoration: none; color: inherit; }
 .top select.lang { width: auto; }
-.beta { font-family: "DM Sans", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+.beta { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
   color: var(--accent); border: 1px solid var(--accent); border-radius: var(--r-full); padding: 1px 7px; vertical-align: 5px; }
 .sync-pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface);
   border-radius: var(--r-full); padding: 4px 10px; font-size: 13px; min-height: 32px; cursor: pointer; margin-left: auto; margin-right: 8px; }
@@ -67,7 +67,7 @@
 .screen { padding-top: var(--s2); }
 .screen-title { font-size: var(--t-title); margin: var(--s2) 0 var(--s4); letter-spacing: -.01em; }
 .sec-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); }
-.sec-title { font-family: "DM Sans", sans-serif; font-size: var(--t-h2); font-weight: 700; letter-spacing: -.01em; margin: var(--s6) 0 var(--s3); display: flex; align-items: baseline; gap: var(--s2); }
+.sec-title { font-size: var(--t-h2); font-weight: 700; letter-spacing: -.01em; margin: var(--s6) 0 var(--s3); display: flex; align-items: baseline; gap: var(--s2); }
 .sec-head .sec-title { margin-bottom: var(--s3); }
 .card .sec-head .sec-title { margin-top: 0; }
 .screen > .sec-head .screen-title { margin-bottom: var(--s4); }

@@ -55,7 +55,7 @@ h2 { font-size: clamp(28px, 5vw, 40px); margin: 0 0 12px; }
 /* regola */
 .rule-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
 .rule-item { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 4px; }
-.rule-item b { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: 40px; line-height: 1; }
+.rule-item b { font-weight: 700; letter-spacing: -.03em; font-size: 40px; line-height: 1; }
 .rule-item span { font-weight: 700; }
 .rule-item small { color: var(--muted); font-size: 14px; }
 @media (max-width: 760px) { .rule-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -63,7 +63,7 @@ h2 { font-size: clamp(28px, 5vw, 40px); margin: 0 0 12px; }
 /* passi */
 .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; counter-reset: s; }
 .steps li { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 6px; counter-increment: s; margin: 0; }
-.steps li::before { content: counter(s); font-family: "DM Serif Display", Georgia, serif; font-size: 36px; color: var(--accent); line-height: 1; }
+.steps li::before { content: counter(s); font-weight: 700; letter-spacing: -.03em; font-size: 36px; color: var(--accent); line-height: 1; }
 @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
 
 /* punti chiave e QR nella prima schermata */
@@ -122,7 +122,7 @@ h2 { font-size: clamp(28px, 5vw, 40px); margin: 0 0 12px; }
 
 /* prezzi */
 .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.price-tag { font-family: "DM Serif Display", Georgia, serif; font-size: 34px; margin: 4px 0; }
+.price-tag { font-weight: 700; letter-spacing: -.03em; font-size: 34px; margin: 4px 0; }
 .price.soon { opacity: .8; }
 @media (max-width: 760px) { .price-grid { grid-template-columns: 1fr; } }
 
@@ -198,7 +198,7 @@ input, select, textarea { font-size: max(16px, 1em); }
 .calc-field input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); height: 28px; }
 .calc-out { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 28px; box-shadow: 0 24px 60px rgba(31,35,40,.10); }
 .calc-label { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
-.calc-big { margin: 4px 0 2px; font-family: "DM Serif Display", Georgia, serif; font-size: clamp(48px, 9vw, 72px); line-height: 1; font-variant-numeric: tabular-nums; }
+.calc-big { margin: 4px 0 2px; font-weight: 700; letter-spacing: -.03em; font-size: clamp(48px, 9vw, 72px); line-height: 1; font-variant-numeric: tabular-nums; }
 .calc-week { margin: 0 0 20px; color: var(--muted); }
 .calc-week b { color: var(--text); font-variant-numeric: tabular-nums; }
 .calc-parts { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 12px; }
@@ -227,7 +227,7 @@ input, select, textarea { font-size: max(16px, 1em); }
 .sp-fl { width: 14px; height: 18px; }
 .sp-hero { margin-top: 10px; border-radius: 20px; padding: 16px; color: #fff; background: linear-gradient(150deg, #D3561F, #A8360A); }
 .sp-hero small { text-transform: uppercase; font-size: 10px; font-weight: 700; letter-spacing: .08em; opacity: .85; }
-.sp-num { display: block; position: relative; height: 40px; font-family: "DM Serif Display", Georgia, serif; font-size: 36px; font-weight: 400; line-height: 40px; }
+.sp-num { display: block; position: relative; height: 40px; font-weight: 700; letter-spacing: -.03em; font-size: 36px; font-weight: 400; line-height: 40px; }
 .sp-num span, .sp-streak span { position: absolute; transition: opacity .4s, transform .4s; }
 .sp-streak { position: relative; display: inline-block; width: 18px; height: 16px; }
 .sp-num .v2, .sp-streak .v2 { opacity: 0; transform: translateY(10px); }
@@ -239,7 +239,7 @@ input, select, textarea { font-size: max(16px, 1em); }
   padding: 14px; display: grid; gap: 4px; opacity: 0; transform: translateY(20px) scale(.97); transition: opacity .4s, transform .45s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
 .sp-notif { top: 54px; } .sp-notif span { color: #15803D; font-weight: 700; }
 .sp-add { bottom: 70px; justify-items: center; padding: 18px; }
-.sp-amt { font-family: "DM Serif Display", Georgia, serif; font-size: 34px; }
+.sp-amt { font-weight: 700; letter-spacing: -.03em; font-size: 34px; }
 .sp-cat { padding: 6px 12px; border-radius: 10px; background: #C2410C; color: #fff; font-weight: 700; }
 .sp-save { margin-top: 6px; width: 100%; text-align: center; padding: 10px; border-radius: 12px; background: #C2410C; color: #fff; font-weight: 700; }
 .sp-streakcard { bottom: 70px; justify-items: center; text-align: center; }
@@ -268,7 +268,7 @@ input, select, textarea { font-size: max(16px, 1em); }
 .story-steps li { min-height: 62vh; display: grid; align-content: center; gap: 6px; counter-increment: st; opacity: .35; transition: opacity .35s; }
 .story-steps li::before { content: counter(st); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #fff; background: var(--accent); }
 .story-steps li.on { opacity: 1; }
-.story-steps b { font-size: clamp(22px, 3vw, 30px); font-family: "DM Serif Display", Georgia, serif; font-weight: 400; }
+.story-steps b { font-size: clamp(22px, 3vw, 30px); font-weight: 700; letter-spacing: -.03em; }
 .story-steps span { color: var(--muted); font-size: 18px; max-width: 26em; }
 @media (max-width: 860px) {
   .story-grid { grid-template-columns: 1fr; gap: 0; }
@@ -284,7 +284,7 @@ input, select, textarea { font-size: max(16px, 1em); }
 .data-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0; }
 @media (max-width: 760px) { .data-grid { grid-template-columns: 1fr; } }
 .data-card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 24px; display: grid; gap: 6px; align-content: start; }
-.data-n { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: 48px; line-height: 1; color: var(--accent); }
+.data-n { font-weight: 700; letter-spacing: -.03em; font-size: 48px; line-height: 1; color: var(--accent); }
 .data-n small { font-size: 22px; color: var(--muted); }
 .data-card p { margin: 0; font-weight: 600; }
 .data-card a { font-size: 13px; color: var(--muted); }

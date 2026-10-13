@@ -9,13 +9,13 @@
 .pw { display: flex; align-items: center; gap: 8px; }
 .pw input { flex: 1; min-width: 0; }
 .pw .link-btn { padding: 0 4px; font-size: 14px; }
-.hello { font-family: "DM Serif Display", Georgia, serif; font-size: 24px; margin: 6px 0 4px; }
+.hello { font-weight: 700; letter-spacing: -.02em; font-size: 24px; margin: 6px 0 4px; }
 .step-head { margin: 14px 0 6px; }
 .step-bar { display: flex; gap: 6px; }
 .step-bar span { flex: 1; height: 5px; border-radius: 99px; background: var(--line); transition: background .25s; }
 .step-bar span.on { background: var(--accent); }
 .step-count { font-size: 12.5px; color: var(--muted); margin: 10px 0 2px; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
-.step-title { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: 26px; margin: 0 0 6px; line-height: 1.15; }
+.step-title { font-weight: 700; letter-spacing: -.02em; font-size: 26px; margin: 0 0 6px; line-height: 1.15; }
 .step-nav { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
 .step-nav .btn.primary { min-width: 140px; }
 .step-body { animation: step-in .2s ease; }
@@ -34,9 +34,9 @@
 }
 .gate-lang { position: absolute; top: 16px; right: 16px; z-index: 2; width: auto; font: inherit; font-size: 14px; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-height: 40px; }
 .gate-hero { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; max-width: 440px; }
-.gate-word { font-size: clamp(46px, 13vw, 68px); margin: 18px 0 2px; animation: fade-up .7s .55s cubic-bezier(.2,.8,.2,1) both; }
+.gate-word { font-family: var(--font-brand); font-weight: 400; letter-spacing: 0; font-size: clamp(46px, 13vw, 68px); margin: 18px 0 2px; animation: fade-up .7s .55s cubic-bezier(.2,.8,.2,1) both; }
 .gate-word span, .gate-mini i { color: var(--accent); font-style: normal; }
-.gate-tag { font-family: "DM Serif Display", Georgia, serif; font-size: 22px; margin: 0; animation: fade-up .7s .7s cubic-bezier(.2,.8,.2,1) both; }
+.gate-tag { font-weight: 600; letter-spacing: -.01em; font-size: 22px; margin: 0; animation: fade-up .7s .7s cubic-bezier(.2,.8,.2,1) both; }
 .gate-sub { color: var(--muted); margin: 10px 0 0; animation: fade-up .7s .85s cubic-bezier(.2,.8,.2,1) both; }
 .gate-rule { display: flex; gap: 4px; width: min(300px, 80vw); height: 10px; margin: 26px 0 30px; }
 .gate-rule span { border-radius: 99px; transform-origin: left; animation: grow-x .6s cubic-bezier(.2,.8,.2,1) both; }
@@ -56,7 +56,7 @@
 .gate-panel { position: relative; z-index: 1; width: 100%; min-width: 0; max-width: 460px; justify-self: center; animation: panel-in .5s cubic-bezier(.2,.8,.2,1) both; }
 .gate-panel .card { box-shadow: 0 24px 60px rgba(31, 35, 40, .12); }
 .gate-mini { display: flex; align-items: center; gap: 10px; margin: 0 auto 14px; background: none; border: 0; cursor: pointer; color: var(--text);
-  font-family: "DM Serif Display", Georgia, serif; font-size: 26px; }
+  font-family: var(--font-brand); font-size: 26px; }
 .gate-mini .logo-mark { box-shadow: none; }
 .wizard { animation: panel-in .5s cubic-bezier(.2,.8,.2,1) both; }
 .wizard .step-bar span { transition: background .4s ease, transform .4s ease; }

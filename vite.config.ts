@@ -11,7 +11,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png', 'fonts/*.ttf'],
+      includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png', 'fonts/DMSerifDisplay-Regular.ttf', 'fonts/*.woff2'],
       manifest: {
         id: `${base}app/`,
         name: 'Quadriamo',
@@ -34,7 +34,7 @@ export default defineConfig({
           { src: 'icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,ttf}'], navigateFallback: null, importScripts: ['push-sw.js'] },
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,ttf,woff2}'], globIgnores: ['fonts/DMSans.ttf'], navigateFallback: null, importScripts: ['push-sw.js'] },
     }),
   ],
   build: { rollupOptions: { input: { home: 'index.html', app: 'app/index.html', admin: 'admin/index.html' } } },

@@ -2,7 +2,11 @@
    Token di Quadriamo. Ogni valore ha un significato; i componenti usano solo questi.
    Colori: carta, inchiostro, una sola tinta d'azione (--accent) e le quattro parti (--b1…--b4).
    ========================================================================== */
-@font-face { font-family: "DM Sans"; src: url("/fonts/DMSans.ttf") format("truetype"); font-weight: 100 1000; font-display: swap; }
+/* Testo: SF Pro su iPhone, iPad e Mac (font di sistema, non si scarica); Inter altrove (licenza OFL, /fonts/Inter-LICENSE.txt).
+   Inter si scarica solo dove serve: sui dispositivi Apple il browser usa SF Pro e non la chiede. */
+@font-face { font-family: "Inter"; src: url("/fonts/Inter-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Inter"; src: url("/fonts/Inter-latin-ext.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+/* Marchio "Quadriamo." (solo il logo) */
 @font-face { font-family: "DM Serif Display"; src: url("/fonts/DMSerifDisplay-Regular.ttf") format("truetype"); font-display: swap; }
 
 :root {
@@ -23,12 +27,14 @@
   --ease: cubic-bezier(.2,.8,.2,1); --spring: cubic-bezier(.3,1.4,.5,1);
   --spring-snappy: linear(0, .05, .165, .304, .445, .573, .683, .772, .842, .896, .934, .962, .98, .993, 1, 1.004, 1.006, 1.006, 1.006, 1.005, 1.004, 1.004, 1.003, 1.002, 1);
   --spring-gentle: linear(0, .047, .156, .288, .422, .546, .654, .743, .814, .869, .911, .942, .964, .979, .989, .996, 1, 1.002, 1.003, 1.003, 1.003, 1.003, 1.002, 1.002, 1);
-  /* testo */
+  /* testo: un font per l'interfaccia, il serif solo per il marchio */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-brand: "DM Serif Display", Georgia, serif;
   --t-title: 30px; --t-h2: 19px; --t-cap: 12px;
   /* struttura */
   --bar-h: 64px; --top-h: 56px;
   color-scheme: light;
-  font: 16px/1.5 "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 16px/1.5 var(--font-ui);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {

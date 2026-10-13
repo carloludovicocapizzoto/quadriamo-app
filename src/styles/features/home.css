@@ -40,7 +40,7 @@
 .hero::after { content: ""; position: absolute; right: -40px; bottom: -60px; width: 200px; height: 200px; border-radius: 48px; transform: rotate(18deg);
   background: rgba(255,255,255,.07); pointer-events: none; }
 .hero-eyebrow { margin: 0; font-size: var(--t-cap); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
-.hero-amount { margin: var(--s1) 0 var(--s3); font-family: "DM Serif Display", Georgia, serif; font-size: clamp(44px, 13vw, 60px); line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.hero-amount { margin: var(--s1) 0 var(--s3); font-weight: 700; font-size: clamp(44px, 13vw, 60px); line-height: 1; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
 .hero-parts { display: flex; flex-wrap: wrap; gap: var(--s2); }
 .hero-parts span { font-size: 13px; padding: 6px 10px; border-radius: var(--r-full); background: rgba(255,255,255,.16); }
 .hero-parts b { font-variant-numeric: tabular-nums; }

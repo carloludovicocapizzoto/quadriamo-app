@@ -41,8 +41,10 @@ const scrollTo = sel => `(() => { const el = ${sel}; if (el) { el.scrollIntoView
 const byText = (tag, text) => `[...document.querySelectorAll('${tag}')].find(x => x.textContent.includes(${JSON.stringify(text)}))`
 
 await cdp('Page.enable'); await cdp('Runtime.enable')
-await cdp('Emulation.setDeviceMetricsOverride', { width: 375, height: 812, deviceScaleFactor: 2, mobile: true })
-await cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }, { name: 'prefers-reduced-motion', value: 'reduce' }] })
+// THEME=dark e WIDTH=1024 per il controllo visivo della modalità scura e del computer
+const W = Number(process.env.WIDTH ?? 375), WIDE = W > 600
+await cdp('Emulation.setDeviceMetricsOverride', { width: W, height: WIDE ? 800 : 812, deviceScaleFactor: WIDE ? 1 : 2, mobile: !WIDE })
+await cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: process.env.THEME === 'dark' ? 'dark' : 'light' }, { name: 'prefers-reduced-motion', value: 'reduce' }] })
 await cdp('Page.navigate', { url: APP }); await sleep(1500)
 await js(`localStorage.setItem('quadriamo.lang', '${LANG}')`); await cdp('Page.reload'); await sleep(3500)
 await shot('10-welcome.jpg')
