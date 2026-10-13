@@ -101,8 +101,13 @@ export async function checkSetup(signedIn: boolean): Promise<Setup> {
   const bf = await supabase.functions.invoke('billing', { body: { action: 'status' } })
   s.billing = bf.error ? { fn: false, configured: false, webhook: false, test: false }
     : { fn: true, configured: !!bf.data?.configured, webhook: !!bf.data?.webhook, test: !!bf.data?.test }
-  const nw = await supabase.functions.invoke('news', { body: { lang: 'it' } })
-  s.news = !nw.error && Array.isArray(nw.data?.items)
+  // le notizie si chiamano come dall'app (senza il codice da amministratore, che la funzione non si aspetta)
+  try {
+    const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY
+    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/news`, {
+      method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ lang: 'it' }) })
+    s.news = res.ok && Array.isArray((await res.json())?.items)
+  } catch { s.news = false }
   const an = await supabase.rpc('admin_name')
   s.adminKeys = !(an.error && (an.error.code === 'PGRST202' || /could not find the function/i.test(an.error.message)))
   s.adminName = (an.data as string | null) ?? null
