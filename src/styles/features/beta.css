@@ -1,0 +1,8 @@
+.consent { border-color: var(--accent); }
+.feedback { border-color: var(--accent); }
+.stars { display: flex; gap: 6px; margin: 8px 0; }
+.star { font-size: 28px; line-height: 1; width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--line); cursor: pointer; }
+.star.on { color: #F59E0B; border-color: #F59E0B; }
+.fb-text { width: 100%; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; resize: vertical; }
