@@ -1,6 +1,5 @@
 /* Home: data, il numero del giorno, i quattro blocchi, le spese di oggi. Nient'altro. */
-.home { max-width: 520px; }
-.home-date { margin: var(--s2) 0 0; font-size: var(--t-h2); font-weight: 600; letter-spacing: -.02em; }
+.home-date { margin: 0; font-size: var(--t-h2); font-weight: 600; letter-spacing: -.02em; }
 
 /* il numero del giorno: il protagonista, senza riquadro */
 .hero { margin: var(--s8) 0 var(--s12); }

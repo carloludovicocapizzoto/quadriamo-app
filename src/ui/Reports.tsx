@@ -1,28 +1,8 @@
 import { useMemo } from 'react'
-import { categoryChanges, forecastMonth, monthlyTrend, type MonthResult, type Settings, type Transaction } from '../engine'
+import { categoryChanges, monthlyTrend, type MonthResult, type Settings, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import type { Dict } from '../i18n/en'
 import { categoryName } from './names'
-
-/** Previsione di fine mese: dove arrivi se continui a questo ritmo. */
-export function ForecastReport({ r, settings, today }: { r: MonthResult; settings: Settings; today: string }) {
-  const { t, money } = useI18n()
-  const f = forecastMonth(r, today)
-  const cur = settings.currency
-  if (!f) return <p className="muted small">{t('rep.notCurrent')}</p>
-  const over = f.projectedLeftOver < 0
-  const budget = Math.max(1, r.income - r.saved)
-  return <>
-    <div className="w-big">{money(f.projected, cur)}</div>
-    <p className="small">{t('rep.projected')}</p>
-    <div className="fc-meter" role="img" aria-label={t('rep.projected')}>
-      <span className="fc-done" style={{ width: `${Math.min(100, (f.spentSoFar / budget) * 100)}%` }} />
-      <span className="fc-next" style={{ width: `${Math.max(0, Math.min(100, (f.projected / budget) * 100) - Math.min(100, (f.spentSoFar / budget) * 100))}%` }} />
-    </div>
-    <p className={`small ${over ? 'bad-text' : 'good-text'}`}><b>{over ? t('rep.over', { amount: money(-f.projectedLeftOver, cur) }) : t('rep.leftOver', { amount: money(f.projectedLeftOver, cur) })}</b></p>
-    <p className="muted small">{t(f.upcoming > 0 ? 'rep.detail' : 'rep.detailNoUp', { spent: money(f.spentSoFar, cur), upcoming: money(f.upcoming, cur), perDay: money(f.variablePerDay, cur) })}</p>
-  </>
-}
 
 /** Entrate e spese degli ultimi sei mesi. */
 export function TrendReport({ r, txs, settings, today }: { r: MonthResult; txs: Transaction[]; settings: Settings; today: string }) {

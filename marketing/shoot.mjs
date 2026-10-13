@@ -65,7 +65,7 @@ await js(`document.querySelector('.filter-btn').click()`); await sleep(900); awa
 await js(`[...document.querySelectorAll('.filters .chip')].find(b => b.textContent.includes('Mangiare fuori')).click()`); await sleep(300)
 await js(`document.querySelector('.filters .btn.primary').click()`); await sleep(900); await shot('30-filtered.jpg', 'window.scrollTo(0,0)')
 await js(`[...document.querySelectorAll('.link-btn')].find(b => b.textContent.includes('Azzera'))?.click()`); await sleep(400)
-await click('Analisi', '.tabbar button'); await sleep(2500); await shot('12-forecast.jpg', clean); await shot('13-month.jpg', clean + ';' + scrollTo(`document.querySelector('.hc-donut')?.closest('.card')`))
+await click('Analisi', '.tabbar button'); await sleep(2500); await shot('12-forecast.jpg', clean); await shot('13-month.jpg', clean + ';' + scrollTo(`document.querySelector('.part-rows')?.previousElementSibling`))
 await click('Anno', '.segmented button'); await sleep(900); await shot('14-trend.jpg', clean + ';' + scrollTo(byText('.widget', 'Andamento')))
 await shot('15-growing.jpg', scrollTo(byText('.widget', 'Categorie che crescono')))
 await click('Profilo', '.tabbar button'); await sleep(900); await shot('17-profile.jpg', clean)

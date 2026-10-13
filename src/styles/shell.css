@@ -1,10 +1,10 @@
 /* Il guscio dell'app: barra in alto, barra in basso, pagine. E l'intestazione delle schermate prima dell'app. */
 .app { max-width: 960px; margin: 0 auto; padding: 0 var(--gutter) 48px; }
 .has-nav { padding-bottom: 96px; }
-.app2 { padding-top: calc(env(safe-area-inset-top) + var(--s4)); padding-bottom: calc(var(--bar-h) + var(--s12) + env(safe-area-inset-bottom)); }
+.app2 { max-width: var(--column); padding-top: var(--top-gap); padding-bottom: calc(var(--bar-h) + var(--s12) + env(safe-area-inset-bottom)); }
 
 /* ---------- intestazione prima dell'app (benvenuto, accesso, configurazione) ---------- */
-.top { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; }
+.top { display: flex; justify-content: space-between; align-items: center; padding: var(--top-gap) 0 18px; }
 .logo { font-size: 26px; }
 .logo span { color: var(--accent); }
 .top a.logo { text-decoration: none; color: inherit; }
@@ -33,8 +33,8 @@
 .tab-add:active > span { transform: scale(.92); }
 
 /* ---------- pagine ---------- */
-.screen { padding-top: var(--s2); }
-.screen-title { font-size: var(--t-title); margin: var(--s2) 0 var(--s6); }
+.screen { padding-top: 0; }
+.screen-title { font-size: var(--t-title); line-height: 1.15; margin: 0 0 var(--s6); }
 .sec-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); }
 .sec-title { font-size: var(--t-h2); font-weight: 600; letter-spacing: -.02em; margin: var(--s12) 0 var(--s3); display: flex; align-items: baseline; gap: var(--s2); }
 .sec-head .sec-title { margin-bottom: var(--s3); }

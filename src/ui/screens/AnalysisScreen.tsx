@@ -7,7 +7,7 @@ import { MonthNav } from '../MonthNav'
 import { MonthView } from '../MonthView'
 import { InvestmentsView } from '../InvestmentsView'
 import { ProGate } from '../Pro'
-import { CategoryChangesReport, ForecastReport, TrendReport } from '../Reports'
+import { CategoryChangesReport, TrendReport } from '../Reports'
 import { YearNav, YearView } from '../YearView'
 import { TransactionsScreen } from './TransactionsScreen'
 
@@ -20,7 +20,6 @@ export function AnalysisScreen({ view, onView, data, result, current, homeResult
 }) {
   const { t } = useI18n()
   const inbox = data.inbox?.length ?? 0
-  const isNow = current.year === homeResult.ym.year && current.month === homeResult.ym.month
   return (
     <div className="screen">
       <h1 className="screen-title">{t('nav.analysis')}</h1>
@@ -37,8 +36,6 @@ export function AnalysisScreen({ view, onView, data, result, current, homeResult
         {view === 'month' && <>
           <MonthNav ym={current} onChange={onMonth} />
           <Swipe id={`${current.year}-${current.month}`} onPrev={() => onMonth(prevMonth(current))} onNext={() => onMonth(nextMonth(current))} hint>
-          {isNow && <section className="card widget"><div className="w-head"><h3 className="h-plain">{t('w.forecast')}</h3></div>
-            <ProGate feature="reports" compact><ForecastReport r={result} settings={data.settings} today={today} /></ProGate></section>}
           <MonthView r={result} settings={data.settings} onOpen={onOpen} today={today} />
           </Swipe>
         </>}

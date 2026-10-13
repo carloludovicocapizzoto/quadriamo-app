@@ -38,6 +38,10 @@
   --spring: var(--spring-snappy);
   /* struttura */
   --bar-h: 60px; --top-h: 0px; --gutter: 20px;
+  /* distanza del titolo dal bordo alto: subito sotto la Dynamic Island o la barra di stato (iPhone),
+     un po' di respiro dove l'area sicura non c'è (Android, tablet), di più sul computer */
+  --top-gap: max(calc(env(safe-area-inset-top) + 4px), clamp(12px, 3vw, 32px));
+  --column: 680px;   /* colonna di lettura su tablet e computer */
   color-scheme: light;
   font: 16px/1.5 var(--font-ui);
   font-variant-numeric: tabular-nums;
