@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { CUSTOM, SPLIT, addDays, splitOk, splitTotal, fxRate, suggest, todayIso, type CategoryType, type Settings, type Transaction } from '../engine'
+import { CUSTOM, FIRST, SPLIT, addDays, splitOk, splitTotal, fxRate, suggest, todayIso, type CategoryType, type Settings, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { newId, parseAmount } from '../store/state'
 import { Icon } from './Icon'
@@ -10,7 +10,10 @@ import { amountText } from './kit/amount'
 
 const GROUPS: CategoryType[] = ['expense', 'income', 'saving']
 
-/** Inserimento rapido: importo, categoria, (descrizione), data di oggi già pronta. */
+/**
+ * Nuovo movimento. L'importo è il protagonista; sotto, le categorie come nomi con il blocco della loro parte;
+ * poi i dettagli (descrizione, data, parte) come righe sulla superficie. La data di oggi è già pronta.
+ */
 export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDelete, onClose }: {
   settings: Settings
   initial?: Transaction
@@ -83,8 +86,9 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   // il tipo segue la categoria scelta (anche quando la propone una regola)
   const kind: CategoryType = cat?.type ?? kindPick
   const yesterday = addDays(todayIso(), -1)
-  const tileColor = (c: Settings['categories'][number]) => c.type === 'income' ? 'var(--good)'
-    : BUCKET_COLORS[Math.max(0, settings.buckets.findIndex(b => b.id === c.defaultBucket))]
+  // il blocco di una categoria: la parte da cui escono i soldi (inchiostro se pagata prima delle parti); le entrate non ne hanno
+  const blockOf = (c: Settings['categories'][number]) => c.type === 'income' ? null : c.defaultBucket === FIRST ? 'var(--text)'
+    : BUCKET_COLORS[settings.buckets.findIndex(b => b.id === c.defaultBucket)] ?? null
 
   return (
     <div className="tx-sheet">
@@ -104,7 +108,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
           </div>
         )}
 
-        <div className={`txs-amount${kind === 'income' ? ' income' : ''}`}>
+        <div className="txs-amount">
           <AmountInput className="amount-input" placeholder="0,00" autoFocus={!initial} aria-label={t('tx.amount')}
                  value={amount} onChange={setAmount} aria-invalid={errors.length > 0 && (parsed == null || parsed <= 0)} />
           <select className="txs-cur" value={currency} onChange={e => setCurrency(e.target.value)} aria-label={t('tx.currency')}>
@@ -118,18 +122,18 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
           </p>
         )}
 
-        <p className="txs-label">{t('tx.category')}</p>
-        <div className="cat-grid" role="radiogroup" aria-label={t('tx.category')}>
-          {settings.categories.filter(c => c.type === kind).map(c => (
-            <button type="button" key={c.id} role="radio" aria-checked={category === c.id} className={`cat-tile${category === c.id ? ' on' : ''}`}
-                    style={{ ['--cc' as string]: tileColor(c) }}
-                    onClick={() => { if (c.id !== category && c.type === 'income') { setPaidFrom(''); setSplit(null) } setCategory(c.id); setCatTouched(true); setFromRule(false) }}>
-              <span className="cat-dot">{categoryName(c, t).charAt(0).toUpperCase()}</span>
-              <span className="cat-name">{categoryName(c, t)}</span>
-            </button>
-          ))}
+        <div className="cat-pick" role="radiogroup" aria-label={t('tx.category')}>
+          {settings.categories.filter(c => c.type === kind).map(c => {
+            const block = blockOf(c)
+            return (
+              <button type="button" key={c.id} role="radio" aria-checked={category === c.id} className={category === c.id ? 'on' : ''}
+                      onClick={() => { if (c.id !== category && c.type === 'income') { setPaidFrom(''); setSplit(null) } setCategory(c.id); setCatTouched(true); setFromRule(false) }}>
+                {block && <i style={{ background: block }} aria-hidden="true" />}{categoryName(c, t)}
+              </button>
+            )
+          })}
         </div>
-        {fromRule && category && <p className="small good-text"><Icon name="check" size={15} />{t('tx.fromRule')}</p>}
+        {fromRule && category && <p className="txs-note">{t('tx.fromRule')}</p>}
 
         <div className="txs-rows">
           <label className="txs-row">
@@ -160,7 +164,6 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
           </label>}
         </div>
         {isIncome && incomeTo === CUSTOM && <SplitEditor key={category} buckets={settings.buckets} value={incomeSplit} onChange={setSplit} />}
-        <p className="small muted txs-hint">{isIncome ? t('tx.incomeHint') : t('tx.paidFromHint')}</p>
 
         {errors.length > 0 && <ul className="errors" role="alert">{errors.map(e => <li key={e}>{e}</li>)}</ul>}
 

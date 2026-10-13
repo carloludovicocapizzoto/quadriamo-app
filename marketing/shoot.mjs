@@ -79,7 +79,7 @@ await js(`document.querySelector('.tab-add').click()`); await sleep(900)
 for (const ch of '1250,5') { await cdp('Input.insertText', { text: ch }) }
 await sleep(300); await shot('16-add.jpg')
 // entrata divisa a modo mio: scheda Entrate, prima categoria, "Dividi a modo mio"
-await click('Entrate', '.txs-kind button, [role=tab]'); await js(`document.querySelector('.cat-tile')?.click()`); await sleep(300)
+await click('Entrate', '.txs-kind button, [role=tab]'); await js(`document.querySelector('.cat-pick button')?.click()`); await sleep(300)
 await js(`(() => { const el = [...document.querySelectorAll('.txs-row select')].find(x => [...x.options].some(o => o.value === 'custom')); if (!el) return
   Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(el, 'custom'); el.dispatchEvent(new Event('change', { bubbles: true })) })()`)
 await sleep(500); await js(`document.querySelector('.split-edit input')?.scrollIntoView({ block: 'center' })`); await sleep(300); await shot('34-income-split.jpg')

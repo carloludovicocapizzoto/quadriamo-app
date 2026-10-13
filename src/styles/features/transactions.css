@@ -37,42 +37,45 @@
 .inbox-top .tx-date { grid-area: date; font-size: 13px; }
 .inbox-top .tx-amount { grid-area: amount; }
 .inbox-edit select { min-width: 0; font-size: 15px; padding-left: 10px; padding-right: 26px; background-position: right 8px center; }
+/* ---------- nuovo movimento: l'importo è il protagonista, poi le categorie, poi i dettagli ---------- */
 .txs-head { display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; margin-bottom: var(--s3); }
-.txs-head h2 { letter-spacing: 0; font-size: 17px; font-weight: 600; text-align: center; margin: 0; }
+.txs-head h2 { font-size: var(--t-body); font-weight: 600; letter-spacing: 0; text-align: center; margin: 0; }
 .icon-btn.ghost { width: 40px; height: 40px; border: 0; background: none; color: var(--muted); }
-.txs-kind { margin-bottom: var(--s5); }
-.txs-amount { display: flex; align-items: baseline; justify-content: center; gap: var(--s2); margin: var(--s2) 0 var(--s1); }
-.txs-amount .amount-input { width: auto; min-width: 0; max-width: 70%; field-sizing: content; text-align: center; border: 0; background: none; padding: 0;
-  font-weight: 600; letter-spacing: -.035em; font-size: 52px; line-height: 1.1; min-height: 0; color: var(--text); font-variant-numeric: tabular-nums; }
-.txs-amount .amount-input::placeholder { color: color-mix(in srgb, var(--muted) 45%, transparent); }
-.txs-amount .amount-input:focus-visible { box-shadow: none; }
-.txs-amount.income .amount-input { color: var(--good); }
-.txs-cur { width: auto; min-height: 32px; padding: 0 26px 0 10px; border-radius: var(--r-full); font-size: 14px; font-weight: 600;
-  background-color: color-mix(in srgb, var(--muted) 12%, transparent); border: 0; background-position: right 8px center; }
-.txs-fx { text-align: center; margin: 0; }
-.txs-label { margin: var(--s5) 0 var(--s2); font-size: var(--t-cap); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s2); }
-.cat-tile { display: grid; justify-items: center; gap: 6px; padding: var(--s3) var(--s1); border-radius: var(--r-lg); border: 1.5px solid transparent;
-  background: var(--surface); color: var(--text); font: inherit; cursor: pointer; box-shadow: var(--e1); transition: transform .12s var(--spring), border-color .15s; }
-.cat-tile:active { transform: scale(.94); }
-.cat-dot { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; font-weight: 600; color: var(--cc);
-  background: color-mix(in srgb, var(--cc) 15%, transparent); transition: background .15s, color .15s; }
-.cat-name { font-size: 12px; font-weight: 600; text-align: center; line-height: 1.2; }
-.cat-tile.on { border-color: var(--cc); }
-.cat-tile.on .cat-dot { background: var(--cc); color: var(--on-accent); }
-.txs-rows { margin-top: var(--s5); border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--e1); overflow: hidden; }
-.txs-row { display: grid; grid-template-columns: 92px 1fr; gap: var(--s3); align-items: center; padding: var(--s2) var(--s4); min-height: 56px; }
-.txs-row + .txs-row { border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
-.txs-row > span { font-size: 14.5px; font-weight: 600; color: var(--muted); }
-.txs-row input, .txs-row select { border: 0; background-color: transparent; padding: 0 26px 0 0; min-height: 40px; text-align: right; }
+.txs-kind { margin-bottom: var(--s6); }
+.txs-amount { display: flex; align-items: baseline; justify-content: center; gap: var(--s1); margin: var(--s4) 0 var(--s8); }
+.txs-amount .amount-input { width: auto; min-width: 2ch; max-width: 80%; field-sizing: content; text-align: center; border: 0; background: none; padding: 0;
+  font-weight: 600; letter-spacing: -.045em; font-size: var(--t-hero); line-height: 1; min-height: 0; color: var(--text); }
+.txs-amount .amount-input::placeholder { color: var(--faint); }
+.txs-amount .amount-input:focus-visible { border: 0; }
+/* la valuta: secondaria come il simbolo del numero del giorno, si cambia toccandola */
+.txs-cur { width: auto; min-height: 32px; padding: 0 18px 0 2px; border: 0; background-color: transparent; background-position: right 2px center;
+  font-size: var(--t-h2); font-weight: 600; color: var(--muted); }
+.txs-fx { text-align: center; margin: calc(-1 * var(--s6)) 0 var(--s6); }
+.txs-label { margin: var(--s5) 0 var(--s2); font-size: var(--t-sm); color: var(--muted); }
+
+/* categorie: nomi con il blocco della loro parte; quella scelta è in inchiostro */
+.cat-pick { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.cat-pick > button { display: inline-flex; align-items: center; gap: var(--s2); min-height: 40px; padding: 0 14px; border: 0; border-radius: var(--r-md);
+  background: var(--fill); color: var(--text); font: inherit; font-size: 15px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background var(--d-fast), color var(--d-fast), transform 120ms var(--ease); }
+.cat-pick i { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.cat-pick > button:active { transform: scale(.96); }
+.cat-pick > button.on { background: var(--accent); color: var(--on-accent); }
+.cat-pick > .on i { box-shadow: 0 0 0 1.5px var(--on-accent); }
+.txs-note { margin: var(--s2) 0 0; font-size: var(--t-sm); color: var(--muted); }
+
+/* righe di dettaglio: etichetta a sinistra, valore a destra, una linea tra l'una e l'altra */
+.txs-rows { margin-top: var(--s6); border-top: 1px solid var(--line); }
+.txs-row { display: grid; grid-template-columns: 96px 1fr; gap: var(--s3); align-items: center; min-height: 52px; border-bottom: 1px solid var(--line); }
+.txs-row > span { font-size: 15px; color: var(--muted); }
+.txs-row input, .txs-row select { border: 0; background-color: transparent; padding: 0 22px 0 0; min-height: 44px; text-align: right; border-radius: 0; }
 .txs-row input { padding-right: 0; }
-.txs-row input:focus-visible, .txs-row select:focus-visible { box-shadow: none; }
-.txs-date { display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
-.txs-hint { margin: var(--s2) var(--s1) 0; }
-.txs-actions { position: sticky; bottom: calc(-1 * (var(--s6) + env(safe-area-inset-bottom))); display: grid; justify-items: center; gap: var(--s1); padding: var(--s4) 0 calc(var(--s6) + env(safe-area-inset-bottom));
-  margin-top: var(--s3); background: linear-gradient(to top, var(--bg) 70%, transparent); }
-@media (max-width: 360px) { .cat-grid { grid-template-columns: repeat(3, 1fr); } }
-.txs-date input { width: auto; font-size: 15px; padding: 0; min-height: 30px; }
+.txs-row input:focus-visible, .txs-row select:focus-visible { border: 0; }
+.txs-date { display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: nowrap; min-width: 0; }
+.txs-hint { margin: var(--s2) 0 0; }
+.txs-actions { position: sticky; bottom: calc(-1 * (var(--s6) + env(safe-area-inset-bottom))); display: grid; justify-items: center; gap: var(--s1);
+  padding: var(--s4) 0 calc(var(--s6) + env(safe-area-inset-bottom)); margin-top: var(--s4); background: var(--bg); }
+.txs-date input { width: auto; min-width: 0; max-width: 128px; font-size: 15px; padding: 0; min-height: 30px; }
 .txs-date .mini-chip { flex: none; }
 .search { position: relative; display: flex; align-items: center; margin-bottom: var(--s3); }
 .search > .ico { position: absolute; left: 14px; color: var(--muted); pointer-events: none; }
