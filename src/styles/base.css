@@ -17,6 +17,8 @@ p { margin: 0 0 12px; }
 
 button { font: inherit; color: inherit; }
 button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* sui touch il contorno resta appeso dopo il tocco (es. il fuoco che torna da un pannello): solo con la tastiera */
+@media (pointer: coarse) { button:focus-visible, a:focus-visible { outline: none; } }
 input, select, textarea { font: inherit; font-size: max(16px, 1em); color: var(--text); background: var(--fill); border: 1px solid transparent;
   border-radius: var(--r-md); transition: border-color var(--d-fast); }
 input, select { padding: 10px 12px; min-height: 44px; width: 100%; }

@@ -6,6 +6,7 @@ import { Icon } from '../Icon'
 import { tap, useCountUp } from '../kit/motion'
 import { Money } from '../kit/Money'
 import { Meter } from '../kit/Meter'
+import { Empty } from '../kit/Empty'
 import { Outcome } from '../Outcome'
 import { Sheet } from '../kit/Sheet'
 import { BUCKET_COLORS, bucketName } from '../names'
@@ -33,13 +34,12 @@ export function HomeScreen({ data, r, today, onAdd, onOpen, onAll }: {
     <div className="home">
       <p className="home-date">{day.charAt(0).toUpperCase() + day.slice(1)}</p>
 
-      {hasPlan ? <section className="hero" aria-live="polite">
+      {/* senza entrate non c'è niente da dividere: solo il primo passo, niente blocchi vuoti e zeri */}
+      {!hasPlan ? <Empty title={t('home.emptyTitle')} text={t('home.noSalary')} action={{ label: t('home.addSalary'), onClick: () => onAdd('income') }} />
+      : <><section className="hero" aria-live="polite">
         <Money className="hero-amount" value={left} currency={cur} />
         <p className="hero-sub">{daysLeft > 1 ? t('home.heroSub', { n: daysLeft }) : t('home.heroLast')}</p>
-      </section> : <section className="hero">
-        <p className="hero-empty">{t('home.noSalary')}</p>
-        <button className="btn primary" onClick={() => onAdd('income')}>{t('home.addSalary')}</button>
-      </section>}
+      </section>
 
       <div className="blocks">
         {r.buckets.map((b, i) => {
@@ -53,9 +53,9 @@ export function HomeScreen({ data, r, today, onAdd, onOpen, onAll }: {
             </button>
           )
         })}
-      </div>
+      </div></>}
 
-      <Today r={r} today={today} settings={s} onOpen={onOpen} onAll={onAll} />
+      {(hasPlan || r.transactions.length > 0) && <Today r={r} today={today} settings={s} onOpen={onOpen} onAll={onAll} />}
 
       <Sheet open={!!part} onClose={() => setPart(null)} title={part ? bucketName(part.bucket, t) : ''}>
         {part && <PartDetail b={part} r={r} cur={cur} color={BUCKET_COLORS[r.buckets.indexOf(part)]} onOpen={tx => { setPart(null); onOpen(tx) }}

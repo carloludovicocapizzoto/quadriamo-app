@@ -617,6 +617,7 @@ const en = {
   'home.heroLast': "to spend today · last day of the month",
   'home.nothingToday': "No spending today",
   'home.allTx': "All transactions",
+  'home.emptyTitle': "First, this month’s income",
   'home.noSalary': "Log this month's income (salary, allowance, grant): Quadriamo splits it into four parts and tells you how much you can spend each day.",
   'home.addSalary': "Log your income",
   'day.today': "Today",

@@ -617,6 +617,7 @@ const it: Dict = {
   'home.heroLast': "da spendere oggi · ultimo giorno del mese",
   'home.nothingToday': "Nessuna spesa oggi",
   'home.allTx': "Tutti i movimenti",
+  'home.emptyTitle': "Prima, le entrate del mese",
   'home.noSalary': "Registra le entrate del mese (stipendio, assegno, borsa): Quadriamo le divide in quattro parti e ti dice quanto puoi spendere ogni giorno.",
   'home.addSalary': "Registra le entrate",
   'day.today': "Oggi",

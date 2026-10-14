@@ -617,6 +617,7 @@ const es: Dict = {
   'home.heroLast': "para gastar hoy · último día del mes",
   'home.nothingToday': "Ningún gasto hoy",
   'home.allTx': "Todos los movimientos",
+  'home.emptyTitle': "Primero, los ingresos del mes",
   'home.noSalary': "Registra los ingresos del mes (sueldo, ayuda, beca): Quadriamo los divide en cuatro partes y te dice cuánto puedes gastar cada día.",
   'home.addSalary': "Registrar ingresos",
   'day.today': "Hoy",

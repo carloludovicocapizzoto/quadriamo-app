@@ -617,6 +617,7 @@ const fr: Dict = {
   'home.heroLast': "à dépenser aujourd’hui · dernier jour du mois",
   'home.nothingToday': "Aucune dépense aujourd’hui",
   'home.allTx': "Tous les mouvements",
+  'home.emptyTitle': "D’abord, les revenus du mois",
   'home.noSalary': "Enregistrez les revenus du mois (salaire, aide, bourse) : Quadriamo les divise en quatre parts et vous dit combien dépenser chaque jour.",
   'home.addSalary': "Enregistrer les revenus",
   'day.today': "Aujourd’hui",

@@ -6,7 +6,6 @@
 .hero-amount { display: block; font-size: var(--t-hero); font-weight: 600; letter-spacing: -.045em; line-height: 1; }
 .hero-amount .cur { font-size: .5em; letter-spacing: -.02em; color: var(--muted); margin: 0 .08em; }
 .hero-sub { margin: var(--s3) 0 0; color: var(--muted); font-size: 15px; }
-.hero-empty { margin: 0 0 var(--s4); font-size: var(--t-h2); line-height: 1.35; letter-spacing: -.01em; max-width: 30ch; }
 
 /* i quattro blocchi: ognuno si svuota dall'alto mentre spendi; il colore è la parte */
 .blocks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); }
