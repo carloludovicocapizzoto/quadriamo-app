@@ -53,3 +53,12 @@
 :root[data-motion="reduce"] *, :root[data-motion="reduce"] *::before, :root[data-motion="reduce"] *::after {
   animation-duration: .01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important;
   transition-duration: .01ms !important; scroll-behavior: auto !important; }
+
+/* una voce che diventa la pagina (kit/motion → morph): il nome si sposta e cresce fino al titolo, il resto si dissolve.
+   Mentre succede, la pagina non entra anche da destra: un movimento solo. */
+[data-morph] { width: fit-content; max-width: 100%; }
+::view-transition-group(morph) { animation-duration: var(--d-spring); animation-timing-function: var(--spring-snappy); }
+::view-transition-old(morph), ::view-transition-new(morph) { height: 100%; object-fit: contain; }
+::view-transition-old(root) { animation-duration: var(--d-fast); }
+::view-transition-new(root) { animation-duration: var(--d-base); }
+:root.morphing .sub-in { animation: none; }

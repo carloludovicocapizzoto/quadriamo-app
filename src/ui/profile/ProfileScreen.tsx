@@ -12,6 +12,7 @@ import { supabase } from '../../sync/client'
 import { useSync } from '../../sync/context'
 import { usePlan } from '../../billing/plan'
 import { Group, Page, Row } from '../kit/List'
+import { morph } from '../kit/motion'
 import { Avatar } from './Avatar'
 import { PAGES } from './registry'
 import { SECTIONS, pageLabel, type Ctx } from './sections'
@@ -43,10 +44,11 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
     const goalsDone = (data.goals ?? []).filter(g => !g.removed && goalStatus(g, today).done).length
     return badges({ txCount: data.transactions.length, bestStreak: streak?.best ?? 0, imported: Object.keys(data.importDone ?? {}).length > 0, goalsDone, months })
   }, [data, streak?.best, today])
-  const open = (p: ProfilePage | null) => { onPage(p); window.scrollTo(0, 0) }
+  // la voce toccata diventa il titolo della pagina; "Indietro" fa la strada inversa
+  const open = (p: ProfilePage | null) => morph(p ?? page ?? '', () => { onPage(p); window.scrollTo(0, 0) })
 
   if (page) return (
-    <Page title={t(pageLabel(page, !!sync.user))} onBack={() => open(null)}>
+    <Page title={t(pageLabel(page, !!sync.user))} onBack={() => open(null)} morph={page}>
       {PAGES[page]({ data, streak, today, badges: list, onBack: () => open(null), onLogin, onHome: () => open(null), onPage: open })}
     </Page>
   )
@@ -80,7 +82,7 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
       {!sync.user && sync.enabled && <button className="btn primary wide me-signin" onClick={onLogin}>{t('prof.signIn')}</button>}
 
       <Group>
-        <Row label={t('prof.progress')} value={t('prof.progressLine', { n: streak?.count ?? 0, done, total: list.length })} onClick={() => open('progress')} />
+        <Row label={t('prof.progress')} value={t('prof.progressLine', { n: streak?.count ?? 0, done, total: list.length })} onClick={() => open('progress')} morph="progress" />
       </Group>
 
       {SECTIONS.map(s => {
@@ -89,7 +91,7 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
           <Group key={s.title} title={t(s.title)}>
             {items.map((i, n) => {
               const label = t(i.label)
-              if ('page' in i) return <Row key={n} label={label} danger={i.danger} value={i.value?.(ctx)} onClick={() => open(i.page)} />
+              if ('page' in i) return <Row key={n} label={label} danger={i.danger} value={i.value?.(ctx)} onClick={() => open(i.page)} morph={i.page} />
               if ('href' in i) return <Row key={n} label={label} href={i.href(ctx)} />
               if ('toggle' in i) return <Row key={n} label={label} toggle={i.toggle(ctx)} />
               if ('action' in i) return <Row key={n} label={label} onClick={() => i.action(ctx)} />

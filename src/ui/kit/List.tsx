@@ -22,14 +22,15 @@ type RowProps = {
   value?: ReactNode                 // a destra, in grigio (es. "Automatico", "0.9-beta")
   detail?: ReactNode                // sotto l'etichetta, più piccolo
   danger?: boolean
+  morph?: string                    // la voce diventa il titolo della pagina che apre (kit/motion → morph)
 } & ({ onClick: () => void; href?: never; toggle?: never }
    | { href: string; onClick?: never; toggle?: never }
    | { toggle: { on: boolean; onChange: (on: boolean) => void; disabled?: boolean }; onClick?: never; href?: never }
    | { onClick?: never; href?: never; toggle?: never })
 
-export function Row({ label, value, detail, danger, ...kind }: RowProps) {
+export function Row({ label, value, detail, danger, morph, ...kind }: RowProps) {
   const body = <>
-    <span className="row-main"><span className={danger ? 'bad-text' : undefined}>{label}</span>{detail && <small>{detail}</small>}</span>
+    <span className="row-main"><span className={danger ? 'bad-text' : undefined} data-morph={morph}>{label}</span>{detail && <small>{detail}</small>}</span>
     {value != null && <span className="row-value">{value}</span>}
   </>
   if ('toggle' in kind && kind.toggle) {
@@ -47,12 +48,12 @@ export function Row({ label, value, detail, danger, ...kind }: RowProps) {
 }
 
 /** Pagina di dettaglio: Indietro, titolo, contenuto. Entra da destra (sei "dentro" una voce). */
-export function Page({ title, onBack, children }: { title: string; onBack: () => void; children: ReactNode }) {
+export function Page({ title, onBack, children, morph }: { title: string; onBack: () => void; children: ReactNode; morph?: string }) {
   const { t } = useI18n()
   return (
     <div className="screen sub-in">
       <button className="back-btn" onClick={() => { tap(); onBack() }}><Icon name="back" size={20} />{t('prof.back')}</button>
-      <h1 className="screen-title">{title}</h1>
+      <h1 className="screen-title" data-morph={morph}>{title}</h1>
       {children}
     </div>
   )
