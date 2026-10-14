@@ -22,8 +22,14 @@ export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; sett
   // mese senza movimenti: niente zeri grandi, ma cosa comparirà qui e come cominciare
   if (r.transactions.length === 0) {
     const now = today >= r.period.start && today <= r.period.end
-    return <Empty title={t(now ? 'month.emptyNow' : 'month.emptyPast')} text={t('month.emptyText')}
-      action={now ? { label: t('month.emptyAdd'), onClick: () => openComposer() } : undefined} />
+    return <>
+      <Empty title={t(now ? 'month.emptyNow' : 'month.emptyPast')} text={t('month.emptyText')}
+        action={now ? { label: t('month.emptyAdd'), onClick: () => openComposer() } : undefined} />
+      <h2 className="sec-title">{t('ana.parts')}</h2>
+      <Parts r={r} settings={settings} onOpen={onOpen} />
+      <h2 className="sec-title">{t('ana.daily')}</h2>
+      <DailyChart r={r} settings={settings} today={today} />
+    </>
   }
   return (
     <>

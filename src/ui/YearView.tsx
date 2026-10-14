@@ -60,7 +60,11 @@ export function YearView({ year, transactions, settings, today, current, onOpenM
   const years = useMemo(() => computeYears(transactions, settings, today), [transactions, settings, today])
   const months = y.rows.filter(r => r.income || r.spent || r.saved)
   const left = y.total.leftOver
-  if (!y.hasData) return <Empty title={t('year.emptyTitle', { year })} text={t('year.emptyText')} />
+  if (!y.hasData) return <>
+    <Empty title={t('year.emptyTitle', { year })} text={t('year.emptyText')} />
+    <h2 className="sec-title">{t('year.chart')}</h2>
+    <YearChart rows={y.rows} onOpenMonth={m => onOpenMonth({ year, month: m })} />
+  </>
 
   return (
     <>

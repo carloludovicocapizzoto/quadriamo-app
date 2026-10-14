@@ -14,15 +14,14 @@ export function DailyChart({ r, settings, today }: { r: MonthResult; settings: S
   const shown = day ?? (todayIdx >= 0 ? todayIdx : days.length - 1)
   const line = days.map((d, i) => `${i + 0.5},${100 - (d.cumulative / maxCum) * 92}`).join(' ')
   const anySpend = days.some(d => d.spent > 0)
-  if (!anySpend) return <p className="muted small">{t('home.noSpend')}</p>
   return (
     <>
-        <p className="hc-tip" aria-live="polite">{t('home.dayTip', { date: date(days[shown].day, { day: 'numeric', month: 'short' }),
+        <p className="hc-tip" aria-live="polite">{!anySpend ? t('chart.emptyDaily') : t('home.dayTip', { date: date(days[shown].day, { day: 'numeric', month: 'short' }),
           amount: money(days[shown].spent, cur), total: money(days[shown].cumulative, cur) })}</p>
         <div className="hc-bars" role="img" aria-label={t('home.daily')} onMouseLeave={() => setDay(null)}>
-          <svg className="hc-line" viewBox={`0 0 ${days.length} 100`} preserveAspectRatio="none" aria-hidden="true">
+          {anySpend && <svg className="hc-line" viewBox={`0 0 ${days.length} 100`} preserveAspectRatio="none" aria-hidden="true">
             <polyline points={line} />
-          </svg>
+          </svg>}
           {days.map((d, i) => (
             <button key={d.day} type="button" className={`col${i === shown ? ' on' : ''}${i === todayIdx ? ' today' : ''}`}
                     aria-label={date(d.day, { day: 'numeric', month: 'short' })} onClick={() => setDay(i)} onMouseEnter={() => setDay(i)}>

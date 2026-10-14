@@ -58,3 +58,6 @@
 .swipe-page.from-right { animation: from-right .32s var(--ease) both; }
 .swipe-hint { display: flex; justify-content: center; align-items: center; gap: 8px; margin: -4px 0 var(--s3); font-size: var(--t-sm); color: var(--faint); }
 .swipe-hint span { font-size: 16px; }
+
+/* la scheda attiva si vede già: niente contorno dopo il clic (computer e iPad); con la tastiera cambia il colore */
+.tabbar > button:focus-visible { outline: none; color: var(--text); }

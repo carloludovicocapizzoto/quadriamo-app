@@ -34,7 +34,7 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
   )
   const spent = c.r.spent > 0
   switch (id) {
-    case 'parts': return c.r.income > 0 ? <section className="widget w-parts">{c.parts}</section> : null
+    case 'parts': return <section className="widget w-parts">{c.parts}</section>
     case 'today': {
       const list = c.r.transactions.filter(x => !x.upcoming && x.date === c.today)
       return box(<>
@@ -43,7 +43,7 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
       </>, c.onAll)
     }
     case 'forecast': return c.r.income > 0 ? box(<MonthOutcome r={c.r} settings={s} today={c.today} />, () => navigate({ tab: 'analysis', view: 'month' })) : null
-    case 'daily': return spent ? box(<DailyChart r={c.r} settings={s} today={c.today} />) : null
+    case 'daily': return box(<DailyChart r={c.r} settings={s} today={c.today} />)
     case 'categories': return c.r.byCategory.some(x => x.amount !== 0) ? box(<ByCategory rows={c.r.byCategory} currency={cur} />) : null
     case 'changes': return spent ? box(<CategoryChangesReport r={c.r} txs={c.data.transactions} settings={s} today={c.today} />) : null
     case 'goals': {
