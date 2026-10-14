@@ -8,7 +8,6 @@ const en = {
 
   'nav.month': 'Month',
   'nav.transactions': 'Transactions',
-  'nav.settings': 'Settings',
 
   'action.add': 'Add transaction',
   'action.save': 'Save',
@@ -31,7 +30,7 @@ const en = {
   'ana.overNow': "over this month's income",
   'ana.leftPast': "left over this month",
   'ana.overPast': "over this month's income",
-  'month.noSpending': 'Nothing spent from this bucket yet.',
+  'month.noSpending': 'Nothing spent from this part yet.',
 
   'bucket.available': 'Available',
   'bucket.remaining': 'Remaining',
@@ -53,7 +52,7 @@ const en = {
   'tx.category': 'Category',
   'tx.date': 'Date',
   'tx.paidFrom': 'Paid from / Allocate to',
-  'tx.paidFromDefault': 'Default bucket',
+  'tx.paidFromDefault': 'Default part',
   'tx.paidFromSplit': 'Split by my rule',
   'split.rule': "Split with my rule",
   'split.all': "All into {part}",
@@ -92,7 +91,7 @@ const en = {
   'settings.categories': 'Categories',
   'settings.addCategory': 'Add category',
   'settings.type': 'Type',
-  'settings.bucket': 'Bucket',
+  'settings.bucket': 'Part',
   'settings.newCategory': 'New category',
   'settings.deleteCategoryUsed': '{n} transactions use this category: they will be flagged to fix. Delete it anyway?',
   'settings.recurring': 'Recurring payments',
@@ -118,7 +117,7 @@ const en = {
   'settings.install': 'Install Quadriamo: in your browser menu choose “Add to Home Screen” or “Install app”.',
 
   'onb.title': 'Welcome to Quadriamo',
-  'onb.text': 'Give every euro a job: split your income into four buckets and always know what is left.',
+  'onb.text': 'Give every euro a job: split your income into four parts and always know what is left.',
   'onb.start': 'Start',
   'onb.demo': 'Explore with sample data',
   'onb.privacy': 'No account needed: your data stays on this device.',
@@ -137,7 +136,7 @@ const en = {
   'year.chart': 'Month by month',
   'year.byCategory': 'Where the money went',
   'year.overYears': 'Over the years',
-  'year.overYearsHint': 'Every year continues from the previous one: what is left in a bucket rolls into January.',
+  'year.overYearsHint': 'Every year continues from the previous one: what is left in a part rolls into January.',
   'year.month': 'Month',
 
   'sync.title': 'Account & sync',
@@ -219,7 +218,7 @@ const en = {
   'inv.growth': 'Projected growth',
   'inv.projectionNote': 'A projection, not a promise: real returns go up and down.',
   'inv.tracker': 'This year: plan vs reality',
-  'inv.trackerHint': '“Invested” is what left your Investments bucket each month. Type your portfolio value at the end of each month to see your gain.',
+  'inv.trackerHint': '“Invested” is what left your Investments part each month. Type your portfolio value at the end of each month to see your gain.',
   'inv.portfolio': 'Portfolio value',
   'inv.t.etf': 'ETF',
   'inv.t.stock': 'Stock',

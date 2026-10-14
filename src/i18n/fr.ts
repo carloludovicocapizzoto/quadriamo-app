@@ -8,7 +8,6 @@ const fr: Dict = {
 
   'nav.month': 'Mois',
   'nav.transactions': 'Opérations',
-  'nav.settings': 'Réglages',
 
   'action.add': 'Ajouter une opération',
   'action.save': 'Enregistrer',
