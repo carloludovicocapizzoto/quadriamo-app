@@ -46,7 +46,7 @@ export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; sett
 }
 
 /** Come finisce il mese: per quello in corso, la previsione a questo ritmo; per gli altri, com'è andata davvero. */
-function MonthOutcome({ r, settings, today }: { r: MonthResult; settings: Settings; today: string }) {
+export function MonthOutcome({ r, settings, today }: { r: MonthResult; settings: Settings; today: string }) {
   const { t, money } = useI18n()
   const plan = usePlan()
   const cur = settings.currency

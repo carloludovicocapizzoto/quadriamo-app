@@ -40,6 +40,7 @@ export interface Settings {
   rules?: Rule[]                    // regole a parole chiave per riconoscere le transazioni importate
   persona?: 'student' | 'worker' | 'other'   // risposta a "Chi sei?" al primo avvio
   schema?: number                   // aggiornamenti dei dati già applicati (vedi migrate)
+  homeWidgets?: string[]            // i widget della Home, in ordine (vuoto = quelli di partenza, vedi ui/home/widgets)
 }
 
 export const SPLIT = 'split' as const   // entrata divisa secondo la regola

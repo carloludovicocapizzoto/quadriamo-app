@@ -31,3 +31,13 @@
   .hero-amount { font-size: 84px; }
   .block-shape { height: 88px; }
 }
+
+/* widget: uno sotto l'altro, separati solo dallo spazio e dal titolo; in fondo "Personalizza la Home" */
+.widget { margin-top: var(--s6); }
+.widget.w-parts { margin-top: var(--s5); }
+.widget .outcome { margin-top: var(--s2); }
+.home-edit { display: block; margin: var(--s8) 0 var(--s4); color: var(--muted); }
+.home-editor .row { gap: var(--s2); }
+.rot-up { transform: rotate(-90deg); }
+.rot-down { transform: rotate(90deg); }
+.widget .outcome-amount { font-size: var(--t-title); letter-spacing: -.03em; }
