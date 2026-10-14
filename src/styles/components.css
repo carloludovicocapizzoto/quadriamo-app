@@ -85,10 +85,6 @@ a.btn { text-decoration: none; color: var(--text); }
 .switch:disabled { opacity: .6; }
 
 /* ---------- anello di avanzamento ---------- */
-.ring { position: relative; display: inline-grid; place-items: center; flex: none; }
-.ring svg { display: block; }
-.ring-v { transition: stroke-dashoffset .9s var(--ease); animation: ring-in .9s var(--ease) both; }
-.ring-in { position: absolute; inset: 0; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
 
 /* ---------- stati: vuoto e caricamento ---------- */
 .empty-state { display: grid; justify-items: center; text-align: center; gap: var(--s2); padding: var(--s8) var(--s5); }
@@ -130,3 +126,7 @@ button.row:active, a.row:active { opacity: .6; }
 .faq details > summary .row-chev { transition: transform var(--d-spring) var(--spring-snappy); }
 .faq details[open] > summary .row-chev { transform: rotate(90deg); }
 .faq details > p { margin: 0 0 var(--s4); color: var(--muted); font-size: 15px; line-height: 1.55; }
+
+/* Avanzamento (kit/Meter): una linea sottile, si riempie con la molla lenta */
+.meter { display: block; height: 4px; border-radius: 2px; background: var(--fill-2); overflow: hidden; }
+.meter > i { display: block; height: 100%; border-radius: inherit; background: var(--text); transition: width var(--d-spring) var(--spring-gentle); }

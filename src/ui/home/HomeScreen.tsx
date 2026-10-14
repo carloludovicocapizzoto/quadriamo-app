@@ -5,7 +5,8 @@ import type { AppData } from '../../store/state'
 import { Icon } from '../Icon'
 import { tap, useCountUp } from '../kit/motion'
 import { Money } from '../kit/Money'
-import { Ring } from '../kit/Ring'
+import { Meter } from '../kit/Meter'
+import { Outcome } from '../Outcome'
 import { Sheet } from '../kit/Sheet'
 import { BUCKET_COLORS, bucketName } from '../names'
 import { TxRow } from '../TxRow'
@@ -87,14 +88,11 @@ function PartDetail({ b, r, cur, color, settings, onOpen, onAll }: {
   const used = b.available > 0 ? Math.max(0, Math.min(1, 1 - b.remaining / b.available)) : 0
   const txs = (r.spendingByBucket[b.bucket.id] ?? []).filter(x => !x.upcoming).slice(-6).reverse()
   return <>
-    <div className="pd-top">
-      <Ring value={used} size={96} stroke={9} color={color}><b>{Math.round(used * 100)}%</b></Ring>
-      <dl className="pd-stats">
-        <div><dt>{t('bucket.available')}</dt><dd>{money(b.available, cur)}</dd></div>
-        <div><dt>{t('bucket.spent')}</dt><dd>{money(b.spent, cur)}</dd></div>
-        <div><dt>{t('bucket.remaining')}</dt><dd className={b.remaining < 0 ? 'bad-text' : ''}>{money(b.remaining, cur)}</dd></div>
-      </dl>
-    </div>
+    {/* quanto rimane è il protagonista; la linea si riempie con quanto hai speso, nel colore della parte */}
+    <Outcome value={b.remaining} currency={cur} label={t(b.remaining < 0 ? 'part.over' : 'part.leftOf', { amount: money(b.available, cur) })}
+      totals={[{ label: t('bucket.spent'), value: b.spent }, { label: t('part.used'), value: `${Math.round(used * 100)}%` }]}>
+      <Meter value={used} color={color} label={t('part.used')} />
+    </Outcome>
     <p className="day-label">{t('part.last')}</p>
     {txs.length ? <ul className="tx-list">{txs.map(tx => <TxRow key={tx.id} tx={tx} settings={settings} onOpen={onOpen} />)}</ul>
       : <p className="muted small">{t('month.noSpending')}</p>}

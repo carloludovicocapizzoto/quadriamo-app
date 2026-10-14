@@ -34,6 +34,8 @@
 .outcome-amount.bad { color: var(--bad); }
 .outcome-label { margin: var(--s3) 0 0; color: var(--muted); font-size: 15px; }
 .outcome .checks { margin-top: var(--s3); }
+.outcome > .meter { margin-top: var(--s4); }
+.outcome-row.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .outcome-detail { margin: var(--s2) 0 0; font-size: var(--t-sm); color: var(--muted); max-width: 46ch; }
 /* tre totali su una riga; quattro in 2x2 sul telefono e su una riga dove c'è spazio */
 .outcome-row.n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }

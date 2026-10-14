@@ -3,48 +3,52 @@ import { goalStatus, type Goal } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import { useStore } from '../../store/context'
 import { newId, parseAmount } from '../../store/state'
-import { Icon, type IconName } from '../Icon'
-import { Ring } from '../kit/Ring'
+import { Icon } from '../Icon'
+import { Meter } from '../kit/Meter'
+import { Money } from '../kit/Money'
+import { Outcome } from '../Outcome'
 import { tap, useCountUp } from '../kit/motion'
 import { Sheet } from '../kit/Sheet'
 import { AmountInput } from '../kit/AmountInput'
 import { amountText } from '../kit/amount'
 
-const GOAL_ICONS: IconName[] = ['target', 'plane', 'home', 'car', 'gift', 'heart', 'growth']
 const live = (goals: Goal[] | undefined) => (goals ?? []).filter(g => !g.removed)
 
-/** Profilo: i tuoi obiettivi di risparmio come tessere da scorrere, più "Nuovo obiettivo". */
+/**
+ * Profilo → Obiettivi: in alto quanto hai messo da parte in tutto, poi un obiettivo per riga con una linea di avanzamento,
+ * e in fondo "+ Nuovo obiettivo". Toccando una riga si apre il dettaglio.
+ */
 export function GoalsStrip({ goals, today, currency, titled = true }: { goals: Goal[] | undefined; today: string; currency: string; titled?: boolean }) {
   const { t, money } = useI18n()
   const [open, setOpen] = useState<string | 'new' | null>(null)
   const list = live(goals)
   const current = list.find(g => g.id === open) ?? null
+  const all = list.map(g => ({ g, s: goalStatus(g, today) }))
+  const saved = all.reduce((a, x) => a + x.s.saved, 0), target = all.reduce((a, x) => a + x.g.target, 0)
   return (
     <>
-      {titled && <div className="sec-head"><h2 className="sec-title">{t('goal.title')}</h2>
-        {list.length > 0 && <button className="link-btn" onClick={() => { tap(); setOpen('new') }}><Icon name="plus" size={16} />{t('goal.new')}</button>}</div>}
-      <div className="goals" role="list">
-        {list.map(g => {
-          const s = goalStatus(g, today)
-          return (
-            <button key={g.id} role="listitem" className={`goal${s.done ? ' done' : ''}`} onClick={() => { tap(); setOpen(g.id) }}>
-              <Ring value={s.pct} size={58} stroke={6} color={s.done ? 'var(--good)' : 'var(--accent)'}>
-                <span className="goal-ico"><Icon name={(s.done ? 'check' : g.icon) as IconName} size={22} /></span></Ring>
-              <b className="goal-name">{g.name}</b>
-              <span className="goal-amt">{money(s.saved, currency)}</span>
-              <span className="goal-of">{t('goal.of', { amount: money(g.target, currency) })}</span>
-              <span className={`goal-sub${s.late ? ' bad-text' : s.onTrack === false ? ' warn-text' : ''}`}>
-                {s.done ? t('goal.reached') : s.late ? t('goal.late') : s.perMonth != null ? t('goal.perMonth', { amount: money(s.perMonth, currency) }) : t('goal.pct', { n: Math.round(s.pct * 100) })}
-              </span>
-            </button>
-          )
-        })}
-        <button className="goal goal-add" onClick={() => { tap(); setOpen('new') }}>
-          <span className="goal-plus"><Icon name="plus" size={26} /></span>
-          <b className="goal-name">{t('goal.new')}</b>
-          {!list.length && <span className="goal-sub">{t('goal.emptyHint')}</span>}
-        </button>
-      </div>
+      {titled && <h2 className="sec-title">{t('goal.title')}</h2>}
+      {list.length > 0 && <Outcome value={saved} currency={currency} label={t('goal.savedTotal')}
+        totals={[{ label: t('goal.targetTotal'), value: target }, { label: t('goal.toGo'), value: Math.max(0, target - saved) },
+          { label: t('goal.count'), value: String(list.length) }]} />}
+      <ul className="group-list goal-list">
+        {all.map(({ g, s }) => (
+          <li key={g.id}><button className="row" onClick={() => { tap(); setOpen(g.id) }}>
+            <span className="row-main">
+              <span className="goal-line"><span className="goal-name">{g.name}</span>
+                <span className="goal-amt"><Money value={s.saved} currency={currency} /></span></span>
+              {s.done ? <small className="goal-done"><Icon name="check" size={15} />{t('goal.reached')}</small> : <>
+                <Meter value={s.pct} label={g.name} />
+                <small className={s.late ? 'bad-text' : s.onTrack === false ? 'warn-text' : undefined}>
+                  {t('goal.of', { amount: money(g.target, currency) })} · {s.late ? t('goal.late') : s.perMonth != null ? t('goal.perMonth', { amount: money(s.perMonth, currency) }) : t('goal.pct', { n: Math.round(s.pct * 100) })}
+                </small></>}
+            </span>
+            <Icon name="chevron" size={18} className="row-chev" />
+          </button></li>
+        ))}
+      </ul>
+      <button className="link-btn goal-add" onClick={() => { tap(); setOpen('new') }}>+ {t('goal.new')}</button>
+      {!list.length && <p className="group-foot">{t('goal.emptyHint')}</p>}
 
       <Sheet open={open === 'new'} onClose={() => setOpen(null)} title={t('goal.new')}>
         {open === 'new' && <GoalForm today={today} currency={currency} onDone={() => setOpen(null)} />}
@@ -77,10 +81,10 @@ function GoalDetail({ goal, today, currency, onClose }: { goal: Goal; today: str
   return (
     <div className="goal-detail">
       <div className="gd-head">
-        <Ring value={s.pct} size={132} stroke={11} color={s.done ? 'var(--good)' : 'var(--accent)'}>
-          <span className="gd-pct"><Icon name={goal.icon as IconName} size={26} /><b>{Math.round(s.pct * 100)}%</b></span></Ring>
         <h2>{goal.name}</h2>
-        <p className="gd-amt">{money(saved, currency)} <span className="muted">/ {money(goal.target, currency)}</span></p>
+        <Money className="outcome-amount" value={saved} currency={currency} />
+        <p className="outcome-label">{t('goal.of', { amount: money(goal.target, currency) })} · {t('goal.pct', { n: Math.round(s.pct * 100) })}</p>
+        <Meter value={s.pct} label={goal.name} />
         <p className={`small ${s.done ? 'good-text' : s.late ? 'bad-text' : 'muted'}`}>
           {s.done ? t('goal.reachedLong') : s.late ? t('goal.lateLong', { amount: money(s.left, currency) })
             : goal.deadline ? t('goal.plan', { amount: money(s.perMonth ?? 0, currency), n: s.monthsLeft ?? 0, left: money(s.left, currency) })
@@ -120,21 +124,17 @@ function GoalForm({ goal, today, currency, onDone, onDelete }: { goal?: Goal; to
   const [name, setName] = useState(goal?.name ?? '')
   const [target, setTarget] = useState(goal ? amountText(goal.target, lang) : '')
   const [deadline, setDeadline] = useState(goal?.deadline ?? '')
-  const [icon, setIcon] = useState(goal?.icon ?? 'target')
   const [err, setErr] = useState('')
   const amount = parseAmount(target)
   function save() {
     if (!name.trim()) return setErr(t('goal.errName'))
     if (!amount || amount <= 0) return setErr(t('goal.errTarget'))
-    dispatch({ type: 'saveGoal', goal: { id: goal?.id ?? newId(), name: name.trim().slice(0, 40), target: amount, deadline: deadline || null, icon,
+    dispatch({ type: 'saveGoal', goal: { id: goal?.id ?? newId(), name: name.trim().slice(0, 40), target: amount, deadline: deadline || null, icon: goal?.icon ?? 'target',
       contributions: goal?.contributions ?? [], createdAt: goal?.createdAt ?? today, updatedAt: '' } })
     onDone()
   }
   return (
     <div className="goal-form">
-      <div className="gf-icons" role="radiogroup" aria-label={t('goal.icon')}>
-        {GOAL_ICONS.map(i => <button key={i} role="radio" aria-checked={icon === i} className={icon === i ? 'on' : ''} onClick={() => { tap(); setIcon(i) }}><Icon name={i} size={22} /></button>)}
-      </div>
       <div className="txs-rows">
         <label className="txs-row"><span>{t('goal.name')}</span><input value={name} maxLength={40} onChange={e => setName(e.target.value)} placeholder={t('goal.namePh')} /></label>
         <label className="txs-row"><span>{t('goal.target')}</span><AmountInput value={target} onChange={setTarget} placeholder={`600 ${currency === 'EUR' ? '€' : currency}`} /></label>
