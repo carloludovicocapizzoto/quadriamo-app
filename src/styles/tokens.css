@@ -39,7 +39,7 @@
   --spring-gentle: linear(0, .047, .156, .288, .422, .546, .654, .743, .814, .869, .911, .942, .964, .979, .989, .996, 1, 1.002, 1.003, 1.003, 1.003, 1.003, 1.002, 1.002, 1);
   --spring: var(--spring-snappy);
   /* struttura */
-  --bar-h: 56px; --bar-gap: max(var(--s2), calc(env(safe-area-inset-bottom) - var(--s2))); --top-h: 0px; --gutter: 20px;
+  --bar-h: 62px; --bar-gap: max(var(--s2), calc(env(safe-area-inset-bottom) - var(--s2))); --top-h: 0px; --gutter: 20px;
   /* distanza del titolo dal bordo alto: subito sotto la Dynamic Island o la barra di stato (iPhone),
      un po' di respiro dove l'area sicura non c'è (Android, tablet), di più sul computer */
   --top-gap: max(calc(env(safe-area-inset-top) + 4px), clamp(12px, 3vw, 32px));

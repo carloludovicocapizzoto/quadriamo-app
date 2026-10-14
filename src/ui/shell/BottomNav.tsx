@@ -13,7 +13,7 @@ export function BottomNav({ tab, onTab, onAdd, badge }: { tab: string; onTab: (t
   const { t } = useI18n()
   const btn = (it: typeof ITEMS[number]) => (
     <button key={it.id} className={tab === it.id ? 'on' : ''} aria-current={tab === it.id ? 'page' : undefined} onClick={() => { tap(); onTab(it.id) }}>
-      <span className="nav-ico"><Icon name={it.icon} size={24} />{!!badge?.[it.id] && <em className="nav-badge">{badge[it.id]}</em>}</span>
+      <span className="nav-ico"><Icon name={it.icon} size={26} />{!!badge?.[it.id] && <em className="nav-badge">{badge[it.id]}</em>}</span>
       <span className="nav-label">{t(`nav.${it.id}` as keyof Dict)}</span>
     </button>
   )

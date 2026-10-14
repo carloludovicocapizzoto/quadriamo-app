@@ -20,14 +20,17 @@
 /* ---------- barra in basso: vetro flottante sopra il contenuto, staccata dal bordo come il display ----------
    Le voci hanno una larghezza minima: se aumentano, la barra scorre col pollice invece di stringerle. */
 .tabbar { position: fixed; z-index: 30; left: 50%; bottom: var(--bar-gap); transform: translateX(-50%);
-  width: min(calc(100% - 2 * var(--s3)), 440px); height: var(--bar-h); display: flex; padding: 0 var(--s1);
+  width: min(calc(100% - 2 * var(--s3)), 440px); height: var(--bar-h); isolation: isolate; display: flex; padding: 0 var(--s1);
   overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
-  border-radius: 24px; background: var(--glass); border: .5px solid var(--glass-line);
+  border-radius: 28px; background: var(--glass); border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
   -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
 .tabbar::-webkit-scrollbar { display: none; }
 .tabbar > button { flex: 1 0 64px; scroll-snap-align: center; height: 100%; border: 0; background: none; display: grid; justify-items: center; align-content: center; gap: 1px;
-  cursor: pointer; color: var(--muted); font: inherit; font-size: 10px; font-weight: 500; letter-spacing: .01em; -webkit-tap-highlight-color: transparent; transition: color var(--d-fast); }
+  cursor: pointer; color: var(--muted); font: inherit; font-size: 11px; font-weight: 500; letter-spacing: .01em; -webkit-tap-highlight-color: transparent; transition: color var(--d-fast); }
 .tabbar > button.on { color: var(--text); }
+/* la voce attiva ha una pillola chiara dietro (non il + , che è già un blocco) */
+.tabbar > button { position: relative; }
+.tabbar > button.on:not(.tab-add)::before { content: ''; position: absolute; inset: 5px 2px; border-radius: 22px; background: var(--fill-2); z-index: -1; }
 .nav-ico { position: relative; display: grid; place-items: center; width: 44px; height: 30px; transition: transform var(--d-base) var(--spring-snappy); }
 .tabbar > button:active .nav-ico { transform: scale(.88); }
 .nav-badge { position: absolute; top: -2px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--bad); color: var(--on-accent);
@@ -65,3 +68,15 @@
 
 /* la scheda attiva si vede già: niente contorno dopo il clic (computer e iPad); con la tastiera cambia il colore */
 .tabbar > button:focus-visible { outline: none; color: var(--text); }
+
+/* iPad e computer: la barra cresce con lo schermo (più alta, più larga, icone ed etichette più grandi) */
+@media (min-width: 768px) {
+  .tabbar { --bar-h: 72px; width: min(calc(100% - 2 * var(--s6)), 560px); border-radius: 32px; }
+  .tabbar > button { flex-basis: 88px; font-size: 12px; gap: 3px; }
+  .tabbar .nav-ico { width: 52px; height: 34px; }
+  .tabbar .nav-ico > .ico { width: 28px; height: 28px; }
+  .tab-add .nav-ico { width: 38px; height: 38px; border-radius: 12px; }
+  .tabbar > button.on:not(.tab-add)::before { inset: 6px 4px; border-radius: 26px; }
+  .app2 { padding-bottom: calc(72px + var(--bar-gap) + var(--s8)); }
+}
+@media (min-width: 1200px) { .tabbar { --bar-h: 76px; width: 600px; } }

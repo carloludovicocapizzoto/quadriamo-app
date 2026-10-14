@@ -2,7 +2,7 @@
    testo che non si ingrandisce da solo; campi da almeno 16px perché su iPhone quelli più piccoli ingrandiscono la pagina. */
 * { box-sizing: border-box; }
 html { background: var(--bg); min-height: 100%; overscroll-behavior: none; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-body { margin: 0; background: var(--bg); color: var(--text); overscroll-behavior: none;
+body { margin: 0; background: transparent; color: var(--text); overscroll-behavior: none;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-optical-sizing: auto; }
 
 h1, h2, h3 { font-weight: 600; letter-spacing: -.02em; }
