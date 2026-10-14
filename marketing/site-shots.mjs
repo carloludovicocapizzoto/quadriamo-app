@@ -3,7 +3,7 @@
 // Uso: con il server di sviluppo acceso (npm run dev, porta 5173):  node marketing/shoot.mjs
 // Apre Chrome senza finestra come un telefono 375x812 (x2) e salva le immagini in marketing/shots/.
 import { spawn } from 'node:child_process'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -14,7 +14,9 @@ const OUT = (process.env.OUT_DIR ?? new URL('./site-shots/', import.meta.url).pa
 const PORT = 9333
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
-const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${mkdtempSync(join(tmpdir(), 'qshot-'))}`,
+// profilo di Chrome usa e getta: si cancella alla fine (senza, ogni giro lascia centinaia di MB nella cartella temporanea)
+const PROFILE = mkdtempSync(join(tmpdir(), 'qshot-'))
+const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${PROFILE}`,
   '--lang=it-IT', '--hide-scrollbars', '--no-first-run', '--no-default-browser-check', 'about:blank'], { stdio: 'ignore' })
 let target
 for (let i = 0; i < 50 && !target; i++) {
@@ -61,3 +63,4 @@ for (const lang of ['it', 'en', 'fr', 'es']) for (const theme of ['light', 'dark
   await js(`location.hash = '#/'`); await sleep(600)
 }
 ws.close(); chrome.kill()
+await new Promise(r => chrome.once('exit', r)); rmSync(PROFILE, { recursive: true, force: true })

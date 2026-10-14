@@ -2,7 +2,7 @@
 // Uso: con il server di sviluppo acceso (npm run dev, porta 5173):  node marketing/shoot.mjs
 // Apre Chrome senza finestra come un telefono 375x812 (x2) e salva le immagini in marketing/shots/.
 import { spawn } from 'node:child_process'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -15,7 +15,9 @@ const PORT = 9333
 const LANG = process.argv[2] ?? 'it'   // it, en, fr, es
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
-const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${mkdtempSync(join(tmpdir(), 'qshot-'))}`,
+// profilo di Chrome usa e getta: si cancella alla fine (senza, ogni giro lascia centinaia di MB nella cartella temporanea)
+const PROFILE = mkdtempSync(join(tmpdir(), 'qshot-'))
+const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${PROFILE}`,
   '--lang=it-IT', '--hide-scrollbars', '--no-first-run', '--no-default-browser-check', 'about:blank'], { stdio: 'ignore' })
 let target
 for (let i = 0; i < 50 && !target; i++) {
@@ -124,3 +126,4 @@ await js(`[...document.querySelectorAll('button')].find(b => b.textContent.trim(
 await type('.salary-input', '980'); await js(`document.querySelectorAll('.salary-step input')[1].focus()`); await cdp('Input.insertText', { text: '380' }); await sleep(900)
 await shot('32-income.jpg', 'window.scrollTo(0,0)')
 ws.close(); chrome.kill()
+await new Promise(r => chrome.once('exit', r)); rmSync(PROFILE, { recursive: true, force: true })
