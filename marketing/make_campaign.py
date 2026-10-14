@@ -68,7 +68,7 @@ img = canvas(W, H)
 eyebrow(img, 60, 90, 'Privacy')
 y = text_block(img, 60, 150, 'I tuoi soldi sono affari tuoi', headline(92), INK, 960)
 d = ImageDraw.Draw(img)
-points = ['I tuoi dati li vedi solo tu, nel tuo account', 'Server nell’Unione europea, connessioni cifrate',
+points = ['Un account gratuito, i tuoi dati su ogni dispositivo', 'Server nell’Unione europea, connessioni cifrate',
           'Entrate e investimenti li vedi solo tu', 'Niente pubblicità, niente vendita di dati', 'Esporti o cancelli tutto quando vuoi']
 for i, p in enumerate(points):
     y0 = 470 + i * 140
