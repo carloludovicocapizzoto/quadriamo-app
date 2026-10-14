@@ -294,7 +294,6 @@ const en = {
   'beta.statsHint': 'Helps us understand how the beta is used. No budget data is ever sent.',
   'admin.open': 'Admin dashboard',
   'sh.title': "Shared budget",
-  'sh.back': "Back",
   'sh.needAccount': "A shared budget involves several people, so everyone needs an account. Sign in or create one.",
   'sh.errLoad': "Something went wrong. Check your connection and try again.",
   'sh.introTitle': "A budget for shared expenses",

@@ -18,7 +18,8 @@ const remember = (id: string | null) => { try { if (id) localStorage.setItem(LAS
 const remembered = () => { try { return localStorage.getItem(LAST) } catch { return null } }
 
 /** Budget comune (di coppia o tra coinquilini): spese condivise, divisione scelta dagli utenti, chi deve quanto a chi. */
-export function SharedView({ onBack, onLogin }: { onBack: () => void; onLogin: () => void }) {
+/** Dentro la pagina del Profilo, che ha già Indietro e titolo. */
+export function SharedView({ onLogin }: { onLogin: () => void }) {
   const { t } = useI18n()
   const sync = useSync()
   const [list, setList] = useState<SBudget[] | null>(null)
@@ -34,13 +35,12 @@ export function SharedView({ onBack, onLogin }: { onBack: () => void; onLogin: (
     if (sync.user) void refreshList()
   }, [sync.user, refreshList])
 
-  const head = <div className="sh-head"><button className="link-btn" onClick={onBack}><Icon name="back" size={16} />{t('sh.back')}</button><h1>{t('sh.title')}</h1></div>
-  if (!sync.user) return <div className="shared">{head}<section className="card"><p>{t('sh.needAccount')}</p>
+  if (!sync.user) return <div className="shared"><section className="card"><p>{t('sh.needAccount')}</p>
     <button className="btn primary" onClick={onLogin}><Icon name="user" size={16} />{t('onb.account')}</button></section></div>
-  if (!list) return <div className="shared">{head}<p className="muted">…</p></div>
+  if (!list) return <div className="shared"><p className="muted">…</p></div>
   return (
     <div className="shared">
-      {head}
+      
       {error && <p className="bad-text small">{error}</p>}
       {list.length > 1 && (
         <div className="chips sh-pick">{list.map(b => <button key={b.id} className={`chip${b.id === current ? ' on' : ''}`} onClick={() => { setCurrent(b.id); remember(b.id) }}>{b.name}</button>)}</div>

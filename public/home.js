@@ -423,10 +423,18 @@
 }
   Object.keys(X).forEach(function (l) { Object.keys(X[l]).forEach(function (k) { T[l][k] = X[l][k] }) })
   function pick(l) { return T[l] ? l : 'en' }
+  // schermate vere dell'app nella lingua e nel tema di chi visita (public/site/<lingua>-<tema>-<nome>.webp)
+  var dark = window.matchMedia('(prefers-color-scheme: dark)')
+  function shots(l) {
+    var t = dark.matches ? 'dark' : 'light'
+    document.querySelectorAll('img[data-shot]').forEach(function (img) { img.src = 'site/' + l + '-' + t + '-' + img.getAttribute('data-shot') + '.webp' })
+  }
+  if (dark.addEventListener) dark.addEventListener('change', function () { shots(document.documentElement.lang || 'it') })
   function apply(l) {
     l = pick(l)
     var d = T[l]
     document.documentElement.lang = l
+    shots(l)
     document.title = d['page.title']
     document.querySelectorAll('[data-i18n]').forEach(function (el) { var k = el.getAttribute('data-i18n'); if (d[k] != null) el.textContent = d[k] })
     document.querySelectorAll('[data-i18n-html]').forEach(function (el) { var k = el.getAttribute('data-i18n-html'); if (d[k] != null) el.innerHTML = d[k] })

@@ -24,7 +24,7 @@ export const PAGES: Record<ProfilePage, (p: PageProps) => ReactNode> = {
   recurring: p => <SettingsView only={['recurring']} onLogin={p.onLogin} />,
   goals: p => <GoalsStrip goals={p.data.goals} today={p.today} currency={p.data.settings.currency} titled={false} />,
   rules: p => <SettingsView only={['rules']} onLogin={p.onLogin} />,
-  shared: p => <ProGate feature="shared"><SharedView onBack={p.onBack} onLogin={p.onLogin} /></ProGate>,
+  shared: p => <ProGate feature="shared"><SharedView onLogin={p.onLogin} /></ProGate>,
   appearance: () => <Appearance />,
   language: () => <Language />,
   notifications: () => <Notifications />,

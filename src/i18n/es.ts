@@ -294,7 +294,6 @@ const es: Dict = {
   'beta.statsHint': 'Nos ayudan a entender cómo se usa la beta. Nunca se envían datos del presupuesto.',
   'admin.open': 'Panel de administración',
   'sh.title': "Presupuesto común",
-  'sh.back': "Atrás",
   'sh.needAccount': "El presupuesto común es entre varias personas, así que cada una necesita una cuenta. Entra o crea una.",
   'sh.errLoad': "Algo ha fallado. Revisa la conexión e inténtalo de nuevo.",
   'sh.introTitle': "Un presupuesto para los gastos comunes",

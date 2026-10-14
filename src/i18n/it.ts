@@ -294,7 +294,6 @@ const it: Dict = {
   'beta.statsHint': 'Ci aiutano a capire come viene usata la beta. Nessun dato del budget viene mai inviato.',
   'admin.open': 'Dashboard amministratore',
   'sh.title': "Budget comune",
-  'sh.back': "Indietro",
   'sh.needAccount': "Il budget comune serve a più persone, quindi ognuno deve avere un account. Accedi o creane uno.",
   'sh.errLoad': "Qualcosa non ha funzionato. Controlla la connessione e riprova.",
   'sh.introTitle': "Un budget per le spese in comune",

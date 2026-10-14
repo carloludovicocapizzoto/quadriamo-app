@@ -56,24 +56,8 @@
       </div>
       <p class="muted small" data-i18n="hero.note"></p>
     </div>
-    <div class="phone" aria-hidden="true">
-      <div class="phone-screen">
-        <div class="ph-logo">Quadriamo<span>.</span></div>
-        <div class="ph-safe">
-          <div class="ph-label" data-i18n="mock.safe"></div>
-          <div class="ph-row"><i class="c1"></i><span data-i18n="b.essentials"></span></div>
-          <div class="ph-big" data-i18n="mock.perDay1"></div>
-          <div class="ph-row"><i class="c2"></i><span data-i18n="b.qualityOfLife"></span></div>
-          <div class="ph-big" data-i18n="mock.perDay2"></div>
-        </div>
-        <div class="ph-card">
-          <div class="ph-bar"><span class="c1" style="width:55%"></span><span class="c2" style="width:20%"></span><span class="c3" style="width:15%"></span><span class="c4" style="width:10%"></span></div>
-          <div class="ph-line"><span data-i18n="b.safetyFund"></span><b>250 €</b></div>
-          <div class="ph-line"><span data-i18n="b.investments"></span><b>590 €</b></div>
-        </div>
-        <div class="ph-fab">+</div>
-      </div>
-    </div>
+    <!-- schermata vera dell'app (public/site/, lingua e tema di chi visita: home.js → shots) -->
+    <div class="phone" aria-hidden="true"><img class="shot" data-shot="home" alt="" width="540" height="1170"></div>
   </section>
 
   <!-- calcolatore: il proprio numero del giorno in 10 secondi -->
@@ -115,17 +99,14 @@
   <section id="demo" class="site-wrap story" aria-labelledby="story-title">
     <div class="story-head"><p class="eyebrow" data-i18n="story.eyebrow"></p><h2 id="story-title" data-i18n="story.title"></h2></div>
     <div class="story-grid">
+      <!-- una schermata vera per ogni passaggio: si vede quella del passaggio che stai leggendo -->
       <div class="story-phone" aria-hidden="true" data-step="1">
-        <div class="sp-screen">
-          <div class="sp-top"><span class="sp-logo"><i></i><i></i><i></i><i></i></span><span class="sp-flame"><svg viewBox="0 0 24 32" class="sp-fl"><path fill="#F2542D" d="M12 1c1 5 7 8.5 7 16a7 7 0 0 1-14 0c0-3.6 1.8-6 3.6-7.6-.1 2.2.7 3.8 2.1 4.6C10 9.8 10.6 5 12 1Z"/><path fill="#FFD08A" d="M12 15.5c.5 2.4 3.2 3.6 3.2 6.6a3.2 3.2 0 0 1-6.4 0c0-1.9 1-3 2-3.8-.1 1 .3 1.8 1 2.2-.3-1.8 0-3.4.2-5Z"/></svg><b class="sp-streak"><span class="v1">12</span><span class="v2">13</span></b></span></div>
-          <div class="sp-notif"><b data-i18n="story.n1"></b><span data-i18n="story.n1b"></span></div>
-          <div class="sp-hero"><small data-i18n="story.today"></small><b class="sp-num"><span class="v1">21,40 €</span><span class="v2">20,20 €</span></b></div>
-          <div class="sp-parts"><span class="c1"><i></i></span><span class="c2"><i></i></span><span class="c3"><i></i></span><span class="c4"><i></i></span></div>
-          <div class="sp-add"><span class="sp-amt">1,20 €</span><span class="sp-cat" data-i18n="story.coffee"></span><span class="sp-save" data-i18n="story.save"></span></div>
-          <div class="sp-streakcard"><span class="sp-bigflame"><svg viewBox="0 0 24 32" class="sp-fl"><path fill="#F2542D" d="M12 1c1 5 7 8.5 7 16a7 7 0 0 1-14 0c0-3.6 1.8-6 3.6-7.6-.1 2.2.7 3.8 2.1 4.6C10 9.8 10.6 5 12 1Z"/><path fill="#FFD08A" d="M12 15.5c.5 2.4 3.2 3.6 3.2 6.6a3.2 3.2 0 0 1-6.4 0c0-1.9 1-3 2-3.8-.1 1 .3 1.8 1 2.2-.3-1.8 0-3.4.2-5Z"/></svg></span><b data-i18n="story.days"></b><span class="sp-dots"><i></i><i></i><i></i><i></i><i></i><i></i><i class="new"></i></span></div>
-          <div class="sp-shared"><b data-i18n="story.flat"></b><span data-i18n="story.owes"></span></div>
-          <div class="sp-tab"><i></i><i></i><i class="plus">+</i><i></i><i></i></div>
-        </div>
+        <img class="shot" data-for="1" data-shot="income" alt="" width="540" height="1170">
+        <img class="shot" data-for="2" data-shot="split" alt="" width="540" height="1170" loading="lazy">
+        <img class="shot" data-for="3" data-shot="add" alt="" width="540" height="1170" loading="lazy">
+        <img class="shot" data-for="4" data-shot="home" alt="" width="540" height="1170" loading="lazy">
+        <img class="shot" data-for="5" data-shot="streak" alt="" width="540" height="1170" loading="lazy">
+        <img class="shot" data-for="6" data-shot="home" alt="" width="540" height="1170" loading="lazy">
       </div>
       <ol class="story-steps">
         <li data-step="1"><b data-i18n="story.s1t"></b><span data-i18n="story.s1"></span></li>

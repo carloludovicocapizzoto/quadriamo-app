@@ -294,7 +294,6 @@ const fr: Dict = {
   'beta.statsHint': 'Nous aident à comprendre l’usage de la bêta. Aucune donnée de budget n’est envoyée.',
   'admin.open': 'Tableau de bord admin',
   'sh.title': "Budget commun",
-  'sh.back': "Retour",
   'sh.needAccount': "Le budget commun concerne plusieurs personnes : chacun doit avoir un compte. Connectez-vous ou créez-en un.",
   'sh.errLoad': "Un problème est survenu. Vérifiez la connexion et réessayez.",
   'sh.introTitle': "Un budget pour les dépenses communes",
