@@ -87,7 +87,7 @@ a.btn { text-decoration: none; color: var(--text); }
 /* ---------- anello di avanzamento ---------- */
 
 /* ---------- stati: vuoto e caricamento ---------- */
-.empty { margin: var(--s8) 0 var(--s6); }
+.empty { margin: var(--s6) 0 var(--s5); }
 .empty h2 { margin: 0; font-size: var(--t-h2); font-weight: 600; letter-spacing: -.02em; }
 .empty p { margin: var(--s2) 0 0; color: var(--muted); max-width: 40ch; line-height: 1.5; }
 .empty .btn { margin-top: var(--s5); }
@@ -107,7 +107,7 @@ a.btn { text-decoration: none; color: var(--text); }
 .group-title { font-size: var(--t-sm); font-weight: 600; color: var(--muted); margin: 0 0 var(--s2); letter-spacing: 0; }
 .group-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .group-list > li { border-bottom: 1px solid var(--line); }
-.row { display: flex; align-items: center; gap: var(--s3); width: 100%; min-height: 52px; padding: var(--s3) 0; border: 0; background: none;
+.row { display: flex; align-items: center; gap: var(--s3); width: 100%; min-height: 48px; padding: 10px 0; border: 0; background: none;
   color: var(--text); font: inherit; font-size: var(--t-body); text-align: left; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 div.row { cursor: default; }
 button.row:active, a.row:active { opacity: .6; }

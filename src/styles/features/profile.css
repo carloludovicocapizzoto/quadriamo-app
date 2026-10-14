@@ -20,7 +20,7 @@
   .edit-list.recurring li > :nth-child(7) { grid-area: x; }
   .edit-list li { padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 }
-.save-bar { position: fixed; left: 0; right: 0; bottom: calc(60px + env(safe-area-inset-bottom)); display: flex; gap: 12px;
+.save-bar { position: fixed; left: 0; right: 0; bottom: calc(var(--bar-h) + var(--bar-gap) + var(--s2)); display: flex; gap: 12px;
   align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--surface);
   border-top: 1px solid var(--line); z-index: 6; }
 .settings { padding-bottom: 64px; }

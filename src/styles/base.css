@@ -1,7 +1,7 @@
 /* Elementi di base e piccole utilità. L'interfaccia sta ferma come un'app: niente zoom con il doppio tocco, niente rimbalzo,
    testo che non si ingrandisce da solo; campi da almeno 16px perché su iPhone quelli più piccoli ingrandiscono la pagina. */
 * { box-sizing: border-box; }
-html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html { background: var(--bg); min-height: 100%; overscroll-behavior: none; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--text); overscroll-behavior: none;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-optical-sizing: auto; }
 

@@ -13,6 +13,8 @@
 @font-face { font-family: "DM Serif Display"; src: url("/fonts/DMSerifDisplay-Regular.ttf") format("truetype"); font-display: swap; }
 
 :root {
+  /* vetro della barra in basso: la superficie al 80%, sfocata dietro; un filo al posto dell'ombra */
+  --glass: color-mix(in srgb, var(--bg) 80%, transparent); --glass-line: color-mix(in srgb, var(--text) 9%, transparent);
   /* colore: carta, inchiostro (tre intensità), linea sottile, riempimento dei controlli */
   --bg: #F6F4EF; --surface: #F6F4EF; --text: #17181A; --muted: #6B6E73; --faint: #A3A5A8;
   --line: rgba(23,24,26,.09); --fill: rgba(23,24,26,.05); --fill-2: rgba(23,24,26,.09);
@@ -37,7 +39,7 @@
   --spring-gentle: linear(0, .047, .156, .288, .422, .546, .654, .743, .814, .869, .911, .942, .964, .979, .989, .996, 1, 1.002, 1.003, 1.003, 1.003, 1.003, 1.002, 1.002, 1);
   --spring: var(--spring-snappy);
   /* struttura */
-  --bar-h: 60px; --top-h: 0px; --gutter: 20px;
+  --bar-h: 56px; --bar-gap: max(var(--s2), calc(env(safe-area-inset-bottom) - var(--s2))); --top-h: 0px; --gutter: 20px;
   /* distanza del titolo dal bordo alto: subito sotto la Dynamic Island o la barra di stato (iPhone),
      un po' di respiro dove l'area sicura non c'è (Android, tablet), di più sul computer */
   --top-gap: max(calc(env(safe-area-inset-top) + 4px), clamp(12px, 3vw, 32px));

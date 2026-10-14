@@ -1,7 +1,7 @@
 /* Il guscio dell'app: barra in alto, barra in basso, pagine. E l'intestazione delle schermate prima dell'app. */
 .app { max-width: var(--column); margin: 0 auto; padding: 0 var(--gutter) 48px; }
 .has-nav { padding-bottom: 96px; }
-.app2 { max-width: var(--column); padding-top: var(--top-gap); padding-bottom: calc(var(--bar-h) + var(--s12) + env(safe-area-inset-bottom)); }
+.app2 { max-width: var(--column); padding-top: var(--top-gap); padding-bottom: calc(var(--bar-h) + var(--bar-gap) + var(--s8)); }
 
 /* ---------- intestazione prima dell'app (benvenuto, accesso, configurazione) ---------- */
 .top { display: flex; justify-content: space-between; align-items: center; padding: var(--top-gap) 0 18px; }
@@ -17,26 +17,30 @@
 .dot.syncing { background: var(--accent); animation: pulse 1s infinite alternate; }
 .dot.error { background: var(--bad); }
 
-/* ---------- barra in basso: piatta, sulla superficie; il "+" è un blocco d'inchiostro dentro la barra ---------- */
-.tabbar { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); align-items: center;
-  height: calc(var(--bar-h) + env(safe-area-inset-bottom)); padding: 0 max(var(--s2), calc(50% - 300px)) env(safe-area-inset-bottom);
-  background: var(--bg); border-top: 1px solid var(--line); }
-.tabbar > button { height: var(--bar-h); border: 0; background: none; display: grid; justify-items: center; align-content: center; gap: 2px; cursor: pointer;
-  color: var(--muted); font: inherit; font-size: var(--t-cap); font-weight: 600; -webkit-tap-highlight-color: transparent; transition: color var(--d-fast); }
+/* ---------- barra in basso: vetro flottante sopra il contenuto, staccata dal bordo come il display ----------
+   Le voci hanno una larghezza minima: se aumentano, la barra scorre col pollice invece di stringerle. */
+.tabbar { position: fixed; z-index: 30; left: 50%; bottom: var(--bar-gap); transform: translateX(-50%);
+  width: min(calc(100% - 2 * var(--s3)), 440px); height: var(--bar-h); display: flex; padding: 0 var(--s1);
+  overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
+  border-radius: 24px; background: var(--glass); border: .5px solid var(--glass-line);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
+.tabbar::-webkit-scrollbar { display: none; }
+.tabbar > button { flex: 1 0 64px; scroll-snap-align: center; height: 100%; border: 0; background: none; display: grid; justify-items: center; align-content: center; gap: 1px;
+  cursor: pointer; color: var(--muted); font: inherit; font-size: 10px; font-weight: 500; letter-spacing: .01em; -webkit-tap-highlight-color: transparent; transition: color var(--d-fast); }
 .tabbar > button.on { color: var(--text); }
-.nav-ico { position: relative; display: grid; place-items: center; width: 44px; height: 28px; transition: transform 120ms var(--ease); }
-.tabbar > button:active .nav-ico { transform: scale(.9); }
+.nav-ico { position: relative; display: grid; place-items: center; width: 44px; height: 30px; transition: transform var(--d-base) var(--spring-snappy); }
+.tabbar > button:active .nav-ico { transform: scale(.88); }
 .nav-badge { position: absolute; top: -2px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--bad); color: var(--on-accent);
   font-size: var(--t-cap); font-style: normal; font-weight: 600; display: grid; place-items: center; }
 .tabbar > .tab-add { color: var(--text); }
-/* il + è un blocco quadrato, come i quattro blocchi dell'app, sulla stessa riga delle icone */
-.tab-add .nav-ico { width: 30px; height: 30px; margin: -1px 0; border-radius: 8px; color: var(--on-accent); background: var(--accent); }
+/* il + è un blocco quadrato, come i quattro blocchi dell'app; il raggio segue quello della barra (interno = esterno − distanza) */
+.tab-add .nav-ico { width: 32px; height: 32px; margin: -1px 0; border-radius: 10px; color: var(--on-accent); background: var(--accent); }
 
 /* ---------- pagine ---------- */
 .screen { padding-top: 0; }
-.screen-title { font-size: var(--t-title); line-height: 1.15; margin: 0 0 var(--s6); }
+.screen-title { font-size: var(--t-title); line-height: 1.15; letter-spacing: -.025em; margin: 0 0 var(--s5); }
 .sec-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); }
-.sec-title { font-size: var(--t-h2); font-weight: 600; letter-spacing: -.02em; margin: var(--s12) 0 var(--s3); display: flex; align-items: baseline; gap: var(--s2); }
+.sec-title { font-size: var(--t-h2); font-weight: 600; letter-spacing: -.02em; margin: var(--s8) 0 var(--s3); display: flex; align-items: baseline; gap: var(--s2); }
 .sec-head .sec-title { margin-bottom: var(--s3); }
 .card .sec-head .sec-title { margin-top: 0; }
 .screen > .sec-head .screen-title { margin-bottom: var(--s4); }

@@ -41,7 +41,7 @@
 
 /* pagine: il cambio di scheda è istantaneo (come in iOS e Android); si anima solo ciò che spiega qualcosa:
    la pagina di dettaglio entra da destra (sei "dentro" una voce), le schede di Analisi si scambiano con una dissolvenza */
-.view-in { animation: fade var(--d-fast) var(--ease); }
+.view-in { }   /* il cambio di scheda è immediato: niente dissolvenza generica */
 .sub-in { animation: sub-in var(--d-spring) var(--spring-snappy) backwards; }
 
 @media (prefers-reduced-motion: reduce) {
