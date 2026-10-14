@@ -11,6 +11,7 @@ import { YearNav } from './YearView'
 import { AmountInput } from './kit/AmountInput'
 import { Money } from './kit/Money'
 import { Outcome } from './Outcome'
+import { Empty } from './kit/Empty'
 
 const TYPES = ['etf', 'stock', 'bond', 'fund', 'crypto', 'other'] as const
 const num = (v: number | null | undefined) => (v == null ? '' : String(v).replace('.', ','))
@@ -34,8 +35,11 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
 
   return (
     <>
-      <Outcome value={o.value} currency={cur} label={t('inv.valueToday')}
-        totals={[{ label: t('inv.invested'), value: o.invested }, { label: t('inv.gain'), value: o.gain }, { label: t('inv.return'), value: pct(o.return) }]} />
+      {/* senza titoli né conti: cosa si fa qui, al posto di un valore a zero */}
+      {o.holdings.length || inv.deposits.length
+        ? <Outcome value={o.value} currency={cur} label={t('inv.valueToday')}
+            totals={[{ label: t('inv.invested'), value: o.invested }, { label: t('inv.gain'), value: o.gain }, { label: t('inv.return'), value: pct(o.return) }]} />
+        : <Empty title={t('inv.emptyTitle')} text={t('inv.emptyText')} />}
 
       {/* titoli: una riga ciascuno; i campi si aprono toccandola */}
       <h2 className="sec-title">{t('inv.holdings')}</h2>

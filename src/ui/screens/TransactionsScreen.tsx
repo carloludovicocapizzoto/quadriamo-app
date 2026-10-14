@@ -12,6 +12,7 @@ import { MonthNav } from '../MonthNav'
 import { Swipe } from '../kit/Swipe'
 import { BUCKET_COLORS, bucketName, categoryName } from '../names'
 import { TransactionsView } from '../TransactionsView'
+import { Empty } from '../kit/Empty'
 import { TxRow } from '../TxRow'
 import { AmountInput } from '../kit/AmountInput'
 import { amountText } from '../kit/amount'
@@ -85,11 +86,8 @@ export function TransactionsScreen({ data, current, result, today, onMonth, onOp
           {list.length > 0 && <span className={signedTotal(list) >= 0 ? 'good-text' : ''}>{t('srch.total', { amount: money(signedTotal(list), s.currency) })}</span>}
         </div>
         {list.length === 0 ? (
-          <section className="card empty-state">
-            <span className="empty-ico"><Icon name="search" size={28} /></span>
-            <b>{t('srch.none')}</b><p className="muted small">{t('srch.noneHint')}</p>
-            <button className="btn" onClick={() => { setQ(''); setF(EMPTY_FILTER); setPeriod('month') }}>{t('srch.clear')}</button>
-          </section>
+          <Empty title={t('srch.none')} text={t('srch.noneHint')} quiet
+            action={{ label: t('srch.clear'), onClick: () => { setQ(''); setF(EMPTY_FILTER); setPeriod('month') } }} />
         ) : (
           <section className="card activity results">
             {groups.slice(0, 120).map(g => (

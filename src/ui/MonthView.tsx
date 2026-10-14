@@ -6,6 +6,8 @@ import { usePlan } from '../billing/plan'
 import { ByCategory } from './ByCategory'
 import { Checks } from './Checks'
 import { Outcome } from './Outcome'
+import { Empty } from './kit/Empty'
+import { openComposer } from '../app/composer'
 import { DailyChart } from './DailyChart'
 import { Money } from './kit/Money'
 import { BUCKET_COLORS, bucketName, categoryName } from './names'
@@ -17,6 +19,12 @@ import { TxRow } from './TxRow'
  */
 export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; settings: Settings; onOpen: (tx: ClassifiedTx) => void; today: string }) {
   const { t } = useI18n()
+  // mese senza movimenti: niente zeri grandi, ma cosa comparirà qui e come cominciare
+  if (r.transactions.length === 0) {
+    const now = today >= r.period.start && today <= r.period.end
+    return <Empty title={t(now ? 'month.emptyNow' : 'month.emptyPast')} text={t('month.emptyText')}
+      action={now ? { label: t('month.emptyAdd'), onClick: () => openComposer() } : undefined} />
+  }
   return (
     <>
       <MonthOutcome r={r} settings={settings} today={today} />
@@ -52,7 +60,6 @@ function MonthOutcome({ r, settings, today }: { r: MonthResult; settings: Settin
       detail={f && t(f.upcoming > 0 ? 'rep.detail' : 'rep.detailNoUp', { spent: money(f.spentSoFar, cur), upcoming: money(f.upcoming, cur), perDay: money(f.variablePerDay, cur) })}
       totals={[{ label: t('month.income'), value: r.income }, { label: t('month.spent'), value: r.spent }, { label: t('ana.saved'), value: r.saved }]}>
       <Checks checks={r.checks} />
-      {r.transactions.length === 0 && <p className="muted small">{t('month.empty')}</p>}
     </Outcome>
   )
 }

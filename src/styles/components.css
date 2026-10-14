@@ -87,9 +87,10 @@ a.btn { text-decoration: none; color: var(--text); }
 /* ---------- anello di avanzamento ---------- */
 
 /* ---------- stati: vuoto e caricamento ---------- */
-.empty-state { display: grid; justify-items: center; text-align: center; gap: var(--s2); padding: var(--s8) var(--s5); }
-.empty-state p { margin: 0 0 var(--s2); max-width: 32ch; }
-.empty-ico { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
+.empty { margin: var(--s8) 0 var(--s6); }
+.empty h2 { margin: 0; font-size: var(--t-h2); font-weight: 600; letter-spacing: -.02em; }
+.empty p { margin: var(--s2) 0 0; color: var(--muted); max-width: 40ch; line-height: 1.5; }
+.empty .btn { margin-top: var(--s5); }
 .empty-note { text-align: center; padding: var(--s6) 0; }
 .skel { display: grid; gap: 6px; padding: var(--s3) 0; }
 .skel span { height: 14px; border-radius: var(--r-sm); background: var(--fill); }

@@ -6,6 +6,7 @@ import { Icon } from './Icon'
 import { Money } from './kit/Money'
 import { BUCKET_COLORS, bucketName } from './names'
 import { Outcome } from './Outcome'
+import { Empty } from './kit/Empty'
 import { ProGate } from './Pro'
 import { CategoryChangesReport } from './Reports'
 
@@ -59,13 +60,13 @@ export function YearView({ year, transactions, settings, today, current, onOpenM
   const years = useMemo(() => computeYears(transactions, settings, today), [transactions, settings, today])
   const months = y.rows.filter(r => r.income || r.spent || r.saved)
   const left = y.total.leftOver
+  if (!y.hasData) return <Empty title={t('year.emptyTitle', { year })} text={t('year.emptyText')} />
 
   return (
     <>
       <Outcome value={left} currency={cur} label={t(left < 0 ? 'year.overLabel' : 'year.leftLabel', { year })}
         totals={[{ label: t('month.income'), value: y.total.income }, { label: t('month.spent'), value: y.total.spent },
                  { label: t('ana.saved'), value: y.total.saved }, { label: t('year.savingsRate'), value: pctFmt(y.total.savingsRate, lang) }]}>
-        {!y.hasData && <p className="muted small">{t('year.empty')}</p>}
       </Outcome>
 
       {months.length > 0 && <>
