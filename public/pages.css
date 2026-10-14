@@ -16,7 +16,7 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 -app
 header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .logo { font-family: "DM Serif Display", Georgia, serif; font-size: 26px; text-decoration: none; color: inherit; }
 .logo span { color: var(--accent); }
-h1, h2 { font-weight: 700; letter-spacing: -.025em; }
+h1, h2 { font-weight: 600; letter-spacing: -.025em; }
 h1 { font-size: clamp(32px, 7vw, 46px); line-height: 1.1; margin: 28px 0 10px; }
 h2 { font-size: 24px; margin: 32px 0 8px; }
 h3 { font-size: 18px; margin: 20px 0 6px; }
@@ -28,14 +28,14 @@ a { color: var(--accent); }
 ol, ul { padding-left: 22px; }
 li { margin: 8px 0; }
 .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 20px; border-radius: 10px;
-  background: var(--accent); color: #fff; font-weight: 700; text-decoration: none; }
+  background: var(--accent); color: #fff; font-weight: 600; text-decoration: none; }
 .langs { display: flex; gap: 6px; flex-wrap: wrap; }
 .langs button { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--text);
   border-radius: 99px; padding: 4px 12px; min-height: 36px; cursor: pointer; }
-.langs button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.langs button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .qr { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
 .qr img { width: 150px; height: 150px; background: #fff; border-radius: 12px; padding: 8px; }
-kbd { font: inherit; font-weight: 700; border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; background: var(--surface); }
+kbd { font: inherit; font-weight: 600; border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; background: var(--surface); }
 code { font-size: 14px; word-break: break-all; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
 [data-lang] { display: none; }
 [data-lang].on { display: block; }

@@ -16,7 +16,7 @@ body { background: var(--cream); color: var(--ink); font: 15px/1.5 -apple-system
 a { color: var(--accent); }
 input, select, textarea, button { font: inherit; color: inherit; max-width: 100%; }
 code { font-size: 13px; background: var(--soft); padding: 1px 6px; border-radius: 6px; }
-h1, h3, h4 { font-weight: 700; }
+h1, h3, h4 { font-weight: 600; }
 
 .az-brand { font-family: "DM Serif Display", Georgia, serif; font-size: 22px; padding: 20px 20px 16px; border-bottom: 1.5px solid var(--line); }
 .az-brand span { color: var(--accent); }
@@ -34,7 +34,7 @@ h1, h3, h4 { font-weight: 700; }
   height: 100dvh; position: sticky; top: 0; }
 .az-sidebar-nav { flex: 1; overflow-y: auto; padding: 16px 12px; }
 .az-nav-group { margin-bottom: 18px; }
-.az-nav-group-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--grey); padding: 0 10px; margin-bottom: 6px; }
+.az-nav-group-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--grey); padding: 0 10px; margin-bottom: 6px; }
 .az-nav-item { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 12px; border-radius: 10px; border: 0;
   background: none; font-weight: 600; font-size: 14px; cursor: pointer; margin-bottom: 2px; text-decoration: none; color: var(--ink); }
 .az-nav-item:hover { background: var(--soft); }
@@ -42,7 +42,7 @@ h1, h3, h4 { font-weight: 700; }
 .az-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-left: auto; }
 .az-sidebar-footer { padding: 14px 20px; border-top: 1.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .az-sidebar-user { font-size: 12px; color: var(--grey); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.az-logout { background: none; border: 1.5px solid var(--line); padding: 7px 14px; border-radius: 10px; font-weight: 700; font-size: 12.5px; cursor: pointer; }
+.az-logout { background: none; border: 1.5px solid var(--line); padding: 7px 14px; border-radius: 10px; font-weight: 600; font-size: 12.5px; cursor: pointer; }
 .az-sidebar-toggle { display: none; position: fixed; top: 14px; left: 14px; z-index: 25; width: 40px; height: 40px; border-radius: 10px;
   border: 1.5px solid var(--line); background: #fff; font-size: 18px; cursor: pointer; }
 .az-sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(31, 35, 40, .45); z-index: 19; }
@@ -56,7 +56,7 @@ h1, h3, h4 { font-weight: 700; }
 
 @media (max-width: 860px) {
   .az-sidebar-toggle { display: block; }
-  .az-sidebar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 20; transform: translateX(-100%); transition: transform .25s ease; box-shadow: 0 0 40px rgba(0,0,0,.2); }
+  .az-sidebar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 20; transform: translateX(-100%); transition: transform .25s ease; border-right: 1px solid var(--line); }
   .az-sidebar.open { transform: translateX(0); }
   .az-main { padding: 70px 16px 50px; }
 }
@@ -65,7 +65,7 @@ h1, h3, h4 { font-weight: 700; }
 .az-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
 .az-stat { background: #fff; border: 1.5px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; }
 .az-stat.wide { grid-column: 1 / -1; background: var(--ink); color: #fff; border-color: var(--ink); }
-.az-stat .n { font-weight: 700; font-size: 28px; line-height: 1.1; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+.az-stat .n { font-weight: 600; font-size: 28px; line-height: 1.1; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
 .az-stat.wide .n { font-size: 40px; }
 .az-stat .l { font-size: 12.5px; color: var(--grey); }
 .az-stat .sub { font-size: 12px; color: var(--grey); margin-top: 4px; }
@@ -78,7 +78,7 @@ h1, h3, h4 { font-weight: 700; }
 .az-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0 16px; }
 .az-hint { font-size: 12.5px; color: var(--grey); margin: 6px 0; }
 .az-empty { color: var(--grey); font-size: 14px; padding: 18px 4px; }
-.az-big { font-weight: 700; font-size: 40px; line-height: 1.1; }
+.az-big { font-weight: 600; font-size: 40px; line-height: 1.1; }
 .az-big .sub { display: block; font-weight: 400; font-size: 12.5px; color: var(--grey); margin-top: 6px; }
 
 .az-chart { display: flex; align-items: flex-end; gap: 3px; height: 160px; margin: 14px 0 6px; }
@@ -112,18 +112,18 @@ table.az-table { width: 100%; border-collapse: collapse; font-size: 13.5px; whit
 .az-table td.wrap { white-space: normal; min-width: 240px; }
 .az-table .mono { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; }
 .stars { color: #F59E0B; letter-spacing: 1px; } .stars span { color: var(--line); }
-.az-pill { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 99px; vertical-align: 1px; }
+.az-pill { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 99px; vertical-align: 1px; }
 .az-pill.ok { background: var(--good-bg); color: var(--good); }
 .az-pill.warn { background: var(--warn-bg); color: var(--warn); }
 
 /* moduli e pulsanti */
 .az-form { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; max-width: 520px; }
-.az-field span { display: block; font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+.az-field span { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; }
 .az-field input, .az-field textarea { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; }
 .az-field textarea { min-height: 70px; resize: vertical; }
 .az-field input:focus, .az-field textarea:focus { outline: none; border-color: var(--accent); }
 .az-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff;
-  font-weight: 700; font-size: 13.5px; cursor: pointer; text-decoration: none; color: var(--ink); }
+  font-weight: 600; font-size: 13.5px; cursor: pointer; text-decoration: none; color: var(--ink); }
 .az-btn:hover { border-color: var(--accent); }
 .az-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 .az-btn.big { padding: 13px 22px; font-size: 15px; justify-content: center; }
@@ -137,14 +137,14 @@ table.az-table { width: 100%; border-collapse: collapse; font-size: 13.5px; whit
 /* configurazione */
 .az-steps { display: grid; gap: 12px; margin-bottom: 18px; }
 .az-step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1.5px solid var(--line); border-radius: 16px; padding: 18px 20px; }
-.az-step .num { width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-weight: 700; }
+.az-step .num { width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-weight: 600; }
 .az-step.done .num { background: var(--good); }
 .az-step.done { background: #FCFEFC; }
 .az-step h4 { font-size: 15.5px; margin: 5px 0 6px; }
 .az-step p, .az-step ol { font-size: 14px; color: #3B4048; }
 .az-step ol { padding-left: 18px; display: grid; gap: 4px; }
 .az-checks { list-style: none; display: grid; gap: 6px; font-size: 14px; }
-.az-checks li::before { content: "✓"; color: var(--good); font-weight: 700; margin-right: 8px; }
+.az-checks li::before { content: "✓"; color: var(--good); font-weight: 600; margin-right: 8px; }
 .az-checks li.bad::before { content: "✕"; color: var(--bad); }
 .az-tpl { list-style: none; display: grid; gap: 8px; margin: 10px 0 0; padding: 0; }
 .az-tpl li { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--soft); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
