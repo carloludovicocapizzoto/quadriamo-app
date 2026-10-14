@@ -1,0 +1,39 @@
+/* Sfondi per sezione (background.home, .news, .analysis, .investments, .profile).
+   Lo sfondo è uno strato fisso dietro tutto: colore base, un gradiente lento verso un secondo tono e due luci diffuse.
+   Le schermate non definiscono colori: ereditano dalla sezione (data-section su <html>, lo imposta la navigazione).
+   Cambiando sezione i colori evolvono (proprietà registrate, ~650 ms, molla lenta). Senza sezione (ingresso): home. */
+@property --bg-a { syntax: '<color>'; inherits: true; initial-value: #F3F5F5; }
+@property --bg-b { syntax: '<color>'; inherits: true; initial-value: #E8F0F0; }
+@property --bg-l { syntax: '<color>'; inherits: true; initial-value: transparent; }
+@property --bg-m { syntax: '<color>'; inherits: true; initial-value: transparent; }
+
+:root { transition: --bg-a 650ms var(--spring-gentle), --bg-b 650ms var(--spring-gentle), --bg-l 650ms var(--spring-gentle), --bg-m 650ms var(--spring-gentle); }
+:root, :root[data-section="home"] { --bg-a: #F3F5F5; --bg-b: #E8F0F0; --bg-l: rgba(255,255,255,.75); --bg-m: rgba(160,200,205,.18); }
+:root[data-section="news"] { --bg-a: #F4F4F3; --bg-b: #ECEFF2; --bg-l: rgba(255,255,255,.8); --bg-m: rgba(190,210,225,.20); }
+:root[data-section="analysis"] { --bg-a: #F3F3F7; --bg-b: #ECEBF5; --bg-l: rgba(255,255,255,.75); --bg-m: rgba(170,160,220,.16); }
+:root[data-section="investments"] { --bg-a: #F1F5F2; --bg-b: #E8F1EE; --bg-l: rgba(255,255,255,.75); --bg-m: rgba(140,195,175,.17); }
+:root[data-section="profile"] { --bg-a: #F4F4F2; --bg-b: #EDEFF2; --bg-l: rgba(255,255,255,.8); --bg-m: rgba(180,190,205,.16); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]), :root:not([data-theme="light"])[data-section="home"] { --bg-a: #0B141D; --bg-b: #0D2329; --bg-l: rgba(110,165,185,.10); --bg-m: rgba(40,110,120,.14); }
+  :root:not([data-theme="light"])[data-section="news"] { --bg-a: #111316; --bg-b: #151B24; --bg-l: rgba(200,225,240,.07); --bg-m: rgba(90,110,140,.10); }
+  :root:not([data-theme="light"])[data-section="analysis"] { --bg-a: #0D0F1F; --bg-b: #17132C; --bg-l: rgba(140,130,225,.09); --bg-m: rgba(90,60,150,.12); }
+  :root:not([data-theme="light"])[data-section="investments"] { --bg-a: #08161A; --bg-b: #0A221F; --bg-l: rgba(110,190,160,.08); --bg-m: rgba(30,110,110,.12); }
+  :root:not([data-theme="light"])[data-section="profile"] { --bg-a: #111317; --bg-b: #151A22; --bg-l: rgba(170,180,200,.06); --bg-m: rgba(70,85,110,.10); }
+}
+:root[data-theme="dark"], :root[data-theme="dark"][data-section="home"] { --bg-a: #0B141D; --bg-b: #0D2329; --bg-l: rgba(110,165,185,.10); --bg-m: rgba(40,110,120,.14); }
+:root[data-theme="dark"][data-section="news"] { --bg-a: #111316; --bg-b: #151B24; --bg-l: rgba(200,225,240,.07); --bg-m: rgba(90,110,140,.10); }
+:root[data-theme="dark"][data-section="analysis"] { --bg-a: #0D0F1F; --bg-b: #17132C; --bg-l: rgba(140,130,225,.09); --bg-m: rgba(90,60,150,.12); }
+:root[data-theme="dark"][data-section="investments"] { --bg-a: #08161A; --bg-b: #0A221F; --bg-l: rgba(110,190,160,.08); --bg-m: rgba(30,110,110,.12); }
+:root[data-theme="dark"][data-section="profile"] { --bg-a: #111317; --bg-b: #151A22; --bg-l: rgba(170,180,200,.06); --bg-m: rgba(70,85,110,.10); }
+
+/* il colore di base è anche quello di <html> (bordi, rimbalzo, barre di sistema): niente fasce di un altro colore */
+:root, :root:not([data-theme="light"]), :root[data-theme="dark"] { --bg: var(--bg-a); --surface: var(--bg-a); }
+body { background: var(--bg-a); }
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 80% -5%, var(--bg-l), transparent 65%),
+    radial-gradient(100% 55% at -10% 105%, var(--bg-m), transparent 70%),
+    linear-gradient(175deg, var(--bg-a) 0%, var(--bg-a) 35%, var(--bg-b) 100%); }
+
+/* vetro discreto: solo sulle superfici che stanno sopra il contenuto (barra in basso, pannelli) */
+:root { --glass: color-mix(in srgb, var(--bg-a) 82%, transparent); --glass-strong: color-mix(in srgb, var(--bg-a) 90%, transparent); }

@@ -13,8 +13,8 @@
 @font-face { font-family: "DM Serif Display"; src: url("/fonts/DMSerifDisplay-Regular.ttf") format("truetype"); font-display: swap; }
 
 :root {
-  /* vetro della barra in basso: la superficie al 80%, sfocata dietro; un filo al posto dell'ombra */
-  --glass: color-mix(in srgb, var(--bg) 80%, transparent); --glass-line: color-mix(in srgb, var(--text) 9%, transparent);
+  /* filo delle superfici in vetro (il vetro stesso è in backgrounds.css) */
+  --glass-line: color-mix(in srgb, var(--text) 9%, transparent);
   /* colore: carta, inchiostro (tre intensità), linea sottile, riempimento dei controlli */
   --bg: #F6F4EF; --surface: #F6F4EF; --text: #17181A; --muted: #6B6E73; --faint: #A3A5A8;
   --line: rgba(23,24,26,.09); --fill: rgba(23,24,26,.05); --fill-2: rgba(23,24,26,.09);

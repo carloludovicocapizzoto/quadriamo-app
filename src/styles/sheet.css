@@ -4,7 +4,8 @@ body.sheet-open { overflow: hidden; }
 .bs-root { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; pointer-events: none;
   background: rgba(15,17,20,.36); opacity: 0; transition: opacity var(--d-base) var(--ease); }
 .bs-root.open { opacity: 1; pointer-events: auto; }
-.bs { width: min(560px, 100%); max-height: 88vh; overflow: auto; background: var(--bg); border-radius: var(--r-lg) var(--r-lg) 0 0;
+.bs { width: min(560px, 100%); max-height: 88vh; overflow: auto; background: var(--glass-strong); border-radius: var(--r-lg) var(--r-lg) 0 0;
+  -webkit-backdrop-filter: saturate(160%) blur(24px); backdrop-filter: saturate(160%) blur(24px); border-top: .5px solid var(--glass-line);
   padding: 0 var(--s5) calc(var(--s6) + env(safe-area-inset-bottom)); outline: none;
   transform: translateY(105%); transition: transform var(--d-spring) var(--spring-snappy); }
 .bs-root.open .bs { transform: none; }

@@ -27,16 +27,13 @@ export const usePrefs = () => useSyncExternalStore(f => { listeners.add(f); retu
 export function applyPrefs() {
   const root = document.documentElement
   if (current.theme === 'auto') delete root.dataset.theme; else root.dataset.theme = current.theme
-  // le barre di sistema (stato e navigazione) dello stesso colore dell'app: se il tema è scelto a mano vale per entrambe le modalità
-  for (const m of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
-    const dark = m.media.includes('dark')
-    m.content = current.theme === 'auto' ? (dark ? '#0F1012' : '#F6F4EF') : current.theme === 'dark' ? '#0F1012' : '#F6F4EF'
-  }
+  // le barre di sistema (stato e navigazione) del colore di fondo della sezione, anche col tema scelto a mano
+  setTimeout(() => {
+    const c = getComputedStyle(root).getPropertyValue('--bg-a').trim()
+    if (c) for (const m of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) m.content = c
+  }, 700)
   if (current.motion === 'reduce') root.dataset.motion = 'reduce'; else delete root.dataset.motion
   if (current.text === 'large') root.dataset.text = 'large'; else delete root.dataset.text
-  // la barra del browser e quella di stato prendono il colore della pagina
-  const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.setAttribute('content', getComputedStyle(root).getPropertyValue('--bg').trim() || '#F6F4EF')
 }
 
 /** Animazioni ridotte: se lo chiede il sistema o se l'utente l'ha scelto qui. */

@@ -1,5 +1,5 @@
 // L'app vera e propria: pagina corrente (dall'indirizzo), barra in basso, "nuovo movimento", messaggi.
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { mainIncome, type ClassifiedTx, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
@@ -37,6 +37,16 @@ export function AppShell() {
   const entry = useEntry()
   const data = state.data!
   const { today, viewed, month, thisMonth, streak } = useModel(data, route)
+  // lo sfondo della sezione (styles/backgrounds.css): Investi ha il suo dentro Analisi; le barre di sistema seguono il colore
+  const section = route.tab === 'analysis' && route.view === 'investments' ? 'investments' : route.tab
+  useEffect(() => {
+    document.documentElement.dataset.section = section
+    const id = setTimeout(() => {
+      const c = getComputedStyle(document.documentElement).getPropertyValue('--bg-a').trim()
+      if (c) for (const m of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) m.content = c
+    }, 700)
+    return () => clearTimeout(id)
+  }, [section])
   const composer = useComposer()
   const feedback = useFeedbackOpen()
   const note = useToast()
