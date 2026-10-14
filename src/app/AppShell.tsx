@@ -42,7 +42,7 @@ export function AppShell() {
   useEffect(() => {
     document.documentElement.dataset.section = section
     const id = setTimeout(() => {
-      const c = getComputedStyle(document.documentElement).getPropertyValue('--bg-a').trim()
+      const c = getComputedStyle(document.documentElement).getPropertyValue('--bg-t').trim()
       if (c) for (const m of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) m.content = c
     }, 700)
     return () => clearTimeout(id)

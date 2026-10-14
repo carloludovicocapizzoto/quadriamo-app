@@ -29,7 +29,7 @@ export function applyPrefs() {
   if (current.theme === 'auto') delete root.dataset.theme; else root.dataset.theme = current.theme
   // le barre di sistema (stato e navigazione) del colore di fondo della sezione, anche col tema scelto a mano
   setTimeout(() => {
-    const c = getComputedStyle(root).getPropertyValue('--bg-a').trim()
+    const c = getComputedStyle(root).getPropertyValue('--bg-t').trim()
     if (c) for (const m of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) m.content = c
   }, 700)
   if (current.motion === 'reduce') root.dataset.motion = 'reduce'; else delete root.dataset.motion
