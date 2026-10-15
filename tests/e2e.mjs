@@ -16,11 +16,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
 // il server con l'app costruita (npm run e2e la costruisce in dist-e2e), se non ne è stato indicato un altro
 const server = process.env.E2E_URL ? null
   : spawn('npx', ['vite', 'preview', '--outDir', 'dist-e2e', '--port', '4180', '--strictPort'], { stdio: 'ignore', detached: true })
-for (let i = 0; i < 60; i++) { try { if ((await fetch(URL_APP)).ok) break } catch { /* non ancora */ } await sleep(250) }
+for (let i = 0; i < 120; i++) { try { if ((await fetch(URL_APP)).ok) break } catch { /* non ancora */ } await sleep(250) }
 
 const profile = mkdtempSync(join(tmpdir(), 'qe2e-'))
+// sui server di GitHub Chrome gira senza sandbox e può metterci un po' a partire: fino a 45 secondi
 const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check',
-  '--lang=it-IT', 'about:blank'], { stdio: 'ignore' })
+  '--lang=it-IT', ...(process.env.CI ? ['--no-sandbox', '--disable-dev-shm-usage'] : []), 'about:blank'], { stdio: 'ignore' })
 const done = async code => {
   try { ws.close() } catch { /* già chiuso */ }
   chrome.kill(); await new Promise(r => chrome.once('exit', r)); try { rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 }) } catch { /* Chrome scrive ancora: la cartella temporanea la pulisce il sistema */ }
@@ -29,9 +30,11 @@ const done = async code => {
 }
 
 let target
-for (let i = 0; i < 60 && !target; i++) {
-  try { target = (await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json()).find(t => t.type === 'page') } catch { await sleep(250) }
+for (let i = 0; i < 180 && !target; i++) {
+  try { target = (await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json()).find(t => t.type === 'page') } catch { /* non ancora */ }
+  if (!target) await sleep(250)
 }
+if (!target) { console.error('Chrome non è partito in 45 secondi'); await done(1) }
 const ws = new WebSocket(target.webSocketDebuggerUrl)
 await new Promise(r => ws.addEventListener('open', r, { once: true }))
 let seq = 0
