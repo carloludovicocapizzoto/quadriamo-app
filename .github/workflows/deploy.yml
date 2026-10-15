@@ -1,4 +1,5 @@
-# Pubblica l'app su GitHub Pages a ogni push su main, solo se passano controllo del codice, test e tipi.
+# Pubblica l'app su GitHub Pages a ogni push su main, solo se passano controllo del codice, test, tipi
+# e i test che usano l'app come un utente (Chrome è già installato sui server di GitHub).
 name: Deploy
 
 on:
@@ -27,6 +28,7 @@ jobs:
       - run: npm ci
       - run: npm run lint -- --deny-warnings
       - run: npm test
+      - run: npm run e2e
       - run: npm run build
         env:
           BASE_PATH: /quadriamo-app/

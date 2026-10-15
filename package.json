@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "VITE_SUPABASE_URL= VITE_SUPABASE_PUBLISHABLE_KEY= vite build --outDir dist-e2e && node tests/e2e.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
