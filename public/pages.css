@@ -48,3 +48,15 @@ input, select, textarea { font-size: max(16px, 1em); }
 .faq details p { margin: 0 0 16px; color: var(--muted); }
 .contact { margin-top: 40px; }
 .contact-mail { font-size: 22px; font-weight: 600; }
+
+/* Roadmap: tre gruppi, un segno per lo stato (fatto, in corso, prossimamente) */
+.rm-list { list-style: none; padding: 0; margin: 0 0 var(--s6); border-top: 1px solid var(--line); }
+.rm-list li { padding: 12px 0 12px 22px; border-bottom: 1px solid var(--line); position: relative; }
+.rm-list li::before { content: ''; position: absolute; left: 2px; top: 20px; width: 9px; height: 9px; border-radius: 2px; background: var(--fill-2); }
+.rm-list.rm-done li::before { background: var(--b1); }
+.rm-list.rm-now li::before { background: var(--b2); }
+/* Blog: un indice e gli articoli uno sotto l'altro */
+.blog-index { display: grid; gap: 6px; margin: var(--s4) 0 var(--s8); }
+.blog-index a { font-weight: 600; }
+.post { padding-top: var(--s6); border-top: 1px solid var(--line); margin-top: var(--s6); }
+.post p { max-width: 62ch; }

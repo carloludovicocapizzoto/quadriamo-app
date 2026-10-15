@@ -3,7 +3,7 @@
   var T = {
     it: {
       'page.title': 'Quadriamo — I tuoi soldi, in quattro',
-      'nav.how': 'Come funziona', 'nav.features': 'Funzioni', 'nav.pricing': 'Prezzi', 'nav.faq': 'Domande', 'nav.login': 'Accedi o registrati', 'nav.open': 'Scarica l’app',
+      'nav.how': 'Come funziona', 'nav.features': 'Funzioni', 'nav.pricing': 'Prezzi', 'nav.faq': 'Domande', 'nav.news': 'Notizie', 'nav.blog': 'Blog', 'nav.login': 'Accedi o registrati', 'nav.open': 'Scarica l’app',
       'hero.eyebrow': 'Budget personale · Beta gratuita',
       'hero.title': 'I tuoi soldi, <em>in quattro.</em>',
       'hero.lead': 'Dividi lo stipendio in 4 parti con la regola 55-20-15-10. Il resto lo fa l’app.',
@@ -51,7 +51,7 @@
     },
     en: {
       'page.title': 'Quadriamo — Your money, in four',
-      'nav.how': 'How it works', 'nav.features': 'Features', 'nav.pricing': 'Pricing', 'nav.faq': 'FAQ', 'nav.login': 'Sign in or sign up', 'nav.open': 'Get the app',
+      'nav.how': 'How it works', 'nav.features': 'Features', 'nav.pricing': 'Pricing', 'nav.faq': 'FAQ', 'nav.news': 'News', 'nav.blog': 'Blog', 'nav.login': 'Sign in or sign up', 'nav.open': 'Get the app',
       'hero.eyebrow': 'Personal budget · Free beta',
       'hero.title': 'Your money, <em>in four.</em>',
       'hero.lead': 'Split your salary into 4 parts with the 55-20-15-10 rule. The app does the rest.',
@@ -99,7 +99,7 @@
     },
     fr: {
       'page.title': 'Quadriamo — Votre argent, en quatre',
-      'nav.how': 'Fonctionnement', 'nav.features': 'Fonctions', 'nav.pricing': 'Prix', 'nav.faq': 'Questions', 'nav.login': 'Connexion / inscription', 'nav.open': 'Télécharger l’app',
+      'nav.how': 'Fonctionnement', 'nav.features': 'Fonctions', 'nav.pricing': 'Prix', 'nav.faq': 'Questions', 'nav.news': 'Actualités', 'nav.blog': 'Blog', 'nav.login': 'Connexion / inscription', 'nav.open': 'Télécharger l’app',
       'hero.eyebrow': 'Budget personnel · Bêta gratuite',
       'hero.title': 'Votre argent, <em>en quatre.</em>',
       'hero.lead': 'Divisez votre salaire en 4 parts avec la règle 55-20-15-10. L’app fait le reste.',
@@ -147,7 +147,7 @@
     },
     es: {
       'page.title': 'Quadriamo — Tu dinero, en cuatro',
-      'nav.how': 'Cómo funciona', 'nav.features': 'Funciones', 'nav.pricing': 'Precios', 'nav.faq': 'Preguntas', 'nav.login': 'Entrar o registrarse', 'nav.open': 'Descargar la app',
+      'nav.how': 'Cómo funciona', 'nav.features': 'Funciones', 'nav.pricing': 'Precios', 'nav.faq': 'Preguntas', 'nav.news': 'Noticias', 'nav.blog': 'Blog', 'nav.login': 'Entrar o registrarse', 'nav.open': 'Descargar la app',
       'hero.eyebrow': 'Presupuesto personal · Beta gratuita',
       'hero.title': 'Tu dinero, <em>en cuatro.</em>',
       'hero.lead': 'Divide tu sueldo en 4 partes con la regla 55-20-15-10. La app hace el resto.',

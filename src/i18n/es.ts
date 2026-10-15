@@ -620,6 +620,7 @@ const es: Dict = {
   'home.emptyTitle': "Primero, los ingresos del mes",
   'chart.emptyDaily': "El gráfico se llena día a día con tus gastos.",
   'home.noSalary': "Registra los ingresos del mes (sueldo, ayuda, beca): Quadriamo los divide en cuatro partes y te dice cuánto puedes gastar cada día.",
+  'site.openApp': "Abrir la app",
   'kb.title': "Atajos de teclado",
   'kb.new': "Nuevo movimiento",
   'kb.search': "Buscar",

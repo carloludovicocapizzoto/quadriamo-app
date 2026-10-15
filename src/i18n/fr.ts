@@ -620,6 +620,7 @@ const fr: Dict = {
   'home.emptyTitle': "D’abord, les revenus du mois",
   'chart.emptyDaily': "Le graphique se remplit jour après jour avec vos dépenses.",
   'home.noSalary': "Enregistrez les revenus du mois (salaire, aide, bourse) : Quadriamo les divise en quatre parts et vous dit combien dépenser chaque jour.",
+  'site.openApp': "Ouvrir l’app",
   'kb.title': "Raccourcis clavier",
   'kb.new': "Nouveau mouvement",
   'kb.search': "Rechercher",

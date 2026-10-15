@@ -317,7 +317,7 @@ html = '''<!doctype html>
 
 ''' + '\n\n'.join(sections) + '''
 
-  <footer><a href="privacy.html">Privacy</a> · <a href="terms.html">Termini / Terms</a></footer>
+  <footer><a href="privacy.html">Privacy</a> · <a href="terms.html">Termini / Terms</a> · <a href="notizie/">Notizie / News</a> · <a href="blog.html">Blog</a> · <a href="roadmap.html">Roadmap</a></footer>
 </div>
 <script src="pages.js"></script>
 </body>

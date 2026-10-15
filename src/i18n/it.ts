@@ -620,6 +620,7 @@ const it: Dict = {
   'home.emptyTitle': "Prima, le entrate del mese",
   'chart.emptyDaily': "Il grafico si riempie giorno per giorno con le tue spese.",
   'home.noSalary': "Registra le entrate del mese (stipendio, assegno, borsa): Quadriamo le divide in quattro parti e ti dice quanto puoi spendere ogni giorno.",
+  'site.openApp': "Apri l’app",
   'kb.title': "Scorciatoie da tastiera",
   'kb.new': "Nuovo movimento",
   'kb.search': "Cerca",

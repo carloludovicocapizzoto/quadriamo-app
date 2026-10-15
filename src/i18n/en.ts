@@ -620,6 +620,7 @@ const en = {
   'home.emptyTitle': "First, this month’s income",
   'chart.emptyDaily': "The chart fills up day by day with your spending.",
   'home.noSalary': "Log this month's income (salary, allowance, grant): Quadriamo splits it into four parts and tells you how much you can spend each day.",
+  'site.openApp': "Open the app",
   'kb.title': "Keyboard shortcuts",
   'kb.new': "New transaction",
   'kb.search': "Search",

@@ -80,3 +80,9 @@
   .app2 { padding-bottom: calc(72px + var(--bar-gap) + var(--s8)); }
 }
 @media (min-width: 1200px) { .tabbar { --bar-h: 76px; width: 600px; } }
+
+/* pagina Notizie del sito: l'intestazione del sito sopra le Notizie dell'app */
+.site-news { padding-top: var(--top-gap); padding-bottom: var(--s12); }
+.site-news .top { gap: var(--s3); padding-top: 0; }
+.site-news .top .lang { margin-left: auto; }
+.site-news .small-btn { min-height: 36px; padding: 0 14px; text-decoration: none; white-space: nowrap; }
