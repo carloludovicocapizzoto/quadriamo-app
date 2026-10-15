@@ -23,7 +23,7 @@ const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}
   '--lang=it-IT', 'about:blank'], { stdio: 'ignore' })
 const done = async code => {
   try { ws.close() } catch { /* già chiuso */ }
-  chrome.kill(); await new Promise(r => chrome.once('exit', r)); rmSync(profile, { recursive: true, force: true })
+  chrome.kill(); await new Promise(r => chrome.once('exit', r)); try { rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 }) } catch { /* Chrome scrive ancora: la cartella temporanea la pulisce il sistema */ }
   if (server) try { process.kill(-server.pid) } catch { /* già chiuso */ }
   process.exit(code)
 }
