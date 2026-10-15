@@ -67,7 +67,7 @@ export function CapitalPage() {
               <select value={p.goalId ?? ''} onChange={e => edit(p.id, { goalId: e.target.value || null })}>
                 <option value="">—</option>{goals.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>}
           </div>
-          {p.policy === 'big' && <div className="nf-options cap-big">{BIG_PURCHASES.map(b => {
+          {p.policy === 'big' && <div className="chips cap-big">{BIG_PURCHASES.map(b => {
             const on = (p.bigPurchases ?? []).includes(b)
             return <button key={b} className={on ? 'on' : ''} aria-pressed={on} onClick={() => { tap(); edit(p.id, { bigPurchases: on ? p.bigPurchases!.filter(x => x !== b) : [...(p.bigPurchases ?? []), b] }) }}>{t(k(`cap.big.${b}`))}</button>
           })}</div>}

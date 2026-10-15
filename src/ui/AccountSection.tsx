@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
+import { Segmented } from './kit/Segmented'
 import { PAGES } from '../config'
 import { ENTRY } from '../entry'
 import { useI18n } from '../i18n/core'
@@ -116,10 +117,8 @@ function SignInOrUp() {
   return (
     <>
       <p className="muted small">{t('auth.intro')}</p>
-      <div className="seg" role="tablist">
-        <button role="tab" aria-selected={tab === 'in' || tab === 'link' || tab === 'reset'} className={tab === 'in' || tab === 'link' || tab === 'reset' ? 'on' : ''} onClick={() => go('in')}>{t('auth.tabSignIn')}</button>
-        <button role="tab" aria-selected={tab === 'up' || tab === 'confirm'} className={tab === 'up' || tab === 'confirm' ? 'on' : ''} onClick={() => go('up')}>{t('auth.tabSignUp')}</button>
-      </div>
+      <Segmented value={tab === 'up' || tab === 'confirm' ? 'up' : 'in'} onChange={v => go(v)}
+        options={[{ id: 'in' as const, label: t('auth.tabSignIn') }, { id: 'up' as const, label: t('auth.tabSignUp') }]} />
 
       {tab === 'up' && (
         <form onSubmit={signUp} className="auth-form" noValidate>

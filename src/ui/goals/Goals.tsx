@@ -94,7 +94,7 @@ function GoalDetail({ goal, today, currency, onClose }: { goal: Goal; today: str
       </div>
 
       {!s.done && <>
-        <div className="gd-quick">{[10, 50, 100].map(n => <button key={n} className="gd-chip" onClick={() => add(n)}>+{money(n, currency).replace(/[,.]00/, '')}</button>)}</div>
+        <div className="gd-quick">{[10, 50, 100].map(n => <button key={n} className="chip big" onClick={() => add(n)}>+{money(n, currency).replace(/[,.]00/, '')}</button>)}</div>
         <div className="gd-input">
           <AmountInput placeholder={t('goal.amountPh')} value={raw} onChange={setRaw} aria-label={t('goal.amountPh')} />
           <button className="btn primary" disabled={!typed || typed <= 0} onClick={() => add(typed ?? 0)}><Icon name="plus" size={16} />{t('goal.add')}</button>

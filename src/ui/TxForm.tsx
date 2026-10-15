@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Segmented } from './kit/Segmented'
 import { CUSTOM, FIRST, SPLIT, addDays, splitOk, splitTotal, fxRate, suggest, todayIso, type CategoryType, type Settings, type Transaction, partForPurchase } from '../engine'
 import { useI18n } from '../i18n/core'
 import { newId, parseAmount } from '../store/state'
@@ -100,12 +101,8 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
         </div>
 
         {kinds.length > 1 && (
-          <div className="segmented txs-kind" role="tablist" style={{ gridTemplateColumns: `repeat(${kinds.length}, 1fr)` }}>
-            {kinds.map(k => (
-              <button type="button" key={k} role="tab" aria-selected={kind === k} className={kind === k ? 'on' : ''}
-                      onClick={() => { setKind(k); if (cat && cat.type !== k) { setCategory(null); setCatTouched(false) } }}>{t(`type.${k}`)}</button>))}
-            <span className="seg-pill" style={{ width: `calc((100% - 8px) / ${kinds.length})`, transform: `translateX(${kinds.indexOf(kind) * 100}%)` }} />
-          </div>
+          <Segmented className="txs-kind" value={kind} options={kinds.map(k => ({ id: k, label: t(`type.${k}`) }))}
+            onChange={k => { setKind(k); if (cat && cat.type !== k) { setCategory(null); setCatTouched(false) } }} />
         )}
 
         <div className="txs-amount">

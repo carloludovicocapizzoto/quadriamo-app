@@ -131,3 +131,12 @@ button.row:active, a.row:active { opacity: .6; }
 /* Avanzamento (kit/Meter): una linea sottile, si riempie con la molla lenta */
 .meter { display: block; height: 4px; border-radius: 2px; background: var(--fill-2); overflow: hidden; }
 .meter > i { display: block; height: 100%; border-radius: inherit; background: var(--text); transition: width var(--d-spring) var(--spring-gentle); }
+
+/* Chip: un'opzione che si accende (filtri, scelte multiple, importi rapidi). Un solo stile per tutta l'app.
+   Si usa come .chip, oppure come pulsante dentro un gruppo .chips. */
+.chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.chip, .chips > button { min-height: 36px; padding: 0 14px; border: 0; border-radius: var(--r-md); background: var(--fill); color: var(--text);
+  font: inherit; font-size: 14px; cursor: pointer; transition: background var(--d-fast), color var(--d-fast), transform 120ms var(--spring); }
+.chip.on, .chips > button.on { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.chip:active, .chips > button:active { transform: scale(.96); }
+.chip.big { min-height: 48px; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }

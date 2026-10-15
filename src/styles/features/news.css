@@ -6,9 +6,7 @@
 .news-filter-btn.on { background: var(--accent); color: var(--on-accent); }
 /* pannello dei filtri: gruppi con un titolo e opzioni che vanno a capo */
 .nf-group { margin-top: var(--s4); }
-.nf-options { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s2); }
-.nf-options button { min-height: 36px; padding: 0 14px; border: 0; border-radius: var(--r-md); background: var(--fill); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
-.nf-options button.on { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.nf-options { margin-top: var(--s2); }
 .nf-hint { margin: var(--s2) 0 0; }
 .nf-actions { position: sticky; bottom: 0; display: flex; align-items: center; gap: var(--s4); margin-top: var(--s5); padding: var(--s3) 0 var(--s1); background: var(--bg-a); box-shadow: 0 -12px 12px -4px var(--bg-a); }
 .nf-actions .btn { margin-left: auto; }

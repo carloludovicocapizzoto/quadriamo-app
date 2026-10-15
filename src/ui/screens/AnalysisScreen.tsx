@@ -1,8 +1,8 @@
 import { nextMonth, prevMonth, type ClassifiedTx, type MonthResult, type YearMonth } from '../../engine'
+import { Segmented } from '../kit/Segmented'
 import { Swipe } from '../kit/Swipe'
 import { useI18n } from '../../i18n/core'
 import type { AppData } from '../../store/state'
-import { tap } from '../kit/motion'
 import { MonthNav } from '../MonthNav'
 import { MonthView } from '../MonthView'
 import { InvestmentsView } from '../InvestmentsView'
@@ -22,13 +22,8 @@ export function AnalysisScreen({ view, onView, data, result, current, homeResult
   return (
     <div className="screen">
       <h1 className="screen-title">{t('nav.analysis')}</h1>
-      <div className="segmented" role="tablist">
-        {ANALYSIS_VIEWS.map(v => (
-          <button key={v} role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => { tap(); onView(v) }}>
-            {t(v === 'transactions' ? 'nav.transactions' : v === 'month' ? 'ana.month' : v === 'year' ? 'ana.year' : 'nav.investments')}
-            {v === 'transactions' && inbox > 0 && <em className="seg-badge">{inbox}</em>}</button>))}
-        <span className="seg-pill" style={{ transform: `translateX(${ANALYSIS_VIEWS.indexOf(view) * 100}%)` }} />
-      </div>
+      <Segmented value={view} onChange={onView} options={ANALYSIS_VIEWS.map(v => ({ id: v, badge: v === 'transactions' ? inbox : 0,
+        label: t(v === 'transactions' ? 'nav.transactions' : v === 'month' ? 'ana.month' : v === 'year' ? 'ana.year' : 'nav.investments') }))} />
 
       <div key={view} className="view-in">
         {view === 'transactions' && <TransactionsScreen embedded data={data} current={current} result={result} today={today} onMonth={onMonth} onOpen={onOpen} />}

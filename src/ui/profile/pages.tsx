@@ -1,6 +1,7 @@
 // I contenuti delle pagine del Profilo (quale pagina mostra cosa: registry.tsx). Ognuna è un componente piccolo: legge lo stato da dove vive già
 // (store, sincronizzazione, preferenze del dispositivo) e usa gli stessi elementi (Group, Row) delle altre.
 import { useState, type FormEvent } from 'react'
+import { Segmented } from '../kit/Segmented'
 import { type Badge, type Streak } from '../../engine'
 import { LANGS, useI18n, type Lang } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
@@ -144,11 +145,8 @@ export function Appearance() {
   const prefs = usePrefs()
   const opts = ['auto', 'light', 'dark'] as const
   return <>
-    <div className="segmented" role="radiogroup" aria-label={t('prof.appearance')}>
-      {opts.map(o => <button key={o} role="radio" aria-checked={prefs.theme === o} className={prefs.theme === o ? 'on' : ''}
-        onClick={() => setPrefs({ theme: o })}>{t(`theme.${o}`)}</button>)}
-      <span className="seg-pill" style={{ transform: `translateX(${opts.indexOf(prefs.theme) * 100}%)` }} />
-    </div>
+    <Segmented role="radiogroup" label={t('prof.appearance')} value={prefs.theme} onChange={o => setPrefs({ theme: o })}
+      options={opts.map(o => ({ id: o, label: t(`theme.${o}`) }))} />
     <p className="group-foot">{t('theme.hint')}</p>
   </>
 }

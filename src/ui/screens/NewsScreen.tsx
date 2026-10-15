@@ -110,7 +110,7 @@ function FiltersPanel({ value, lang, onApply, onCancel }: { value: NewsFilter; l
   const group = <K extends 'types' | 'topics' | 'langs' | 'areas' | 'sources'>(k: K, title: string, options: readonly NewsFilter[K][number][], label: (v: NewsFilter[K][number]) => string) => (
     <section className="nf-group">
       <h3 className="group-title">{title}</h3>
-      <div className="nf-options">{options.map(o => (
+      <div className="chips nf-options">{options.map(o => (
         <button key={o} className={(f[k] as string[]).includes(o as string) ? 'on' : ''} aria-pressed={(f[k] as string[]).includes(o as string)} onClick={() => toggle(k, o)}>{label(o)}</button>
       ))}</div>
     </section>
@@ -126,7 +126,7 @@ function FiltersPanel({ value, lang, onApply, onCancel }: { value: NewsFilter; l
       {group('sources', t('nf.source'), SOURCES, v => t(`nf.s.${v}` as keyof Dict))}
       <section className="nf-group">
         <h3 className="group-title">{t('nf.sort')}</h3>
-        <div className="nf-options">{(['relevant', 'recent'] as const).map(o => (
+        <div className="chips nf-options">{(['relevant', 'recent'] as const).map(o => (
           <button key={o} className={f.sort === o ? 'on' : ''} aria-pressed={f.sort === o} onClick={() => { tap(); setF(x => ({ ...x, sort: o })) }}>{t(`nf.sort.${o}` as keyof Dict)}</button>
         ))}</div>
       </section>

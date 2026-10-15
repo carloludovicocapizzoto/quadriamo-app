@@ -13,9 +13,6 @@
 .gd-head p { margin: 0; }
 .gd-head .outcome-label { margin: 0 0 var(--s2); }
 .gd-quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); margin: var(--s2) 0; }
-.gd-chip { height: 48px; border-radius: var(--r-md); border: 0; background: var(--fill); color: var(--text);
-  font: inherit; font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums; cursor: pointer; transition: transform .12s var(--spring); }
-.gd-chip:active { transform: scale(.94); }
 .gd-input { display: grid; grid-template-columns: 1fr auto 48px; gap: var(--s2); margin-bottom: var(--s2); }
 .gd-input .btn { padding: 0 14px; }
 .gd-hist { list-style: none; margin: var(--s1) 0 0; padding: 0; }
