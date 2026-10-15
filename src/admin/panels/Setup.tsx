@@ -1,359 +1,46 @@
-// Le sezioni dell'area amministratore: componenti "puri" (ricevono i dati), così si provano senza database.
+// Configurazione: i passi per collegare Supabase, con gli script da copiare e i controlli automatici.
 import { useState } from 'react'
-import { downloadCsv, label, projectRef, type Account, type Device, type Feedback, type Cohort, type PushSub, type ResearchStats, type Setup, type Stats } from './data'
-import sql0002 from '../../supabase/migrations/0002_beta_feedback_stats_push.sql?raw'
-import sql0004 from '../../supabase/migrations/0004_profiles.sql?raw'
-import sql0005 from '../../supabase/migrations/0005_site_feedback.sql?raw'
-import tplConfirm from '../../supabase/templates/confirmation.html?raw'
-import tplMagic from '../../supabase/templates/magic_link.html?raw'
-import tplRecovery from '../../supabase/templates/recovery.html?raw'
-import sql0006 from '../../supabase/migrations/0006_admin_key.sql?raw'
-import sql0007 from '../../supabase/migrations/0007_private_profile_anonymous_research.sql?raw'
-import sql0008 from '../../supabase/migrations/0008_morning_push_alternatives_cohorts.sql?raw'
-import sql0010 from '../../supabase/migrations/0010_shared_budgets.sql?raw'
-import sql0011 from '../../supabase/migrations/0011_nudge_streak.sql?raw'
-import sql0012 from '../../supabase/migrations/0012_nudge_cron.sql?raw'
-import sql0013 from '../../supabase/migrations/0013_billing.sql?raw'
-import sql0014 from '../../supabase/migrations/0014_news_push.sql?raw'
-import sql0015 from '../../supabase/migrations/0015_news_cron.sql?raw'
-import sql0016 from '../../supabase/migrations/0016_nudge_until_midnight.sql?raw'
-import sql0017 from '../../supabase/migrations/0017_avatars.sql?raw'
-import billingCode from '../../supabase/functions/billing/index.ts?raw'
-import newsCode from '../../supabase/functions/news/index.ts?raw'
-import ingestCode from '../../supabase/functions/news-ingest/index.ts?raw'
-import feedCode from '../../supabase/functions/_shared/news-feed.ts?raw'
-import rulesCode from '../../supabase/functions/_shared/news-rules.ts?raw'
-import itemCode from '../../supabase/functions/_shared/news-item.ts?raw'
-import sql0020 from '../../supabase/migrations/0020_news_podcasts_images.sql?raw'
-import sql0021 from '../../supabase/migrations/0021_feedback_cron_fix.sql?raw'
-import sql0022 from '../../supabase/migrations/0022_client_errors.sql?raw'
-import sql0023 from '../../supabase/migrations/0023_econ_events.sql?raw'
-import sql0018 from '../../supabase/migrations/0018_news_hub.sql?raw'
-import sql0019 from '../../supabase/migrations/0019_news_hub_cron.sql?raw'
-import sql0009 from '../../supabase/migrations/0009_morning_push_cron.sql?raw'
-import sql0003 from '../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
-import fnCode from '../../supabase/functions/send-push/index.ts?raw'
+import { projectRef, type Setup } from '../data'
+import sql0002 from '../../../supabase/migrations/0002_beta_feedback_stats_push.sql?raw'
+import sql0004 from '../../../supabase/migrations/0004_profiles.sql?raw'
+import sql0005 from '../../../supabase/migrations/0005_site_feedback.sql?raw'
+import tplConfirm from '../../../supabase/templates/confirmation.html?raw'
+import tplMagic from '../../../supabase/templates/magic_link.html?raw'
+import tplRecovery from '../../../supabase/templates/recovery.html?raw'
+import sql0006 from '../../../supabase/migrations/0006_admin_key.sql?raw'
+import sql0007 from '../../../supabase/migrations/0007_private_profile_anonymous_research.sql?raw'
+import sql0008 from '../../../supabase/migrations/0008_morning_push_alternatives_cohorts.sql?raw'
+import sql0010 from '../../../supabase/migrations/0010_shared_budgets.sql?raw'
+import sql0011 from '../../../supabase/migrations/0011_nudge_streak.sql?raw'
+import sql0012 from '../../../supabase/migrations/0012_nudge_cron.sql?raw'
+import sql0013 from '../../../supabase/migrations/0013_billing.sql?raw'
+import sql0014 from '../../../supabase/migrations/0014_news_push.sql?raw'
+import sql0015 from '../../../supabase/migrations/0015_news_cron.sql?raw'
+import sql0016 from '../../../supabase/migrations/0016_nudge_until_midnight.sql?raw'
+import sql0017 from '../../../supabase/migrations/0017_avatars.sql?raw'
+import billingCode from '../../../supabase/functions/billing/index.ts?raw'
+import newsCode from '../../../supabase/functions/news/index.ts?raw'
+import ingestCode from '../../../supabase/functions/news-ingest/index.ts?raw'
+import feedCode from '../../../supabase/functions/_shared/news-feed.ts?raw'
+import rulesCode from '../../../supabase/functions/_shared/news-rules.ts?raw'
+import itemCode from '../../../supabase/functions/_shared/news-item.ts?raw'
+import sql0020 from '../../../supabase/migrations/0020_news_podcasts_images.sql?raw'
+import sql0021 from '../../../supabase/migrations/0021_feedback_cron_fix.sql?raw'
+import sql0022 from '../../../supabase/migrations/0022_client_errors.sql?raw'
+import sql0023 from '../../../supabase/migrations/0023_econ_events.sql?raw'
+import sql0018 from '../../../supabase/migrations/0018_news_hub.sql?raw'
+import sql0019 from '../../../supabase/migrations/0019_news_hub_cron.sql?raw'
+import sql0009 from '../../../supabase/migrations/0009_morning_push_cron.sql?raw'
+import sql0003 from '../../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
+import fnCode from '../../../supabase/functions/send-push/index.ts?raw'
 
 const SITE = 'https://carloludovicocapizzoto.github.io/quadriamo-app/'
-const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : '—')
-const dt = (iso: string | null) => (iso ? new Date(iso).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' }) : '—')
-const d = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('it-IT') : '—')
-const yn = (b: boolean | null | undefined) => (b == null ? '—' : b ? 'Sì' : 'No')
-const sorted = (o: Record<string, number>) => Object.entries(o).sort((a, b) => b[1] - a[1])
 
-function Stat({ n, l, sub, wide }: { n: string | number; l: string; sub?: string; wide?: boolean }) {
-  return <div className={`az-stat${wide ? ' wide' : ''}`}><span className="n">{n}</span><span className="l">{l}</span>{sub && <span className="sub">{sub}</span>}</div>
-}
-function Bars({ items, total }: { items: [string, number][]; total?: number }) {
-  const max = total ?? Math.max(1, ...items.map(i => i[1]))
-  if (!items.length) return <p className="az-empty">Ancora nessun dato.</p>
-  return (
-    <ul className="az-bars">
-      {items.map(([k, n]) => (
-        <li key={k}><span className="k">{k}</span><span className="track"><span style={{ width: `${max ? (n / max) * 100 : 0}%` }} /></span><b>{n}</b></li>
-      ))}
-    </ul>
-  )
-}
-function Toolbar({ count, onExport, children }: { count: string; onExport?: () => void; children?: React.ReactNode }) {
-  return (
-    <div className="az-toolbar">
-      <div className="az-toolbar-left">{children}</div>
-      <div className="actions"><span className="az-count">{count}</span>{onExport && <button className="az-btn primary" onClick={onExport}>💾 Esporta CSV</button>}</div>
-    </div>
-  )
-}
-
-// ---------- Dashboard ----------
 // l'editor delle funzioni di Supabase accetta un file solo: regole e lettura dei feed (condivise con i test) nello stesso file
 const ingestBundle = [ingestCode.replace(/^import .*_shared\/.*\n/gm, ''), '// ---------- lettura dei feed (_shared/news-feed.ts) ----------', feedCode,
   '// ---------- regole (_shared/news-rules.ts) ----------', rulesCode,
   '// ---------- da contenuto a riga (_shared/news-item.ts) ----------', itemCode.replace(/^import .*'\.\/news-.*\n/gm, '')].join('\n')
 
-export function DashboardPanel({ stats, days, setDays, cohorts = [] }: { stats: Stats; days: number; setDays: (n: number) => void; cohorts?: Cohort[] }) {
-  const daily = stats.daily ?? []
-  const max = Math.max(1, ...daily.map(x => x.active))
-  const funnel: [string, number][] = [['Hanno aperto l’app', stats.devices], ['Hanno registrato almeno un movimento', stats.with_tx],
-    ['Attivati (6+ movimenti: stipendio e 5 spese)', stats.activated], ['Con account', stats.signed_in], ['Con notifiche attive', stats.push]]
-  return (
-    <>
-      <div className="az-stat-grid">
-        <Stat wide n={stats.active_7} l="Persone attive negli ultimi 7 giorni" sub={`${stats.active_1} oggi · ${stats.active_30} negli ultimi 30 giorni`} />
-        <Stat n={stats.devices} l="Dispositivi totali" />
-        <Stat n={stats.accounts} l="Account registrati" />
-        <Stat n={stats.installed} l="App installate" sub={pct(stats.installed, stats.devices) + ' dei dispositivi'} />
-        <Stat n={stats.avg_tx} l="Movimenti medi per dispositivo" />
-        <Stat n={stats.retention_7 == null ? '—' : `${stats.retention_7}%`} l="Tornano dopo 7 giorni" />
-        <Stat n={stats.retention_30 == null ? '—' : `${stats.retention_30}%`} l="Tornano dopo 30 giorni" />
-        <Stat n={stats.feedback_count} l="Feedback ricevuti" sub={stats.feedback_avg != null ? `voto medio ${stats.feedback_avg}/5` : undefined} />
-        <Stat n={stats.push} l="Iscritti alle notifiche" />
-      </div>
-
-      <div className="az-card">
-        <div className="az-card-head">
-          <h3>Accessi giornalieri</h3>
-          <select value={days} onChange={e => setDays(Number(e.target.value))} aria-label="Periodo">
-            <option value={7}>Ultimi 7 giorni</option><option value={30}>Ultimi 30 giorni</option><option value={90}>Ultimi 90 giorni</option>
-          </select>
-        </div>
-        <div className="az-chart" role="img" aria-label="Dispositivi attivi per giorno">
-          {daily.map(x => (
-            <div key={x.day} className="col" title={`${d(x.day)}: ${x.active} attivi, di cui ${x.new} nuovi`}>
-              <span className="bar" style={{ height: `${(x.active / max) * 100}%` }}>
-                <span className="new" style={{ height: x.active ? `${(x.new / x.active) * 100}%` : 0 }} />
-              </span>
-            </div>
-          ))}
-        </div>
-        <p className="az-hint"><i className="lg a" /> attivi · <i className="lg n" /> di cui nuovi · {d(daily[0]?.day ?? null)} → {d(daily.at(-1)?.day ?? null)}</p>
-      </div>
-
-      <div className="az-card">
-        <h3>Tornano dopo 7 giorni, settimana per settimana</h3>
-        <p className="az-hint">Per ogni settimana: quanti dispositivi hanno aperto Quadriamo per la prima volta e quanti sono tornati dopo almeno 7 giorni.
-          È il numero che dice se il vantaggio è reale. Le ultime settimane si completano col tempo.</p>
-        {cohorts.length ? <ul className="az-cohorts">
-          {cohorts.map(c => {
-            const p = c.new_devices ? c.back_7 / c.new_devices : 0
-            return <li key={c.week} className={c.ready ? '' : 'pending'}>
-              <span className="k">sett. del {d(c.week)}</span>
-              <span className="track"><span style={{ width: `${p * 100}%` }} /></span>
-              <b>{c.ready ? `${Math.round(p * 100)}%` : '…'}</b>
-              <span className="pct">{c.back_7}/{c.new_devices}</span>
-            </li>
-          })}
-        </ul> : <p className="az-empty">Ancora nessun dato.</p>}
-      </div>
-
-      <div className="az-cols">
-        <div className="az-card">
-          <h3>Imbuto della beta</h3>
-          <p className="az-hint">Su {stats.devices} dispositivi che hanno aperto l'app.</p>
-          <ul className="az-bars">
-            {funnel.map(([l, n]) => (
-              <li key={l}><span className="k">{l}</span><span className="track"><span style={{ width: `${stats.devices ? (n / stats.devices) * 100 : 0}%` }} /></span>
-                <b>{n}</b><span className="pct">{pct(n, stats.devices)}</span></li>
-            ))}
-          </ul>
-        </div>
-        <div className="az-card">
-          <h3>Azioni nel periodo</h3>
-          <Bars items={sorted(stats.events).map(([k, n]) => [label(k), n])} />
-        </div>
-        <div className="az-card">
-          <h3>Lingue</h3>
-          <Bars items={sorted(stats.langs).map(([k, n]) => [label(k), n])} />
-        </div>
-        <div className="az-card">
-          <h3>Dispositivi</h3>
-          <Bars items={sorted(stats.platforms).map(([k, n]) => [label(k), n])} />
-        </div>
-      </div>
-      <p className="az-hint">I numeri sui dispositivi contano solo chi ha acconsentito alle statistiche anonime; gli account sono il totale degli iscritti.</p>
-    </>
-  )
-}
-
-// ---------- Dispositivi ----------
-export function DevicesPanel({ rows }: { rows: Device[] }) {
-  const [q, setQ] = useState('')
-  const [only, setOnly] = useState('')
-  const list = rows.filter(r => (!only || r.platform === only) && (!q || `${r.device_id} ${label(r.lang)} ${label(r.platform)}`.toLowerCase().includes(q.toLowerCase())))
-  return (
-    <>
-      <Toolbar count={`${list.length} dispositivi`} onExport={() => downloadCsv('quadriamo-dispositivi', [
-        ['Dispositivo', 'Primo giorno', 'Ultimo giorno', 'Giorni di uso', 'Tipo', 'Lingua', 'Installata', 'Con account', 'Movimenti', 'Mesi', 'Versione'],
-        ...list.map(r => [r.device_id, r.first_day, r.last_day, r.active_days, label(r.platform), label(r.lang), yn(r.standalone), yn(r.signed_in), r.tx_count, r.months_used, r.app_version])])}>
-        <input className="az-search" placeholder="Cerca…" value={q} onChange={e => setQ(e.target.value)} />
-        <select value={only} onChange={e => setOnly(e.target.value)} aria-label="Tipo di dispositivo">
-          <option value="">Tutti i tipi</option><option value="ios">iPhone / iPad</option><option value="android">Android</option><option value="desktop">Computer</option>
-        </select>
-      </Toolbar>
-      <div className="az-table-wrap">
-        <table className="az-table">
-          <thead><tr><th>Dispositivo</th><th>Primo uso</th><th>Ultimo uso</th><th>Giorni</th><th>Tipo</th><th>Lingua</th><th>Installata</th><th>Account</th><th>Movimenti</th><th>Versione</th></tr></thead>
-          <tbody>
-            {list.map(r => (
-              <tr key={r.device_id}>
-                <td className="mono" title={r.device_id}>{r.device_id.slice(0, 8)}</td><td>{d(r.first_day)}</td><td>{d(r.last_day)}</td><td>{r.active_days}</td>
-                <td>{label(r.platform)}</td><td>{label(r.lang)}</td><td>{r.standalone ? <span className="az-pill ok">Sì</span> : 'No'}</td>
-                <td>{yn(r.signed_in)}</td><td>{r.tx_count ?? '—'}</td><td>{r.app_version ?? '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!list.length && <p className="az-empty">Nessun dispositivo{rows.length ? ' con questi filtri' : ' finora: arriveranno quando i primi amici aprono l’app e accettano le statistiche'}.</p>}
-      <p className="az-hint">Ogni dispositivo è un codice casuale creato sul telefono: non identifica la persona. Nessun importo né descrizione dei movimenti arriva mai qui.</p>
-    </>
-  )
-}
-
-// ---------- Account ----------
-export function AccountsPanel({ rows }: { rows: Account[] }) {
-  const [q, setQ] = useState('')
-  const list = rows.filter(r => !q || `${r.email} ${r.first_name ?? ''} ${r.last_name ?? ''}`.toLowerCase().includes(q.toLowerCase()))
-  return (
-    <>
-      <Toolbar count={`${list.length} account`} onExport={() => downloadCsv('quadriamo-account', [
-        ['Nome', 'Cognome', 'Email', 'Iscritto il', 'Ultimo accesso', 'Notifiche', 'Feedback'],
-        ...list.map(r => [r.first_name, r.last_name, r.email, r.created_at, r.last_sign_in_at, yn(r.has_push), r.feedback_count])])}>
-        <input className="az-search" placeholder="Cerca per nome o email…" value={q} onChange={e => setQ(e.target.value)} />
-      </Toolbar>
-      <div className="az-table-wrap">
-        <table className="az-table">
-          <thead><tr><th>Nome</th><th>Email</th><th>Iscritto il</th><th>Ultimo accesso</th><th>Notifiche</th><th>Feedback</th></tr></thead>
-          <tbody>
-            {list.map(r => (
-              <tr key={r.email}><td>{[r.first_name, r.last_name].filter(Boolean).join(' ') || '—'}</td><td>{r.email}</td><td>{d(r.created_at)}</td><td>{dt(r.last_sign_in_at)}</td>
-                <td>{r.has_push ? <span className="az-pill ok">Attive</span> : '—'}</td><td>{r.feedback_count || '—'}</td></tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!list.length && <p className="az-empty">Nessun account{rows.length ? ' con questa ricerca' : ' registrato finora'}.</p>}
-    </>
-  )
-}
-
-// ---------- Ricerca anonima (solo totali, da 5 schede in su) ----------
-export function ResearchPanel({ r, buckets = ['Essenziali', 'Qualità della vita', 'Fondo di sicurezza', 'Investimenti'] }: { r: ResearchStats; buckets?: string[] }) {
-  const items = (o: Record<string, number> = {}) => sorted(o).map(([k, n]) => [label(k), n] as [string, number])
-  const order = ['lt1000', '1000-1500', '1500-2000', '2000-3000', 'ge3000']
-  const bands = order.filter(k => r.income_bands?.[k]).map(k => [label(k), r.income_bands![k]] as [string, number])
-  const inv = r.invested ?? {}
-  const invTot = (inv.yes ?? 0) + (inv.want ?? 0) + (inv.no ?? 0)
-  const note = <p className="az-hint">Schede inviate per scelta degli utenti, senza nome, email né account; entrate solo per fascia. Le risposte dei singoli non sono visibili e non sono collegate agli account.</p>
-  if (r.answers < r.min) {
-    return (
-      <>
-        <div className="az-card az-locked-info">
-          <h3>Servono almeno {r.min} schede anonime</h3>
-          <p>Finora ne sono arrivate <b>{r.answers}</b>. I totali compaiono da {r.min} in su: con meno risposte una persona potrebbe essere riconosciuta.</p>
-        </div>
-        {note}
-      </>
-    )
-  }
-  return (
-    <>
-      <div className="az-stat-grid">
-        <Stat n={r.answers} l="Schede anonime ricevute" />
-        <Stat n={pct(inv.yes ?? 0, invTot)} l="Ha già investito" sub={invTot ? `${pct(inv.want ?? 0, invTot)} vorrebbe iniziare` : undefined} />
-        <Stat n={r.shares_custom ?? 0} l="Hanno cambiato la regola 55-20-15-10" sub={`${r.shares_default ?? 0} la tengono`} />
-      </div>
-      <div className="az-cols">
-        <div className="az-card"><h3>Entrate mensili nette (fasce)</h3><Bars items={bands} /></div>
-        <div className="az-card"><h3>Per cosa usano Quadriamo</h3><Bars items={items(r.goals)} total={Math.max(1, r.answers)} /></div>
-        <div className="az-card"><h3>Carte e conti</h3><Bars items={items(r.cards)} total={Math.max(1, r.answers)} /></div>
-        <div className="az-card"><h3>Investimenti</h3><Bars items={items(r.invested)} />
-          {Object.keys(r.invest_where ?? {}).length > 0 && <><h3 className="az-h3">Dove investono</h3><Bars items={items(r.invest_where)} /></>}</div>
-        <div className="az-card"><h3>Divisione media scelta</h3>
-          {r.shares_avg?.length === 4
-            ? <Bars items={r.shares_avg.map((v, i) => [`${buckets[i]} (${String(v).replace('.', ',')}%)`, v] as [string, number])} total={100} />
-            : <p className="az-empty">Ancora nessun dato.</p>}</div>
-      </div>
-      {note}
-    </>
-  )
-}
-
-// ---------- Feedback ----------
-export function FeedbackPanel({ rows, alternatives = {} }: { rows: Feedback[]; alternatives?: Record<string, number> }) {
-  const [stars, setStars] = useState(0)
-  const rated = rows.filter(r => r.rating != null)
-  const avg = rated.length ? (rated.reduce((s, r) => s + (r.rating ?? 0), 0) / rated.length).toFixed(1) : '—'
-  const withText = rows.filter(r => r.message).length
-  const list = rows.filter(r => !stars || r.rating === stars)
-  return (
-    <>
-      <div className="az-cols">
-        <div className="az-card">
-          <h3>Voto medio</h3>
-          <div className="az-big">{avg}<span className="sub">su 5 · {rated.length} voti · {withText} commenti</span></div>
-        </div>
-        <div className="az-card">
-          <h3>Se non ci fosse Quadriamo userebbero…</h3>
-          <Bars items={sorted(alternatives).map(([k, n]) => [label(k), n])} />
-        </div>
-        <div className="az-card">
-          <h3>Distribuzione dei voti</h3>
-          <Bars items={[5, 4, 3, 2, 1].map(s => [`${'★'.repeat(s)}`, rated.filter(r => r.rating === s).length])} total={Math.max(1, rated.length)} />
-        </div>
-      </div>
-      <Toolbar count={`${list.length} risposte`} onExport={() => downloadCsv('quadriamo-feedback', [
-        ['Data', 'Da', 'Voto', 'Commento', 'Al posto di Quadriamo', 'Email', 'Lingua', 'Versione', 'Con account'],
-        ...list.map(r => [r.created_at, r.source === 'site' ? 'Sito' : 'App', r.rating, r.message, r.alternative ? `${label(r.alternative)}${r.alternative_other ? `: ${r.alternative_other}` : ''}` : '', r.email, label(r.lang), r.app_version, yn(!!r.user_id)])])}>
-        <select value={stars} onChange={e => setStars(Number(e.target.value))} aria-label="Filtra per voto">
-          <option value={0}>Tutti i voti</option>{[5, 4, 3, 2, 1].map(s => <option key={s} value={s}>{s} stelle</option>)}
-        </select>
-      </Toolbar>
-      <div className="az-table-wrap">
-        <table className="az-table">
-          <thead><tr><th>Data</th><th>Da</th><th>Voto</th><th>Commento</th><th>Al posto di Quadriamo</th><th>Email</th><th>Lingua</th><th>Versione</th><th>Account</th></tr></thead>
-          <tbody>
-            {list.map(r => (
-              <tr key={r.id}><td>{dt(r.created_at)}</td><td>{r.source === 'site' ? <span className="az-pill warn">Sito</span> : 'App'}</td>
-                <td className="stars">{r.rating ? <>{'★'.repeat(r.rating)}<span>{'★'.repeat(5 - r.rating)}</span></> : '—'}</td>
-                <td className="wrap">{r.message ?? '—'}</td><td>{r.alternative ? `${label(r.alternative)}${r.alternative_other ? `: ${r.alternative_other}` : ''}` : '—'}</td><td>{r.email ? <a href={`mailto:${r.email}`}>{r.email}</a> : '—'}</td><td>{label(r.lang)}</td><td>{r.app_version ?? '—'}</td><td>{r.user_id ? 'Sì' : '—'}</td></tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!list.length && <p className="az-empty">Nessuna risposta{rows.length ? ' con questo voto' : ' ricevuta finora'}.</p>}
-    </>
-  )
-}
-
-// ---------- Notifiche ----------
-export function PushPanel({ rows, setup, onSend }: { rows: PushSub[]; setup: Setup; onSend: (title: string, body: string) => Promise<string> }) {
-  const [title, setTitle] = useState('')
-  const [body, setBody] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [msg, setMsg] = useState<{ text: string; bad?: boolean } | null>(null)
-  const last = rows.map(r => r.last_prompt_at).filter(Boolean).sort().at(-1) ?? null
-  const ready = setup.fn === 'ok'
-  async function send() {
-    if (!confirm(`Inviare la notifica di feedback a ${rows.length} dispositivi?`)) return
-    setBusy(true); setMsg(null)
-    try { setMsg({ text: await onSend(title, body) }) } catch (e) { setMsg({ text: `Errore: ${(e as Error).message}`, bad: true }) } finally { setBusy(false) }
-  }
-  return (
-    <>
-      <div className="az-stat-grid">
-        <Stat n={rows.length} l="Dispositivi iscritti" />
-        <Stat n={rows.filter(r => r.email).length} l="Di cui con account" />
-        <Stat n={last ? d(last) : '—'} l="Ultima notifica inviata" />
-        <Stat n={setup.reminder ? 'Attivo' : 'Spento'} l="Promemoria automatico ogni 10 giorni" />
-      </div>
-      <div className="az-card">
-        <h3>Invia una notifica di feedback</h3>
-        <p className="az-hint">Arriva sul telefono o sul computer di chi ha attivato le notifiche. Toccandola si apre l'app sul riquadro "Come ti trovi?".
-          Lascia vuoto per il testo standard, che ognuno riceve nella sua lingua.</p>
-        {!ready && <p className="az-msg error">Prima pubblica la funzione send-push con le chiavi (sezione Configurazione).</p>}
-        <div className="az-form">
-          <label className="az-field"><span>Titolo</span><input placeholder="Come ti trovi con Quadriamo?" value={title} maxLength={60} onChange={e => setTitle(e.target.value)} /></label>
-          <label className="az-field"><span>Testo</span><textarea placeholder="Dacci un parere in 30 secondi: ci aiuta a migliorare la beta." value={body} maxLength={140} onChange={e => setBody(e.target.value)} /></label>
-          <div className="az-preview" aria-label="Anteprima">
-            <b>🔔 {title || 'Come ti trovi con Quadriamo?'}</b><span>{body || 'Dacci un parere in 30 secondi: ci aiuta a migliorare la beta.'}</span>
-          </div>
-          <div><button className="az-btn primary big" disabled={busy || !rows.length || !ready} onClick={() => void send()}>{busy ? 'Invio…' : `🔔 Invia a ${rows.length} dispositivi`}</button></div>
-          {msg && <p className={`az-msg ${msg.bad ? 'error' : 'ok'}`} role="status">{msg.text}</p>}
-        </div>
-      </div>
-      <h3 className="az-h3">Iscritti</h3>
-      <div className="az-table-wrap">
-        <table className="az-table">
-          <thead><tr><th>Iscritto il</th><th>Lingua</th><th>Account</th><th>Ultima notifica</th></tr></thead>
-          <tbody>{rows.map((r, i) => <tr key={i}><td>{dt(r.created_at)}</td><td>{label(r.lang)}</td><td>{r.email ?? '—'}</td><td>{dt(r.last_prompt_at)}</td></tr>)}</tbody>
-        </table>
-      </div>
-      {!rows.length && <p className="az-empty">Nessuno ha ancora attivato le notifiche (Impostazioni → Beta nell'app, oppure dopo aver inviato un feedback).</p>}
-    </>
-  )
-}
-
-// ---------- Configurazione ----------
 function Copy({ text, label: l = 'Copia' }: { text: string; label?: string }) {
   const [done, setDone] = useState(false)
   return <button className="az-btn" onClick={() => void navigator.clipboard.writeText(text).then(() => { setDone(true); setTimeout(() => setDone(false), 2000) })}>{done ? '✓ Copiato' : `📋 ${l}`}</button>
