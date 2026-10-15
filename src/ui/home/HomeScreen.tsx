@@ -13,7 +13,7 @@ import { BUCKET_COLORS, bucketName } from '../names'
 import { TxRow } from '../TxRow'
 import { useStore } from '../../store/context'
 import { Widget } from './widgets'
-import { DEFAULT_WIDGETS, WIDGETS, shown, type WidgetId } from './catalog'
+import { DEFAULT_WIDGETS, WIDGETS, shown, sizeOf, type WidgetId, type WidgetSize } from './catalog'
 
 /**
  * Home: prima la domanda "quanto posso spendere oggi?" (il numero del giorno è il protagonista),
@@ -28,6 +28,18 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
   const budget = useMemo(() => todayBudget(r, s, today), [r, s, today])
   const [part, setPart] = useState<BucketRow | null>(null)
   const [edit, setEdit] = useState(false)
+  const [drag, setDrag] = useState<WidgetId | null>(null)
+  const [over, setOver] = useState<WidgetId | null>(null)
+  const { dispatch } = useStore()
+  // trascinato su un altro widget: prende il suo posto (gli altri scorrono)
+  const dropOn = (target: WidgetId) => {
+    const from = drag
+    setDrag(null); setOver(null)
+    if (!from || from === target) return
+    const list = shown(s).filter(x => x !== from)
+    list.splice(list.indexOf(target), 0, from)
+    tap(); dispatch({ type: 'setSettings', settings: { ...s, homeWidgets: list } })
+  }
   const left = useCountUp(budget.left)
   const daysLeft = daysBetween(today, r.period.end) + 1
   const hasPlan = budget.parts.length > 0 && r.income > 0
@@ -63,7 +75,14 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
 
       {/* i widget scelti, in ordine; quelli del mese compaiono quando ci sono le entrate */}
       {/* la griglia sceglie quante colonne in base allo spazio (telefono 1, tablet 2, computer 3-4) */}
-      <div className="home-grid">{shown(s).map(id => <Widget key={id} id={id} c={{ data, r, today, streak, parts: blocks, onOpen, onAll }} />)}</div>
+      <div className="home-grid">{shown(s).map(id => (
+        // il posto del widget: porta la taglia e, sul computer, si trascina dalla maniglia per cambiare l'ordine
+        <div key={id} className={`w-slot size-${sizeOf(s, id)}${drag === id ? ' dragging' : ''}${over === id && drag !== id ? ' over' : ''}`}
+             draggable={drag === id} onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id) }}
+             onDragOver={e => { if (drag) { e.preventDefault(); setOver(id) } }} onDrop={e => { e.preventDefault(); dropOn(id) }} onDragEnd={() => { setDrag(null); setOver(null) }}>
+          <button className="w-drag" aria-label={t('hw.drag')} onPointerDown={() => setDrag(id)} onPointerUp={() => setDrag(null)}><Icon name="list" size={16} /></button>
+          <Widget id={id} c={{ data, r, today, streak, parts: blocks, onOpen, onAll }} />
+        </div>))}</div>
       <button className="link-btn home-edit" onClick={() => { tap(); setEdit(true) }}>{t('hw.edit')}</button>
 
       <Sheet open={edit} onClose={() => setEdit(false)} title={t('hw.edit')}>{edit && <HomeEditor />}</Sheet>
@@ -93,7 +112,10 @@ function HomeEditor() {
     <ul className="group-list home-editor">{list.map(id => {
       const active = on.includes(id), i = on.indexOf(id)
       return <li key={id}><div className="row">
-        <span className="row-main"><span>{t(`hw.${id}` as 'hw.parts')}</span><small>{t(`hw.${id}D` as 'hw.partsD')}</small></span>
+        <span className="row-main"><span>{t(`hw.${id}` as 'hw.parts')}</span><small>{t(`hw.${id}D` as 'hw.partsD')}</small>
+          {active && <div className="chips w-sizes" role="radiogroup" aria-label={t('hw.size')}>{(['s', 'm', 'l'] as WidgetSize[]).map(z => (
+          <button key={z} role="radio" aria-checked={sizeOf(settings, id) === z} className={sizeOf(settings, id) === z ? 'on' : ''}
+            onClick={() => { tap(); dispatch({ type: 'setSettings', settings: { ...settings, homeWidgetSizes: { ...settings.homeWidgetSizes, [id]: z } } }) }}>{t(`hw.size.${z}` as 'hw.size.s')}</button>))}</div>}</span>
         {active && <>
           <button className="icon-btn ghost" disabled={i === 0} onClick={() => move(id, -1)} aria-label={t('hw.up')}><Icon name="chevron" size={18} className="rot-up" /></button>
           <button className="icon-btn ghost" disabled={i === on.length - 1} onClick={() => move(id, 1)} aria-label={t('hw.down')}><Icon name="chevron" size={18} className="rot-down" /></button>

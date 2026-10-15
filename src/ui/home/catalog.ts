@@ -14,3 +14,4 @@ export type WidgetSize = 's' | 'm' | 'l'
 export const DEFAULT_SIZE: Record<WidgetId, WidgetSize> = {
   parts: 'm', today: 's', forecast: 's', capital: 's', daily: 'm', categories: 's', changes: 's', goals: 's', streak: 's',
 }
+export const sizeOf = (s: AppData['settings'], id: WidgetId): WidgetSize => s.homeWidgetSizes?.[id] ?? DEFAULT_SIZE[id]

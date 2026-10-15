@@ -41,6 +41,7 @@ export interface Settings {
   persona?: 'student' | 'worker' | 'other'   // risposta a "Chi sei?" al primo avvio
   schema?: number                   // aggiornamenti dei dati già applicati (vedi migrate)
   capital?: import('./capital').Capital | null   // capitale iniziale (engine/capital): separato dal budget del mese
+  homeWidgetSizes?: Record<string, 's' | 'm' | 'l'>   // taglia scelta per ogni widget (vuoto = quella di partenza)
   homeWidgets?: string[]            // i widget della Home, in ordine (vuoto = quelli di partenza, vedi ui/home/widgets)
 }
 
