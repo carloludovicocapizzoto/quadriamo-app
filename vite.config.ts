@@ -39,7 +39,7 @@ export default defineConfig({
         // Android colora la zona della barra di navigazione (e la schermata di avvio) con background_color:
         // il blu notte della Home scura, così non resta una fascia chiara sotto l'app; theme_color è la barra di stato
         background_color: '#0B141D',
-        theme_color: '#1F4E6B',
+        theme_color: '#1C3F52',
         shortcuts: [
           { name: 'Aggiungi spesa · Add expense', short_name: '+', url: `${base}app/?add=1`,
             icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
