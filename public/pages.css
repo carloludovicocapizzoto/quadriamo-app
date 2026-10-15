@@ -1,26 +1,16 @@
-/* Stile delle pagine statiche (installazione, privacy, termini): lo stesso dell'app. */
-/* Testo: SF Pro su iPhone, iPad e Mac (font di sistema, non si scarica); Inter altrove (licenza OFL, fonts/Inter-LICENSE.txt).
-   Inter si scarica solo dove serve: sui dispositivi Apple il browser usa SF Pro e non la chiede. */
-@font-face { font-family: "Inter"; src: url("fonts/Inter-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
-@font-face { font-family: "Inter"; src: url("fonts/Inter-latin-ext.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
-/* Marchio "Quadriamo." (solo il logo) */
-@font-face { font-family: "DM Serif Display"; src: url("fonts/DMSerifDisplay-Regular.ttf") format("truetype"); font-display: swap; }
-:root { --bg: #F6F4EF; --surface: #FFFDF9; --text: #17181A; --muted: #6B6E73; --line: #E2DFD8; --accent: #C2410C; color-scheme: light; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --bg: #0F1012; --surface: #17181A; --text: #F1ECE4; --muted: #B5B0A8; --line: #2E333A; --accent: #E0602A; color-scheme: dark; }
-}
-:root[data-theme="dark"] { --bg: #0F1012; --surface: #17181A; --text: #F1ECE4; --muted: #B5B0A8; --line: #2E333A; --accent: #E0602A; color-scheme: dark; }
+/* Pagine statiche del sito (aiuto, installazione, privacy, termini) e base della home: impaginazione.
+   Colori, caratteri, sfondi per sezione e movimento vengono dal design system unico (ds/quadriamo.css, da src/design). */
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Inter", system-ui, "Segoe UI", Roboto, sans-serif; }
+body { margin: 0; background: transparent; color: var(--text); font: 17px/1.6 var(--font-ui); -webkit-font-smoothing: antialiased; }
 .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
 header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .logo { font-family: "DM Serif Display", Georgia, serif; font-size: 26px; text-decoration: none; color: inherit; }
-.logo span { color: var(--accent); }
+.logo span { color: var(--b1); }
 h1, h2 { font-weight: 600; letter-spacing: -.025em; }
 h1 { font-size: clamp(32px, 7vw, 46px); line-height: 1.1; margin: 28px 0 10px; }
 h2 { font-size: 24px; margin: 32px 0 8px; }
 h3 { font-size: 18px; margin: 20px 0 6px; }
-a { color: var(--accent); }
+a { color: var(--text); text-underline-offset: 3px; }
 .muted { color: var(--muted); }
 .small { font-size: 14px; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
@@ -28,11 +18,11 @@ a { color: var(--accent); }
 ol, ul { padding-left: 22px; }
 li { margin: 8px 0; }
 .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 20px; border-radius: 10px;
-  background: var(--accent); color: #fff; font-weight: 600; text-decoration: none; }
+  background: var(--accent); color: var(--on-accent); font-weight: 600; text-decoration: none; }
 .langs { display: flex; gap: 6px; flex-wrap: wrap; }
 .langs button { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--text);
   border-radius: 99px; padding: 4px 12px; min-height: 36px; cursor: pointer; }
-.langs button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.langs button[aria-pressed="true"] { border-color: var(--text); color: var(--text); font-weight: 600; }
 .qr { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
 .qr img { width: 150px; height: 150px; background: #fff; border-radius: 12px; padding: 8px; }
 kbd { font: inherit; font-weight: 600; border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; background: var(--surface); }

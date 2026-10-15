@@ -10,7 +10,7 @@ OUT = os.path.join(HERE, 'out')
 FONTS = os.path.join(HERE, '..', 'public', 'fonts')
 QR = os.path.join(HERE, '..', 'public', 'qr.svg')
 SITE = 'carloludovicocapizzoto.github.io/quadriamo-app'
-# gli stessi valori di src/styles/tokens.css
+# gli stessi valori di src/design/tokens.css
 INK, CREAM, SURF, LINE, FILL = (23, 24, 26), (246, 244, 239), (246, 244, 239), (226, 223, 216), (234, 232, 226)
 ACCENT, B2, B3, B4, MUTED = (194, 65, 12), (232, 145, 95), (217, 190, 154), (140, 143, 148), (107, 110, 115)
 BLOCKS = [(ACCENT, 13, 13, 20, 18), (B2, 36, 13, 15, 18), (B3, 13, 34, 20, 17), (B4, 36, 34, 15, 17)]

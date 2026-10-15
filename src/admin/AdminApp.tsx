@@ -8,14 +8,15 @@ import { checkSetup, loadAccounts, loadAlternatives, loadCohorts, loadDevices, l
   type Account, type Cohort, type Device, type Feedback, type PushSub, type ResearchStats, type Setup, type Stats } from './data'
 import { sampleAccounts, sampleAlternatives, sampleCohorts, sampleDevices, sampleFeedback, samplePush, sampleResearch, sampleSetup, sampleStats } from './sample'
 import { ErrorsPanel } from './ErrorsPanel'
+import { Icon, type IconName } from '../ui/Icon'
 import { AccountsPanel, DashboardPanel, DevicesPanel, FeedbackPanel, PushPanel, ResearchPanel, SetupPanel } from './panels'
 
 type Panel = 'dashboard' | 'dispositivi' | 'account' | 'ricerca' | 'feedback' | 'notifiche' | 'errori' | 'configurazione'
-const NAV: { group: string; items: [Panel, string][] }[] = [
-  { group: 'Panoramica', items: [['dashboard', '📊 Dashboard']] },
-  { group: 'Persone', items: [['dispositivi', '📱 Dispositivi'], ['account', '👤 Account'], ['ricerca', '🔒 Ricerca anonima']] },
-  { group: 'Ascolto', items: [['feedback', '💬 Feedback'], ['notifiche', '🔔 Notifiche'], ['errori', '⚠️ Errori']] },
-  { group: 'Impostazioni', items: [['configurazione', '⚙️ Configurazione']] },
+const NAV: { group: string; items: [Panel, string, IconName][] }[] = [
+  { group: 'Panoramica', items: [['dashboard', 'Dashboard', 'chart']] },
+  { group: 'Persone', items: [['dispositivi', 'Dispositivi', 'list'], ['account', 'Account', 'user'], ['ricerca', 'Ricerca anonima', 'lock']] },
+  { group: 'Ascolto', items: [['feedback', 'Feedback', 'message'], ['notifiche', 'Notifiche', 'bell'], ['errori', 'Errori', 'alert']] },
+  { group: 'Impostazioni', items: [['configurazione', 'Configurazione', 'settings']] },
 ]
 const TITLES: Record<Panel, [string, string]> = {
   dashboard: ['Dashboard', 'Quante persone usano Quadriamo e come.'],
@@ -190,14 +191,14 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
           {NAV.map(g => (
             <div key={g.group} className="az-nav-group">
               <p className="az-nav-group-label">{g.group}</p>
-              {g.items.map(([id, text]) => (
+              {g.items.map(([id, text, icon]) => (
                 <button key={id} className={`az-nav-item${panel === id ? ' is-active' : ''}`} onClick={() => setPanel(id)}>
-                  {text}{id === 'configurazione' && setup && (!setup.admin || !setup.profiles || setup.fn !== 'ok') && <span className="az-dot" aria-label="da completare" />}
+                  <Icon name={icon} size={18} />{text}{id === 'configurazione' && setup && (!setup.admin || !setup.profiles || setup.fn !== 'ok') && <span className="az-dot" aria-label="da completare" />}
                 </button>
               ))}
             </div>
           ))}
-          <a className="az-nav-item" href={APP_URL}>↗ Apri l'app</a>
+          <a className="az-nav-item" href={APP_URL}><Icon name="external" size={18} />Apri l'app</a>
         </nav>
         <div className="az-sidebar-footer">
           <span className="az-sidebar-user" title={email}>{email}</span>
@@ -249,7 +250,7 @@ function Unlock({ adminKey, email, onOk }: { adminKey?: AdminKey; email: string;
   }
   return (
     <div className="az-card az-lock">
-      <h3>🔒 Dati riservati</h3>
+      <h3>Dati riservati</h3>
       <p className="az-hint">Per vedere i totali della ricerca anonima inserisci di nuovo {adminKey ? 'il tuo codice amministratore' : 'la tua password'}.
         La sezione si richiude quando la lasci.</p>
       <form className="az-form" onSubmit={submit}>

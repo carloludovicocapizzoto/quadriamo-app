@@ -1,6 +1,19 @@
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import { defineConfig } from 'vitest/config'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { defineConfig, type Plugin } from 'vitest/config'
+
+// Il design system (src/design) è uno solo: l'app e l'admin lo importano, le pagine statiche del sito
+// (public/*.html, index.html) leggono public/ds/quadriamo.css, generato qui da quegli stessi file a ogni avvio e costruzione.
+function designSystemForSite(): Plugin {
+  const write = () => {
+    const css = ['tokens', 'backgrounds', 'motion'].map(f => readFileSync(`src/design/${f}.css`, 'utf8')).join('\n')
+      .replaceAll('url("/fonts/', 'url("../fonts/')
+    mkdirSync('public/ds', { recursive: true })
+    writeFileSync('public/ds/quadriamo.css', `/* Generato da src/design (vite.config.ts): non modificare qui. */\n${css}`)
+  }
+  return { name: 'quadriamo-design-system', buildStart: write, configureServer: write, handleHotUpdate: ({ file }) => { if (file.includes('/src/design/')) write() } }
+}
 
 // In produzione su GitHub Pages l'app vive in /quadriamo-app/ (BASE_PATH dalla GitHub Action); in sviluppo in /.
 const base = process.env.BASE_PATH ?? '/'
@@ -8,6 +21,7 @@ const base = process.env.BASE_PATH ?? '/'
 export default defineConfig({
   base,
   plugins: [
+    designSystemForSite(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

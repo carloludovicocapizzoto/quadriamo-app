@@ -1,9 +1,7 @@
 /* Quadriamo: token → base → componenti → movimento → guscio → una sezione per funzione. */
-@import './tokens.css';
-@import './backgrounds.css';
+@import '../design/index.css';
 @import './base.css';
 @import './components.css';
-@import './motion.css';
 @import './shell.css';
 @import './sheet.css';
 @import './features/home.css';

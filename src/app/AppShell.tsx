@@ -37,7 +37,7 @@ export function AppShell() {
   const entry = useEntry()
   const data = state.data!
   const { today, viewed, month, thisMonth, streak } = useModel(data, route)
-  // lo sfondo della sezione (styles/backgrounds.css): Investi ha il suo dentro Analisi; le barre di sistema seguono il colore
+  // lo sfondo della sezione (design/backgrounds.css): Investi ha il suo dentro Analisi; le barre di sistema seguono il colore
   const section = route.tab === 'analysis' && route.view === 'investments' ? 'investments' : route.tab
   useEffect(() => {
     document.documentElement.dataset.section = section

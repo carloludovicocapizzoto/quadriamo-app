@@ -1,0 +1,6 @@
+/* Design system di Quadriamo: UNA fonte per app, sito e area admin.
+   tokens: colori, testo, spazi, forme, molle · backgrounds: sfondi per sezione e vetro · motion: il vocabolario dei movimenti.
+   L'app e l'admin lo importano; per le pagine statiche del sito la costruzione genera public/ds/quadriamo.css (vite.config.ts). */
+@import './tokens.css';
+@import './backgrounds.css';
+@import './motion.css';

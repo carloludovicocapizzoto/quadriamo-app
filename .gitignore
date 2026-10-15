@@ -30,3 +30,4 @@ desktop-admin/node_modules
 desktop-admin/dist
 tools/news/sample.json
 dist-e2e
+public/ds/
