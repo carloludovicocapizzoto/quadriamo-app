@@ -64,3 +64,37 @@
   .home-grid > .size-l { grid-column: 1 / -1; }
 }
 .w-sizes { margin-top: 6px; }
+
+/* ---------- pannello a destra (da 1280 px): notizie, prossimi pagamenti, mercati, eventi ---------- */
+.home-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; column-gap: var(--s8); align-items: start; }
+.home-side { position: sticky; top: var(--s4); padding-left: var(--s6); border-left: 1px solid var(--line); }
+.home-side > .w-slot { grid-column: auto; }
+
+/* ---------- dentro i widget ---------- */
+.w-big { margin: 0 0 var(--s2); font-size: var(--t-title); font-weight: 600; letter-spacing: -.03em; }
+.w-big .cur { font-size: .6em; color: var(--muted); }
+.w-tips { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.w-tips li { padding: var(--s3) 0; border-bottom: 1px solid var(--line); line-height: 1.5; }
+.w-missions .row { gap: var(--s3); }
+.w-check { flex: none; width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--line); display: grid; place-items: center; color: var(--on-accent); }
+.w-missions li.done .w-check { background: var(--good); border-color: var(--good); }
+.w-missions li.done .row-main > span:first-child { color: var(--muted); text-decoration: line-through; }
+.mk-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--fill-2); }
+.mk-dot.on { background: var(--good); }
+
+/* notizie: la stessa voce mostra solo il titolo, titolo e immagine, o anche l'anteprima, secondo lo spazio del widget */
+.w-news { container-type: inline-size; list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.w-news li { border-bottom: 1px solid var(--line); }
+.w-news a { display: flex; gap: var(--s3); align-items: flex-start; padding: var(--s3) 0; color: var(--text); text-decoration: none; }
+.w-news-text { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.w-news-text b { font-weight: 600; line-height: 1.35; }
+.w-news-text small { color: var(--muted); font-size: var(--t-sm); }
+.w-news-excerpt { display: none; color: var(--muted); font-size: var(--t-sm); line-height: 1.5; }
+.w-news img { display: none; flex: none; width: 64px; aspect-ratio: 1; object-fit: cover; border-radius: var(--r-sm); background: var(--fill); }
+@container (min-width: 300px) { .w-news img { display: block; } }
+@container (min-width: 520px) { .w-news-excerpt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } .w-news img { width: 96px; } }
+
+/* grafico giorno per giorno: compatto, medio o esteso secondo la larghezza del widget */
+.w-daily { container-type: inline-size; }
+@container (min-width: 560px) { .w-daily .hc-bars { height: 160px; } }
+@container (min-width: 860px) { .w-daily .hc-bars { height: 200px; } }

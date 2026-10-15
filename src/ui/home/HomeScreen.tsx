@@ -13,7 +13,8 @@ import { BUCKET_COLORS, bucketName } from '../names'
 import { TxRow } from '../TxRow'
 import { useStore } from '../../store/context'
 import { Widget } from './widgets'
-import { DEFAULT_WIDGETS, WIDGETS, shown, sizeOf, type WidgetId, type WidgetSize } from './catalog'
+import { DEFAULT_WIDGETS, SIDE, WIDGETS, shown, sizeOf, type WidgetId, type WidgetSize } from './catalog'
+import { useMedia } from '../kit/useMedia'
 
 /**
  * Home: prima la domanda "quanto posso spendere oggi?" (il numero del giorno è il protagonista),
@@ -28,6 +29,9 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
   const budget = useMemo(() => todayBudget(r, s, today), [r, s, today])
   const [part, setPart] = useState<BucketRow | null>(null)
   const [edit, setEdit] = useState(false)
+  const wide = useMedia('(min-width: 1280px)')
+  const main = wide ? shown(s).filter(id => !SIDE.includes(id)) : shown(s)
+  const side = wide ? shown(s).filter(id => SIDE.includes(id)) : []
   const [drag, setDrag] = useState<WidgetId | null>(null)
   const [over, setOver] = useState<WidgetId | null>(null)
   const { dispatch } = useStore()
@@ -74,15 +78,26 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
       </section>}
 
       {/* i widget scelti, in ordine; quelli del mese compaiono quando ci sono le entrate */}
-      {/* la griglia sceglie quante colonne in base allo spazio (telefono 1, tablet 2, computer 3-4) */}
-      <div className="home-grid">{shown(s).map(id => (
+      {/* la griglia sceglie quante colonne in base allo spazio (telefono 1, tablet 2, computer 3-4);
+          sugli schermi larghi le cose "di contorno" (notizie, pagamenti, mercati, eventi) vanno nel pannello a destra */}
+      <div className={wide ? 'home-layout' : undefined}>
+        <div className="home-grid">{main.map(id => (
         // il posto del widget: porta la taglia e, sul computer, si trascina dalla maniglia per cambiare l'ordine
         <div key={id} className={`w-slot size-${sizeOf(s, id)}${drag === id ? ' dragging' : ''}${over === id && drag !== id ? ' over' : ''}`}
              draggable={drag === id} onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id) }}
              onDragOver={e => { if (drag) { e.preventDefault(); setOver(id) } }} onDrop={e => { e.preventDefault(); dropOn(id) }} onDragEnd={() => { setDrag(null); setOver(null) }}>
           <button className="w-drag" aria-label={t('hw.drag')} onPointerDown={() => setDrag(id)} onPointerUp={() => setDrag(null)}><Icon name="list" size={16} /></button>
-          <Widget id={id} c={{ data, r, today, streak, parts: blocks, onOpen, onAll }} />
+          <Widget id={id} c={{ data, r, today, streak, parts: blocks, daily: hasPlan ? left : 0, onOpen, onAll }} />
         </div>))}</div>
+        {wide && side.length > 0 && <aside className="home-side">{side.map(id => (
+        // il posto del widget: porta la taglia e, sul computer, si trascina dalla maniglia per cambiare l'ordine
+        <div key={id} className={`w-slot size-${sizeOf(s, id)}${drag === id ? ' dragging' : ''}${over === id && drag !== id ? ' over' : ''}`}
+             draggable={drag === id} onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id) }}
+             onDragOver={e => { if (drag) { e.preventDefault(); setOver(id) } }} onDrop={e => { e.preventDefault(); dropOn(id) }} onDragEnd={() => { setDrag(null); setOver(null) }}>
+          <button className="w-drag" aria-label={t('hw.drag')} onPointerDown={() => setDrag(id)} onPointerUp={() => setDrag(null)}><Icon name="list" size={16} /></button>
+          <Widget id={id} c={{ data, r, today, streak, parts: blocks, daily: hasPlan ? left : 0, onOpen, onAll }} />
+        </div>))}</aside>}
+      </div>
       <button className="link-btn home-edit" onClick={() => { tap(); setEdit(true) }}>{t('hw.edit')}</button>
 
       <Sheet open={edit} onClose={() => setEdit(false)} title={t('hw.edit')}>{edit && <HomeEditor />}</Sheet>

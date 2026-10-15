@@ -15,10 +15,12 @@ import { CategoryChangesReport } from '../Reports'
 import { TxRow } from '../TxRow'
 import { Trend } from '../capital/CapitalPage'
 import type { WidgetId } from './catalog'
+import { Badges, Emergency, Events, Invest, Markets, MonthGoals, Missions, News, Recent, Stats, Tips, Upcoming, Wealth, Week } from './widgetsMore'
 
 export interface WidgetCtx {
   data: AppData; r: MonthResult; today: string; streak: Streak | null
   parts: ReactNode                                   // i quattro blocchi (vivono nella Home: aprono il dettaglio)
+  daily: number                                      // quanto si può spendere oggi (il numero del giorno)
   onOpen: (tx: ClassifiedTx) => void; onAll: () => void
 }
 
@@ -80,6 +82,20 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
           : t('cap.adv.used', { pct: a.pct })}</p>)}
       </>, () => navigate({ tab: 'profile', page: 'capital' }))
     }
+    case 'tips': return <Tips c={c} box={box} />
+    case 'missions': return <Missions c={c} box={box} />
+    case 'upcoming': return <Upcoming c={c} box={box} />
+    case 'wealth': return <Wealth c={c} box={box} />
+    case 'emergency': return <Emergency c={c} box={box} />
+    case 'week': return <Week c={c} box={box} />
+    case 'stats': return c.r.income > 0 || c.r.spent > 0 ? <Stats c={c} box={box} /> : null
+    case 'recent': return <Recent c={c} box={box} />
+    case 'invest': return <Invest c={c} box={box} open={() => navigate({ tab: 'analysis', view: 'investments' })} />
+    case 'news': return <News c={c} box={box} open={() => navigate({ tab: 'news' })} />
+    case 'markets': return <Markets box={box} />
+    case 'events': return <Events c={c} box={box} />
+    case 'monthGoals': return <MonthGoals c={c} box={box} open={() => navigate({ tab: 'profile', page: 'goals' })} />
+    case 'badges': return <Badges c={c} box={box} open={() => navigate({ tab: 'profile', page: 'progress' })} />
     case 'streak': return c.streak ? box(<dl className="outcome-row n2 w-streak">
       <div><dt>{t('hw.streakNow')}</dt><dd>{c.streak.count}</dd></div>
       <div><dt>{t('hw.streakBest')}</dt><dd>{c.streak.best}</dd></div>
