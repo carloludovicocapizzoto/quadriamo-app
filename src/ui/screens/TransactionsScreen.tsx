@@ -4,7 +4,7 @@ import { activeFilters, daysBetween, nextMonth, prevMonth, filterTransactions, m
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import type { AppData } from '../../store/state'
-import { parseAmount } from '../../store/state'
+import { parseAmount } from '../kit/amount'
 import { Icon } from '../Icon'
 import { tap } from '../kit/motion'
 import { Sheet } from '../kit/Sheet'

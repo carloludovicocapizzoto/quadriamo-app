@@ -1,6 +1,6 @@
 import { splitTotal, type Bucket } from '../engine'
 import { useI18n } from '../i18n/core'
-import { parseAmount } from '../store/state'
+import { parseAmount } from './kit/amount'
 import { BUCKET_COLORS, bucketName } from './names'
 
 const pct = (x: number) => String(Math.round(x * 1000) / 10).replace('.', ',')

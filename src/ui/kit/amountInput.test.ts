@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { amountText, groupTyping } from './amount'
-import { parseAmount } from '../../store/state'
+import { parseAmount } from './amount'
 
 describe('importi mentre si scrivono', () => {
   it.each([

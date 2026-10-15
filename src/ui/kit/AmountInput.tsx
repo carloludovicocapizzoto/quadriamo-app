@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type InputHTMLAttributes } from 'react'
 import { useI18n } from '../../i18n/core'
-import { parseAmount } from '../../store/state'
+import { parseAmount } from './amount'
 import { amountText, groupTyping } from './amount'
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'defaultValue' | 'onChange' | 'type'> & {

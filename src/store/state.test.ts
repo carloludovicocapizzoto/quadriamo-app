@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createInitial, duplicateCandidates, mergeData, migrate, planImport, parseAmount, parseBackup, reducer, toCsv, validateSettings, type State } from './state'
+import { createInitial, duplicateCandidates, mergeData, migrate, planImport, parseBackup, reducer, toCsv, validateSettings, type State } from './state'
+import { parseAmount } from '../ui/kit/amount'
 
 const base = (): State => ({ loaded: true, data: createInitial('EUR', '2026-10-09') })
 
