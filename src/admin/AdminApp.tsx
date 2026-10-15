@@ -1,6 +1,6 @@
-// Area amministratore di Quadriamo (pagina /admin/): stessa struttura della "Sezione aziendale" di Growmi,
-// barra laterale con le sezioni e area di lavoro a destra.
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+// Area amministratore di Quadriamo (pagina /admin/): parte dello stesso prodotto (design system unico, src/design),
+// barra laterale, area di lavoro, ricerca globale ⌘K e scorciatoie G + lettera.
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../sync/client'
 import { newCode, saveKey, savedKey, sha256Hex, type AdminKey } from './adminKey'
@@ -9,6 +9,7 @@ import { checkSetup, loadAccounts, loadAlternatives, loadCohorts, loadDevices, l
 import { sampleAccounts, sampleAlternatives, sampleCohorts, sampleDevices, sampleFeedback, samplePush, sampleResearch, sampleSetup, sampleStats } from './sample'
 import { ErrorsPanel } from './ErrorsPanel'
 import { Icon, type IconName } from '../ui/Icon'
+import { CommandPalette, type Command } from './CommandPalette'
 import { AccountsPanel, DashboardPanel, DevicesPanel, FeedbackPanel, PushPanel, ResearchPanel, SetupPanel } from './panels'
 
 type Panel = 'dashboard' | 'dispositivi' | 'account' | 'ricerca' | 'feedback' | 'notifiche' | 'errori' | 'configurazione'
@@ -29,6 +30,8 @@ const TITLES: Record<Panel, [string, string]> = {
   configurazione: ['Configurazione', 'Cosa è attivo su Supabase e cosa manca.'],
 }
 const APP_URL = `${import.meta.env.BASE_URL}app/`
+// scorciatoie: G poi la lettera del pannello (come Linear)
+const KEYS: Record<string, Panel> = { d: 'dashboard', v: 'dispositivi', a: 'account', r: 'ricerca', f: 'feedback', n: 'notifiche', e: 'errori', c: 'configurazione' }
 const DEMO = new URLSearchParams(window.location.search).get('demo') === '1'
 
 export function AdminApp() {
@@ -143,6 +146,7 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
   const [unlocked, setUnlocked] = useState(false)
   const [error, setError] = useState('')
 
+  const [cmd, setCmd] = useState(false)
   const setPanel = (p: Panel) => {
     setPanelState(p); setMenu(false); setUnlocked(false)
     const q = new URLSearchParams(demo ? 'demo=1' : '')
@@ -161,6 +165,22 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
     if (!s.admin) setPanelState('configurazione')
     return s
   }, [demo])
+  const goRef = useRef<(p: Panel) => void>(() => {})
+  useEffect(() => { goRef.current = setPanel })
+  useEffect(() => {
+    let g = 0
+    const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setCmd(x => !x); return }
+      if (typing(e.target) || e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === 'g') { g = Date.now(); return }
+      const p = KEYS[e.key.toLowerCase()]
+      if (p && Date.now() - g < 1200) { e.preventDefault(); g = 0; goRef.current(p) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   const load = useCallback(async () => {
     setError('')
     if (demo) {
@@ -209,7 +229,19 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
       <main className="az-main">
         <div className="az-main-header">
           <div><h1>{title}</h1><p>{lead}</p></div>
-          {setup?.admin && panel !== 'configurazione' && <button className="az-btn" onClick={() => void load()}>↻ Aggiorna</button>}
+          {cmd && <CommandPalette onClose={() => setCmd(false)} accounts={accounts} feedback={feedback} devices={devices} onPanel={p => setPanel(p)}
+            commands={[
+              ...NAV.flatMap(g => g.items.map(([id, text, icon]): Command => ({ id: `p-${id}`, group: 'Pannelli', icon, label: text,
+                hint: `G ${Object.entries(KEYS).find(([, v]) => v === id)?.[0].toUpperCase() ?? ''}`, run: () => setPanel(id) }))),
+              { id: 'x-reload', group: 'Azioni', icon: 'refresh', label: 'Aggiorna i dati', run: () => void load() },
+              { id: 'x-app', group: 'Azioni', icon: 'external', label: "Apri l'app", run: () => { window.open(APP_URL, '_blank') } },
+              { id: 'x-push', group: 'Azioni', icon: 'bell', label: 'Manda una notifica di feedback', run: () => setPanel('notifiche') },
+              { id: 'x-errors', group: 'Azioni', icon: 'alert', label: 'Controlla gli errori dell\'app', run: () => setPanel('errori') },
+            ]} />}
+          <div className="az-head-actions">
+            <button className="az-btn az-cmd-btn" onClick={() => setCmd(true)} aria-label="Cerca e azioni"><Icon name="search" size={16} />Cerca<kbd>⌘K</kbd></button>
+            {setup?.admin && panel !== 'configurazione' && <button className="az-btn" onClick={() => void load()}><Icon name="refresh" size={16} />Aggiorna</button>}
+          </div>
         </div>
         {demo && <p className="az-msg ok">Anteprima con dati inventati: i numeri veri compaiono qui dopo la configurazione.</p>}
         {!setup && <p className="az-empty">Caricamento…</p>}
