@@ -1,5 +1,5 @@
 // L'app vera e propria: pagina corrente (dall'indirizzo), barra in basso, "nuovo movimento", messaggi.
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { mainIncome, type ClassifiedTx, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
@@ -18,6 +18,7 @@ import { profilePrompt } from '../sync/profile'
 import { closeComposer, openComposer, useComposer } from './composer'
 import { useBootstrap, useDailyPing, useMorningSnapshot, useProReturn, usePushSync } from './effects'
 import { useEntry } from './entryContext'
+import { SHORTCUTS, useShortcuts } from './shortcuts'
 import { closeFeedback, useFeedbackOpen } from './prompts'
 import { ANALYSIS_VIEWS, navigate, useRoute, type Route } from './router'
 import { toast, useToast } from './toast'
@@ -25,9 +26,12 @@ import { useModel, ymKey } from './useModel'
 import { SectionBoundary } from './SectionBoundary'
 
 // le pagine meno usate si scaricano solo quando servono
-const AnalysisScreen = lazy(() => import('../ui/screens/AnalysisScreen').then(m => ({ default: m.AnalysisScreen })))
-const NewsScreen = lazy(() => import('../ui/screens/NewsScreen').then(m => ({ default: m.NewsScreen })))
-const ProfileScreen = lazy(() => import('../ui/profile/ProfileScreen').then(m => ({ default: m.ProfileScreen })))
+// le altre sezioni si scaricano a parte; appena il telefono è libero si precaricano, così il primo tocco è immediato
+const loadAnalysis = () => import('../ui/screens/AnalysisScreen'), loadNews = () => import('../ui/screens/NewsScreen'), loadProfile = () => import('../ui/profile/ProfileScreen')
+const AnalysisScreen = lazy(() => loadAnalysis().then(m => ({ default: m.AnalysisScreen })))
+const NewsScreen = lazy(() => loadNews().then(m => ({ default: m.NewsScreen })))
+const ProfileScreen = lazy(() => loadProfile().then(m => ({ default: m.ProfileScreen })))
+const idle = (f: () => void) => ('requestIdleCallback' in window ? window.requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2000))
 
 export function AppShell() {
   const { t, lang } = useI18n()
@@ -37,6 +41,11 @@ export function AppShell() {
   const entry = useEntry()
   const data = state.data!
   const { today, viewed, month, thisMonth, streak } = useModel(data, route)
+  useEffect(() => { idle(() => { void loadAnalysis(); void loadNews(); void loadProfile() }) }, [])
+  const [keysHelp, setKeysHelp] = useState(false)
+  const openKeys = useCallback(() => setKeysHelp(true), [])
+  useShortcuts(openKeys)
+
   // lo sfondo della sezione (design/backgrounds.css): Investi ha il suo dentro Analisi; le barre di sistema seguono il colore
   const section = route.tab === 'analysis' && route.view === 'investments' ? 'investments' : route.tab
   useEffect(() => {
@@ -119,6 +128,10 @@ export function AppShell() {
 
       {note && <div key={note.id} className="toast" role="status">{note.text}</div>}
       <StreakCelebration s={streak} />
+      <Sheet open={keysHelp} onClose={() => setKeysHelp(false)} title={t('kb.title')}>
+        <ul className="group-list kb-list">{SHORTCUTS.map(([k, label]) => (
+          <li key={k}><div className="row"><span className="row-main">{t(label as 'kb.new')}</span><span className="row-value">{k.split(' ').map(x => <kbd key={x}>{x}</kbd>)}</span></div></li>))}</ul>
+      </Sheet>
       <BottomNav tab={route.tab} onTab={tab => go(tab === 'analysis' ? { tab, view: ANALYSIS_VIEWS[0] } : { tab } as Route)} onAdd={() => openComposer()} badge={{ analysis: data.inbox?.length ?? 0 }} />
 
       <Sheet open={composer.open} onClose={closeComposer} label={composer.value.tx ? t('tx.edit') : t('tx.new')}>

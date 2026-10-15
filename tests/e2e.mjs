@@ -108,6 +108,13 @@ await step('Profilo → Capitale: inserisco 2.000 €', async () => {
 }, has('/2\\.000,00/', '.outcome'))
 await step('il capitale compare in Home', () => js(`location.hash = '#/'`), `/2\\.000,00/.test(document.querySelector('.w-capital')?.innerText ?? '')`)
 
+console.log('Tastiera')
+const press = (key, code) => cdp('Input.dispatchKeyEvent', { type: 'keyDown', key, code, text: key.length === 1 ? key : undefined, windowsVirtualKeyCode: key.toUpperCase().charCodeAt(0) })
+await step('G poi N apre le Notizie', async () => { await js(`document.activeElement?.blur()`); await press('g', 'KeyG'); await press('n', 'KeyN') }, `location.hash === '#/news'`)
+await step('N apre il nuovo movimento', () => press('n', 'KeyN'), `!!document.querySelector('.tx-sheet')`)
+await step('Esc lo chiude', () => cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }), `!document.body.classList.contains('sheet-open')`)
+await step('? mostra le scorciatoie', async () => { await sleep(600); await press('?', 'Slash') }, `!!document.querySelector('.kb-list')`)
+
 if (errors.length) { console.error(`\nErrori nella pagina:\n  ${errors.join('\n  ')}`); await done(1) }
 console.log(`\nTutti i ${n} passi sono andati bene.`)
 await done(0)

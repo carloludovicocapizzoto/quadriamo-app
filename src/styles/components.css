@@ -140,3 +140,9 @@ button.row:active, a.row:active { opacity: .6; }
 .chip.on, .chips > button.on { background: var(--accent); color: var(--on-accent); font-weight: 600; }
 .chip:active, .chips > button:active { transform: scale(.96); }
 .chip.big { min-height: 48px; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* righe delle liste lunghe (movimenti, notizie): il browser disegna solo quelle sullo schermo */
+.tx-list > li, .stories > li, .results > div { content-visibility: auto; contain-intrinsic-size: auto 64px; }
+/* tasti delle scorciatoie */
+kbd { display: inline-block; min-width: 22px; padding: 2px 6px; margin-left: 4px; border-radius: 6px; background: var(--fill-2); color: var(--text);
+  font: 600 12px/1.4 var(--font-ui); text-align: center; }
