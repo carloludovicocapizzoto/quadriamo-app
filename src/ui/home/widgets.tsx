@@ -1,21 +1,19 @@
-// I widget della Home: le cose che servono appena apri l'app. Ognuno riusa un pezzo che esiste già altrove
-// (Analisi, Obiettivi, Profilo); l'utente sceglie quali vedere e in che ordine (Settings.homeWidgets, sincronizzato).
+// I widget della Home: le cose che si guardano appena si apre l'app. Ognuno dice una cosa sola, con un mini grafico
+// o un indicatore che informa (non decora). L'utente sceglie quali vedere, in che ordine e di che dimensione.
 import type { ReactNode } from 'react'
-import { capitalAdvice, capitalSummary, forecastMonth, goalStatus, type ClassifiedTx, type MonthResult, type Streak } from '../../engine'
+import { capitalAdvice, capitalSummary, dailySpending, forecastMonth, goalStatus, lastDays, missions, portfolioSummary,
+  type ClassifiedTx, type MonthResult, type Streak } from '../../engine'
 import { useI18n } from '../../i18n/core'
+import type { Dict } from '../../i18n/en'
 import type { AppData } from '../../store/state'
 import { navigate } from '../../app/router'
-import { ByCategory } from '../ByCategory'
-import { DailyChart } from '../DailyChart'
 import { Icon } from '../Icon'
 import { Meter } from '../kit/Meter'
 import { Money } from '../kit/Money'
-import { MonthOutcome } from '../MonthView'
-import { CategoryChangesReport } from '../Reports'
+import { categoryName } from '../names'
 import { TxRow } from '../TxRow'
-import { Trend } from '../capital/CapitalPage'
 import type { WidgetId } from './catalog'
-import { Badges, Emergency, Events, Invest, Markets, MonthGoals, Missions, News, Recent, Stats, Tips, Upcoming, Wealth, Week } from './widgetsMore'
+import { Events, Markets } from './widgetsMore'
 
 export interface WidgetCtx {
   data: AppData; r: MonthResult; today: string; streak: Streak | null
@@ -23,82 +21,185 @@ export interface WidgetCtx {
   daily: number                                      // quanto si può spendere oggi (il numero del giorno)
   onOpen: (tx: ClassifiedTx) => void; onAll: () => void
 }
+const k = (s: string) => s as keyof Dict
+const essentialsMonth = (c: WidgetCtx) => (c.r.buckets.find(b => b.bucket.id === 'essentials')?.available ?? 0) + (c.r.paidFirst ?? 0)
 
-/** Un widget: titolo e contenuto. Senza dati da mostrare non compare (niente riquadri vuoti). */
+/** Una linea sottile da una serie di valori (mini grafico): l'ultimo punto è marcato. */
+function Spark({ values, dashedFrom }: { values: number[]; dashedFrom?: number }) {
+  if (values.length < 2) return null
+  const max = Math.max(...values), min = Math.min(0, ...values), span = Math.max(1, max - min)
+  const pts = values.map((v, i) => [(i / (values.length - 1)) * 100, 30 - ((v - min) / span) * 28] as const)
+  const line = (a: readonly (readonly [number, number])[]) => a.map(p => p.join(',')).join(' ')
+  const cut = dashedFrom ?? values.length
+  return (
+    <svg className="w-spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points={line(pts.slice(0, cut))} />
+      {cut < values.length && <polyline className="dash" points={line(pts.slice(cut - 1))} />}
+    </svg>
+  )
+}
+
+/** Barrette dei giorni (ultimi 7): l'ultima è oggi. */
+function Bars({ values }: { values: number[] }) {
+  const max = Math.max(1, ...values)
+  return <div className="w-bars" aria-hidden="true">{values.map((v, i) => <span key={i} className={i === values.length - 1 ? 'now' : ''} style={{ height: `${Math.max(4, (v / max) * 100)}%` }} />)}</div>
+}
+
+/** Freccia di andamento con la percentuale: verde se va bene (meno spese, più capitale). */
+function TrendTag({ delta, base, goodWhenDown }: { delta: number; base: number; goodWhenDown?: boolean }) {
+  if (!base) return null
+  const pct = Math.round((delta / base) * 100)
+  if (!pct) return <span className="w-trend">=</span>
+  const good = goodWhenDown ? pct < 0 : pct > 0
+  return <span className={`w-trend ${good ? 'good' : 'bad'}`}>{pct > 0 ? '↑' : '↓'} {Math.abs(pct)}%</span>
+}
+
 export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
   const { t, money } = useI18n()
   const s = c.data.settings, cur = s.currency
-  const box = (body: ReactNode, more?: () => void) => (
-    <section className={`widget w-${id}`}>
-      <h2 className="sec-title">{t(`hw.${id}` as 'hw.parts')}</h2>
+  const box = (body: ReactNode, more?: () => void, attention = false) => (
+    <section className={`widget w-${id}${attention ? ' attention' : ''}`}>
+      <h2 className="w-title">{t(k(`hw.${id}`))}{more && <button className="w-more" onClick={more} aria-label={t('hw.more')}><Icon name="chevron" size={16} /></button>}</h2>
       {body}
-      {more && <button className="row-link" onClick={more}><span>{t('hw.more')}</span><Icon name="chevron" size={18} /></button>}
     </section>
   )
-  const spent = c.r.spent > 0
   switch (id) {
     case 'parts': return <section className="widget w-parts">{c.parts}</section>
+
     case 'today': {
+      // quanto hai speso oggi rispetto al numero del giorno, e le spese di oggi
       const list = c.r.transactions.filter(x => !x.upcoming && x.date === c.today)
+      const spent = list.filter(x => x.type === 'expense').reduce((a, x) => a + (x.amountIn ?? 0), 0)
+      const over = c.daily > 0 && spent > c.daily
       return box(<>
+        <p className="w-big"><Money value={spent} currency={cur} />{c.daily > 0 && <small> {t('hw.todayOf', { amount: money(c.daily, cur) })}</small>}</p>
+        {c.daily > 0 && <Meter value={spent / c.daily} color={over ? 'var(--bad)' : undefined} label={t('hw.today')} />}
         {list.length ? <ul className="tx-list">{list.slice(0, 3).map(tx => <TxRow key={tx.id} tx={tx} settings={s} onOpen={c.onOpen} />)}</ul>
-          : <p className="today-none muted">{t('home.nothingToday')}</p>}
-      </>, c.onAll)
+          : <p className="w-note">{t('home.nothingToday')}</p>}
+      </>, c.onAll, over)
     }
-    case 'forecast': return c.r.income > 0 ? box(<MonthOutcome r={c.r} settings={s} today={c.today} />, () => navigate({ tab: 'analysis', view: 'month' })) : null
-    case 'daily': return box(<DailyChart r={c.r} settings={s} today={c.today} />)
-    case 'categories': return c.r.byCategory.some(x => x.amount !== 0) ? box(<ByCategory rows={c.r.byCategory} currency={cur} />) : null
-    case 'changes': return spent ? box(<CategoryChangesReport r={c.r} txs={c.data.transactions} settings={s} today={c.today} />) : null
+
+    case 'forecast': {
+      // come finisce il mese: la spesa fin qui (linea) e la proiezione a questo ritmo (tratteggio)
+      const f = forecastMonth(c.r, c.today)
+      if (!f || c.r.income <= 0) return null
+      const days = dailySpending(c.r), at = days.findIndex(d => d.day === c.today) + 1
+      const perDay = f.variablePerDay, cum = days.slice(0, at).map(d => d.cumulative)
+      const proj = days.slice(at).map((_, i) => (cum.at(-1) ?? 0) + perDay * (i + 1))
+      const left = f.projectedLeftOver
+      return box(<>
+        <p className={`w-big${left < 0 ? ' bad-text' : ''}`}><Money value={left} currency={cur} /></p>
+        <p className="w-note">{t(left < 0 ? 'ana.endOver' : 'ana.endLeft')}</p>
+        <Spark values={[...cum, ...proj]} dashedFrom={cum.length} />
+        <p className="w-legend"><span>{t('hw.spentSoFar', { amount: money(f.spentSoFar, cur) })}</span><span>{t('hw.perDay', { amount: money(perDay, cur) })}</span></p>
+      </>, () => navigate({ tab: 'analysis', view: 'month' }), left < 0)
+    }
+
+    case 'week': {
+      const w = lastDays(c.r.transactions, c.today)
+      const perDay = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(Date.parse(c.today) - (6 - i) * 864e5).toISOString().slice(0, 10)
+        return c.r.transactions.filter(x => x.type === 'expense' && !x.upcoming && x.date === d).reduce((a, x) => a + (x.amountIn ?? 0), 0)
+      })
+      const cat = s.categories.find(x => x.id === w.topCategory)
+      return box(<>
+        <p className="w-big"><Money value={w.spent} currency={cur} /> <TrendTag delta={w.spent - w.before} base={w.before} goodWhenDown /></p>
+        <Bars values={perDay} />
+        <p className="w-note">{cat ? t('hw.weekTop', { cat: categoryName(cat, t), amount: money(w.topAmount, cur) }) : t('hw.weekSpent', { n: w.count })}</p>
+      </>)
+    }
+
+    case 'upcoming': {
+      const list = c.r.transactions.filter(x => x.upcoming).sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+      if (!list.length) return null
+      // l'importo dei pagamenti futuri non è ancora contato nel mese: si mostra quello previsto dalla spesa ricorrente
+      const planned = (tx: ClassifiedTx) => s.recurring.find(r => r.name === tx.description && r.category === tx.category)?.amount ?? 0
+      const total = list.reduce((a, x) => a + planned(x), 0)
+      return box(<>
+        <p className="w-big"><Money value={total} currency={cur} /><small> {t('hw.upcomingCount', { n: list.length })}</small></p>
+        <ul className="w-rows">{list.slice(0, 3).map(tx => (
+          <li key={tx.id}><span>{tx.description}</span><small>{tx.date ? new Date(tx.date).getDate() : ''}</small><Money value={planned(tx)} currency={cur} /></li>))}</ul>
+      </>)
+    }
+
+    case 'tips': {
+      const end = forecastMonth(c.r, c.today)?.projectedLeftOver ?? null
+      const out: string[] = []
+      if (s.capital?.parts.length) for (const a of capitalAdvice(s.capital, end, essentialsMonth(c))) {
+        out.push(a.id === 'cover' ? t('cap.adv.cover', { deficit: money(a.deficit, cur), part: a.part, available: money(a.available, cur) })
+          : a.id === 'protectedOnly' ? t('cap.adv.protectedOnly', { deficit: money(a.deficit, cur), usable: money(a.usable, cur) })
+          : a.id === 'emergencyLow' ? t('cap.adv.emergencyLow', { months: String(a.months).replace('.', ',') }) : t('cap.adv.used', { pct: a.pct }))
+      } else if (end != null && end < 0) out.push(t('tip.overMonth', { amount: money(-end, cur) }))
+      if (!(c.data.goals ?? []).some(g => !g.removed)) out.push(t('tip.noGoal'))
+      if (!out.length) return null
+      return box(<ul className="w-tips">{out.slice(0, 2).map(x => <li key={x}>{x}</li>)}</ul>, undefined, end != null && end < 0)
+    }
+
+    case 'missions': {
+      const todays = c.r.transactions.filter(x => !x.upcoming && x.date === c.today)
+      const spentToday = todays.filter(x => x.type === 'expense').reduce((a, x) => a + (x.amountIn ?? 0), 0)
+      const weekAgo = new Date(Date.parse(c.today) - 6 * 864e5).toISOString().slice(0, 10)
+      const saved = (c.data.goals ?? []).some(g => g.contributions.some(x => x.amount > 0 && x.date >= weekAgo))
+        || c.r.transactions.some(x => x.type === 'saving' && !x.upcoming && (x.date ?? '') >= weekAgo)
+      const list = missions({ loggedToday: !!c.streak?.doneToday || todays.length > 0, spentToday, dailyAllowance: c.daily, streak: c.streak?.count ?? 0, savedThisWeek: saved })
+      const done = list.filter(m => m.done).length
+      return box(<>
+        <p className="w-big">{t('hw.missionsDone', { done, total: list.length })}</p>
+        <Meter value={done / list.length} label={t('hw.missions')} />
+        <ul className="w-missions">{list.map(m => (
+          <li key={m.id} className={m.done ? 'done' : ''}><span className="w-check" aria-hidden="true">{m.done && <Icon name="check" size={12} />}</span>{t(k(`ms.${m.id}`))}</li>))}</ul>
+      </>)
+    }
+
+    case 'capital': {
+      if (!s.capital?.parts.length) return null
+      const sum = capitalSummary(s.capital)
+      const inv = c.data.investments?.holdings.length ? portfolioSummary(c.data.investments, s, c.today).value : 0
+      return box(<>
+        <p className="w-big"><Money value={sum.total} currency={cur} /> <TrendTag delta={sum.total - sum.start} base={sum.start} /></p>
+        {s.capital.history.length > 1 && <Spark values={s.capital.history.map(h => h.total)} />}
+        {/* protetto e utilizzabile come una barra sola divisa in due */}
+        <div className="w-split" aria-hidden="true"><span style={{ flex: sum.protected }} /><span style={{ flex: sum.usable }} /></div>
+        <p className="w-legend"><span>{t('cap.protected')} {money(sum.protected, cur)}</span><span>{t('cap.usable')} {money(sum.usable, cur)}</span></p>
+        {inv > 0 && <p className="w-note">{t('hw.withInvest', { amount: money(sum.total + inv, cur) })}</p>}
+      </>, () => navigate({ tab: 'profile', page: 'capital' }))
+    }
+
+    case 'emergency': {
+      const amount = (s.capital?.parts ?? []).filter(p => p.kind === 'emergency').reduce((a, p) => a + Math.max(0, p.amount), 0)
+      const month = essentialsMonth(c)
+      if (!amount || !month) return null
+      const months = amount / month
+      return box(<>
+        <p className="w-big">{t('hw.emergencyMonths', { n: months.toFixed(1).replace('.', ',') })}</p>
+        <Meter value={months / 3} color={months < 3 ? 'var(--b2)' : 'var(--good)'} label={t('hw.emergency')} />
+        <p className="w-note">{t('hw.emergencyText', { amount: money(amount, cur) })}</p>
+      </>, () => navigate({ tab: 'profile', page: 'capital' }), months < 1)
+    }
+
     case 'goals': {
       const goals = (c.data.goals ?? []).filter(g => !g.removed).slice(0, 3)
       if (!goals.length) return null
-      return box(<ul className="group-list goal-list">{goals.map(g => {
-        const st = goalStatus(g, c.today)
-        return <li key={g.id}><div className="row"><span className="row-main">
-          <span className="goal-line"><span className="goal-name">{g.name}</span><span className="goal-amt"><Money value={st.saved} currency={cur} /></span></span>
-          <Meter value={st.pct} label={g.name} /><small>{t('goal.of', { amount: money(g.target, cur) })}</small>
-        </span></div></li>
+      const month = c.today.slice(0, 7)
+      return box(<ul className="w-goals">{goals.map(g => {
+        const st = goalStatus(g, c.today), put = g.contributions.filter(x => x.date.startsWith(month)).reduce((a, x) => a + x.amount, 0)
+        return <li key={g.id}><span className="goal-line"><span className="goal-name">{g.name}</span><span className="goal-amt">{Math.round(st.pct * 100)}%</span></span>
+          <Meter value={st.pct} label={g.name} />
+          <small>{st.done ? t('goal.reached') : put > 0 ? t('hw.goalMonth', { amount: money(put, cur) }) : t('goal.of', { amount: money(g.target, cur) })}</small></li>
       })}</ul>, () => navigate({ tab: 'profile', page: 'goals' }))
     }
-    case 'capital': {
-      // il capitale di partenza: quanto c'è, quanto è protetto, quanto è utilizzabile (non entra nel numero del giorno)
-      if (!s.capital?.parts.length) return null
-      const k = capitalSummary(s.capital)
-      // i consigli dalle regole del capitale: il mese a questo ritmo e quanto costano al mese le spese essenziali
-      const essentials = (c.r.buckets.find(b => b.bucket.id === 'essentials')?.available ?? 0) + (c.r.paidFirst ?? 0)
-      const advice = capitalAdvice(s.capital, forecastMonth(c.r, c.today)?.projectedLeftOver ?? null, essentials).slice(0, 2)
+
+    case 'streak': {
+      if (!c.streak) return null
+      const days = new Set(c.data.activity ?? [])
+      const week = Array.from({ length: 7 }, (_, i) => new Date(Date.parse(c.today) - (6 - i) * 864e5).toISOString().slice(0, 10))
       return box(<>
-        <Money className="outcome-amount" value={k.total} currency={cur} />
-        {s.capital.history.length > 1 && <Trend history={s.capital.history} />}
-        <dl className="outcome-row">
-          <div><dt>{t('cap.protected')}</dt><dd><Money value={k.protected} currency={cur} /></dd></div>
-          <div><dt>{t('cap.usable')}</dt><dd><Money value={k.usable} currency={cur} /></dd></div>
-          <div><dt>{t('cap.preserved')}</dt><dd>{k.preserved == null ? '—' : `${Math.round(k.preserved * 100)}%`}</dd></div>
-        </dl>
-        {advice.map(a => <p key={a.id} className="cap-advice">{
-          a.id === 'cover' ? t('cap.adv.cover', { deficit: money(a.deficit, cur), part: a.part, available: money(a.available, cur) })
-          : a.id === 'protectedOnly' ? t('cap.adv.protectedOnly', { deficit: money(a.deficit, cur), usable: money(a.usable, cur) })
-          : a.id === 'emergencyLow' ? t('cap.adv.emergencyLow', { months: String(a.months).replace('.', ',') })
-          : t('cap.adv.used', { pct: a.pct })}</p>)}
-      </>, () => navigate({ tab: 'profile', page: 'capital' }))
+        <p className="w-big">{t('hw.streakDays', { n: c.streak.count })}<small> {t('hw.streakBestShort', { n: c.streak.best })}</small></p>
+        <div className="w-dots" aria-hidden="true">{week.map(d => <span key={d} className={days.has(d) ? 'on' : ''} />)}</div>
+      </>, () => navigate({ tab: 'profile', page: 'progress' }))
     }
-    case 'tips': return <Tips c={c} box={box} />
-    case 'missions': return <Missions c={c} box={box} />
-    case 'upcoming': return <Upcoming c={c} box={box} />
-    case 'wealth': return <Wealth c={c} box={box} />
-    case 'emergency': return <Emergency c={c} box={box} />
-    case 'week': return <Week c={c} box={box} />
-    case 'stats': return c.r.income > 0 || c.r.spent > 0 ? <Stats c={c} box={box} /> : null
-    case 'recent': return <Recent c={c} box={box} />
-    case 'invest': return <Invest c={c} box={box} open={() => navigate({ tab: 'analysis', view: 'investments' })} />
-    case 'news': return <News c={c} box={box} open={() => navigate({ tab: 'news' })} />
-    case 'markets': return <Markets box={box} />
-    case 'events': return <Events c={c} box={box} />
-    case 'monthGoals': return <MonthGoals c={c} box={box} open={() => navigate({ tab: 'profile', page: 'goals' })} />
-    case 'badges': return <Badges c={c} box={box} open={() => navigate({ tab: 'profile', page: 'progress' })} />
-    case 'streak': return c.streak ? box(<dl className="outcome-row n2 w-streak">
-      <div><dt>{t('hw.streakNow')}</dt><dd>{c.streak.count}</dd></div>
-      <div><dt>{t('hw.streakBest')}</dt><dd>{c.streak.best}</dd></div>
-    </dl>, () => navigate({ tab: 'profile', page: 'progress' })) : null
+
+    case 'markets': return <Markets box={b => box(b)} />
+    case 'events': return <Events c={c} box={b => box(b)} />
   }
 }

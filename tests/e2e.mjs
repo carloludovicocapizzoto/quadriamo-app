@@ -109,7 +109,7 @@ await step('Profilo → Capitale: inserisco 2.000 €', async () => {
   await type('2000'); await sleep(200)
   await click(byText('/Salva il saldo/'))
 }, has('/2\\.000,00/', '.outcome'))
-await step('il capitale compare in Home', () => js(`location.hash = '#/'`), `/2\\.000,00/.test(document.querySelector('.w-capital')?.innerText ?? '')`)
+await step('il capitale compare in Analisi → Investi', () => js(`location.hash = '#/analysis/investments'`), `/2\\.000,00/.test(document.querySelector('.cap-line')?.innerText ?? '')`)
 
 console.log('Tastiera')
 const press = (key, code) => cdp('Input.dispatchKeyEvent', { type: 'keyDown', key, code, text: key.length === 1 ? key : undefined, windowsVirtualKeyCode: key.toUpperCase().charCodeAt(0) })

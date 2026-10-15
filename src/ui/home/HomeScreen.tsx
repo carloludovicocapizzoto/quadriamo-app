@@ -29,9 +29,10 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
   const budget = useMemo(() => todayBudget(r, s, today), [r, s, today])
   const [part, setPart] = useState<BucketRow | null>(null)
   const [edit, setEdit] = useState(false)
-  const wide = useMedia('(min-width: 1280px)')
-  const main = wide ? shown(s).filter(id => !SIDE.includes(id)) : shown(s)
-  const side = wide ? shown(s).filter(id => SIDE.includes(id)) : []
+  const wide = useMedia('(min-width: 1280px)'), roomy = useMedia('(min-width: 1024px)')
+  const ids = shown(s, roomy)
+  const main = wide ? ids.filter(id => !SIDE.includes(id)) : ids
+  const side = wide ? ids.filter(id => SIDE.includes(id)) : []
   const [drag, setDrag] = useState<WidgetId | null>(null)
   const [over, setOver] = useState<WidgetId | null>(null)
   const { dispatch } = useStore()
@@ -40,7 +41,7 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
     const from = drag
     setDrag(null); setOver(null)
     if (!from || from === target) return
-    const list = shown(s).filter(x => x !== from)
+    const list = ids.filter(x => x !== from)
     list.splice(list.indexOf(target), 0, from)
     tap(); dispatch({ type: 'setSettings', settings: { ...s, homeWidgets: list } })
   }
