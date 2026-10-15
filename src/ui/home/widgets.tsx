@@ -1,7 +1,7 @@
 // I widget della Home: le cose che servono appena apri l'app. Ognuno riusa un pezzo che esiste già altrove
 // (Analisi, Obiettivi, Profilo); l'utente sceglie quali vedere e in che ordine (Settings.homeWidgets, sincronizzato).
 import type { ReactNode } from 'react'
-import { goalStatus, type ClassifiedTx, type MonthResult, type Streak } from '../../engine'
+import { capitalSummary, goalStatus, type ClassifiedTx, type MonthResult, type Streak } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { AppData } from '../../store/state'
 import { navigate } from '../../app/router'
@@ -13,6 +13,7 @@ import { Money } from '../kit/Money'
 import { MonthOutcome } from '../MonthView'
 import { CategoryChangesReport } from '../Reports'
 import { TxRow } from '../TxRow'
+import { Trend } from '../capital/CapitalPage'
 import type { WidgetId } from './catalog'
 
 export interface WidgetCtx {
@@ -56,6 +57,20 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
           <Meter value={st.pct} label={g.name} /><small>{t('goal.of', { amount: money(g.target, cur) })}</small>
         </span></div></li>
       })}</ul>, () => navigate({ tab: 'profile', page: 'goals' }))
+    }
+    case 'capital': {
+      // il capitale di partenza: quanto c'è, quanto è protetto, quanto è utilizzabile (non entra nel numero del giorno)
+      if (!s.capital?.parts.length) return null
+      const k = capitalSummary(s.capital)
+      return box(<>
+        <Money className="outcome-amount" value={k.total} currency={cur} />
+        {s.capital.history.length > 1 && <Trend history={s.capital.history} />}
+        <dl className="outcome-row">
+          <div><dt>{t('cap.protected')}</dt><dd><Money value={k.protected} currency={cur} /></dd></div>
+          <div><dt>{t('cap.usable')}</dt><dd><Money value={k.usable} currency={cur} /></dd></div>
+          <div><dt>{t('cap.preserved')}</dt><dd>{k.preserved == null ? '—' : `${Math.round(k.preserved * 100)}%`}</dd></div>
+        </dl>
+      </>, () => navigate({ tab: 'profile', page: 'capital' }))
     }
     case 'streak': return c.streak ? box(<dl className="outcome-row n2 w-streak">
       <div><dt>{t('hw.streakNow')}</dt><dd>{c.streak.count}</dd></div>

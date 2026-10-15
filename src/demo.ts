@@ -71,5 +71,18 @@ export function demoAppData(today: string, lang = 'it'): AppData {
   const goals = [{ id: 'demo-goal', name: tx.goal, target: 1200, deadline: `${months[3].year + 1}-06`, icon: 'plane',
     contributions: months.map((m, i) => ({ id: `demo-gc-${i}`, date: makeDate(m.year, m.month, 2), amount: 90 })),
     createdAt: makeDate(months[0].year, months[0].month, 1), updatedAt: new Date(0).toISOString() }]
+  // capitale di partenza: i risparmi di prima dell'università, in tre destinazioni (uno collegato all'obiettivo Erasmus)
+  const capStart = `${months[0].year}-${String(months[0].month).padStart(2, '0')}-01`
+  const L = ({ it: ['Fondo di emergenza', 'Liquidità', 'Erasmus'], en: ['Emergency fund', 'Cash', 'Erasmus'],
+    fr: ['Fonds d’urgence', 'Liquidités', 'Erasmus'], es: ['Fondo de emergencia', 'Liquidez', 'Erasmus'] } as Record<string, string[]>)[lang] ?? ['Emergency fund', 'Cash', 'Erasmus']
+  settings.capital = {
+    date: today,
+    parts: [
+      { id: 'demo-cap-1', name: L[0], kind: 'emergency', amount: 1200, policy: 'emergency' },
+      { id: 'demo-cap-2', name: L[1], kind: 'liquid', amount: 450, policy: 'always' },
+      { id: 'demo-cap-3', name: L[2], kind: 'goal', amount: 600, policy: 'big', bigPurchases: ['travel'], goalId: goals[0]?.id ?? null },
+    ],
+    history: [{ date: capStart, total: 2500 }, { date: today, total: 2250 }],
+  }
   return { version: 1, settings, transactions: txs, demo: true, activity, goals }
 }

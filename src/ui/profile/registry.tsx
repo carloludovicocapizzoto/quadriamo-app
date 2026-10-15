@@ -8,6 +8,7 @@ import { GoalsStrip } from '../goals/Goals'
 import { PlanCard, ProGate } from '../Pro'
 import { SettingsView } from '../SettingsView'
 import { SharedView } from '../shared/SharedView'
+import { CapitalPage } from '../capital/CapitalPage'
 import { Accessibility, Appearance, Delete, HelpCenter, Language, Licenses, Motion, Notifications, Personal, Progress, Security } from './pages'
 
 export interface PageProps {
@@ -21,6 +22,7 @@ export const PAGES: Record<ProfilePage, (p: PageProps) => ReactNode> = {
   security: () => <Security />,
   plan: p => <PlanCard onLogin={p.onLogin} />,
   budget: p => <SettingsView only={['general', 'fx', 'rule', 'categories']} onLogin={p.onLogin} />,
+  capital: () => <CapitalPage />,
   recurring: p => <SettingsView only={['recurring']} onLogin={p.onLogin} />,
   goals: p => <GoalsStrip goals={p.data.goals} today={p.today} currency={p.data.settings.currency} titled={false} />,
   rules: p => <SettingsView only={['rules']} onLogin={p.onLogin} />,

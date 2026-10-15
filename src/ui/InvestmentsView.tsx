@@ -1,5 +1,8 @@
 import { useMemo } from 'react'
+import { navigate } from '../app/router'
+import { Icon } from './Icon'
 import {
+  capitalSummary,
   computeYear, emptyInvestments, pacFutureValue, pacProjection, pacTracker, portfolioSummary,
   type Investments, type Settings, type Transaction,
 } from '../engine'
@@ -40,6 +43,12 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
         ? <Outcome value={o.value} currency={cur} label={t('inv.valueToday')}
             totals={[{ label: t('inv.invested'), value: o.invested }, { label: t('inv.gain'), value: o.gain }, { label: t('inv.return'), value: pct(o.return) }]} />
         : <Empty title={t('inv.emptyTitle')} text={t('inv.emptyText')} />}
+
+      {/* il capitale di partenza, accanto agli investimenti: il patrimonio in un colpo d'occhio */}
+      {settings.capital?.parts.length ? <ul className="group-list cap-line"><li><button className="row" onClick={() => navigate({ tab: 'profile', page: 'capital' })}>
+        <span className="row-main"><span>{t('prof.capital')}</span><small>{t('cap.line', { protected: money(capitalSummary(settings.capital).protected, cur), usable: money(capitalSummary(settings.capital).usable, cur) })}</small></span>
+        <span className="row-value"><Money value={capitalSummary(settings.capital).total} currency={cur} /></span><Icon name="chevron" size={18} className="row-chev" />
+      </button></li></ul> : null}
 
       {/* titoli: una riga ciascuno; i campi si aprono toccandola */}
       <h2 className="sec-title">{t('inv.holdings')}</h2>

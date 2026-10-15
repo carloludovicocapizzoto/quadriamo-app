@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { isStandalone } from '../beta/device'
-import { SPLIT, applyPersona, daysBetween, mainIncome, monthOf, periodOf, todayIso, type Persona } from '../engine'
+import { SPLIT, applyPersona, daysBetween, defaultPolicy, mainIncome, monthOf, periodOf, todayIso, updateCapital, type CapitalKind, type Persona } from '../engine'
 import { useStore } from '../store/context'
 import { newId, parseAmount } from '../store/state'
 import { BUCKET_COLORS, bucketName } from './names'
@@ -21,7 +21,7 @@ const STEPS: [SettingsSection, keyof Dict][] = [
   ['recurring', 'settings.recurring'], ['rules', 'rules.title'], ['fx', 'settings.fx'], ['data', 'settings.data'],
 ]
 
-type Kind = { kind: 'persona' } | { kind: 'notify' } | { kind: 'salary' } | { kind: 'settings'; section: SettingsSection; title: keyof Dict } | { kind: 'profile' }
+type Kind = { kind: 'persona' } | { kind: 'notify' } | { kind: 'salary' } | { kind: 'capital' } | { kind: 'settings'; section: SettingsSection; title: keyof Dict } | { kind: 'profile' }
 const isDesktopApp = () => 'quadriamoDesktop' in window || /QuadriamoDesktop\//.test(navigator.userAgent)
 
 /**
@@ -43,7 +43,7 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
     ...(canNotify ? [{ kind: 'notify' } as Kind] : []),
     // subito dopo valuta e giorno: lo stipendio, per vedere il proprio numero del giorno prima ancora di registrare una spesa
     ...STEPS.flatMap(([section, title]) => section === 'general'
-      ? [{ kind: 'settings', section, title } as Kind, { kind: 'salary' } as Kind]
+      ? [{ kind: 'settings', section, title } as Kind, { kind: 'salary' } as Kind, { kind: 'capital' } as Kind]
       : [{ kind: 'settings', section, title } as Kind]),
     ...(sync.user ? [{ kind: 'profile' } as Kind] : []),
   ]
@@ -65,6 +65,7 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
   }
   const title = cur.kind === 'persona' ? t('setup.personaTitle') : cur.kind === 'notify' ? t('setup.notifyTitle')
     : cur.kind === 'salary' ? t(student ? 'setup.incomeTitle' : 'setup.salaryTitle')
+    : cur.kind === 'capital' ? t('setup.capitalTitle')
     : cur.kind === 'profile' ? t('setup.profile') : t(cur.title)
   return (
     <section className="card wizard">
@@ -74,6 +75,7 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
         {cur.kind === 'notify' && <NotifyStep />}
         {cur.kind === 'settings' && <SettingsView only={[cur.section]} wizard />}
         {cur.kind === 'salary' && <SalaryStep />}
+        {cur.kind === 'capital' && <CapitalStep />}
         {cur.kind === 'profile' && <ProfileForm withShares={false} onDone={finish} />}
       </div>
       {cur.kind !== 'profile' && (
@@ -191,4 +193,31 @@ function SalaryStep() {
       )}
     </div>
   )
+}
+
+/** Facoltativo: i risparmi che ci sono già (capitale iniziale). Una destinazione sola; le altre si aggiungono dal Profilo. */
+function CapitalStep() {
+  const { t } = useI18n()
+  const { state, dispatch } = useStore()
+  const settings = state.data!.settings
+  const first = settings.capital?.parts[0]
+  const [kind, setKind] = useState<CapitalKind>(first?.kind ?? 'emergency')
+  const save = (amount: number | null, k: CapitalKind) => {
+    const today = todayIso()
+    const capital = amount && amount > 0
+      ? updateCapital({ date: today, parts: [], history: [] }, [{ id: first?.id ?? newId(), name: t(`cap.kind.${k}` as keyof Dict), kind: k, amount, policy: defaultPolicy(k) }], today)
+      : null
+    dispatch({ type: 'setSettings', settings: { ...settings, capital } })
+  }
+  return <>
+    <p className="lead">{t('setup.capitalText')}</p>
+    <div className="txs-rows">
+      <label className="txs-row"><span>{t('cap.amount')}</span><AmountInput defaultValue={first?.amount ?? null} placeholder="0" onValue={n => save(n, kind)} /></label>
+      <label className="txs-row"><span>{t('cap.kind')}</span>
+        <select value={kind} onChange={e => { const k = e.target.value as CapitalKind; setKind(k); if (first) save(first.amount, k) }}>
+          {(['emergency', 'liquid', 'grow', 'spendable'] as CapitalKind[]).map(x => <option key={x} value={x}>{t(`cap.kind.${x}` as keyof Dict)}</option>)}
+        </select></label>
+    </div>
+    <p className="small muted txs-hint">{t('setup.capitalHint')}</p>
+  </>
 }

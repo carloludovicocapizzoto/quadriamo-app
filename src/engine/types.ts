@@ -40,6 +40,7 @@ export interface Settings {
   rules?: Rule[]                    // regole a parole chiave per riconoscere le transazioni importate
   persona?: 'student' | 'worker' | 'other'   // risposta a "Chi sei?" al primo avvio
   schema?: number                   // aggiornamenti dei dati già applicati (vedi migrate)
+  capital?: import('./capital').Capital | null   // capitale iniziale (engine/capital): separato dal budget del mese
   homeWidgets?: string[]            // i widget della Home, in ordine (vuoto = quelli di partenza, vedi ui/home/widgets)
 }
 

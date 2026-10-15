@@ -36,6 +36,7 @@ export const SECTIONS: { title: keyof Dict; items: Item[] }[] = [
   ] },
   { title: 'prof.sec.budget', items: [
     { page: 'budget', label: 'prof.budget' },
+    { page: 'capital', label: 'prof.capital' },
     { page: 'recurring', label: 'prof.recurring' },
     { page: 'goals', label: 'prof.goalsPage' },
     { page: 'rules', label: 'prof.rules' },

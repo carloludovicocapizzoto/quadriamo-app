@@ -116,3 +116,8 @@
 /* grafici ancora vuoti: un segno per ogni giorno (e mese), così si vede dove arriveranno i dati */
 .hc-bars .col:not(:has(.bar))::before { content: ''; width: 100%; height: 3px; border-radius: 2px; background: var(--fill-2); }
 .ychart-pair { border-bottom: 3px solid var(--fill-2); }
+/* capitale: la linea dell'andamento e le scelte dei grandi acquisti */
+.cap-trend { display: block; width: 100%; height: 48px; margin-top: var(--s4); overflow: visible; }
+.cap-trend polyline { fill: none; stroke: var(--text); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.cap-big { margin: var(--s3) 0; }
+.cap-line { margin-bottom: var(--s2); }

@@ -57,13 +57,18 @@ Le entrate del mese si dividono in **quattro parti**:
 **Insieme**
 - **Budget con i coinquilini**: affitto, bollette, spesa condivisa; Quadriamo calcola chi deve cosa a chi.
 
+**Capitale iniziale**
+- I risparmi che hai già, **separati dal budget del mese** (non cambiano il numero del giorno), divisi in destinazioni: emergenza, liquidità, un acquisto, da far crescere…
+- Ogni destinazione ha una **regola d'uso**: mai, solo emergenze, solo grandi acquisti (auto, casa, viaggi…), sempre disponibile.
+- Vedi quanto è **protetto**, quanto è **utilizzabile** e quanto del capitale di partenza hai **preservato**, con l'andamento nel tempo.
+
 **Obiettivi e investimenti**
 - **Obiettivi di risparmio** (es. «Erasmus a Lisbona, 360 € di 1.200 €»): quanto mettere da parte al mese per arrivarci.
 - **Investi**: portafoglio (ETF, azioni, fondi, crypto), conti deposito, **simulatore di PAC** (es. 100 €/mese per 10 anni al 6% → circa 16.400 €).
 
 **Notizie (imparare)**
 - Ogni giorno poche notizie scelte da **57 fonti approvate**: testate, blog indipendenti, ricerca, **video e podcast** (es. Il Sole 24 Ore, Planet Money, The Bull).
-- Ricerca per parole e **«I tuoi argomenti»** da seguire. Livello base/avanzato. Niente like né commenti.
+- Ricerca per parole, **un pannello Filtri** (tipo, argomenti, lingua, area, fonte, ordine) e **«I tuoi argomenti»** da seguire. Livello base/avanzato. Niente like né commenti.
 - **Consigli di Quadriamo** con un'azione diretta nell'app.
 
 **Ovunque**
