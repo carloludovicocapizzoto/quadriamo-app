@@ -1,7 +1,7 @@
 // I widget della Home: le cose che servono appena apri l'app. Ognuno riusa un pezzo che esiste già altrove
 // (Analisi, Obiettivi, Profilo); l'utente sceglie quali vedere e in che ordine (Settings.homeWidgets, sincronizzato).
 import type { ReactNode } from 'react'
-import { capitalSummary, goalStatus, type ClassifiedTx, type MonthResult, type Streak } from '../../engine'
+import { capitalAdvice, capitalSummary, forecastMonth, goalStatus, type ClassifiedTx, type MonthResult, type Streak } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { AppData } from '../../store/state'
 import { navigate } from '../../app/router'
@@ -62,6 +62,9 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
       // il capitale di partenza: quanto c'è, quanto è protetto, quanto è utilizzabile (non entra nel numero del giorno)
       if (!s.capital?.parts.length) return null
       const k = capitalSummary(s.capital)
+      // i consigli dalle regole del capitale: il mese a questo ritmo e quanto costano al mese le spese essenziali
+      const essentials = (c.r.buckets.find(b => b.bucket.id === 'essentials')?.available ?? 0) + (c.r.paidFirst ?? 0)
+      const advice = capitalAdvice(s.capital, forecastMonth(c.r, c.today)?.projectedLeftOver ?? null, essentials).slice(0, 2)
       return box(<>
         <Money className="outcome-amount" value={k.total} currency={cur} />
         {s.capital.history.length > 1 && <Trend history={s.capital.history} />}
@@ -70,6 +73,11 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
           <div><dt>{t('cap.usable')}</dt><dd><Money value={k.usable} currency={cur} /></dd></div>
           <div><dt>{t('cap.preserved')}</dt><dd>{k.preserved == null ? '—' : `${Math.round(k.preserved * 100)}%`}</dd></div>
         </dl>
+        {advice.map(a => <p key={a.id} className="cap-advice">{
+          a.id === 'cover' ? t('cap.adv.cover', { deficit: money(a.deficit, cur), part: a.part, available: money(a.available, cur) })
+          : a.id === 'protectedOnly' ? t('cap.adv.protectedOnly', { deficit: money(a.deficit, cur), usable: money(a.usable, cur) })
+          : a.id === 'emergencyLow' ? t('cap.adv.emergencyLow', { months: String(a.months).replace('.', ',') })
+          : t('cap.adv.used', { pct: a.pct })}</p>)}
       </>, () => navigate({ tab: 'profile', page: 'capital' }))
     }
     case 'streak': return c.streak ? box(<dl className="outcome-row n2 w-streak">

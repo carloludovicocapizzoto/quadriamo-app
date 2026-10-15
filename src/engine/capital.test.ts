@@ -30,3 +30,22 @@ describe('Capitale iniziale', () => {
     expect(defaultPolicy('locked')).toBe('never')
   })
 })
+
+import { capitalAdvice, partForPurchase } from './capital'
+describe('Capitale: consigli', () => {
+  it('mese in rosso: la liquidità basta, o il resto è protetto', () => {
+    expect(capitalAdvice(cap, -300, 0)[0]).toEqual({ id: 'cover', deficit: 300, part: 'Liquidità', available: 2000 })
+    expect(capitalAdvice(cap, -2500, 0)[0]).toEqual({ id: 'protectedOnly', deficit: 2500, usable: 2000 })
+    expect(capitalAdvice(cap, 100, 0)).toEqual([])
+  })
+  it('fondo di emergenza sotto i 3 mesi e capitale usato', () => {
+    expect(capitalAdvice(cap, null, 2000)).toEqual([{ id: 'emergencyLow', months: 2 }])
+    const used = { ...cap, history: [{ date: '2026-01-01', total: 12000 }, ...cap.history] }
+    expect(capitalAdvice(used, null, 0)).toEqual([{ id: 'used', pct: 33 }])
+  })
+  it('una spesa per l\'auto può venire dalla parte "solo grandi acquisti: auto"', () => {
+    expect(partForPurchase(cap, 'transport', 1500)?.id).toBe('c')
+    expect(partForPurchase(cap, 'transport', 2500)).toBeNull()
+    expect(partForPurchase(cap, 'groceries', 100)).toBeNull()
+  })
+})

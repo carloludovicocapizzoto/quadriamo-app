@@ -121,3 +121,4 @@
 .cap-trend polyline { fill: none; stroke: var(--text); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
 .cap-big { margin: var(--s3) 0; }
 .cap-line { margin-bottom: var(--s2); }
+.cap-advice { margin: var(--s3) 0 0; font-size: var(--t-sm); color: var(--muted); line-height: 1.5; max-width: 46ch; }

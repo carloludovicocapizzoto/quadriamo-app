@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { CUSTOM, FIRST, SPLIT, addDays, splitOk, splitTotal, fxRate, suggest, todayIso, type CategoryType, type Settings, type Transaction } from '../engine'
+import { CUSTOM, FIRST, SPLIT, addDays, splitOk, splitTotal, fxRate, suggest, todayIso, type CategoryType, type Settings, type Transaction, partForPurchase } from '../engine'
 import { useI18n } from '../i18n/core'
 import { newId, parseAmount } from '../store/state'
 import { Icon } from './Icon'
@@ -133,6 +133,11 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
             )
           })}
         </div>
+        {/* spesa grande in una categoria abbinata: da quale parte del capitale può venire (solo un'informazione) */}
+        {kind === 'expense' && parsed != null && (() => {
+          const part = partForPurchase(settings.capital, category ?? undefined, parsed)
+          return part && <p className="small muted txs-hint cap-hint">{t('cap.adv.purchase', { part: part.name, amount: money(part.amount, settings.currency) })}</p>
+        })()}
         {fromRule && category && <p className="txs-note">{t('tx.fromRule')}</p>}
 
         <div className="txs-rows">

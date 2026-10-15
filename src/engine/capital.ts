@@ -58,3 +58,39 @@ export function canUse(p: CapitalPart, purpose: 'everyday' | 'emergency' | strin
   if (p.policy === 'big') return (p.bigPurchases ?? []).includes(purpose)
   return false
 }
+
+// ---------- consigli dal capitale (regole, nessuna intelligenza artificiale) ----------
+/** Categoria di spesa → grande acquisto: una spesa in queste categorie può venire da una parte "solo grandi acquisti". */
+export const PURPOSE_OF: Record<string, string> = { transport: 'car', health: 'health', rent: 'home', university: 'education' }
+
+export type CapitalAdvice =
+  | { id: 'cover'; deficit: number; part: string; available: number }      // il mese chiude in rosso, la parte utilizzabile basta
+  | { id: 'protectedOnly'; deficit: number; usable: number }              // il mese chiude in rosso, quello che si può usare non basta
+  | { id: 'emergencyLow'; months: number }                                // il fondo di emergenza copre meno di 3 mesi di spese essenziali
+  | { id: 'used'; pct: number }                                           // del capitale di partenza è rimasto meno dell'80%
+
+/**
+ * Cosa dire sul capitale, in ordine di importanza. `monthEnd` è come finisce il mese a questo ritmo (negativo = sforamento),
+ * `essentialsMonth` quanto costano al mese le spese essenziali (parte Essenziali più quelle tolte prima, come l'affitto).
+ */
+export function capitalAdvice(c: Capital, monthEnd: number | null, essentialsMonth: number): CapitalAdvice[] {
+  const out: CapitalAdvice[] = []
+  const sum = capitalSummary(c)
+  if (monthEnd != null && monthEnd < 0) {
+    const deficit = -monthEnd
+    const usable = c.parts.filter(p => p.policy === 'always' && p.amount > 0).sort((a, b) => b.amount - a.amount)
+    if (usable[0] && usable[0].amount >= deficit) out.push({ id: 'cover', deficit, part: usable[0].name, available: usable[0].amount })
+    else out.push({ id: 'protectedOnly', deficit, usable: sum.usable })
+  }
+  const emergency = c.parts.filter(p => p.kind === 'emergency').reduce((a, p) => a + Math.max(0, p.amount), 0)
+  if (emergency > 0 && essentialsMonth > 0 && emergency / essentialsMonth < 3) out.push({ id: 'emergencyLow', months: Math.round(emergency / essentialsMonth * 10) / 10 })
+  if (sum.preserved != null && sum.preserved < 0.8) out.push({ id: 'used', pct: Math.round((1 - sum.preserved) * 100) })
+  return out
+}
+
+/** Una spesa grande in una categoria abbinata (es. Trasporti → auto): da quale parte del capitale può venire, se c'è. */
+export function partForPurchase(c: Capital | null | undefined, categoryId: string | undefined, amount: number): CapitalPart | null {
+  const purpose = categoryId ? PURPOSE_OF[categoryId] : undefined
+  if (!c || !purpose || amount <= 0) return null
+  return c.parts.find(p => p.amount >= amount && canUse(p, purpose) && p.policy === 'big') ?? null
+}
