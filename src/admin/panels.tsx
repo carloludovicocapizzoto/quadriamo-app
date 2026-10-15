@@ -26,6 +26,7 @@ import rulesCode from '../../supabase/functions/_shared/news-rules.ts?raw'
 import itemCode from '../../supabase/functions/_shared/news-item.ts?raw'
 import sql0020 from '../../supabase/migrations/0020_news_podcasts_images.sql?raw'
 import sql0021 from '../../supabase/migrations/0021_feedback_cron_fix.sql?raw'
+import sql0022 from '../../supabase/migrations/0022_client_errors.sql?raw'
 import sql0018 from '../../supabase/migrations/0018_news_hub.sql?raw'
 import sql0019 from '../../supabase/migrations/0019_news_hub_cron.sql?raw'
 import sql0009 from '../../supabase/migrations/0009_morning_push_cron.sql?raw'
@@ -579,6 +580,12 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
           <p>Il promemoria «dacci un parere» ogni 10 giorni non partiva. Copia lo script, incollalo in SQL Editor e premi <b>Run</b>:
             lo ricrea con lo stesso indirizzo e segreto del promemoria del mattino.</p>
           <div className="az-u-row"><Copy text={sql0021} label="Copia lo script" />
+            <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
+        </Step>
+        <Step n={16} ok={null} manual={{ done: manual.includes(16), toggle: toggle(16) }} title="Errori dell'app: attivare la raccolta">
+          <p>Crea la tabella dove arrivano gli errori dai telefoni degli utenti (solo dati tecnici) e la pulizia dopo 30 giorni.
+            Copia lo script, incollalo in SQL Editor e premi <b>Run</b>. Poi li trovi nel pannello <b>Errori</b>.</p>
+          <div className="az-u-row"><Copy text={sql0022} label="Copia lo script" />
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
         </Step>
       </div>

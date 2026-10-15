@@ -1,4 +1,4 @@
-# Pubblica l'app su GitHub Pages a ogni push su main (dopo aver passato i test).
+# Pubblica l'app su GitHub Pages a ogni push su main, solo se passano controllo del codice, test e tipi.
 name: Deploy
 
 on:
@@ -25,6 +25,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint -- --deny-warnings
       - run: npm test
       - run: npm run build
         env:

@@ -7,13 +7,14 @@ import { newCode, saveKey, savedKey, sha256Hex, type AdminKey } from './adminKey
 import { checkSetup, loadAccounts, loadAlternatives, loadCohorts, loadDevices, loadFeedback, loadPush, loadResearch, loadStats, sendPush,
   type Account, type Cohort, type Device, type Feedback, type PushSub, type ResearchStats, type Setup, type Stats } from './data'
 import { sampleAccounts, sampleAlternatives, sampleCohorts, sampleDevices, sampleFeedback, samplePush, sampleResearch, sampleSetup, sampleStats } from './sample'
+import { ErrorsPanel } from './ErrorsPanel'
 import { AccountsPanel, DashboardPanel, DevicesPanel, FeedbackPanel, PushPanel, ResearchPanel, SetupPanel } from './panels'
 
-type Panel = 'dashboard' | 'dispositivi' | 'account' | 'ricerca' | 'feedback' | 'notifiche' | 'configurazione'
+type Panel = 'dashboard' | 'dispositivi' | 'account' | 'ricerca' | 'feedback' | 'notifiche' | 'errori' | 'configurazione'
 const NAV: { group: string; items: [Panel, string][] }[] = [
   { group: 'Panoramica', items: [['dashboard', '📊 Dashboard']] },
   { group: 'Persone', items: [['dispositivi', '📱 Dispositivi'], ['account', '👤 Account'], ['ricerca', '🔒 Ricerca anonima']] },
-  { group: 'Ascolto', items: [['feedback', '💬 Feedback'], ['notifiche', '🔔 Notifiche']] },
+  { group: 'Ascolto', items: [['feedback', '💬 Feedback'], ['notifiche', '🔔 Notifiche'], ['errori', '⚠️ Errori']] },
   { group: 'Impostazioni', items: [['configurazione', '⚙️ Configurazione']] },
 ]
 const TITLES: Record<Panel, [string, string]> = {
@@ -23,6 +24,7 @@ const TITLES: Record<Panel, [string, string]> = {
   ricerca: ['Ricerca anonima', 'Totali delle schede che gli utenti scelgono di inviare in forma anonima. Dati riservati.'],
   feedback: ['Feedback', 'Voti e commenti arrivati dall’app.'],
   notifiche: ['Notifiche', 'Manda la richiesta di feedback direttamente sui dispositivi.'],
+  errori: ['Errori', 'Cosa si è rotto sui dispositivi degli utenti, raggruppato per messaggio.'],
   configurazione: ['Configurazione', 'Cosa è attivo su Supabase e cosa manca.'],
 }
 const APP_URL = `${import.meta.env.BASE_URL}app/`
@@ -220,6 +222,7 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
           ? <p className="az-msg error">Esegui lo script aggiornato (sezione Configurazione, passo 1).</p>
           : unlocked || demo ? <ResearchPanel r={research} />
           : <Unlock adminKey={adminKey} email={email} onOk={() => setUnlocked(true)} />)}
+        {setup?.admin && panel === 'errori' && !DEMO && <ErrorsPanel />}
         {setup?.admin && panel === 'feedback' && <FeedbackPanel rows={feedback} alternatives={alternatives} />}
         {setup?.admin && panel === 'notifiche' && <PushPanel rows={push} setup={setup} onSend={async (t, b) => {
           if (demo) return 'Anteprima: nessuna notifica inviata.'

@@ -4,6 +4,7 @@
 import { Component, useEffect, type ReactNode } from 'react'
 import { useI18n } from '../i18n/core'
 import { Empty } from '../ui/kit/Empty'
+import { reportError } from './errors'
 
 // "Failed to fetch dynamically imported module" (Chrome), "Importing a module script failed" (Safari), "error loading dynamically imported module" (Firefox)
 const isOffline = (e: unknown) => !navigator.onLine || /dynamically imported module|module script failed/i.test(String((e as Error)?.message ?? e))
@@ -12,7 +13,7 @@ const reload = () => window.location.reload()
 class Boundary extends Component<{ children: ReactNode; fallback: (offline: boolean) => ReactNode }, { failed: boolean; offline: boolean }> {
   state = { failed: false, offline: false }
   static getDerivedStateFromError(e: unknown) { return { failed: true, offline: isOffline(e) } }
-  componentDidCatch(error: unknown) { console.error('[Quadriamo]', error) }
+  componentDidCatch(error: unknown) { console.error('[Quadriamo]', error); if (!isOffline(error)) reportError(error) }
   render() { return this.state.failed ? this.props.fallback(this.state.offline) : this.props.children }
 }
 
