@@ -79,12 +79,9 @@ export function buildSections(items: HubItem[], now: number, lang: string, i: In
   }).filter(s => s.stories.length).sort((a, b) => SHOWN.indexOf(a.id) - SHOWN.indexOf(b.id))
 }
 
-/** Un filtro in alto: una categoria, un formato ("video", "podcast") o le cripto, che sono la scheda a parte. */
-export const inFilter = (x: HubItem, f: string) =>
-  f === 'crypto' ? x.crypto : f === 'video' || f === 'podcast' ? x.format === f : !x.crypto && x.categories.includes(f)
-
-/** Il filtro in alto e la ricerca per parole, insieme: le storie in ordine di valore. */
-export function find(items: HubItem[], filter: string | null, query: string, now: number, lang: string, i: Interests): Story[] {
-  const pool = items.filter(x => (!filter || inFilter(x, filter)) && (!query.trim() || matches(x, query)))
-  return stories(pool, now, lang, i).slice(0, 30)
+/** Ricerca e filtri attivi: le storie in ordine di valore, o dalla più recente. I filtri li applica news/filters. */
+export function find(items: HubItem[], query: string, now: number, lang: string, i: Interests, sort: 'relevant' | 'recent' = 'relevant'): Story[] {
+  const list = stories(items.filter(x => !query.trim() || matches(x, query)), now, lang, i)
+  if (sort === 'recent') list.sort((a, b) => Date.parse(b.lead.published) - Date.parse(a.lead.published))
+  return list.slice(0, 40)
 }

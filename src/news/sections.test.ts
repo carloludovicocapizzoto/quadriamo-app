@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { HubItem } from './hub'
 import { learn } from './interests'
 import { buildSections, find, matches, rank, stories } from './sections'
+import { EMPTY, activeCount, applyFilter } from './filters'
 
 const now = Date.parse('2026-10-13T12:00:00Z')
 let n = 0
@@ -29,7 +30,8 @@ describe('Notizie: sezioni', () => {
     expect(new Set(ids).size).toBe(ids.length)
     expect(ids).not.toContain(items[3].id)
     expect(sec.map(s => s.id)).toContain('videos')
-    expect(find(items, 'crypto', '', now, 'it', {}).map(s => s.lead.id)).toEqual([items[3].id])
+    expect(applyFilter(items, { ...EMPTY, topics: ['crypto'] }, 'it').map(x => x.id)).toEqual([items[3].id])
+    expect(applyFilter(items, EMPTY, 'it')).not.toContain(items[3])
   })
   it('ricerca per parole: senza maiuscole né accenti, anche l’inizio di una parola', () => {
     const mutuo = item({ title: 'Mutui: i tassi scendono a ottobre' }), eco = item({ title: 'La economía española crece', lang: 'es' })
@@ -44,8 +46,16 @@ describe('Notizie: sezioni', () => {
     const sec = buildSections([pod, tesla, item()], now, 'it', {}, ['tesla'])
     expect(sec.find(s => s.id === 'podcasts')?.stories[0].lead.id).toBe(pod.id)
     expect(sec.find(s => s.id === 'mine')?.stories[0].lead.id).toBe(tesla.id)
-    expect(find([pod, tesla], 'podcast', '', now, 'it', {}).map(s => s.lead.id)).toEqual([pod.id])
-    expect(find([pod, tesla], null, 'tesla', now, 'it', {}).map(s => s.lead.id)).toEqual([tesla.id])
+    expect(applyFilter([pod, tesla], { ...EMPTY, types: ['podcast'] }, 'it').map(x => x.id)).toEqual([pod.id])
+    expect(find([pod, tesla], 'tesla', now, 'it', {}).map(s => s.lead.id)).toEqual([tesla.id])
+  })
+  it('filtri: lingua di partenza, area, fonte e quanti sono attivi', () => {
+    const it1 = item({ lang: 'it', source: { name: 'A', kind: 'press', paywall: false, trust: 4, country: 'IT' } })
+    const fr = item({ lang: 'fr', source: { name: 'B', kind: 'institution', paywall: false, trust: 5, country: 'FR' } })
+    expect(applyFilter([it1, fr], EMPTY, 'it')).toEqual([it1])
+    expect(applyFilter([it1, fr], { ...EMPTY, langs: ['fr'], sources: ['research'] }, 'it')).toEqual([fr])
+    expect(applyFilter([it1, fr], { ...EMPTY, langs: ['it', 'fr'], areas: ['IT'] }, 'it')).toEqual([it1])
+    expect(activeCount({ ...EMPTY, topics: ['etf', 'tax'], sort: 'recent' })).toBe(3)
   })
   it('impara dai gusti: chi apre ETF vede più ETF, e la propria lingua conta', () => {
     const etf = item({ categories: ['etf'] }), eco = item({ categories: ['economy'] })

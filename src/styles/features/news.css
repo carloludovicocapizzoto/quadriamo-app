@@ -1,4 +1,17 @@
 /* Notizie: si legge, si scopre, si impara. Niente riquadri: storie come righe, i filtri scorrono in orizzontale. */
+.news-tools { display: flex; gap: var(--s2); align-items: center; margin: 0 0 var(--s3); }
+.news-tools .news-search { flex: 1; margin: 0; }
+.news-filter-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 1.5px solid transparent;
+  border-radius: var(--r-md); background: var(--fill); color: var(--text); font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; }
+.news-filter-btn.on { background: var(--accent); color: var(--on-accent); }
+/* pannello dei filtri: gruppi con un titolo e opzioni che vanno a capo */
+.nf-group { margin-top: var(--s4); }
+.nf-options { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s2); }
+.nf-options button { min-height: 36px; padding: 0 14px; border: 0; border-radius: var(--r-md); background: var(--fill); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+.nf-options button.on { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.nf-hint { margin: var(--s2) 0 0; }
+.nf-actions { position: sticky; bottom: 0; display: flex; align-items: center; gap: var(--s4); margin-top: var(--s5); padding: var(--s3) 0 var(--s1); background: var(--bg-a); box-shadow: 0 -12px 12px -4px var(--bg-a); }
+.nf-actions .btn { margin-left: auto; }
 .news-search { display: flex; align-items: center; gap: var(--s2); min-height: 44px; margin: 0 0 var(--s3); padding: 0 12px;
   border: 1.5px solid transparent; border-radius: var(--r-md); background: var(--fill); color: var(--muted); }
 .news-search input { flex: 1; min-width: 0; min-height: 44px; padding: 0; border: 0; background: none; color: var(--text); font: inherit; font-size: var(--t-body); }
@@ -8,13 +21,6 @@
 .news-follow { margin: var(--s2) 0 var(--s3); }
 .news-topics { display: flex; flex-wrap: wrap; gap: 0 var(--s4); margin: calc(-1 * var(--s2)) 0 var(--s3); }
 .news-topics .link-btn { font-size: var(--t-sm); color: var(--muted); }
-.news-filters { display: flex; gap: var(--s2); overflow-x: auto; margin: 0 calc(-1 * var(--gutter)) var(--s2); padding: 0 var(--gutter) var(--s1);
-  scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-.news-filters::-webkit-scrollbar { display: none; }
-.news-filters button { flex: none; min-height: 36px; padding: 0 14px; border: 0; border-radius: var(--r-md); background: var(--fill); color: var(--text);
-  font: inherit; font-size: 15px; cursor: pointer; white-space: nowrap; transition: background var(--d-fast), color var(--d-fast); }
-.news-filters button.on { background: var(--accent); color: var(--on-accent); font-weight: 600; }
-.news-filters button.apart { margin-left: var(--s3); }   /* le cripto, separate dal resto */
 
 .stories { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .stories > li { border-bottom: 1px solid var(--line); }

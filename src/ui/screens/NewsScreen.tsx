@@ -6,12 +6,11 @@ import { loadNews, type NewsItem } from '../../news/api'
 import { loadHub, type HubItem } from '../../news/hub'
 import { follow, following, loadInterests, loadTopics, remember, unfollow } from '../../news/interests'
 import { buildSections, find, type Story } from '../../news/sections'
+import { AREAS, EMPTY, LANGS, SOURCES, TOPICS, TYPES, activeCount, applyFilter, loadFilter, saveFilter, type NewsFilter } from '../../news/filters'
 import { Icon } from '../Icon'
 import { tap } from '../kit/motion'
 import { Sheet } from '../kit/Sheet'
 
-// i filtri in alto: i formati, poi gli argomenti più cercati; le cripto in fondo, separate
-const FILTERS = ['podcast', 'video', 'personal', 'etf', 'stocks', 'economy', 'markets', 'realestate', 'pension', 'tax', 'saving', 'psychology', 'bonds', 'commodities', 'ai', 'tech', 'startup', 'crypto']
 
 /**
  * Notizie: poche storie scelte ogni giorno, per argomento, da fonti approvate (testate, indipendenti, ricerca, video, podcast).
@@ -23,7 +22,8 @@ export function NewsScreen({ onAction }: { onAction: (a: NonNullable<Tip['action
   const { t, lang } = useI18n()
   const [hub, setHub] = useState<HubItem[] | null | undefined>(undefined)
   const [legacy, setLegacy] = useState<NewsItem[] | null>(null)
-  const [filter, setFilter] = useState<string | null>(null)
+  const [filter, setFilter] = useState<NewsFilter>(loadFilter)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [open, setOpen] = useState<Story | null>(null)
   const [now, setNow] = useState(0)
   const [tick, setTick] = useState(0)
@@ -42,9 +42,13 @@ export function NewsScreen({ onAction }: { onAction: (a: NonNullable<Tip['action
   }, [lang, tick])
 
   const q = query.trim()
-  const narrowed = !!filter || q.length > 1
-  const sections = useMemo(() => (hub && now ? buildSections(hub, now, lang, interests, topics) : []), [hub, now, lang, interests, topics])
-  const found = useMemo(() => (hub && now && narrowed ? find(hub, filter, q.length > 1 ? q : '', now, lang, interests) : []), [hub, now, narrowed, filter, q, lang, interests])
+  const active = activeCount(filter)
+  const narrowed = active > 0 || q.length > 1
+  // i filtri valgono sempre (anche la lingua di partenza): le sezioni o l'elenco nascono dai contenuti che li passano
+  const base = useMemo(() => (hub ? applyFilter(hub, filter, lang) : []), [hub, filter, lang])
+  const sections = useMemo(() => (now && !narrowed ? buildSections(base, now, lang, interests, topics) : []), [base, now, narrowed, lang, interests, topics])
+  const found = useMemo(() => (now && narrowed ? find(base, q.length > 1 ? q : '', now, lang, interests, filter.sort) : []), [base, now, narrowed, q, lang, interests, filter.sort])
+  const apply = (f: NewsFilter) => { setFilter(f); saveFilter(f); setFiltersOpen(false); window.scrollTo(0, 0) }
   const followed = following(topics, q)
   const read = (s: Story) => { tap(); remember(s.lead); setInterests(loadInterests()); setOpen(s) }
 
@@ -53,14 +57,14 @@ export function NewsScreen({ onAction }: { onAction: (a: NonNullable<Tip['action
       <div className="sec-head"><h1 className="screen-title">{t('nav.news')}</h1>
         <button className="icon-btn ghost" onClick={() => { tap(); setHub(undefined); setTick(x => x + 1) }} aria-label={t('news.refresh')}><Icon name="refresh" size={20} /></button></div>
 
-      {hub && <label className="news-search"><Icon name="search" size={18} />
-        <input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder={t('news.search')} aria-label={t('news.search')} enterKeyHint="search" />
-      </label>}
-
-      {hub && <div className="news-filters" role="tablist">
-        <button role="tab" aria-selected={!filter} className={!filter ? 'on' : ''} onClick={() => { tap(); setFilter(null) }}>{t('news.all')}</button>
-        {FILTERS.map(f => <button key={f} role="tab" aria-selected={filter === f} className={`${filter === f ? 'on' : ''}${f === 'crypto' ? ' apart' : ''}`}
-          onClick={() => { tap(); setFilter(f); window.scrollTo(0, 0) }}>{t(`cat.${f}` as keyof Dict)}</button>)}
+      {/* una riga sola: la ricerca e, a destra, i filtri (con quanti sono attivi) */}
+      {hub && <div className="news-tools">
+        <label className="news-search"><Icon name="search" size={18} />
+          <input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder={t('news.search')} aria-label={t('news.search')} enterKeyHint="search" />
+        </label>
+        <button className={`news-filter-btn${active ? ' on' : ''}`} onClick={() => { tap(); setFiltersOpen(true) }} aria-haspopup="dialog">
+          <Icon name="filter" size={18} />{active ? t('news.filtersN', { n: active }) : t('news.filters')}
+        </button>
       </div>}
 
       {hub === undefined ? <div className="news-loading">{[0, 1, 2, 3].map(i => <div key={i} className="skel"><span /><span /></div>)}</div>
@@ -88,7 +92,49 @@ export function NewsScreen({ onAction }: { onAction: (a: NonNullable<Tip['action
 
       <p className="group-foot news-note">{t('news.note')}</p>
 
+      <Sheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title={t('news.filters')}>
+        {filtersOpen && <FiltersPanel value={filter} lang={lang} onApply={apply} onCancel={() => setFiltersOpen(false)} />}
+      </Sheet>
       <Sheet open={!!open} onClose={() => setOpen(null)}>{open && <StoryDetail story={open} now={now} />}</Sheet>
+    </div>
+  )
+}
+
+/** Il pannello dei filtri: si sceglie su una bozza; Applica la rende effettiva, Annulla la scarta, Reimposta la svuota. */
+function FiltersPanel({ value, lang, onApply, onCancel }: { value: NewsFilter; lang: string; onApply: (f: NewsFilter) => void; onCancel: () => void }) {
+  const { t } = useI18n()
+  const [f, setF] = useState(value)
+  const toggle = <K extends 'types' | 'topics' | 'langs' | 'areas' | 'sources'>(k: K, v: NewsFilter[K][number]) => {
+    tap(); setF(x => ({ ...x, [k]: (x[k] as string[]).includes(v as string) ? (x[k] as string[]).filter(y => y !== v) : [...(x[k] as string[]), v] }))
+  }
+  const group = <K extends 'types' | 'topics' | 'langs' | 'areas' | 'sources'>(k: K, title: string, options: readonly NewsFilter[K][number][], label: (v: NewsFilter[K][number]) => string) => (
+    <section className="nf-group">
+      <h3 className="group-title">{title}</h3>
+      <div className="nf-options">{options.map(o => (
+        <button key={o} className={(f[k] as string[]).includes(o as string) ? 'on' : ''} aria-pressed={(f[k] as string[]).includes(o as string)} onClick={() => toggle(k, o)}>{label(o)}</button>
+      ))}</div>
+    </section>
+  )
+  const names = new Intl.DisplayNames([lang], { type: 'language' }), regions = new Intl.DisplayNames([lang], { type: 'region' })
+  return (
+    <div className="news-filters-panel">
+      {group('types', t('nf.type'), TYPES, v => t(`nf.t.${v}` as keyof Dict))}
+      {group('topics', t('nf.topic'), TOPICS, v => t(`cat.${v}` as keyof Dict))}
+      {group('langs', t('nf.lang'), LANGS, v => { const n = names.of(v) ?? v; return n.charAt(0).toUpperCase() + n.slice(1) })}
+      {f.langs.length === 0 && <p className="small muted nf-hint">{t('nf.langHint')}</p>}
+      {group('areas', t('nf.area'), AREAS, v => v === 'EU' ? t('nf.eu') : regions.of(v) ?? v)}
+      {group('sources', t('nf.source'), SOURCES, v => t(`nf.s.${v}` as keyof Dict))}
+      <section className="nf-group">
+        <h3 className="group-title">{t('nf.sort')}</h3>
+        <div className="nf-options">{(['relevant', 'recent'] as const).map(o => (
+          <button key={o} className={f.sort === o ? 'on' : ''} aria-pressed={f.sort === o} onClick={() => { tap(); setF(x => ({ ...x, sort: o })) }}>{t(`nf.sort.${o}` as keyof Dict)}</button>
+        ))}</div>
+      </section>
+      <div className="nf-actions">
+        <button className="link-btn" onClick={onCancel}>{t('nf.cancel')}</button>
+        <button className="link-btn" onClick={() => { tap(); setF(EMPTY) }} disabled={activeCount(f) === 0}>{t('nf.reset')}</button>
+        <button className="btn primary" onClick={() => { tap(); onApply(f) }}>{t('nf.apply')}</button>
+      </div>
     </div>
   )
 }
