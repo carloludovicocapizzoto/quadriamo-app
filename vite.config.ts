@@ -60,5 +60,5 @@ export default defineConfig({
       output: { manualChunks: (id: string) => id.includes('node_modules/@supabase/') ? 'supabase' : /node_modules\/(react|react-dom|scheduler)\//.test(id) ? 'react' : undefined },
     },
   },
-  test: { include: ['src/**/*.test.ts', 'src/**/*.test.tsx'] },
+  test: { include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'tests/**/*.test.ts'] },
 })

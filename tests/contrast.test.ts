@@ -1,9 +1,9 @@
 // Il contrasto dei testi si misura sui valori veri del design system: una modifica ai colori che rende
 // illeggibile il testo (anche grigio) sugli sfondi delle sezioni ferma la pubblicazione. Soglia WCAG AA: 4,5.
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import bgs from './backgrounds.css?raw'
-import tokens from './tokens.css?raw'
 
+const tokens = readFileSync('src/design/tokens.css', 'utf8'), bgs = readFileSync('src/design/backgrounds.css', 'utf8')
 const lum = (hex: string) => {
   const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
