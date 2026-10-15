@@ -16,7 +16,7 @@
   /* filo delle superfici in vetro (il vetro stesso è in backgrounds.css) */
   --glass-line: color-mix(in srgb, var(--text) 9%, transparent);
   /* colore: carta, inchiostro (tre intensità), linea sottile, riempimento dei controlli */
-  --bg: #F6F4EF; --surface: #F6F4EF; --text: #17181A; --muted: #6B6E73; --faint: #A3A5A8;
+  --bg: #F6F4EF; --surface: #F6F4EF; --text: #17181A; --muted: #5C5F64; --faint: #A3A5A8;
   --line: rgba(23,24,26,.09); --fill: rgba(23,24,26,.05); --fill-2: rgba(23,24,26,.09);
   --accent: #17181A; --on-accent: #F6F4EF;
   --good: #1F7A45; --good-bg: rgba(31,122,69,.09); --bad: #B42318; --bad-bg: rgba(180,35,24,.08); --warn: #A15C07; --warn-bg: rgba(161,92,7,.09);
@@ -50,7 +50,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0F1012; --surface: #0F1012; --text: #EDEBE6; --muted: #9A9DA3; --faint: #5E6166;
+    --bg: #0F1012; --surface: #0F1012; --text: #EDEBE6; --muted: #BABDC2; --faint: #5E6166;
     --line: rgba(237,235,230,.1); --fill: rgba(237,235,230,.06); --fill-2: rgba(237,235,230,.11);
     --accent: #EDEBE6; --on-accent: #0F1012;
     --good: #4CC27A; --good-bg: rgba(76,194,122,.12); --bad: #F2675C; --bad-bg: rgba(242,103,92,.12); --warn: #E5A13A; --warn-bg: rgba(229,161,58,.12);
@@ -59,7 +59,7 @@
 }
 }
 :root[data-theme="dark"] {
-  --bg: #0F1012; --surface: #0F1012; --text: #EDEBE6; --muted: #9A9DA3; --faint: #5E6166;
+  --bg: #0F1012; --surface: #0F1012; --text: #EDEBE6; --muted: #BABDC2; --faint: #5E6166;
   --line: rgba(237,235,230,.1); --fill: rgba(237,235,230,.06); --fill-2: rgba(237,235,230,.11);
   --accent: #EDEBE6; --on-accent: #0F1012;
   --good: #4CC27A; --good-bg: rgba(76,194,122,.12); --bad: #F2675C; --bad-bg: rgba(242,103,92,.12); --warn: #E5A13A; --warn-bg: rgba(229,161,58,.12);

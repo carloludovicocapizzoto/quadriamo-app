@@ -53,6 +53,12 @@ export default defineConfig({
       workbox: { globPatterns: ['**/*.{js,css,html,svg,png,ttf,woff2,json}'], globIgnores: ['fonts/DMSans.ttf'], navigateFallback: null, importScripts: ['push-sw.js'] },
     }),
   ],
-  build: { rollupOptions: { input: { home: 'index.html', app: 'app/index.html', admin: 'admin/index.html' } } },
+  build: {
+    rollupOptions: {
+      input: { home: 'index.html', app: 'app/index.html', admin: 'admin/index.html' },
+      // le librerie in pezzi a parte: cambiano di rado, restano in memoria sul telefono e a ogni aggiornamento si scarica solo l'app
+      output: { manualChunks: (id: string) => id.includes('node_modules/@supabase/') ? 'supabase' : /node_modules\/(react|react-dom|scheduler)\//.test(id) ? 'react' : undefined },
+    },
+  },
   test: { include: ['src/**/*.test.ts', 'src/**/*.test.tsx'] },
 })
