@@ -41,3 +41,11 @@
 .rot-up { transform: rotate(-90deg); }
 .rot-down { transform: rotate(90deg); }
 .widget .outcome-amount { font-size: var(--t-title); letter-spacing: -.03em; }
+
+/* ---------- griglia dei widget: le colonne dipendono dallo spazio del riquadro, non dallo schermo ----------
+   telefono: una colonna · tablet: due · computer: tre o quattro. Ogni widget ha una taglia: piccolo, medio (due colonne), grande (riga intera) */
+.home-grid { container-type: inline-size; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); column-gap: var(--s8); align-items: start; }
+@container (min-width: 632px) {
+  .home-grid > .size-m { grid-column: span 2; }
+  .home-grid > .size-l { grid-column: 1 / -1; }
+}

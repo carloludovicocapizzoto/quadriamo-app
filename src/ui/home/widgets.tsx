@@ -14,7 +14,7 @@ import { MonthOutcome } from '../MonthView'
 import { CategoryChangesReport } from '../Reports'
 import { TxRow } from '../TxRow'
 import { Trend } from '../capital/CapitalPage'
-import type { WidgetId } from './catalog'
+import { DEFAULT_SIZE, type WidgetId } from './catalog'
 
 export interface WidgetCtx {
   data: AppData; r: MonthResult; today: string; streak: Streak | null
@@ -27,7 +27,7 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
   const { t, money } = useI18n()
   const s = c.data.settings, cur = s.currency
   const box = (body: ReactNode, more?: () => void) => (
-    <section className={`widget w-${id}`}>
+    <section className={`widget w-${id} size-${DEFAULT_SIZE[id]}`}>
       <h2 className="sec-title">{t(`hw.${id}` as 'hw.parts')}</h2>
       {body}
       {more && <button className="row-link" onClick={more}><span>{t('hw.more')}</span><Icon name="chevron" size={18} /></button>}
@@ -35,7 +35,7 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
   )
   const spent = c.r.spent > 0
   switch (id) {
-    case 'parts': return <section className="widget w-parts">{c.parts}</section>
+    case 'parts': return <section className={`widget w-parts size-${DEFAULT_SIZE.parts}`}>{c.parts}</section>
     case 'today': {
       const list = c.r.transactions.filter(x => !x.upcoming && x.date === c.today)
       return box(<>

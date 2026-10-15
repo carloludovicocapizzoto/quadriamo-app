@@ -8,3 +8,9 @@ export const DEFAULT_WIDGETS: WidgetId[] = ['parts', 'today', 'forecast', 'capit
 export const shown = (s: AppData['settings']): WidgetId[] =>
   (s.homeWidgets?.filter((x): x is WidgetId => (WIDGETS as readonly string[]).includes(x)) ?? DEFAULT_WIDGETS)
 
+
+/** Quanto spazio prende un widget nella griglia: piccolo (una colonna), medio (due), grande (tutta la riga). */
+export type WidgetSize = 's' | 'm' | 'l'
+export const DEFAULT_SIZE: Record<WidgetId, WidgetSize> = {
+  parts: 'm', today: 's', forecast: 's', capital: 's', daily: 'm', categories: 's', changes: 's', goals: 's', streak: 's',
+}

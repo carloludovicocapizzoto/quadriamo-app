@@ -62,7 +62,8 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
       </section>}
 
       {/* i widget scelti, in ordine; quelli del mese compaiono quando ci sono le entrate */}
-      {shown(s).map(id => <Widget key={id} id={id} c={{ data, r, today, streak, parts: blocks, onOpen, onAll }} />)}
+      {/* la griglia sceglie quante colonne in base allo spazio (telefono 1, tablet 2, computer 3-4) */}
+      <div className="home-grid">{shown(s).map(id => <Widget key={id} id={id} c={{ data, r, today, streak, parts: blocks, onOpen, onAll }} />)}</div>
       <button className="link-btn home-edit" onClick={() => { tap(); setEdit(true) }}>{t('hw.edit')}</button>
 
       <Sheet open={edit} onClose={() => setEdit(false)} title={t('hw.edit')}>{edit && <HomeEditor />}</Sheet>

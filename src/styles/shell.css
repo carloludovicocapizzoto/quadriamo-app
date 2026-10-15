@@ -86,3 +86,29 @@
 .site-news .top { gap: var(--s3); padding-top: 0; }
 .site-news .top .lang { margin-left: auto; }
 .site-news .small-btn { min-height: 36px; padding: 0 14px; text-decoration: none; white-space: nowrap; }
+
+/* ---------- tablet verticale: più spazio alla Home, le altre pagine restano in colonna di lettura ---------- */
+.nav-brand { display: none; }
+@media (min-width: 768px) {
+  .app2:has(.home) { max-width: 960px; }
+}
+
+/* ---------- tablet orizzontale e computer: la barra diventa laterale, la Home una dashboard ----------
+   stesse voci e stesso ordine logico: cambia solo dove stanno. Il + diventa il primo pulsante, sotto il marchio. */
+@media (min-width: 1024px) {
+  .tabbar { --bar-h: auto; left: var(--s3); top: var(--s3); bottom: var(--s3); transform: none; width: 224px; height: auto;
+    flex-direction: column; align-items: stretch; gap: 2px; padding: var(--s4) var(--s2); border-radius: var(--r-lg); overflow-x: hidden; overflow-y: auto; scroll-snap-type: none; }
+  .tabbar > button { flex: 0 0 auto; height: 44px; display: flex; justify-content: flex-start; align-items: center; gap: 12px; padding: 0 12px;
+    font-size: 15px; font-weight: 500; letter-spacing: 0; border-radius: var(--r-md); }
+  .tabbar .nav-ico, .tabbar .nav-ico > .ico { width: 24px; height: 24px; }
+  .tabbar > button.on:not(.tab-add)::before { inset: 0; border-radius: var(--r-md); }
+  .tabbar > button:not(.on):not(.tab-add):hover { background: var(--fill); }
+  .tabbar > .tab-add { order: -1; margin-bottom: var(--s3); background: var(--accent); color: var(--on-accent); }
+  .tabbar > .tab-add .nav-ico { width: 24px; height: 24px; margin: 0; background: none; color: inherit; border-radius: 0; }
+  .nav-brand { display: block; order: -2; padding: 2px 12px var(--s4); font: 400 22px/1 var(--font-brand); color: var(--text); text-decoration: none; }
+  .nav-brand span { color: var(--b1); }
+  .app2, .app2:has(.home) { max-width: none; margin: 0; padding-left: calc(224px + var(--s3) + var(--s8)); padding-right: var(--s8); padding-bottom: var(--s12); }
+  .app2 > main { max-width: 1280px; margin: 0 auto; }
+  /* le pagine di lettura (Analisi, Notizie, Profilo) restano in colonna; la Home usa tutta la larghezza */
+  .app2 > main > :not(.home) { max-width: var(--column); margin-inline: auto; }
+}
