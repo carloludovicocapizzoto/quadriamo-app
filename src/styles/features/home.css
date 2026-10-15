@@ -37,9 +37,6 @@
 .widget.w-parts { margin-top: var(--s5); }
 .widget .outcome { margin-top: var(--s2); }
 .home-edit { display: block; margin: var(--s8) 0 var(--s4); color: var(--muted); }
-.home-editor .row { gap: var(--s2); }
-.rot-up { transform: rotate(-90deg); }
-.rot-down { transform: rotate(90deg); }
 .widget .outcome-amount { font-size: var(--t-title); letter-spacing: -.03em; }
 
 /* ---------- griglia dei widget: le colonne dipendono dallo spazio del riquadro, non dallo schermo ----------
@@ -56,14 +53,11 @@
   .w-slot:hover .w-drag, .w-drag:focus-visible { opacity: 1; }
 }
 .w-drag:active { cursor: grabbing; }
-.w-sizes { flex-wrap: nowrap; gap: 4px; }
-.w-sizes > button { min-height: 30px; padding: 0 9px; font-size: 12px; }
 .home-grid { container-type: inline-size; display: grid; grid-auto-flow: row dense; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); column-gap: var(--s8); align-items: start; }
 @container (min-width: 632px) {
   .home-grid > .size-m { grid-column: span 2; }
   .home-grid > .size-l { grid-column: 1 / -1; }
 }
-.w-sizes { margin-top: 6px; }
 
 /* ---------- pannello a destra (da 1280 px): notizie, prossimi pagamenti, mercati, eventi ---------- */
 .home-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; column-gap: var(--s8); align-items: start; }
@@ -128,3 +122,28 @@
 .home-grid > .w-slot:has(> .w-parts) { padding-top: 0; border-top: 0; }
 .w-slot > .widget { margin-top: 0; }
 .w-drag { top: var(--s3); }
+
+/* ---------- galleria dei widget: anteprime vere, ridotte, nella stessa griglia della Home ---------- */
+.wg-hint { margin: 0 0 var(--s4); color: var(--muted); font-size: var(--t-sm); }
+.wg-grid { list-style: none; margin: var(--s2) 0 var(--s6); padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s4); }
+.wg-tile { position: relative; display: grid; gap: var(--s2); min-width: 0; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab;
+  transition: transform var(--d-spring) var(--spring-snappy), opacity var(--d-base); }
+.wg-tile.size-m, .wg-tile.size-l { grid-column: span 2; }
+.wg-tile.lifted { z-index: 5; cursor: grabbing; transition: none; touch-action: none; }
+.wg-tile.lifted .wg-preview { outline: 1.5px solid var(--text); }
+/* la cornice dell'anteprima: il widget vero, rimpicciolito, senza tocchi */
+.wg-preview { position: relative; height: 150px; overflow: hidden; border-radius: var(--r-lg); background: var(--fill); padding: 12px; pointer-events: none; }
+.wg-scale { width: 166%; transform: scale(.6); transform-origin: top left; }
+.wg-scale .widget { margin: 0; }
+.wg-empty { display: none; margin: 0; color: var(--muted); font-size: var(--t-sm); line-height: 1.45; }
+.wg-scale:empty + .wg-empty { display: block; }
+.wg-foot { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.wg-name { max-width: 100%; font-size: 14px; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wg-sizes { flex-wrap: nowrap; gap: 3px; }
+.wg-sizes > button { min-height: 26px; padding: 0 7px; font-size: 11px; }
+/* − e + nell'angolo, come nella galleria di Apple */
+.wg-btn { position: absolute; top: -6px; left: -6px; width: 24px; height: 24px; border-radius: 50%; border: 0; display: grid; place-items: center; cursor: pointer;
+  background: var(--text); color: var(--bg); transition: transform 120ms var(--spring); }
+.wg-btn:active { transform: scale(.88); }
+.wg-btn.add { background: var(--good); color: #fff; }
+.wg-tile.off .wg-preview { opacity: .7; }
