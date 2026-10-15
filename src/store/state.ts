@@ -155,6 +155,18 @@ export function migrate(d: AppData | null): AppData | null {
     const buckets = oldRule ? s.buckets.map(b => ({ ...b, share: STUDENT_SHARES[b.id] ?? b.share })) : s.buckets
     s = { ...s, categories, recurring, rules, buckets, schema: 3 }
   }
+  if ((s.schema ?? 0) < 4) {
+    // 4: Viaggi e Tecnologia, subito dopo Svago e shopping (servono anche al capitale: "solo grandi acquisti")
+    const categories = [...s.categories]
+    const bucket = s.buckets.find(b => b.id === 'qualityOfLife')?.id ?? s.buckets[0]?.id ?? null
+    let at = categories.findIndex(c => c.id === 'funShopping')
+    for (const id of ['travel', 'tech']) {
+      if (categories.some(c => c.id === id)) continue
+      at = at < 0 ? categories.length : at + 1
+      categories.splice(at, 0, { id, name: id, type: 'expense', defaultBucket: bucket })
+    }
+    s = { ...s, categories, schema: 4 }
+  }
   return s === d.settings ? d : { ...d, settings: s }
 }
 

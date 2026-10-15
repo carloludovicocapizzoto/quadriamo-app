@@ -560,6 +560,8 @@ const fr: Dict = {
   'c.health': 'Santé',
   'c.eatingOut': 'Restaurants',
   'c.funShopping': 'Loisirs et shopping',
+  'c.travel': "Voyages",
+  'c.tech': "Technologie",
   'c.gifts': 'Cadeaux',
   'c.other': 'Autre',
   'c.safetyFundSaving': 'Fonds de sécurité',

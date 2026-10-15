@@ -61,7 +61,7 @@ export function canUse(p: CapitalPart, purpose: 'everyday' | 'emergency' | strin
 
 // ---------- consigli dal capitale (regole, nessuna intelligenza artificiale) ----------
 /** Categoria di spesa → grande acquisto: una spesa in queste categorie può venire da una parte "solo grandi acquisti". */
-export const PURPOSE_OF: Record<string, string> = { transport: 'car', health: 'health', rent: 'home', university: 'education' }
+export const PURPOSE_OF: Record<string, string> = { transport: 'car', health: 'health', rent: 'home', university: 'education', travel: 'travel', tech: 'tech' }
 
 export type CapitalAdvice =
   | { id: 'cover'; deficit: number; part: string; available: number }      // il mese chiude in rosso, la parte utilizzabile basta

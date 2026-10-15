@@ -20,6 +20,8 @@ export const DEFAULT_CATEGORIES: Omit<Category, 'name'>[] = [
   { id: 'health', type: 'expense', defaultBucket: 'essentials' },
   { id: 'eatingOut', type: 'expense', defaultBucket: 'qualityOfLife' },
   { id: 'funShopping', type: 'expense', defaultBucket: 'qualityOfLife' },
+  { id: 'travel', type: 'expense', defaultBucket: 'qualityOfLife' },
+  { id: 'tech', type: 'expense', defaultBucket: 'qualityOfLife' },
   { id: 'gifts', type: 'expense', defaultBucket: 'qualityOfLife' },
   { id: 'other', type: 'expense', defaultBucket: 'essentials' },
   { id: 'safetyFundSaving', type: 'saving', defaultBucket: 'safetyFund' },
@@ -49,6 +51,6 @@ export function defaultSettings(opts: {
     recurring: opts.recurring ?? [],
     fxRates: {},
     rules: seedRules(),
-    schema: 3,
+    schema: 4,
   }
 }

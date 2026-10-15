@@ -560,6 +560,8 @@ const en = {
   'c.health': 'Health',
   'c.eatingOut': 'Eating out',
   'c.funShopping': 'Fun & shopping',
+  'c.travel': "Travel",
+  'c.tech': "Tech",
   'c.gifts': 'Gifts',
   'c.other': 'Other',
   'c.safetyFundSaving': 'Safety fund',

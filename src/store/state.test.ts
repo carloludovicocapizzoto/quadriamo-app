@@ -224,7 +224,7 @@ describe('migrate', () => {
     const ids = m.settings.categories.map(c => c.id)
     expect(ids.indexOf('loans')).toBe(ids.indexOf('fixedCosts') + 1)
     expect(m.settings.categories.find(c => c.id === 'loans')!.defaultBucket).toBe('essentials')
-    expect(m.settings.schema).toBe(3)
+    expect(m.settings.schema).toBe(4)
     // cancellata dall'utente: non torna
     const removed = { ...m, settings: { ...m.settings, categories: m.settings.categories.filter(c => c.id !== 'loans') } }
     expect(migrate(removed)).toBe(removed)
@@ -241,6 +241,20 @@ describe('migrate, affitto', () => {
     expect(m.categories.find(c => c.id === 'rent')?.defaultBucket).toBe('first')
     expect(m.recurring.map(r => r.category)).toEqual(['rent', 'fixedCosts'])
     expect(m.rules?.[0].category).toBe('rent')
-    expect(m.schema).toBe(3)
+    expect(m.schema).toBe(4)
+  })
+})
+
+describe('aggiornamento dei dati salvati', () => {
+  it('aggiunge Viaggi e Tecnologia dopo Svago e shopping, una volta sola', () => {
+    const d = base().data!
+    const old = { ...d, settings: { ...d.settings, schema: 3, categories: d.settings.categories.filter(c => c.id !== 'travel' && c.id !== 'tech') } }
+    const s = migrate(old)!.settings
+    const ids = s.categories.map(c => c.id)
+    expect(ids.slice(ids.indexOf('funShopping'), ids.indexOf('funShopping') + 3)).toEqual(['funShopping', 'travel', 'tech'])
+    expect(s.schema).toBe(4)
+    // cancellata dall'utente dopo l'aggiornamento: non torna
+    const removed = { ...d, settings: { ...s, categories: s.categories.filter(c => c.id !== 'travel') } }
+    expect(migrate(removed)!.settings.categories.some(c => c.id === 'travel')).toBe(false)
   })
 })
