@@ -80,9 +80,15 @@ export function Stats({ c, box }: { c: WidgetCtx; box: Box }) {
 }
 
 export function Upcoming({ c, box }: { c: WidgetCtx; box: Box }) {
+  const { date } = useI18n()
   const list = c.r.transactions.filter(x => x.upcoming).sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '')).slice(0, 4)
   if (!list.length) return null
-  return box(<ul className="tx-list">{list.map((tx: ClassifiedTx) => <TxRow key={tx.id} tx={tx} settings={c.data.settings} onOpen={c.onOpen} />)}</ul>)
+  // l'importo dei pagamenti futuri non è ancora contato nel mese: si mostra quello previsto dalla spesa ricorrente
+  const planned = (tx: ClassifiedTx) => c.data.settings.recurring.find(r => r.name === tx.description && r.category === tx.category)?.amount ?? 0
+  return box(<ul className="group-list">{list.map(tx => (
+    <li key={tx.id}><div className="row"><span className="row-main"><span>{tx.description}</span>
+      <small>{tx.date ? date(tx.date, { weekday: 'short', day: 'numeric', month: 'short' }) : ''}</small></span>
+      <span className="row-value"><Money value={-planned(tx)} currency={c.data.settings.currency} /></span></div></li>))}</ul>)
 }
 
 export function Invest({ c, box, open }: { c: WidgetCtx; box: Box; open: () => void }) {
