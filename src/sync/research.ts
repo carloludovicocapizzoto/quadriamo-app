@@ -12,7 +12,7 @@ function token(create: boolean): string | null {
   } catch { return null }
 }
 
-export function incomeBand(n: number | null): string | null {
+function incomeBand(n: number | null): string | null {
   if (n == null) return null
   return n < 1000 ? 'lt1000' : n < 1500 ? '1000-1500' : n < 2000 ? '1500-2000' : n < 3000 ? '2000-3000' : 'ge3000'
 }

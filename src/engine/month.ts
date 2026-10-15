@@ -49,7 +49,7 @@ function withAmount(tx: Transaction, s: Settings, type: ClassifiedTx['type'], bu
 }
 
 /** Movimenti che appartengono al mese (per data). */
-export function transactionsOf(ym: YearMonth, all: Transaction[], s: Settings): Transaction[] {
+function transactionsOf(ym: YearMonth, all: Transaction[], s: Settings): Transaction[] {
   const key = ymKey(ym)
   return all.filter(t => t.date && ymKey(monthOf(t.date, s.monthStartDay)) === key)
 }

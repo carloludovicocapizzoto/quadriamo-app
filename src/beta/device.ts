@@ -35,7 +35,7 @@ export function firstOpenToday(today: string): boolean {
 }
 
 /** Promemoria per il feedback: dopo 10 giorni dal primo uso, poi ogni 10 giorni dall'ultima richiesta. */
-export const FEEDBACK_EVERY_DAYS = 10
+const FEEDBACK_EVERY_DAYS = 10
 export function feedbackDue(now = Date.now()): boolean {
   const first = Number(get(K.firstUse) ?? 0)
   if (!first) { set(K.firstUse, String(now)); return false }

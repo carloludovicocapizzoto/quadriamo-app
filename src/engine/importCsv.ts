@@ -7,7 +7,7 @@ export interface ColumnMap { date: number; description: number[]; amount: number
   currency: number | null; fee: number | null; state: number | null }
 
 /** Divide un CSV in righe e celle, rispettando le virgolette. Riconosce il separatore (, ; o tab). */
-export function parseCsv(text: string): string[][] {
+function parseCsv(text: string): string[][] {
   const clean = text.replace(/^﻿/, '')
   const first = clean.split(/\r?\n/, 1)[0] ?? ''
   const counts = [',', ';', '\t'].map(d => [d, first.split(d).length] as const)

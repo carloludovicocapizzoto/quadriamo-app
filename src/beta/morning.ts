@@ -3,7 +3,7 @@
 // Così gli importi non passano mai dal server: arriva solo la "sveglia".
 import { set } from 'idb-keyval'
 
-export const MORNING_KEY = 'quadriamo.morning'
+const MORNING_KEY = 'quadriamo.morning'
 
 export interface MorningSnapshot {
   lang: string; currency: string; end: string            // fine del periodo (YYYY-MM-DD)

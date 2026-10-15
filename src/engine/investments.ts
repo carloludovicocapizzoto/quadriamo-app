@@ -15,7 +15,7 @@ export interface Holding {
 }
 
 /** Cambio verso la tua valuta: 1 se è la tua, null se manca. */
-export const rateTo = fxRate
+const rateTo = fxRate
 
 export function valueHolding(h: Holding, s: Settings) {
   const price = h.manualPrice ?? h.livePrice ?? null

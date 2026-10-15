@@ -29,8 +29,6 @@
   .rule-head { display: none; }
   .rule-row label { grid-column: 1 / -1; margin-top: 8px; }
 }
-.inline-form { display: grid; gap: 4px; }
-.account-compact { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
 .edit-list.fx-list li { grid-template-columns: 80px 1fr 110px 40px; }
 .fx-code { font-weight: 600; font-variant-numeric: tabular-nums; }
 @media (max-width: 560px) { .edit-list.fx-list li { grid-template-columns: 70px 1fr 90px 36px; } .edit-list.fx-list li > :first-child { grid-column: auto; } }

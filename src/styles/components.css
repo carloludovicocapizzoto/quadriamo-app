@@ -28,8 +28,6 @@ a.btn { text-decoration: none; color: var(--text); }
 .link-btn { display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; color: var(--accent); font-weight: 600; padding: 8px 0; cursor: pointer; }
 .link-btn > .ico:last-child { margin-left: 1px; }
 .danger-link { color: var(--bad); }
-.btn-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.btn-pair .btn { min-width: 0; padding: 0 10px; font-size: 14px; white-space: nowrap; }
 .stack { display: grid; gap: 10px; margin: 16px 0; }
 .stack-row { display: flex; flex-wrap: wrap; gap: 10px; }
 .stack-row select { width: auto; }
@@ -38,7 +36,6 @@ a.btn { text-decoration: none; color: var(--text); }
 .pill { font-size: var(--t-sm); font-weight: 600; }
 .pill.good { color: var(--good); }
 .pill.bad { color: var(--bad); }
-.pill-count { font-size: var(--t-sm); color: var(--muted); }
 .tag { font-style: normal; font-size: var(--t-cap); color: var(--muted); margin-left: 6px; }
 .eyebrow { font-size: var(--t-sm); color: var(--muted); margin: 0; }
 .day-label { margin: var(--s5) 0 var(--s1); font-size: var(--t-sm); color: var(--muted); }
@@ -91,7 +88,6 @@ a.btn { text-decoration: none; color: var(--text); }
 .empty h2 { margin: 0; font-size: var(--t-h2); font-weight: 600; letter-spacing: -.02em; }
 .empty p { margin: var(--s2) 0 0; color: var(--muted); max-width: 40ch; line-height: 1.5; }
 .empty .btn { margin-top: var(--s5); }
-.empty-note { text-align: center; padding: var(--s6) 0; }
 .skel { display: grid; gap: 6px; padding: var(--s3) 0; }
 .skel span { height: 14px; border-radius: var(--r-sm); background: var(--fill); }
 .skel span:last-child { width: 40%; height: 10px; }

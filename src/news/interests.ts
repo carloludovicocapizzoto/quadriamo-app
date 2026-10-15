@@ -15,7 +15,6 @@ export function learn(i: Interests, item: HubItem): Interests {
 export function remember(item: HubItem) {
   try { localStorage.setItem(KEY, JSON.stringify(learn(loadInterests(), item))) } catch { /* niente */ }
 }
-export function forget() { try { localStorage.removeItem(KEY) } catch { /* niente */ } }
 
 // Gli argomenti che segui: parole scelte da te (es. "ETF", "mutuo", "Tesla"), solo su questo telefono
 const TOPICS = 'q.newsTopics'

@@ -88,7 +88,7 @@ export function CapitalPage() {
 }
 
 /** L'andamento del capitale: una linea sottile tra il primo e l'ultimo aggiornamento. */
-export function Trend({ history }: { history: Capital['history'] }) {
+function Trend({ history }: { history: Capital['history'] }) {
   const pts = useMemo(() => {
     const max = Math.max(...history.map(h => h.total)), min = Math.min(...history.map(h => h.total))
     const span = Math.max(1, max - min)

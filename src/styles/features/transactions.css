@@ -17,9 +17,6 @@
 .tx-upcoming { color: var(--muted); }
 .tx-upcoming .tx-desc, .tx-upcoming .tx-amount { color: var(--muted); }
 .amount-input { font-size: 32px; font-weight: 600; min-height: 60px; font-variant-numeric: tabular-nums; }
-.amount-row { display: grid; grid-template-columns: 1fr 110px; gap: 10px; align-items: end; }
-.amount-row .field { margin-bottom: 4px; }
-.currency-field select { min-height: 60px; font-weight: 600; }
 .import-row { margin: 0 0 var(--s4); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .row-lead { color: var(--muted); flex: none; }
 .inbox-list { list-style: none; padding: 0; margin: 10px 0 0; border-top: 1px solid var(--line); }

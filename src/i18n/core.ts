@@ -34,11 +34,3 @@ export function useI18n(): I18n {
   return v
 }
 
-/** Nomi tradotti di bucket e categorie predefiniti, per id. */
-export function defaultNames(lang: Lang): Record<string, string> {
-  const out: Record<string, string> = {}
-  for (const [k, v] of Object.entries(DICTS[lang])) {
-    if (k.startsWith('b.') || k.startsWith('c.')) out[k.slice(2)] = v
-  }
-  return out
-}

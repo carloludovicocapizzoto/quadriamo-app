@@ -44,7 +44,7 @@ export interface InboxItem {
   source: string            // es. "csv"
 }
 
-export const fingerprintOf = (r: { date: string; amount: number; description: string }) =>
+const fingerprintOf = (r: { date: string; amount: number; description: string }) =>
   `${r.date}|${r.amount.toFixed(2)}|${normalize(r.description)}`
 
 /** Prepara l'import: scarta le righe già viste (in casella, confermate o ignorate) e propone categoria e bucket. */

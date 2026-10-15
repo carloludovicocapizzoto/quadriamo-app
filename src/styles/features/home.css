@@ -23,9 +23,6 @@
 
 /* oggi */
 .today .tx-list { margin: 0; }
-.today-none { margin: 0; padding: var(--s3) 0; border-top: 1px solid var(--line); }
-.row-link { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: var(--s3) 0; border: 0; border-top: 1px solid var(--line);
-  background: none; color: var(--muted); font: inherit; cursor: pointer; }
 
 @media (min-width: 720px) {
   .hero-amount { font-size: 84px; }

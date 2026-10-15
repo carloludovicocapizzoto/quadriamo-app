@@ -16,7 +16,7 @@ export function lastDays(txs: ClassifiedTx[], today: string, days = 7) {
 }
 
 // borse principali: fuso orario, apertura e chiusura in ora locale (minuti), lunedì-venerdì. Le festività non sono considerate.
-export const MARKETS = [
+const MARKETS = [
   { id: 'milan', tz: 'Europe/Rome', open: 9 * 60, close: 17 * 60 + 30 },
   { id: 'frankfurt', tz: 'Europe/Berlin', open: 9 * 60, close: 17 * 60 + 30 },
   { id: 'london', tz: 'Europe/London', open: 8 * 60, close: 16 * 60 + 30 },

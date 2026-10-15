@@ -81,21 +81,3 @@ export function tips(lang: string): Tip[] {
   return META.map(([id, icon, action], i) => ({ id, icon, action, title: t[i][0], text: t[i][1] }))
 }
 
-/** Il consiglio del giorno: cambia ogni giorno, uguale per tutto il giorno. Il primo giorno è sempre quello delle banche. */
-export function tipOfDay(lang: string, today: string, firstDay?: string): Tip {
-  const all = tips(lang)
-  const n = Math.floor(Date.parse(`${today}T12:00:00Z`) / 864e5) - Math.floor(Date.parse(`${firstDay ?? today}T12:00:00Z`) / 864e5)
-  return all[((n % all.length) + all.length) % all.length]
-}
-
-/** Banche con "salvadanai" separati (verificato a ottobre 2026 su siti di confronto: le condizioni possono cambiare). */
-export const BANKS: { name: string; feature: Record<L, string>; note: Record<L, string> }[] = [
-  { name: 'Revolut', feature: { it: 'Salvadanai', en: 'Savings vaults', fr: 'Coffres', es: 'Huchas' },
-    note: { it: 'Inclusi anche nel piano Standard gratuito.', en: 'Included in the free Standard plan.', fr: 'Inclus dans l’offre Standard gratuite.', es: 'Incluidas en el plan Standard gratuito.' } },
-  { name: 'N26', feature: { it: 'Spaces', en: 'Spaces', fr: 'Espaces', es: 'Espacios' },
-    note: { it: 'Fino a 10, dal piano Smart (4,90 €/mese).', en: 'Up to 10, from the Smart plan (€4.90/month).', fr: 'Jusqu’à 10, à partir de l’offre Smart (4,90 €/mois).', es: 'Hasta 10, desde el plan Smart (4,90 €/mes).' } },
-  { name: 'Hype', feature: { it: 'Box Salvadanaio e Obiettivo', en: 'Savings and Goal boxes', fr: 'Box Épargne et Objectif', es: 'Box Hucha y Objetivo' },
-    note: { it: 'Incluse anche nel conto base gratuito.', en: 'Included in the free basic account.', fr: 'Incluses dans le compte de base gratuit.', es: 'Incluidas en la cuenta básica gratuita.' } },
-  { name: 'bunq', feature: { it: 'Sottoconti con IBAN', en: 'Sub-accounts with IBAN', fr: 'Sous-comptes avec IBAN', es: 'Subcuentas con IBAN' },
-    note: { it: '3 nel piano Free, fino a 25 nei piani a pagamento.', en: '3 on the Free plan, up to 25 on paid plans.', fr: '3 avec l’offre Free, jusqu’à 25 avec les offres payantes.', es: '3 en el plan Free, hasta 25 en los de pago.' } },
-]

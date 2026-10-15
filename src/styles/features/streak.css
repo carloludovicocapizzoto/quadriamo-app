@@ -5,4 +5,3 @@
 .streak-pop .streak-flame { filter: none; width: 40px; height: 54px; }
 .streak-pop.big .streak-flame { width: 58px; height: 78px; }
 .streak-pop b { font-size: var(--t-h2); font-weight: 600; }
-.stat-ico .streak-flame { width: 20px; height: 26px; filter: none; }
