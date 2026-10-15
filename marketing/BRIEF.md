@@ -48,7 +48,7 @@ Le entrate del mese si dividono in **quattro parti**:
 - **Slancio**: i giorni di fila in cui aggiorni Quadriamo, con traguardi. Un promemoria se non l'hai ancora fatto (al massimo 3 al giorno, fino a mezzanotte).
 
 **Il mese e l'anno**
-- **Home a widget, personalizzabile**: il numero di oggi in grande, poi i widget che scegli e ordini tu (quattro parti, oggi, come finisce il mese, giorno per giorno, categorie, cosa cambia, obiettivi, slancio).
+- **Home a widget, personalizzabile**: il numero di oggi in grande, poi più di 20 widget da scegliere, ordinare e ridimensionare (quattro parti, consigli, missioni, prossimi pagamenti, capitale, patrimonio, fondo di emergenza, ultimi 7 giorni, notizie, mercati aperti o chiusi, eventi economici, obiettivi, traguardi…). Su tablet e computer diventa una dashboard a più colonne con barra laterale.
 - **Analisi**: Mese (come finisce, a questo ritmo), Anno (mese per mese, tasso di risparmio), Investi, Movimenti.
 - **Entrate extra**: scegli tu dove vanno e come dividerle.
 - **Rate e finanziamenti**: pagamenti ricorrenti con le rate che mancano.

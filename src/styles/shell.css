@@ -112,3 +112,6 @@
   /* le pagine di lettura (Analisi, Notizie, Profilo) restano in colonna; la Home usa tutta la larghezza */
   .app2 > main > :not(.home) { max-width: var(--column); margin-inline: auto; }
 }
+@media (min-width: 1024px) {
+  .app2 > main > .screen-wide { max-width: 1080px; }
+}

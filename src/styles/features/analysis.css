@@ -122,3 +122,12 @@
 .cap-big { margin: var(--s3) 0; }
 .cap-line { margin-bottom: var(--s2); }
 .cap-advice { margin: var(--s3) 0 0; font-size: var(--t-sm); color: var(--muted); line-height: 1.5; max-width: 46ch; }
+
+/* Analisi sugli schermi larghi: la pagina si allarga e i blocchi del mese si affiancano */
+.screen-wide { container-type: inline-size; }
+.ana-grid { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: var(--s8); align-items: start; }
+.ana-grid > section:empty { display: none; }
+@container (min-width: 760px) {
+  .ana-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ana-grid > .ana-wide { grid-column: 1 / -1; }
+}

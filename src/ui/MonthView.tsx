@@ -31,23 +31,18 @@ export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; sett
       <DailyChart r={r} settings={settings} today={today} />
     </>
   }
+  // a blocchi: in una colonna sul telefono, affiancati quando lo spazio lo permette (tablet orizzontale, computer)
   return (
-    <>
-      <MonthOutcome r={r} settings={settings} today={today} />
-
-      <h2 className="sec-title">{t('ana.parts')}</h2>
-      <Parts r={r} settings={settings} onOpen={onOpen} />
-
-      <h2 className="sec-title">{t('ana.daily')}</h2>
-      <DailyChart r={r} settings={settings} today={today} />
-
-      {r.byCategory.some(c => c.amount !== 0) && <>
+    <div className="ana-grid">
+      <div className="ana-wide"><MonthOutcome r={r} settings={settings} today={today} /></div>
+      <section><h2 className="sec-title">{t('ana.parts')}</h2><Parts r={r} settings={settings} onOpen={onOpen} /></section>
+      <section><h2 className="sec-title">{t('ana.daily')}</h2><DailyChart r={r} settings={settings} today={today} /></section>
+      {r.byCategory.some(c => c.amount !== 0) && <section>
         <h2 className="sec-title">{t('month.byCategory')}</h2>
         <ByCategory rows={r.byCategory} currency={settings.currency} />
-      </>}
-
-      <Payday r={r} settings={settings} />
-    </>
+      </section>}
+      <section><Payday r={r} settings={settings} /></section>
+    </div>
   )
 }
 

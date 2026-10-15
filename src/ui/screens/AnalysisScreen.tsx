@@ -20,7 +20,7 @@ export function AnalysisScreen({ view, onView, data, result, current, homeResult
   const { t } = useI18n()
   const inbox = data.inbox?.length ?? 0
   return (
-    <div className="screen">
+    <div className="screen screen-wide">
       <h1 className="screen-title">{t('nav.analysis')}</h1>
       <Segmented value={view} onChange={onView} options={ANALYSIS_VIEWS.map(v => ({ id: v, badge: v === 'transactions' ? inbox : 0,
         label: t(v === 'transactions' ? 'nav.transactions' : v === 'month' ? 'ana.month' : v === 'year' ? 'ana.year' : 'nav.investments') }))} />
