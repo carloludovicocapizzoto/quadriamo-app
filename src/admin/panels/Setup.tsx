@@ -1,5 +1,6 @@
 // Configurazione: i passi per collegare Supabase, con gli script da copiare e i controlli automatici.
 import { useState } from 'react'
+import { ENV } from '../../env'
 import { projectRef, type Setup } from '../data'
 import sql0002 from '../../../supabase/migrations/0002_beta_feedback_stats_push.sql?raw'
 import sql0004 from '../../../supabase/migrations/0004_profiles.sql?raw'
@@ -38,7 +39,8 @@ import sql0003 from '../../../supabase/migrations/0003_feedback_push_every_10_da
 import fnCode from '../../../supabase/functions/send-push/index.ts?raw'
 import { local } from '../../storage'
 
-const SITE = 'https://carloludovicocapizzoto.github.io/quadriamo-app/'
+// l'indirizzo del sito di questo ambiente (la beta in /beta/); in sviluppo quello della produzione
+const SITE = `https://carloludovicocapizzoto.github.io${ENV.base === '/' ? '/quadriamo-app/' : ENV.base}`
 
 // l'editor delle funzioni di Supabase accetta un file solo: regole e lettura dei feed (condivise con i test) nello stesso file
 const ingestBundle = [ingestCode.replace(/^import .*_shared\/.*\n/gm, ''), '// ---------- lettura dei feed (_shared/news-feed.ts) ----------', feedCode,
