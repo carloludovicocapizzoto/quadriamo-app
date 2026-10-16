@@ -29,6 +29,7 @@ import sql0020 from '../../../supabase/migrations/0020_news_podcasts_images.sql?
 import sql0021 from '../../../supabase/migrations/0021_feedback_cron_fix.sql?raw'
 import sql0022 from '../../../supabase/migrations/0022_client_errors.sql?raw'
 import sql0023 from '../../../supabase/migrations/0023_econ_events.sql?raw'
+import econDates from '../../../supabase/data/econ_events_2026_2027.sql?raw'
 import sql0024 from '../../../supabase/migrations/0024_error_diagnostics.sql?raw'
 import sql0025 from '../../../supabase/migrations/0025_usage_sessions.sql?raw'
 import sql0026 from '../../../supabase/migrations/0026_tester_reports.sql?raw'
@@ -302,7 +303,8 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
           <p>Crea il calendario degli eventi (riunioni BCE e Fed, dati ISTAT…) che il widget «Eventi economici» mostra agli utenti.
             Copia lo script, incollalo in SQL Editor e premi <b>Run</b>. Poi aggiungi le date dalle fonti ufficiali con una riga come:</p>
           <p><code>insert into econ_events (day, title_it, title_en, url) values ('2026-10-29', 'BCE: decisione sui tassi', 'ECB: interest rate decision', 'https://www.ecb.europa.eu');</code></p>
-          <div className="az-u-row"><Copy text={sql0023} label="Copia lo script" />
+          <p>Le date di BCE e Fed fino a dicembre 2027 sono già pronte, dai calendari ufficiali: dopo lo script della tabella copia anche queste e premi <b>Run</b>.</p>
+          <div className="az-u-row"><Copy text={sql0023} label="1 · Copia lo script" /><Copy text={econDates} label="2 · Copia le date BCE e Fed" />
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
           <p className="az-hint">Finché non ci sono date future, il widget non compare.</p>
         </Step>

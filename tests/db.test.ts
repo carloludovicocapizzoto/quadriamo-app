@@ -103,4 +103,11 @@ describe('database: migrazioni e regole di accesso', () => {
     expect(call.url).toBe('https://abc.supabase.co/functions/v1/report-email')
     expect(call.headers['x-cron-secret']).toBe('s3gr3t0')
   })
+
+  it('le date di BCE e Fed si inseriscono una volta sola e le legge chiunque', async () => {
+    const dates = readFileSync('supabase/data/econ_events_2026_2027.sql', 'utf8')
+    await db.exec(dates); await db.exec(dates)
+    expect((await db.query<{ n: number }>('select count(*)::int n from public.econ_events')).rows[0].n).toBe(20)
+    expect(await count('anon', null, 'public.econ_events')).toBe(20)
+  })
 })
