@@ -31,3 +31,8 @@ desktop-admin/dist
 tools/news/sample.json
 dist-e2e
 public/ds/
+
+# app per Android
+tools/android/node_modules
+dist-android
+.keys.local/
