@@ -37,8 +37,6 @@
 .legal { margin-top: 14px; }
 .legal a { color: inherit; }
 .push-toggle { display: grid; gap: 6px; justify-items: start; margin-top: 8px; }
-.profile-box { border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px 16px; margin: 14px 0 4px; background: var(--bg); }
-.profile-box h4 { margin: 0 0 6px; font-size: 17px; }
 .profile-form .chips .chip { min-height: 38px; font-size: 14px; }
 .share-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin: 10px 0 4px; }
 .share-input { display: grid; gap: 4px; font-size: 13px; font-weight: 600; }

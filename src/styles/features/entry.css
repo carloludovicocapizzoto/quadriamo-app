@@ -6,7 +6,6 @@
 .pw { display: flex; align-items: center; gap: 8px; }
 .pw input { flex: 1; min-width: 0; }
 .pw .link-btn { padding: 0 4px; font-size: 14px; }
-.hello { font-weight: 600; letter-spacing: -.02em; font-size: 24px; margin: 6px 0 4px; }
 .step-head { margin: 0 0 var(--s2); }
 .step-bar { display: flex; gap: 6px; }
 .step-bar span { flex: 1; height: 3px; border-radius: 2px; background: var(--fill-2); transition: background var(--d-base); }
