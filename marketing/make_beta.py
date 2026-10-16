@@ -1,5 +1,5 @@
 """Contenuti social per lanciare la BETA di Quadriamo, costruiti sul posizionamento:
-"oggi puoi spendere", lo stipendio diviso da solo in quattro parti, la previsione di fine mese, lo slancio, la privacy.
+"oggi puoi spendere", le entrate divise da sole in quattro parti, la previsione di fine mese, lo slancio, la privacy.
 
 Escono in marketing/out/beta/: 6 post 1080x1350 (carosello o post singoli), 6 storie 1080x1920 e un reel con la voce narrante.
 Le schermate (marketing/shots/1*.jpg) sono fatte con i DATI DI ESEMPIO dell'app: node marketing/shoot.mjs
@@ -80,10 +80,10 @@ def build(W, H, story=False):
     phone(img, '11-home.jpg', W / 2, y + 60, 640 if story else 560, 160, 1300)   # esce dal bordo in basso, come in mano
     out.append(save(img, f'{tag}-01-oggi.jpg'))
 
-    # 2. lo stipendio si divide da solo
+    # 2. le entrate si dividono da sole
     img = canvas(W, H)
     eyebrow(img, 60, top, 'Il metodo')
-    y = text_block(img, 60, top + 60, 'Lo stipendio si divide da solo.', headline(96 if story else 84), INK, 960)
+    y = text_block(img, 60, top + 60, 'Le entrate si dividono da sole.', headline(96 if story else 84), INK, 960)
     y = text_block(img, 60, y + 14, 'Prima l’affitto, poi quattro parti, ognuna con un compito. La regola 55-20-15-10 è di partenza: la cambi quando vuoi.', sans(36), MUTED, 940)
     rule_bar(img, 60, y + 40, 960, 26)
     d = ImageDraw.Draw(img)
@@ -109,7 +109,7 @@ def build(W, H, story=False):
     eyebrow(img, 60, top, 'Slancio')
     y = text_block(img, 60, top + 60, 'Un minuto al giorno. E non vuoi più fermarti.', headline(96 if story else 84), INK, 960)
     y = text_block(img, 60, y + 14, 'Ogni giorno in cui segni una spesa, la fiamma cresce. Da sola: non c’è niente da spuntare.', sans(36), MUTED, 940)
-    phone(img, '17-profile.jpg', W / 2, y + 60, 600 if story else 520, 400, 840)
+    phone(img, '35-progress.jpg', W / 2, y + 60, 600 if story else 520, 180, 840)
     out.append(save(img, f'{tag}-04-slancio.jpg'))
 
     # 5. privacy
@@ -155,7 +155,7 @@ def clip(src, seconds, out):
 
 from voice import narrated_reel
 LINES = ['Ogni mattina, Quadriamo ti dice quanto puoi spendere oggi.',
-         'Lo stipendio si divide da solo: prima l’affitto, poi quattro parti.',
+         'Le entrate si dividono da sole: prima l’affitto, poi quattro parti.',
          'E sai già come finisce il mese, prima di arrivarci.',
          'Un minuto al giorno, e lo slancio cresce.',
          'I tuoi soldi restano affari tuoi.',

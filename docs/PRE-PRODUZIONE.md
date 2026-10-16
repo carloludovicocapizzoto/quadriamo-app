@@ -81,7 +81,8 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 - ✅ Nessuna perdita: dopo 90 cambi di schermata nodi e gestori di eventi stabili.
 - ✅ Rete e batteria: una richiesta di statistiche per sessione, notizie in memoria 20 minuti, sincronizzazione solo quando cambiano i dati.
 - ✅ Solo la lingua in uso si scarica (le altre se la si cambia): alla prima apertura 218 KB invece di 343, stessa velocità; provato nei test che usano l'app (cambio lingua e apertura senza rete).
-- 🔧 Consigliato: Supabase caricato solo quando serve, per chi non ha un account (−55 KB).
+- ✅ Valutato e scartato: caricare Supabase solo quando serve. Dal 13/10 l'account è obbligatorio (tranne i dati di esempio), quindi a quasi
+  tutti serve all'avvio per riprendere la sessione: per loro aggiungerebbe solo un'attesa.
 
 ## 10. Rischi residui
 
@@ -97,7 +98,6 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 3. Testi legali definitivi (privacy con statistiche, segnalazioni e allegati; termini; dati del titolare).
 4. Prezzo Pro e scheda per la partita IVA.
 5. Guscio nativo per iOS (Capacitor) quando si apre l'Apple Developer Program.
-6. Supabase caricato solo quando serve (punto 9).
 
 ## Cosa deve fare Carlo, in ordine
 

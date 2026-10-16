@@ -1,12 +1,13 @@
 // Schermate vere dell'app per il sito (telefono in apertura e "Una giornata con Quadriamo"), con i DATI DI ESEMPIO.
 // Uso: node marketing/site-shots.mjs  (server di sviluppo acceso), poi python3 tools/site_images.py
-import { writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { openChrome, sleep } from '../tools/chrome.mjs'
 
 const APP = process.env.APP_URL ?? 'http://localhost:5173/app/'
 // OUT_DIR: cartella diversa (es. per il controllo visivo prima/dopo una modifica)
 const OUT = (process.env.OUT_DIR ?? new URL('./site-shots/', import.meta.url).pathname).replace(/\/?$/, '/')
+mkdirSync(OUT, { recursive: true })
 
 const { cdp, js, close } = await openChrome({ args: ['--lang=it-IT', '--hide-scrollbars'], onError: e => console.warn('errore nella pagina:', e) })
 const shot = async (name, prep = '') => {

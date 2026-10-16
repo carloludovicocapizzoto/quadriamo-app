@@ -7,7 +7,7 @@ I reel hanno la voce narrante (Sara, voce sintetica generata sul Mac con Kokoro:
 ## Instagram — carosello (7 immagini, `out/instagram/`)
 I tuoi soldi, in quattro. 🟧🟧🟧⬜
 
-Quadriamo divide lo stipendio in 4 parti con la regola 55-20-15-10 e ti dice ogni giorno quanto puoi ancora spendere.
+Quadriamo divide le entrate in 4 parti con la regola 55-20-15-10 e ti dice ogni giorno quanto puoi ancora spendere.
 → Una spesa in 5 secondi, o importi l’estratto conto
 → Il tuo mese in un grafico
 → I tuoi dati restano tuoi: server nell’UE, niente pubblicità

@@ -73,7 +73,7 @@ Link in bio. Se conosci qualcuno che arriva sempre al 20 del mese senza soldi, m
 ## Reel (`reel-beta.mp4`, 24 secondi, con voce)
 Didascalia: «L'app che ogni mattina ti dice quanto puoi spendere oggi. Cerco 50 tester, gratis: link in bio.»
 
-La voce dice: «Ogni mattina, Quadriamo ti dice quanto puoi spendere oggi. Lo stipendio si divide da solo: prima l'affitto, poi quattro parti. E sai già come finisce il mese, prima di arrivarci. Un minuto al giorno, e lo slancio cresce. I tuoi soldi restano affari tuoi. È gratis durante la beta. Cerco cinquanta tester: il link è nella bio.»
+La voce dice: «Ogni mattina, Quadriamo ti dice quanto puoi spendere oggi. Le entrate si dividono da sole: prima l'affitto, poi quattro parti. E sai già come finisce il mese, prima di arrivarci. Un minuto al giorno, e lo slancio cresce. I tuoi soldi restano affari tuoi. È gratis durante la beta. Cerco cinquanta tester: il link è nella bio.»
 #finanzapersonale #risparmiare #budgeting #appconsigliate #soldi
 
 ---
@@ -91,7 +91,7 @@ La voce dice: «Ogni mattina, Quadriamo ti dice quanto puoi spendere oggi. Lo st
 | Dom 14 | Post 5 «Privacy» + storia 6 di nuovo | Instagram |
 
 Ogni settimana: rispondi a tutti i commenti e messaggi entro la giornata e chiedi a chi la prova di lasciare un feedback dall'app
-(Opzioni → Invia un feedback). Nell'area amministratore guarda «Ritorno dopo 7 giorni»: è il numero che dice se la beta funziona.
+(Profilo → Segnala un problema). Nell'area amministratore guarda «Ritorno dopo 7 giorni»: è il numero che dice se la beta funziona.
 
 ## Rigenerare
 1. `npm run dev` (server di sviluppo acceso)
