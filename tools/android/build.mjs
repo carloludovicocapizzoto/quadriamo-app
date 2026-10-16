@@ -28,6 +28,7 @@ const twa = TwaManifest.fromWebManifestJson(manifestUrl, await res.json())
 Object.assign(twa, {
   packageId: PACKAGE, appVersionName: version, appVersionCode: Number(need('VERSION_CODE')),
   enableNotifications: true,            // le notifiche della PWA arrivano come notifiche dell'app
+  minSdkVersion: 24,                    // Android 7 o più recente: lo richiede androidbrowserhelper
   fallbackType: 'customtabs', signingKey: { path: keystore, alias: 'quadriamo' },
   // barra di navigazione di Android dello stesso colore dello sfondo dell'app: niente fascia nera o chiara in basso
   navigationColor: twa.backgroundColor, navigationColorDark: twa.backgroundColor,
