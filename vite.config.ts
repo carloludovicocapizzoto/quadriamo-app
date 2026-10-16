@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { execSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { loadEnv } from 'vite'
 import { defineConfig, type Plugin } from 'vitest/config'
 
 // Il design system (src/design) è uno solo: l'app e l'admin lo importano, le pagine statiche del sito
@@ -16,6 +17,26 @@ function designSystemForSite(): Plugin {
   return { name: 'quadriamo-design-system', buildStart: write, configureServer: write, handleHotUpdate: ({ file }) => { if (file.includes('/src/design/')) write() } }
 }
 
+// Content Security Policy per le pagine con codice (app, admin, notizie): script solo dal sito, dati solo dal sito,
+// da Supabase dell'ambiente e dai cambi BCE; immagini e audio delle notizie da qualsiasi indirizzo https.
+// Se un testo esterno (una notizia, un feed) contenesse codice, il browser non lo eseguirebbe. Solo nella build:
+// in sviluppo Vite ha bisogno di script in linea. GitHub Pages non manda intestazioni: la regola va nella pagina.
+function contentSecurityPolicy(mode: string): Plugin {
+  const supabase = loadEnv(mode, process.cwd(), 'VITE_').VITE_SUPABASE_URL
+  const api = supabase ? `${supabase} ${supabase.replace(/^https/, 'wss')}` : ''
+  const csp = [
+    "default-src 'self'", "script-src 'self'", "style-src 'self' 'unsafe-inline'", "font-src 'self'",
+    "img-src 'self' data: blob: https:", "media-src 'self' blob: https:",
+    `connect-src 'self' ${api} https://api.frankfurter.dev`.replace(/\s+/g, ' '),
+    "worker-src 'self'", "manifest-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'self'",
+  ].join('; ')
+  return {
+    name: 'quadriamo-csp', apply: 'build',
+    transformIndexHtml: { order: 'post', handler: (html, ctx) => /(^|\/)(app|admin|notizie)\/index\.html$/.test(ctx.path)
+      ? html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${csp}" />`) : html },
+  }
+}
+
 // Identità della build: versione da package.json, numero = quanti commit ci sono (sale sempre), commit corto.
 const git = (cmd: string, fallback: string) => { try { return execSync(`git ${cmd}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() } catch { return fallback } }
 const BUILD = { version: JSON.parse(readFileSync('package.json', 'utf8')).version as string, number: git('rev-list --count HEAD', '0'), commit: git('rev-parse --short HEAD', 'dev') }
@@ -28,6 +49,7 @@ export default defineConfig(({ mode }) => ({
   define: { __APP_VERSION__: JSON.stringify(BUILD.version), __APP_BUILD__: JSON.stringify(BUILD.number), __APP_COMMIT__: JSON.stringify(BUILD.commit) },
   plugins: [
     designSystemForSite(),
+    contentSecurityPolicy(mode),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
