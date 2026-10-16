@@ -1,25 +1,18 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import en from './en'
-import { DICTS, I18nContext, LANG_KEY, LANGS, detectLang, type I18n, type Lang } from './core'
+import { I18nContext, LANG_KEY, loadDict, type I18n, type I18nStart } from './core'
 import { local } from '../storage'
 
-function initialLang(): Lang {
-  const saved = local.get(LANG_KEY)
-  if (saved && saved in LANGS) return saved as Lang
-  return detectLang()
-}
-
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(initialLang)
+export function I18nProvider({ start, children }: { start: I18nStart; children: ReactNode }) {
+  const [{ lang, dict }, setCurrent] = useState(start)
   useEffect(() => { document.documentElement.lang = lang }, [lang])
   const value = useMemo<I18n>(() => ({
     lang,
     setLang: l => {
-      setLangState(l)
       local.set(LANG_KEY, l)
+      void loadDict(l).then(d => setCurrent({ lang: l, dict: d }))
     },
     t: (key, vars) => {
-      let s: string = DICTS[lang][key] ?? en[key] ?? ''
+      let s: string = dict[key] ?? ''
       for (const [k, v] of Object.entries(vars ?? {})) s = s.replaceAll(`{${k}}`, String(v))
       return s
     },
@@ -27,6 +20,6 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     money: (n, currency) => new Intl.NumberFormat(lang, { style: 'currency', currency, useGrouping: 'always' as unknown as boolean }).format(n),
     date: (iso, opts = { day: 'numeric', month: 'short' }) =>
       new Intl.DateTimeFormat(lang, { ...opts, timeZone: 'UTC' }).format(new Date(iso + 'T00:00:00Z')),
-  }), [lang])
+  }), [lang, dict])
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
 }

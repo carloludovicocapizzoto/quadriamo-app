@@ -5,9 +5,10 @@ import { createRoot } from 'react-dom/client'
 import '../styles/index.css'
 import { applyPrefs } from '../app/prefs'
 import { I18nProvider } from '../i18n'
+import { prepareI18n } from '../i18n/core'
 import { NewsPage } from './NewsPage'
 
 applyPrefs()
 document.documentElement.dataset.section = 'news'
 
-createRoot(document.getElementById('root')!).render(<StrictMode><I18nProvider><NewsPage /></I18nProvider></StrictMode>)
+void prepareI18n().then(start => createRoot(document.getElementById('root')!).render(<StrictMode><I18nProvider start={start}><NewsPage /></I18nProvider></StrictMode>))

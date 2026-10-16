@@ -1,12 +1,29 @@
 import { createContext, useContext } from 'react'
-import en, { type Dict } from './en'
-import es from './es'
-import fr from './fr'
-import it from './it'
+import type { Dict } from './en'
+import { local } from '../storage'
 
 export const LANGS = { it: 'Italiano', en: 'English', fr: 'Français', es: 'Español' } as const
 export type Lang = keyof typeof LANGS
-export const DICTS: Record<Lang, Dict> = { it, en, fr, es }
+// ogni lingua è un pezzo a parte: si scarica solo quella in uso (le altre se la si cambia). Tutte hanno tutte le
+// chiavi (i18n.test.ts), quindi non serve una lingua di riserva.
+const LOADERS: Record<Lang, () => Promise<{ default: Dict }>> = {
+  it: () => import('./it'), en: () => import('./en'), fr: () => import('./fr'), es: () => import('./es'),
+}
+const loaded = new Map<Lang, Dict>()
+export async function loadDict(l: Lang): Promise<Dict> {
+  const d = loaded.get(l) ?? (await LOADERS[l]()).default
+  loaded.set(l, d)
+  return d
+}
+
+export interface I18nStart { lang: Lang; dict: Dict }
+
+/** La lingua di partenza (scelta prima, altrimenti quella del browser), già scaricata: si chiama prima del primo disegno. */
+export async function prepareI18n(): Promise<I18nStart> {
+  const saved = local.get(LANG_KEY)
+  const lang = saved && saved in LANGS ? saved as Lang : detectLang()
+  return { lang, dict: await loadDict(lang) }
+}
 export const LANG_KEY = 'quadriamo.lang'
 
 /** Lingua del browser se è una delle quattro, altrimenti inglese. */

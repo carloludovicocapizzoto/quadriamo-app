@@ -84,6 +84,14 @@ await step('Profilo → Capitale: inserisco 2.000 €', async () => {
 }, has('/2\\.000,00/', '.outcome'))
 await step('il capitale compare in Analisi → Investi', () => js(`location.hash = '#/analysis/investments'`), `/2\\.000,00/.test(document.querySelector('.cap-line')?.innerText ?? '')`)
 
+console.log('Lingua')
+await step('Profilo → Lingua → English: l\'app passa all\'inglese', async () => {
+  await js(`location.hash = '#/profile/language'`); await sleep(800)
+  await click(byText('/^English/', '.row, button, [role=button]'))
+}, `document.documentElement.lang === 'en' && /Language|Profile/.test(document.body.innerText)`)
+await step('e torna all\'italiano', () => click(byText('/^Italiano/', '.row, button, [role=button]')),
+  `document.documentElement.lang === 'it' && /Lingua|Profilo/.test(document.body.innerText)`)
+
 console.log('Installazione e aggiornamenti')
 await step('il service worker è registrato (app installabile, aggiornamenti automatici)', null,
   `navigator.serviceWorker.getRegistration().then(r => !!r?.active)`)
