@@ -250,7 +250,7 @@
   "data.awaySrc": "Ministero dell’Università, a.a. 2022/23",
   "data.lit": "il punteggio di educazione finanziaria degli adulti italiani",
   "data.litSrc": "Banca d’Italia, indagine 2023",
-  "data.punch": "Con un affitto così e senza nessuno che te l’abbia insegnato, sapere quanto puoi spendere oggi fa la differenza tra arrivare a fine mese e chiamare casa il 20."
+  "data.punch": "Affitti alti e nessuno che ti abbia mai insegnato a gestire i soldi: sapere ogni giorno quanto puoi spendere trasforma la fine del mese da un’incognita in una certezza."
  },
  "en": {
   "rule.text": "For students we start from 60-25-15, with no forced investing; for workers from 55-20-15-10. You can change the percentages anytime.",
@@ -306,7 +306,7 @@
   "data.awaySrc": "Italian Ministry of University, 2022/23",
   "data.lit": "financial literacy score of Italian adults",
   "data.litSrc": "Bank of Italy, 2023 survey",
-  "data.punch": "With rent like that and nobody who ever taught you, knowing what you can spend today is the difference between making it to the end of the month and calling home on the 20th."
+  "data.punch": "High rents, and no one ever taught you how to manage money: knowing each day what you can spend turns the end of the month from a question mark into a certainty."
  },
  "fr": {
   "rule.text": "Pour les étudiants, on part de 60-25-15, sans investissement imposé ; pour ceux qui travaillent, de 55-20-15-10. Modifiable à tout moment.",
@@ -362,7 +362,7 @@
   "data.awaySrc": "Ministère italien de l’Université, 2022/23",
   "data.lit": "score de culture financière des adultes italiens",
   "data.litSrc": "Banque d’Italie, enquête 2023",
-  "data.punch": "Avec un tel loyer et personne pour vous l’apprendre, savoir ce que vous pouvez dépenser aujourd’hui change tout."
+  "data.punch": "Des loyers élevés, et personne pour vous apprendre à gérer l’argent : savoir chaque jour ce que vous pouvez dépenser fait de la fin du mois une certitude, et non plus une inconnue."
  },
  "es": {
   "rule.text": "Para estudiantes partimos de 60-25-15, sin inversiones obligadas; para quien trabaja, de 55-20-15-10. Cambias los porcentajes cuando quieras.",
@@ -418,7 +418,7 @@
   "data.awaySrc": "Ministerio italiano de Universidad, 2022/23",
   "data.lit": "puntuación de educación financiera de los adultos italianos",
   "data.litSrc": "Banco de Italia, encuesta 2023",
-  "data.punch": "Con un alquiler así y sin que nadie te lo haya enseñado, saber cuánto puedes gastar hoy lo cambia todo."
+  "data.punch": "Alquileres altos y nadie que te haya enseñado a gestionar el dinero: saber cada día cuánto puedes gastar convierte el final de mes en una certeza, no en una incógnita."
  }
 }
   Object.keys(X).forEach(function (l) { Object.keys(X[l]).forEach(function (k) { T[l][k] = X[l][k] }) })
