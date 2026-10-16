@@ -24,6 +24,7 @@ import { ANALYSIS_VIEWS, navigate, useRoute, type Route } from './router'
 import { toast, useToast } from './toast'
 import { useModel, ymKey } from './useModel'
 import { SectionBoundary } from './SectionBoundary'
+import { ENV } from '../env'
 
 // le pagine meno usate si scaricano solo quando servono
 // le altre sezioni si scaricano a parte; appena il telefono è libero si precaricano, così il primo tocco è immediato
@@ -120,7 +121,7 @@ export function AppShell() {
               onOpen={openTx} />}
             {route.tab === 'profile' && <ProfileScreen page={route.page ?? null} onPage={p => go(p ? { tab: 'profile', page: p } : { tab: 'profile' })}
               data={data} streak={streak} today={today} onLogin={entry.openLogin}
-              onAdmin={() => window.location.assign(`${import.meta.env.BASE_URL}admin/`)} />}
+              onAdmin={() => window.location.assign(`${ENV.base}admin/`)} />}
           </Suspense>
         </SectionBoundary>
         <FxAutoUpdate today={today} />

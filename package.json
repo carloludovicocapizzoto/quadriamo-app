@@ -1,11 +1,12 @@
 {
   "name": "quadriamo-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.9.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:beta": "tsc -b && vite build --mode beta",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",

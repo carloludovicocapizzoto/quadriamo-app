@@ -11,6 +11,7 @@ import { ErrorsPanel } from './ErrorsPanel'
 import { Icon, type IconName } from '../ui/Icon'
 import { CommandPalette, type Command } from './CommandPalette'
 import { AccountsPanel, DashboardPanel, DevicesPanel, FeedbackPanel, PushPanel, ResearchPanel, SetupPanel } from './panels'
+import { ENV } from '../env'
 
 type Panel = 'dashboard' | 'dispositivi' | 'account' | 'ricerca' | 'feedback' | 'notifiche' | 'errori' | 'configurazione'
 const NAV: { group: string; items: [Panel, string, IconName][] }[] = [
@@ -29,7 +30,7 @@ const TITLES: Record<Panel, [string, string]> = {
   errori: ['Errori', 'Cosa si è rotto sui dispositivi degli utenti, raggruppato per messaggio.'],
   configurazione: ['Configurazione', 'Cosa è attivo su Supabase e cosa manca.'],
 }
-const APP_URL = `${import.meta.env.BASE_URL}app/`
+const APP_URL = `${ENV.base}app/`
 // scorciatoie: G poi la lettera del pannello (come Linear)
 const KEYS: Record<string, Panel> = { d: 'dashboard', v: 'dispositivi', a: 'account', r: 'ricerca', f: 'feedback', n: 'notifiche', e: 'errori', c: 'configurazione' }
 const DEMO = new URLSearchParams(window.location.search).get('demo') === '1'
@@ -82,7 +83,7 @@ function Login({ onKey }: { onKey: (k: AdminKey) => void }) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setMsg({ text: 'Scrivi prima la tua email.', bad: true }); return }
     setBusy(true); setMsg(null)
     const { error } = await supabase!.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false,
-      emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}admin/` } })
+      emailRedirectTo: `${window.location.origin}${ENV.base}admin/` } })
     setBusy(false)
     setMsg(error ? { text: 'Invio non riuscito: riprova tra qualche minuto.', bad: true } : { text: 'Ti abbiamo mandato un link: aprilo da questo dispositivo.' })
   }

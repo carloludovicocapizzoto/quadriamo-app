@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { defineConfig, type Plugin } from 'vitest/config'
 
@@ -15,11 +16,16 @@ function designSystemForSite(): Plugin {
   return { name: 'quadriamo-design-system', buildStart: write, configureServer: write, handleHotUpdate: ({ file }) => { if (file.includes('/src/design/')) write() } }
 }
 
+// Identità della build: versione da package.json, numero = quanti commit ci sono (sale sempre), commit corto.
+const git = (cmd: string, fallback: string) => { try { return execSync(`git ${cmd}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() } catch { return fallback } }
+const BUILD = { version: JSON.parse(readFileSync('package.json', 'utf8')).version as string, number: git('rev-list --count HEAD', '0'), commit: git('rev-parse --short HEAD', 'dev') }
+
 // In produzione su GitHub Pages l'app vive in /quadriamo-app/ (BASE_PATH dalla GitHub Action); in sviluppo in /.
 const base = process.env.BASE_PATH ?? '/'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   base,
+  define: { __APP_VERSION__: JSON.stringify(BUILD.version), __APP_BUILD__: JSON.stringify(BUILD.number), __APP_COMMIT__: JSON.stringify(BUILD.commit) },
   plugins: [
     designSystemForSite(),
     react(),
@@ -28,8 +34,9 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png', 'fonts/DMSerifDisplay-Regular.ttf', 'fonts/*.woff2'],
       manifest: {
         id: `${base}app/`,
-        name: 'Quadriamo',
-        short_name: 'Quadriamo',
+        // la beta installata accanto all'app normale si riconosce dal nome
+        name: mode === 'beta' ? 'Quadriamo Beta' : 'Quadriamo',
+        short_name: mode === 'beta' ? 'Q. Beta' : 'Quadriamo',
         categories: ['finance', 'productivity'],
         description: 'Your money, in four: the 55-20-15-10 budget planner.',
         lang: 'en',
@@ -61,4 +68,4 @@ export default defineConfig({
     },
   },
   test: { include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'tests/**/*.test.ts'] },
-})
+}))

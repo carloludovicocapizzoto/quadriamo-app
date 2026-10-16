@@ -17,6 +17,7 @@ import { Onboarding } from '../ui/Onboarding'
 import { SetupWizard } from '../ui/SetupWizard'
 
 import { EntryContext } from './entryContext'
+import { ENV } from '../env'
 
 export function Entry({ children }: { children: ReactNode }) {
   const { lang } = useI18n()
@@ -73,7 +74,7 @@ function PreApp({ children }: { children: ReactNode }) {
   return (
     <div className="app">
       <header className="top">
-        <a className="logo" href={import.meta.env.BASE_URL}>Quadriamo<span>.</span> <small className="beta">{t('beta.badge')}</small></a>
+        <a className="logo" href={ENV.base}>Quadriamo<span>.</span> <small className="beta">{t('beta.badge')}</small></a>
         {sync.user && (
           <button className="sync-pill" onClick={() => void sync.syncNow()} title={t('sync.now')}>
             <span className={`dot ${sync.status}`} aria-hidden="true" />

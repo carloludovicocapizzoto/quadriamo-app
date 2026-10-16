@@ -1,8 +1,9 @@
 // La pagina Notizie del sito: intestazione del sito (logo, lingua, Apri l'app) e le Notizie dell'app.
 import { LANGS, useI18n, type Lang } from '../i18n/core'
 import { NewsScreen } from '../ui/screens/NewsScreen'
+import { ENV } from '../env'
 
-const BASE = import.meta.env.BASE_URL
+const BASE = ENV.base
 
 export function NewsPage() {
   const { t, lang, setLang } = useI18n()

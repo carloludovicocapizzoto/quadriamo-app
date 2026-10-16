@@ -1,8 +1,9 @@
 // Salvataggio sul dispositivo (IndexedDB). Niente server: i dati restano qui finché non arriva la sincronizzazione.
 import { del, get, set } from 'idb-keyval'
 import type { AppData } from './state'
+import { storageKey } from '../env'
 
-const KEY = 'quadriamo.data.v1'
+const KEY = storageKey('quadriamo.data.v1')
 
 export async function loadData(): Promise<AppData | null> {
   try { return (await get<AppData>(KEY)) ?? null } catch { return null }

@@ -1,7 +1,7 @@
 // Errori dell'app: se qualcosa si rompe sul telefono di un utente, arriva all'area admin (tabella client_errors).
 // Solo dati tecnici, le email nei messaggi vengono oscurate; al massimo 5 errori diversi per apertura dell'app.
-import { APP_VERSION } from '../beta/device'
 import { supabase } from '../sync/client'
+import { ENV } from '../env'
 
 const sent = new Set<string>()
 // rumore che non dice niente: estensioni del browser, script di terzi, sezioni non scaricate perché offline
@@ -22,7 +22,7 @@ export function reportError(e: unknown) {
   sent.add(message)
   void supabase.from('client_errors').insert({
     message, stack: (err.stack ?? '').replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, '[email]').slice(0, 2000),
-    route: (location.hash.split('?')[0] || '#/').slice(0, 80), version: APP_VERSION, platform: platform(),
+    route: (location.hash.split('?')[0] || '#/').slice(0, 80), version: ENV.release, platform: platform(),
   }).then(() => undefined, () => undefined)
 }
 

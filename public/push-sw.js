@@ -1,7 +1,7 @@
 // Notifiche push di Quadriamo (caricato dal service worker dell'app).
 // - richiesta di feedback e messaggi dell'amministratore: titolo e testo arrivano dal server
 // - "morning": il server manda solo la sveglia; il numero del giorno si calcola qui, con il riepilogo salvato dall'app
-//   sul dispositivo (IndexedDB "keyval-store", chiave "quadriamo.morning"). Gli importi non passano mai dal server.
+//   sul dispositivo (IndexedDB "keyval-store", chiave "quadriamo.morning", con "beta:" davanti nella beta). Gli importi non passano mai dal server.
 var MORNING = {
   it: ['Oggi puoi spendere', 'Apri Quadriamo per vedere quanto puoi spendere oggi.'],
   en: ['Today you can spend', 'Open Quadriamo to see how much you can spend today.'],
@@ -74,6 +74,9 @@ function nudgeNotification(lang, late) {
   })
 }
 
+// la beta vive in /beta/ sullo stesso indirizzo: le sue chiavi hanno il prefisso "beta:" (src/env.ts, storageKey)
+var MORNING_KEY = (self.registration.scope.indexOf('/beta/') > -1 ? 'beta:' : '') + 'quadriamo.morning'
+
 function readSnapshot() {
   return new Promise(function (resolve) {
     try {
@@ -81,7 +84,7 @@ function readSnapshot() {
       req.onerror = function () { resolve(null) }
       req.onsuccess = function () {
         try {
-          var get = req.result.transaction('keyval', 'readonly').objectStore('keyval').get('quadriamo.morning')
+          var get = req.result.transaction('keyval', 'readonly').objectStore('keyval').get(MORNING_KEY)
           get.onsuccess = function () { resolve(get.result || null) }
           get.onerror = function () { resolve(null) }
         } catch { resolve(null) }

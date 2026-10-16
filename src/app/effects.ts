@@ -13,11 +13,12 @@ import type { I18n } from '../i18n/core'
 type T = I18n['t']
 import { navigate } from './router'
 import { toast } from './toast'
+import { ENV } from '../env'
 
 /** Avvio: vecchi indirizzi, pagina d'ingresso dai link (?join=, ?tab=news), indirizzo pulito, installazione. */
 export function useBootstrap() {
   useEffect(() => {
-    if (ENTRY.get('admin') === '1') { window.location.replace(`${import.meta.env.BASE_URL}admin/`); return }
+    if (ENTRY.get('admin') === '1') { window.location.replace(`${ENV.base}admin/`); return }
     if (ENTRY.get('join')) navigate({ tab: 'profile', page: 'shared' }, { replace: true })
     else if (ENTRY.get('tab') === 'news') navigate({ tab: 'news' }, { replace: true })
     // i parametri servono una volta sola: si tolgono dall'indirizzo, la pagina (#/...) resta

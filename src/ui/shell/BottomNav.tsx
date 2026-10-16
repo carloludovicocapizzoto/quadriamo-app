@@ -4,6 +4,7 @@ import { Icon, type IconName } from '../Icon'
 import { tap } from '../kit/motion'
 
 import type { Tab as MainTab } from '../../app/router'
+import { ENV } from '../../env'
 const ITEMS: { id: MainTab; icon: IconName }[] = [
   { id: 'home', icon: 'home' }, { id: 'news', icon: 'news' }, { id: 'analysis', icon: 'year' }, { id: 'profile', icon: 'user' },
 ]
@@ -20,7 +21,7 @@ export function BottomNav({ tab, onTab, onAdd, badge }: { tab: string; onTab: (t
   return (
     <nav className="tabbar" aria-label="Quadriamo">
       {/* il marchio compare solo quando la barra diventa laterale (tablet orizzontale e computer) */}
-      <a className="nav-brand" href={import.meta.env.BASE_URL} aria-hidden="true" tabIndex={-1}>Quadriamo<span>.</span></a>
+      <a className="nav-brand" href={ENV.base} aria-hidden="true" tabIndex={-1}>Quadriamo<span>.</span></a>
       {ITEMS.slice(0, 2).map(btn)}
       {/* stessa struttura delle altre voci (forma + nome): così il + sta sulla loro riga, centrato su ogni dispositivo */}
       <button className="tab-add" onClick={() => { tap(); onAdd() }} aria-label={t('action.add')}>

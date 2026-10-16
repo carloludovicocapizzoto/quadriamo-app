@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { badges, goalStatus, monthOf, monthlyTrend, prevMonth, type Streak } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import { usePrefs } from '../../app/prefs'
-import { APP_VERSION, setStatsConsent, statsConsent } from '../../beta/device'
+import { setStatsConsent, statsConsent } from '../../beta/device'
 import { track } from '../../beta/telemetry'
 import { PAGES as LEGAL } from '../../config'
 import { useHelp } from '../../profile/help'
@@ -16,6 +16,7 @@ import { morph } from '../kit/motion'
 import { Avatar } from './Avatar'
 import { PAGES } from './registry'
 import { SECTIONS, pageLabel, type Ctx } from './sections'
+import { ENV } from '../../env'
 
 const SITE = 'https://carloludovicocapizzoto.github.io/quadriamo-app/'
 
@@ -54,7 +55,7 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
   )
 
   const ctx: Ctx = {
-    signedIn: !!sync.user, isAdmin, prefs, contactEmail: help?.contact ?? '', version: APP_VERSION, stats,
+    signedIn: !!sync.user, isAdmin, prefs, contactEmail: help?.contact ?? '', version: ENV.label, stats,
     privacyUrl: `${LEGAL.privacy}?lang=${lang}`, termsUrl: `${LEGAL.terms}?lang=${lang}`, t,
     setStats: on => { setStats(on); setStatsConsent(on ? 'yes' : 'no') },
     invite: async () => {

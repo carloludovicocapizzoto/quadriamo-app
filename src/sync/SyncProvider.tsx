@@ -8,6 +8,7 @@ import { SyncContext, type SyncApi, type SyncStatus } from './context'
 import { forgetAvatar, loadAvatar, removeAvatar } from '../profile/avatar'
 import { saveNames } from './profile'
 import { fetchRemote, pushRemote } from './remote'
+import { ENV } from '../env'
 
 const DEBOUNCE_MS = 1500
 
@@ -91,9 +92,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     return () => { window.removeEventListener('online', onOnline); document.removeEventListener('visibilitychange', onVisible) }
   }, [syncNow])
 
-  const appUrl = `${window.location.origin}${import.meta.env.BASE_URL}app/?login=1`
+  const appUrl = `${window.location.origin}${ENV.base}app/?login=1`
   // il pulsante dell'email apre il browser (non l'app installata): lì compare "Email confermata, torna sull'app"
-  const confirmUrl = `${window.location.origin}${import.meta.env.BASE_URL}app/?confirmed=1`
+  const confirmUrl = `${window.location.origin}${ENV.base}app/?confirmed=1`
   const api = useMemo<SyncApi>(() => ({
     enabled: !!supabase, ready, user, status, lastSync, syncNow, recovery,
     signIn: async (email, password) => {

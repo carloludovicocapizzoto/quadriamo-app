@@ -3,6 +3,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { supabase } from '../sync/client'
 import { local } from '../storage'
+import { ENV } from '../env'
 
 const KEY = 'q.adminKey'
 export interface AdminKey { name: string; code: string }
@@ -35,7 +36,7 @@ export function db(): SupabaseClient | null {
   if (!k || !supabase) return supabase
   if (!keyed || keyedCode !== k.code) {
     keyedCode = k.code
-    keyed = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, {
+    keyed = createClient(ENV.supabase!.url, ENV.supabase!.key, {
       auth: { persistSession: false, autoRefreshToken: false, storageKey: 'q-admin-key' },
       global: { headers: { 'x-admin-key': k.code } },
     })

@@ -1,6 +1,5 @@
 // Identità anonima del dispositivo e preferenze della beta (solo nel browser; niente dati del budget).
 import { local } from '../storage'
-export const APP_VERSION = '0.9-beta'
 const K = { device: 'quadriamo.device', stats: 'quadriamo.stats', firstUse: 'quadriamo.firstUse',
             feedbackAt: 'quadriamo.feedbackAt', lastOpen: 'quadriamo.lastOpen' } as const
 

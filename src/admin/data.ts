@@ -2,6 +2,7 @@
 // a chi è nella tabella admins (il controllo è nel database, non qui).
 import { db, keyHeaders } from './adminKey'
 import { downloadFile } from '../ui/kit/download'
+import { ENV } from '../env'
 
 export interface Stats {
   devices: number; active_1: number; active_7: number; active_30: number; accounts: number; installed: number
@@ -62,7 +63,7 @@ export const LABELS: Record<string, string> = {
 }
 export const label = (k: string | null | undefined) => LABELS[k ?? '?'] ?? k ?? '—'
 
-export const projectRef = () => (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.match(/https:\/\/([^.]+)\./)?.[1] ?? ''
+export const projectRef = () => ENV.supabase?.ref ?? ''
 
 async function rpc<T>(name: string, args?: Record<string, unknown>): Promise<T> {
   const { data, error } = await db()!.rpc(name, args)
@@ -81,7 +82,7 @@ export const loadPush = () => rpc<PushSub[]>('admin_push_list')
 export async function checkSetup(signedIn: boolean): Promise<Setup> {
   const supabase = db()
   const s: Setup = { connected: !!supabase, tables: null, profiles: null, research: null, v8: null, v10: null, v11: null, v13: null, v14: null, billing: null, news: null, siteFeedback: null, adminKeys: null, adminName: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
-    vapidInApp: !!import.meta.env.VITE_VAPID_PUBLIC_KEY }
+    vapidInApp: !!ENV.vapidKey }
   if (!supabase || !signedIn) return s
   const { data, error } = await supabase.rpc('is_admin')
   // PGRST202 = funzione inesistente: lo script 0002 non è ancora stato eseguito
@@ -107,8 +108,8 @@ export async function checkSetup(signedIn: boolean): Promise<Setup> {
     : { fn: true, configured: !!bf.data?.configured, webhook: !!bf.data?.webhook, test: !!bf.data?.test }
   // le notizie si chiamano come dall'app (senza il codice da amministratore, che la funzione non si aspetta)
   try {
-    const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY
-    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/news`, {
+    const key = ENV.supabase?.key ?? ''
+    const res = await fetch(`${ENV.supabase?.url}/functions/v1/news`, {
       method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ lang: 'it' }) })
     s.news = res.ok && Array.isArray((await res.json())?.items)
   } catch { s.news = false }

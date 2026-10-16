@@ -14,6 +14,7 @@ import { categoryName } from '../names'
 import { AmountInput } from '../kit/AmountInput'
 import { amountText } from '../kit/amount'
 import { local } from '../../storage'
+import { ENV } from '../../env'
 
 const LAST = 'q.sharedBudget'
 
@@ -250,7 +251,7 @@ function BudgetSettings({ d, me, onChange, onLeft }: { d: SFull; me: string; onC
   const [code, setCode] = useState('')
   const [copied, setCopied] = useState(false)
   const self = d.members.find(m => m.user_id === me)
-  const link = code ? `${window.location.origin}${import.meta.env.BASE_URL}app/?join=${code}` : ''
+  const link = code ? `${window.location.origin}${ENV.base}app/?join=${code}` : ''
   const setMode = async (m: SFull['budget']['split_mode']) => { await updateBudget(d.budget.id, { split_mode: m }); onChange() }
   return (
     <section className="card sh-settings">

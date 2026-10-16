@@ -1,5 +1,7 @@
 # Pubblica l'app su GitHub Pages a ogni push su main, solo se passano controllo del codice, test, tipi
 # e i test che usano l'app come un utente (Chrome è già installato sui server di GitHub).
+# Due ambienti sullo stesso sito: produzione in /quadriamo-app/ e beta per i tester in /quadriamo-app/beta/.
+# La beta usa un progetto Supabase separato (variabili BETA_*): finché non ci sono, non viene costruita.
 name: Deploy
 
 on:
@@ -21,6 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # tutta la storia: il numero di build è il numero di commit
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -35,6 +39,14 @@ jobs:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY }}
+      - name: Beta per i tester
+        if: ${{ vars.BETA_VITE_SUPABASE_URL != '' }}
+        run: npx vite build --mode beta --outDir dist/beta
+        env:
+          BASE_PATH: /quadriamo-app/beta/
+          VITE_SUPABASE_URL: ${{ vars.BETA_VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.BETA_VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_VAPID_PUBLIC_KEY: ${{ vars.BETA_VITE_VAPID_PUBLIC_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

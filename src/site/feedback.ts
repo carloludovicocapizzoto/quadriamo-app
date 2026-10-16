@@ -1,7 +1,8 @@
 // Modulo "Manda un feedback" del sito: scrive nella tabella feedback di Supabase (chiunque può inviare,
 // solo l'amministratore legge). Email facoltativa, oppure anonimo.
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined
+import { ENV } from '../env'
+
+const sb = ENV.supabase
 const form = document.getElementById('fb-form') as HTMLFormElement | null
 
 if (form) {
@@ -22,13 +23,13 @@ if (form) {
     const text = msg.value.trim(), mail = anon.checked ? '' : email.value.trim()
     if (!rating && !text) return show('fb-empty')
     if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) return show('fb-bademail')
-    if (!url || !key) return show('fb-err')
+    if (!sb) return show('fb-err')
     const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]')!
     btn.disabled = true
     try {
-      const res = await fetch(`${url}/rest/v1/feedback`, {
+      const res = await fetch(`${sb.url}/rest/v1/feedback`, {
         method: 'POST',
-        headers: { apikey: key, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        headers: { apikey: sb.key, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({ rating: rating || null, message: text || null, email: mail || null, source: 'site',
           lang: document.documentElement.lang, app_version: 'site' }),
       })

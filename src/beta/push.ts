@@ -3,8 +3,9 @@ import { supabase } from '../sync/client'
 import { deviceId } from './device'
 import { track } from './telemetry'
 import { local } from '../storage'
+import { ENV } from '../env'
 
-const VAPID = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
+const VAPID = ENV.vapidKey
 
 export const pushSupported = () =>
   !!supabase && !!VAPID && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
