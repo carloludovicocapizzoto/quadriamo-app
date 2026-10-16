@@ -32,6 +32,11 @@ jobs:
           distribution: temurin
           java-version: 17
       - run: npm ci --prefix tools/android
+      - name: Android SDK
+        # l'SDK dei server di GitHub ha sdkmanager in cmdline-tools/latest/bin; la libreria lo cerca in bin/
+        run: |
+          sudo ln -sfn "$ANDROID_HOME/cmdline-tools/latest/bin" "$ANDROID_HOME/bin"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;36.1.0" > /dev/null
       - name: Chiave di firma
         run: echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > "$RUNNER_TEMP/quadriamo.p12"
       - name: APK
