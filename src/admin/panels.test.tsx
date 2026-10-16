@@ -11,7 +11,7 @@ const stats: Stats = {
   daily: [{ day: '2026-10-09', active: 1, new: 0 }, { day: '2026-10-10', active: 2, new: 2 }],
   langs: { it: 2, en: 1, '?': 1 }, platforms: { ios: 1, android: 1, desktop: 1 }, events: { open: 4, share: 1 },
 }
-const setup: Setup = { connected: true, tables: true, profiles: true, research: true, v8: true, v10: true, v11: true, v13: true, v14: true, billing: { fn: true, configured: true, webhook: true, test: true }, news: true, siteFeedback: true, adminKeys: true, adminName: null, admin: true, fn: 'ok', cronSecret: true, reminder: false, vapidInApp: true }
+const setup: Setup = { connected: true, tables: true, profiles: true, research: true, v8: true, v10: true, v11: true, v13: true, v14: true, billing: { fn: true, configured: true, webhook: true, test: true }, news: true, siteFeedback: true, betaTools: true, adminKeys: true, adminName: null, admin: true, fn: 'ok', cronSecret: true, reminder: false, vapidInApp: true }
 
 describe('area amministratore', () => {
   it('dashboard: numeri chiave, imbuto, lingue', () => {
@@ -39,7 +39,7 @@ describe('area amministratore', () => {
     const todo = renderToString(<SetupPanel setup={{ ...setup, tables: false, admin: false, fn: 'unknown' }} email="io@x.it" onRecheck={() => {}} />)
     expect(todo).toContain('Copia lo script'); expect(todo).toContain('io@x.it')
     const done = renderToString(<SetupPanel setup={setup} email="io@x.it" onRecheck={() => {}} />)
-    expect(done.match(/az-step done/g)?.length).toBe(5)   // tabelle, funzione, chiavi, Stripe, notizie
+    expect(done.match(/az-step done/g)?.length).toBe(6)   // tabelle, funzione, chiavi, Stripe, notizie, strumenti della beta
     expect(done).toContain('Confirm email'); expect(done).toContain('Email Templates'); expect(done).toContain('Segna come fatto')
   })
   it('ricerca anonima: totali da 5 schede, sotto solo il conteggio', () => {

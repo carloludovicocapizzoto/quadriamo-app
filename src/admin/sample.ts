@@ -1,5 +1,5 @@
 // Dati finti per vedere l'area amministratore prima della configurazione (/admin/?demo=1): nessun dato reale.
-import type { Account, Cohort, Device, Feedback, PushSub, ResearchStats, Setup, Stats, UsageStats } from './data'
+import type { Account, Cohort, Device, Feedback, PushSub, ResearchStats, Report, Setup, Stats, UsageStats } from './data'
 
 const day = (n: number) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10)
 const at = (n: number, h = 10) => `${day(n)}T${String(h).padStart(2, '0')}:15:00Z`
@@ -31,7 +31,7 @@ export const sampleResearch: ResearchStats = { answers: 14, min: 5,
   goals: { understand: 10, save: 8, goal: 5, invest: 5, debt: 2, family: 3 }, cards: { bank: 11, Revolut: 6, Satispay: 5, PayPal: 4, credit: 3 },
   invested: { yes: 5, want: 7, no: 2 }, invest_where: { etf: 4, broker: 3, bank: 2, crypto: 1 },
   shares_avg: [53.6, 21.4, 14.6, 10.4], shares_default: 9, shares_custom: 5 }
-export const sampleSetup: Setup = { connected: true, tables: true, profiles: true, research: true, v8: true, v10: true, v11: true, v13: true, v14: true, billing: { fn: true, configured: true, webhook: true, test: true }, news: true, siteFeedback: true, adminKeys: true, adminName: null, admin: true, fn: 'ok', cronSecret: true, reminder: true, vapidInApp: true }
+export const sampleSetup: Setup = { connected: true, tables: true, profiles: true, research: true, v8: true, v10: true, v11: true, v13: true, v14: true, billing: { fn: true, configured: true, webhook: true, test: true }, news: true, siteFeedback: true, betaTools: true, adminKeys: true, adminName: null, admin: true, fn: 'ok', cronSecret: true, reminder: true, vapidInApp: true }
 export const sampleCohorts: Cohort[] = [8, 7, 6, 5, 4, 3, 2, 1].map((w, i) => ({ week: day(w * 7 + 3), new_devices: [3, 5, 4, 8, 9, 12, 10, 7][i], back_7: [2, 3, 3, 5, 6, 7, 0, 0][i], ready: w > 1 }))
 export const sampleAlternatives: Record<string, number> = { spreadsheet: 6, nothing: 5, bank_app: 4, notes: 2, other_app: 2 }
 export const sampleUsage: UsageStats = {
@@ -45,3 +45,15 @@ export const sampleUsage: UsageStats = {
   actions: [{ action: 'setInvestments', devices: 5, times: 6 }, { action: 'saveGoal', devices: 6, times: 9 }, { action: 'deleteTx', devices: 9, times: 21 },
     { action: 'setSettings', devices: 14, times: 48 }, { action: 'updateTx', devices: 17, times: 95 }, { action: 'addTx', devices: 23, times: 1240 }],
 }
+const trail = [{ s: 2.1, kind: 'nav', what: '#/' }, { s: 9.4, kind: 'action', what: 'addTx' }, { s: 15.0, kind: 'nav', what: '#/analysis/month' },
+  { s: 15.8, kind: 'slow', what: '412 ms su #/analysis/month' }, { s: 21.3, kind: 'error', what: "Cannot read properties of undefined (reading 'share')" }]
+const diag = (os: string, lang: string) => ({ os, platform: os.startsWith('iOS') ? 'ios' : 'android', installed: true, lang, screen: '390x844@3', online: true,
+  release: '0.9.0+152', commit: '9dcbe05', env: 'beta', at: at(1, 21), timeZone: 'Europe/Rome', route: '#/analysis/month', trail })
+export const sampleReports: Report[] = [
+  { id: 'r1', created_at: at(0, 21), kind: 'bug', priority: 'blocking', message: 'Aprendo Analisi → Mese dopo aver aggiunto una spesa la pagina diventa bianca con "Qualcosa è andato storto".',
+    attachments: [], env: 'beta', version: '0.9.0+152', status: 'new', email: 'giulia@esempio.it', diagnostics: diag('iOS 18.1', 'it') },
+  { id: 'r2', created_at: at(1, 12), kind: 'idea', priority: 'normal', message: 'Mi piacerebbe vedere il widget del capitale anche sul telefono senza doverlo aggiungere.',
+    attachments: [], env: 'beta', version: '0.9.0+150', status: 'seen', email: null, diagnostics: diag('Android 15', 'it') },
+  { id: 'r3', created_at: at(3, 9), kind: 'bug', priority: 'low', message: 'Nel tema scuro il testo dei filtri delle notizie è poco leggibile.',
+    attachments: [], env: 'beta', version: '0.9.0+148', status: 'done', email: 'marco@esempio.it', diagnostics: null },
+]

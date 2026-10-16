@@ -6,3 +6,15 @@
 .star.on { color: #F59E0B; border-color: #F59E0B; }
 .fb-text { width: 100%; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--r-md); padding: 10px 12px; margin-bottom: 10px; resize: vertical; }
+
+/* segnalazione dei tester */
+.report { display: grid; gap: var(--s2); }
+.report-text { margin: var(--s2) 0 0; }
+.report-files { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--s2); flex-wrap: wrap; }
+.report-files li { position: relative; width: 84px; height: 84px; border-radius: var(--r-md); overflow: hidden; background: var(--fill); }
+.report-files img, .report-files video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.report-files .icon-btn { position: absolute; top: 2px; right: 2px; min-height: 28px; width: 28px; background: var(--glass-strong); }
+.report-diag pre { font: 11.5px/1.5 ui-monospace, Menlo, monospace; white-space: pre-wrap; word-break: break-all; color: var(--muted);
+  max-height: 220px; overflow: auto; margin: var(--s2) 0 0; }
+.err-report { display: block; margin: 0 auto; }
+.feedback-tabs { margin-bottom: var(--s4); }

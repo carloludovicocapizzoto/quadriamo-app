@@ -187,3 +187,8 @@ kbd { font: 500 11px/1 var(--font-ui); padding: 3px 6px; border-radius: 5px; bac
 .az-trail .k { color: var(--grey); }
 .az-trail .k-error .w, .az-trail .k-error .k { color: var(--bad); }
 .az-trail .k-slow .k { color: var(--accent); }
+.az-row-open.is-new td:nth-child(3) { font-weight: 600; }
+.az-report { display: grid; gap: 6px; padding: 6px 0; }
+.az-report-msg { margin: 0; white-space: pre-wrap; font-size: 14px; line-height: 1.5; }
+.az-report-files { display: flex; flex-wrap: wrap; gap: 8px; }
+.az-report-files img, .az-report-files video { max-height: 220px; max-width: 100%; border-radius: var(--r-md); border: 1px solid var(--line); display: block; }

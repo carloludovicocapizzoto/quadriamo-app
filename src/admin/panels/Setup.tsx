@@ -28,6 +28,9 @@ import sql0020 from '../../../supabase/migrations/0020_news_podcasts_images.sql?
 import sql0021 from '../../../supabase/migrations/0021_feedback_cron_fix.sql?raw'
 import sql0022 from '../../../supabase/migrations/0022_client_errors.sql?raw'
 import sql0023 from '../../../supabase/migrations/0023_econ_events.sql?raw'
+import sql0024 from '../../../supabase/migrations/0024_error_diagnostics.sql?raw'
+import sql0025 from '../../../supabase/migrations/0025_usage_sessions.sql?raw'
+import sql0026 from '../../../supabase/migrations/0026_tester_reports.sql?raw'
 import sql0018 from '../../../supabase/migrations/0018_news_hub.sql?raw'
 import sql0019 from '../../../supabase/migrations/0019_news_hub_cron.sql?raw'
 import sql0009 from '../../../supabase/migrations/0009_morning_push_cron.sql?raw'
@@ -284,6 +287,13 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
           <div className="az-u-row"><Copy text={sql0023} label="Copia lo script" />
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
           <p className="az-hint">Finché non ci sono date future, il widget non compare.</p>
+        </Step>
+        <Step n={18} ok={setup.betaTools} title="Beta: diagnostica, uso dell'app e segnalazioni dei tester">
+          <p>Errori con gli ultimi passi, statistiche d'uso per sessione (solo con il consenso) e segnalazioni con screenshot e video
+            in un archivio privato. Copia lo script, incollalo in SQL Editor e premi <b>Run</b>; va eseguito sia nel progetto di
+            produzione sia in quello della beta. Poi trovi tutto nei pannelli <b>Uso dell'app</b>, <b>Segnalazioni</b> ed <b>Errori</b>.</p>
+          <div className="az-u-row"><Copy text={[sql0024, sql0025, sql0026].join('\n')} label="Copia lo script" />
+            <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
         </Step>
       </div>
       <div className="az-card">

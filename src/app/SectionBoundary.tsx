@@ -2,6 +2,7 @@
 // Il caso più comune è la connessione: una sezione aperta per la prima volta senza rete non riesce a scaricarsi.
 // Allora lo diciamo, e la pagina si ricarica da sola quando la rete torna (una sezione non scaricata si riprova solo ricaricando).
 import { Component, useEffect, type ReactNode } from 'react'
+import { ENV } from '../env'
 import { useI18n } from '../i18n/core'
 import { Empty } from '../ui/kit/Empty'
 import { reportError } from './errors'
@@ -29,5 +30,9 @@ function Offline() {
 
 function Broken() {
   const { t } = useI18n()
-  return <Empty title={t('err.title')} text={t('err.text')} quiet action={{ label: t('err.reload'), onClick: reload }} />
+  return <>
+    <Empty title={t('err.title')} text={t('err.text')} quiet action={{ label: t('err.reload'), onClick: reload }} />
+    {/* chi prova la beta lo segnala subito: il diario tecnico (con l'errore) è già nella diagnostica */}
+    {ENV.flags.tester && <button className="link-btn err-report" onClick={() => { location.hash = '#/profile/feedback'; reload() }}>{t('err.report')}</button>}
+  </>
 }

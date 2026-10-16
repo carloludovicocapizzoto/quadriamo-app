@@ -3,6 +3,7 @@
 // leggibile solo dal suo proprietario, e una copia resta qui per mostrarla subito e anche offline.
 import { useSyncExternalStore } from 'react'
 import { supabase } from '../sync/client'
+import { shrinkImage } from '../image'
 import { local } from '../storage'
 
 const KEY = 'q.avatar'
@@ -18,20 +19,10 @@ const set = (v: string | null) => {
 export const useAvatar = () => useSyncExternalStore(f => { listeners.add(f); return () => { listeners.delete(f) } }, () => current)
 const path = (userId: string) => `${userId}/avatar.webp`
 
-/** Riduce un'immagine a un quadrato di 256 px (ritaglio al centro). WebP dove il browser lo sa scrivere, altrimenti JPEG. */
-async function shrink(file: File): Promise<Blob> {
-  const img = await createImageBitmap(file)
-  const side = Math.min(img.width, img.height)
-  const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = SIZE
-  canvas.getContext('2d')!.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, SIZE, SIZE)
-  const blob = await new Promise<Blob | null>(r => canvas.toBlob(r, 'image/webp', 0.85))
-  return blob && blob.type === 'image/webp' ? blob : await new Promise<Blob>(r => canvas.toBlob(b => r(b!), 'image/jpeg', 0.85))
-}
 const toDataUrl = (b: Blob) => new Promise<string>(r => { const fr = new FileReader(); fr.onload = () => r(fr.result as string); fr.readAsDataURL(b) })
 
 export async function setAvatar(file: File, userId: string | null) {
-  const blob = await shrink(file)
+  const blob = await shrinkImage(file, { size: SIZE, square: true })
   set(await toDataUrl(blob))   // prima qui: se il caricamento non riesce, la foto resta almeno su questo dispositivo
   if (userId && supabase) {
     const { error } = await supabase.storage.from('avatars').upload(path(userId), blob, { upsert: true, contentType: blob.type })

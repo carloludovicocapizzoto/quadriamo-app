@@ -9,14 +9,14 @@ import { checkSetup, loadAccounts, loadAlternatives, loadCohorts, loadDevices, l
 import { sampleAccounts, sampleAlternatives, sampleCohorts, sampleDevices, sampleFeedback, samplePush, sampleResearch, sampleSetup, sampleStats } from './sample'
 import { Icon, type IconName } from '../ui/Icon'
 import { CommandPalette, type Command } from './CommandPalette'
-import { AccountsPanel, DashboardPanel, DevicesPanel, ErrorsPanel, FeedbackPanel, PushPanel, ResearchPanel, SetupPanel, UsagePanel } from './panels'
+import { AccountsPanel, DashboardPanel, DevicesPanel, ErrorsPanel, FeedbackPanel, PushPanel, ReportsPanel, ResearchPanel, SetupPanel, UsagePanel } from './panels'
 import { ENV } from '../env'
 
-type Panel = 'dashboard' | 'uso' | 'dispositivi' | 'account' | 'ricerca' | 'feedback' | 'notifiche' | 'errori' | 'configurazione'
+type Panel = 'dashboard' | 'uso' | 'dispositivi' | 'account' | 'ricerca' | 'feedback' | 'segnalazioni' | 'notifiche' | 'errori' | 'configurazione'
 const NAV: { group: string; items: [Panel, string, IconName][] }[] = [
   { group: 'Panoramica', items: [['dashboard', 'Dashboard', 'chart'], ['uso', 'Uso dell’app', 'growth']] },
   { group: 'Persone', items: [['dispositivi', 'Dispositivi', 'list'], ['account', 'Account', 'user'], ['ricerca', 'Ricerca anonima', 'lock']] },
-  { group: 'Ascolto', items: [['feedback', 'Feedback', 'message'], ['notifiche', 'Notifiche', 'bell'], ['errori', 'Errori', 'alert']] },
+  { group: 'Ascolto', items: [['feedback', 'Feedback', 'message'], ['segnalazioni', 'Segnalazioni', 'upload'], ['notifiche', 'Notifiche', 'bell'], ['errori', 'Errori', 'alert']] },
   { group: 'Impostazioni', items: [['configurazione', 'Configurazione', 'settings']] },
 ]
 const TITLES: Record<Panel, [string, string]> = {
@@ -26,13 +26,14 @@ const TITLES: Record<Panel, [string, string]> = {
   account: ['Account', 'Chi si è registrato.'],
   ricerca: ['Ricerca anonima', 'Totali delle schede che gli utenti scelgono di inviare in forma anonima. Dati riservati.'],
   feedback: ['Feedback', 'Voti e commenti arrivati dall’app.'],
+  segnalazioni: ['Segnalazioni', 'Bug e idee di chi prova la beta, con allegati e diagnostica.'],
   notifiche: ['Notifiche', 'Manda la richiesta di feedback direttamente sui dispositivi.'],
   errori: ['Errori', 'Cosa si è rotto sui dispositivi degli utenti, raggruppato per messaggio.'],
   configurazione: ['Configurazione', 'Cosa è attivo su Supabase e cosa manca.'],
 }
 const APP_URL = `${ENV.base}app/`
 // scorciatoie: G poi la lettera del pannello (come Linear)
-const KEYS: Record<string, Panel> = { d: 'dashboard', u: 'uso', v: 'dispositivi', a: 'account', r: 'ricerca', f: 'feedback', n: 'notifiche', e: 'errori', c: 'configurazione' }
+const KEYS: Record<string, Panel> = { d: 'dashboard', u: 'uso', v: 'dispositivi', a: 'account', r: 'ricerca', f: 'feedback', s: 'segnalazioni', n: 'notifiche', e: 'errori', c: 'configurazione' }
 const DEMO = new URLSearchParams(window.location.search).get('demo') === '1'
 
 export function AdminApp() {
@@ -258,6 +259,7 @@ function Shell({ email, demo = false, adminKey, onLogout }: { email: string; dem
           : <Unlock adminKey={adminKey} email={email} onOk={() => setUnlocked(true)} />)}
         {setup?.admin && panel === 'errori' && !DEMO && <ErrorsPanel />}
         {setup?.admin && panel === 'uso' && <UsagePanel demo={demo} />}
+        {setup?.admin && panel === 'segnalazioni' && <ReportsPanel demo={demo} />}
         {setup?.admin && panel === 'feedback' && <FeedbackPanel rows={feedback} alternatives={alternatives} />}
         {setup?.admin && panel === 'notifiche' && <PushPanel rows={push} setup={setup} onSend={async (t, b) => {
           if (demo) return 'Anteprima: nessuna notifica inviata.'

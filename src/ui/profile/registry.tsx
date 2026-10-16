@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import type { Badge, Streak } from '../../engine'
 import type { ProfilePage } from '../../profile/pages'
 import type { AppData } from '../../store/state'
-import { FeedbackCard } from '../beta/FeedbackCard'
+import { FeedbackPage } from '../beta/FeedbackPage'
 import { GoalsStrip } from '../goals/Goals'
 import { PlanCard, ProGate } from '../Pro'
 import { SettingsView } from '../settings/SettingsView'
@@ -35,7 +35,7 @@ export const PAGES: Record<ProfilePage, (p: PageProps) => ReactNode> = {
   data: () => <SettingsView only={['data']} />,
   delete: p => <Delete onDone={p.onHome} />,
   help: p => <HelpCenter onReport={() => p.onPage('feedback')} />,
-  feedback: p => <FeedbackCard onClose={p.onBack} />,
+  feedback: p => <FeedbackPage onClose={p.onBack} />,
   licenses: () => <Licenses />,
 }
 

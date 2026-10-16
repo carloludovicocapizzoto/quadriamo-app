@@ -43,6 +43,7 @@ export interface Setup {
   adminKeys: boolean | null   // script 0006 (accesso con nome + codice) eseguito
   adminName: string | null    // nome di chi è entrato con il codice
   siteFeedback: boolean | null  // script 0005 (feedback dal sito) eseguito
+  betaTools: boolean | null   // script 0024–0026 (diagnostica, uso dell'app, segnalazioni) eseguiti
   admin: boolean              // questo account è amministratore
   fn: 'ok' | 'missing' | 'nosecrets' | 'unknown'   // funzione send-push pubblicata e con le chiavi
   cronSecret: boolean
@@ -79,6 +80,38 @@ export const loadCohorts = () => rpc<Cohort[]>('admin_cohorts', { p_weeks: 8 })
 export const loadAlternatives = () => rpc<Record<string, number>>('admin_alternatives')
 export const loadPush = () => rpc<PushSub[]>('admin_push_list')
 export const loadUsage = (days: number) => rpc<UsageStats>('admin_usage', { p_days: days })
+export const loadReports = () => rpc<Report[]>('admin_reports', { p_limit: 300 })
+
+/** Segnalazione di un tester (0026); email solo se aveva fatto l'accesso. */
+export interface Report {
+  id: string; created_at: string; kind: 'bug' | 'idea'; priority: 'low' | 'normal' | 'high' | 'blocking'; message: string
+  attachments: string[]; env: string | null; version: string | null; status: 'new' | 'seen' | 'done'; email: string | null
+  diagnostics: { os?: string; platform?: string; installed?: boolean; lang?: string; screen?: string; online?: boolean; release?: string; commit?: string
+    env?: string; at?: string; timeZone?: string; route?: string; trail?: { s: number; kind: string; what: string }[] } | null
+}
+
+/** Allegati: link temporanei (un'ora) per vederli; dopo 90 giorni si cancellano (lo fa l'area amministratore quando si apre). */
+export async function attachmentUrls(paths: string[]): Promise<Record<string, string>> {
+  if (!paths.length) return {}
+  const { data, error } = await db()!.storage.from('reports').createSignedUrls(paths, 3600)
+  if (error) throw error
+  return Object.fromEntries((data ?? []).flatMap(x => x.signedUrl && x.path ? [[x.path, x.signedUrl] as const] : []))
+}
+export const setReportStatus = async (id: string, status: Report['status']) => {
+  const { error } = await db()!.from('tester_reports').update({ status }).eq('id', id); if (error) throw error
+}
+export async function deleteReport(r: Report) {
+  if (r.attachments.length) await db()!.storage.from('reports').remove(r.attachments)
+  const { error } = await db()!.from('tester_reports').delete().eq('id', r.id); if (error) throw error
+}
+export async function dropOldAttachments(rows: Report[], days = 90): Promise<number> {
+  const old = rows.filter(r => r.attachments.length && Date.now() - Date.parse(r.created_at) > days * 864e5)
+  for (const r of old) {
+    await db()!.storage.from('reports').remove(r.attachments)
+    await db()!.from('tester_reports').update({ attachments: [] }).eq('id', r.id)
+  }
+  return old.length
+}
 
 /** Come si usa l'app (0025): solo totali, solo voci usate da almeno `min` dispositivi. Sotto la soglia arrivano solo devices e min. */
 export interface UsageStats {
@@ -91,45 +124,44 @@ export interface UsageStats {
   actions?: { action: string; devices: number; times: number }[]
 }
 
+// PGRST202 = funzione inesistente: lo script che la crea non è ancora stato eseguito
+type Res = { error: { code?: string; message: string } | null }
+const exists = (r: Res) => !(r.error && (r.error.code === 'PGRST202' || /could not find the function/i.test(r.error.message)))
+const NONE = '00000000-0000-0000-0000-000000000000'
+
 export async function checkSetup(signedIn: boolean): Promise<Setup> {
   const supabase = db()
-  const s: Setup = { connected: !!supabase, tables: null, profiles: null, research: null, v8: null, v10: null, v11: null, v13: null, v14: null, billing: null, news: null, siteFeedback: null, adminKeys: null, adminName: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
+  const s: Setup = { connected: !!supabase, tables: null, profiles: null, research: null, v8: null, v10: null, v11: null, v13: null, v14: null, billing: null, news: null, siteFeedback: null, adminKeys: null, adminName: null, betaTools: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
     vapidInApp: !!ENV.vapidKey }
   if (!supabase || !signedIn) return s
-  const { data, error } = await supabase.rpc('is_admin')
-  // PGRST202 = funzione inesistente: lo script 0002 non è ancora stato eseguito
-  s.tables = !(error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message)))
-  s.admin = data === true
-  const pr = await supabase.from('profiles').select('user_id', { head: true, count: 'exact' })
+  // i controlli partono tutti insieme; quelli con un indirizzo finto ("check://") non toccano niente
+  const key = ENV.supabase?.key ?? ''
+  const [ad, pr, rs, co, sh, tp, sn, bs, bf, news, an, sf, rp] = await Promise.all([
+    supabase.rpc('is_admin'),
+    supabase.from('profiles').select('user_id', { head: true, count: 'exact' }),
+    supabase.rpc('admin_research_stats'),
+    supabase.rpc('admin_cohorts', { p_weeks: 1 }),
+    supabase.rpc('is_shared_member', { p_budget: NONE }),
+    supabase.rpc('touch_push', { p_endpoint: 'check://quadriamo-admin', p_day: '2000-01-01' }),
+    supabase.rpc('set_news_push', { p_endpoint: 'check://quadriamo-admin', p_on: true }),
+    supabase.rpc('admin_billing_stats'),
+    supabase.functions.invoke('billing', { body: { action: 'status' } }),
+    // le notizie si chiamano come dall'app (senza il codice da amministratore, che la funzione non si aspetta)
+    fetch(`${ENV.supabase?.url}/functions/v1/news`, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ lang: 'it' }) })
+      .then(async r => r.ok && Array.isArray((await r.json())?.items), () => false),
+    supabase.rpc('admin_name'),
+    supabase.rpc('site_feedback_ready'),
+    supabase.rpc('admin_reports', { p_limit: 1 }),
+  ])
+  s.tables = exists(ad); s.admin = ad.data === true
   s.profiles = !(pr.error && (pr.error.code === 'PGRST205' || pr.error.code === '42P01'))
-  const rs = await supabase.rpc('admin_research_stats')
-  s.research = !(rs.error && (rs.error.code === 'PGRST202' || /could not find the function/i.test(rs.error.message)))
-  const co = await supabase.rpc('admin_cohorts', { p_weeks: 1 })
-  s.v8 = !(co.error && (co.error.code === 'PGRST202' || /could not find the function/i.test(co.error.message)))
-  const sh = await supabase.rpc('is_shared_member', { p_budget: '00000000-0000-0000-0000-000000000000' })
-  s.v10 = !(sh.error && (sh.error.code === 'PGRST202' || /could not find the function/i.test(sh.error.message)))
-  // endpoint inesistente: non tocca niente, serve solo a sapere se la funzione c'è
-  const tp = await supabase.rpc('touch_push', { p_endpoint: 'check://quadriamo-admin', p_day: '2000-01-01' })
-  s.v11 = !(tp.error && (tp.error.code === 'PGRST202' || /could not find the function/i.test(tp.error.message)))
-  const sn = await supabase.rpc('set_news_push', { p_endpoint: 'check://quadriamo-admin', p_on: true })
-  s.v14 = !(sn.error && (sn.error.code === 'PGRST202' || /could not find the function/i.test(sn.error.message)))
-  const bs = await supabase.rpc('admin_billing_stats')
-  s.v13 = !(bs.error && (bs.error.code === 'PGRST202' || /could not find the function/i.test(bs.error.message)))
-  const bf = await supabase.functions.invoke('billing', { body: { action: 'status' } })
+  s.research = exists(rs); s.v8 = exists(co); s.v10 = exists(sh); s.v11 = exists(tp); s.v14 = exists(sn); s.v13 = exists(bs)
   s.billing = bf.error ? { fn: false, configured: false, webhook: false, test: false }
     : { fn: true, configured: !!bf.data?.configured, webhook: !!bf.data?.webhook, test: !!bf.data?.test }
-  // le notizie si chiamano come dall'app (senza il codice da amministratore, che la funzione non si aspetta)
-  try {
-    const key = ENV.supabase?.key ?? ''
-    const res = await fetch(`${ENV.supabase?.url}/functions/v1/news`, {
-      method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ lang: 'it' }) })
-    s.news = res.ok && Array.isArray((await res.json())?.items)
-  } catch { s.news = false }
-  const an = await supabase.rpc('admin_name')
-  s.adminKeys = !(an.error && (an.error.code === 'PGRST202' || /could not find the function/i.test(an.error.message)))
-  s.adminName = (an.data as string | null) ?? null
-  const sf = await supabase.rpc('site_feedback_ready')
+  s.news = news
+  s.adminKeys = exists(an); s.adminName = (an.data as string | null) ?? null
   s.siteFeedback = !sf.error
+  s.betaTools = exists(rp)
   if (!s.admin) return s
   const fn = await supabase.functions.invoke('send-push', { body: { mode: 'check' }, headers: keyHeaders() })
   if (fn.error) s.fn = 'missing'
