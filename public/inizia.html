@@ -14,7 +14,7 @@
     .dev-switch button { font: inherit; font-weight: 600; color: var(--text); background: none; border: 0; border-radius: 12px; min-height: 52px; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .2s, color .2s; }
     .dev-switch button span { font-size: 20px; }
-    .dev-switch button[aria-selected="true"] { background: var(--accent); color: #fff; }
+    .dev-switch button[aria-selected="true"] { background: var(--accent); color: var(--on-accent); }
     @media (max-width: 700px) { .dev-switch { grid-template-columns: repeat(3, 1fr); } .dev-switch button { font-size: 15px; } }
     .dl-btns { display: flex; flex-wrap: wrap; gap: 10px; }
     .btn-alt { background: var(--surface); color: var(--text); border: 1.5px solid var(--line); }
@@ -24,7 +24,7 @@
     .dev-panel h2 { margin: 26px 0 0; }
     .journey { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 14px; }
     .step { display: grid; grid-template-columns: 48px 1fr; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin: 0; }
-    .step .n { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center;
+    .step .n { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center;
       font-family: "DM Serif Display", Georgia, serif; font-size: 24px; }
     .step h3 { margin: 8px 0 6px; font-size: 20px; }
     .step p { margin: 6px 0; }
@@ -89,11 +89,10 @@
     <div class="dev-panel" data-dev="android" role="tabpanel">
       <h2>Android</h2>
       <ol class="journey">
-        <li class="step"><span class="n">1</span><div><h3>Aprila sul telefono</h3><div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><div><p>Inquadra il codice con la fotocamera del telefono: si apre Quadriamo.</p>
-            <p class="small muted">Oppure apri questo link sul telefono (o mandatelo):</p>
-            <p class="app-link"><a href="https://carloludovicocapizzoto.github.io/quadriamo-app/app/">carloludovicocapizzoto.github.io/quadriamo-app/app/</a> <button type="button" class="copy-link" data-url="https://carloludovicocapizzoto.github.io/quadriamo-app/app/" data-done="Copiato ✓">Copia link</button></p></div></div>
-          <div class="phone-only"><p>Sei già sul telefono: tocca il pulsante.</p><p><a class="btn big" href="app/">Apri Quadriamo →</a></p></div></div></li>
-        <li class="step"><span class="n">2</span><div><h3>Installala</h3><p>Con <b>Chrome</b>: tocca <kbd>⋮</kbd> in alto a destra → <b>Installa app</b> → <b>Installa</b>.</p><p>Con <b>Samsung Internet</b>: tocca <kbd>≡</kbd> in basso a destra → <b>Aggiungi pagina a</b> → <b>Installa come applicazione Web</b>.</p><p class="small muted">Con altri browser cerca nel menu “Installa” o “Aggiungi a schermata Home”.</p></div></li>
+        <li class="step"><span class="n">1</span><div><h3>Scarica l’app</h3><p>Tocca il pulsante sul telefono Android: si scarica <b>Quadriamo.apk</b> (1 MB). Se Chrome avvisa che il file può essere dannoso, tocca <b>Scarica comunque</b>: lo dice per ogni app che non viene dal Play Store.</p><p><a class="btn big" href="https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk">⤓ Scarica Quadriamo per Android</a></p>
+          <div class="desk-only"><p class="small muted">Sei al computer? Apri questo link sul telefono (o mandatelo):</p>
+            <p class="app-link"><a href="https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk">…/releases/download/android/Quadriamo.apk</a> <button type="button" class="copy-link" data-url="https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk" data-done="Copiato ✓">Copia link</button></p></div></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Installala</h3><p>Apri il file scaricato (dalla notifica o da <b>File → Download</b>). La prima volta Android chiede di consentire le app da questa fonte: <b>Impostazioni → Consenti</b>, poi torna indietro e tocca <b>Installa</b>. Se Play Protect dice “App non riconosciuta”: <b>Altri dettagli → Installa comunque</b>.</p><p class="small muted">Preferisci senza scaricare file? Apri <a href="app/">Quadriamo</a> con Chrome → <kbd>⋮</kbd> → <b>Installa app</b>. È la stessa app.</p></div></li>
         <li class="step"><span class="n">3</span><div><h3>Crea il tuo account</h3><p>Apri Quadriamo dalla sua icona e tocca <b>Crea account</b>: nome e cognome, email, password. Ti arriva un <b>codice di 6 cifre</b> via email: scrivilo nell’app e l’account è attivo. Puoi anche usarla senza account: i dati restano solo su quel dispositivo.</p></div></li>
         <li class="step"><span class="n">4</span><div><h3>Imposta il budget</h3><p>L’app ti guida passo passo: valuta, giorno dello stipendio, la tua regola (consigliata 55-20-15-10), categorie e pagamenti ricorrenti. Poi registri la prima spesa con <b>+</b>.</p></div></li>
       </ol>
@@ -161,11 +160,10 @@
     <div class="dev-panel" data-dev="android" role="tabpanel">
       <h2>Android</h2>
       <ol class="journey">
-        <li class="step"><span class="n">1</span><div><h3>Open it on your phone</h3><div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><div><p>Scan the code with your phone camera: Quadriamo opens.</p>
-            <p class="small muted">Or open this link on your phone (or send it to yourself):</p>
-            <p class="app-link"><a href="https://carloludovicocapizzoto.github.io/quadriamo-app/app/">carloludovicocapizzoto.github.io/quadriamo-app/app/</a> <button type="button" class="copy-link" data-url="https://carloludovicocapizzoto.github.io/quadriamo-app/app/" data-done="Copied ✓">Copy link</button></p></div></div>
-          <div class="phone-only"><p>You’re already on your phone: tap the button.</p><p><a class="btn big" href="app/">Open Quadriamo →</a></p></div></div></li>
-        <li class="step"><span class="n">2</span><div><h3>Install it</h3><p>In <b>Chrome</b>: tap <kbd>⋮</kbd> at the top right → <b>Install app</b> → <b>Install</b>.</p><p>In <b>Samsung Internet</b>: tap <kbd>≡</kbd> at the bottom right → <b>Add page to</b> → <b>Install as web app</b>.</p><p class="small muted">In other browsers look in the menu for “Install” or “Add to Home screen”.</p></div></li>
+        <li class="step"><span class="n">1</span><div><h3>Download the app</h3><p>Tap the button on your Android phone: <b>Quadriamo.apk</b> downloads (1 MB). If Chrome warns the file might be harmful, tap <b>Download anyway</b>: it says so for every app that isn’t from the Play Store.</p><p><a class="btn big" href="https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk">⤓ Download Quadriamo for Android</a></p>
+          <div class="desk-only"><p class="small muted">On a computer? Open this link on your phone (or send it to yourself):</p>
+            <p class="app-link"><a href="https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk">…/releases/download/android/Quadriamo.apk</a> <button type="button" class="copy-link" data-url="https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk" data-done="Copied ✓">Copy link</button></p></div></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Install it</h3><p>Open the downloaded file (from the notification or <b>Files → Downloads</b>). The first time, Android asks to allow apps from this source: <b>Settings → Allow</b>, then go back and tap <b>Install</b>. If Play Protect says “App not recognised”: <b>More details → Install anyway</b>.</p><p class="small muted">Rather not download a file? Open <a href="app/">Quadriamo</a> in Chrome → <kbd>⋮</kbd> → <b>Install app</b>. It’s the same app.</p></div></li>
         <li class="step"><span class="n">3</span><div><h3>Create your account</h3><p>Open Quadriamo from its icon and tap <b>Create account</b>: name, email, password. You get a <b>6-digit code</b> by email: type it in the app and your account is active. You can also use it without an account: your data stays on that device.</p></div></li>
         <li class="step"><span class="n">4</span><div><h3>Set up your budget</h3><p>The app guides you step by step: currency, payday, your rule (suggested 55-20-15-10), categories and recurring payments. Then log your first expense with <b>+</b>.</p></div></li>
       </ol>
@@ -233,11 +231,10 @@
     <div class="dev-panel" data-dev="android" role="tabpanel">
       <h2>Android</h2>
       <ol class="journey">
-        <li class="step"><span class="n">1</span><div><h3>Ouvrez-la sur le téléphone</h3><div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><div><p>Scannez le code avec l’appareil photo du téléphone : Quadriamo s’ouvre.</p>
-            <p class="small muted">Ou ouvrez ce lien sur le téléphone (ou envoyez-le-vous) :</p>
-            <p class="app-link"><a href="https://carloludovicocapizzoto.github.io/quadriamo-app/app/">carloludovicocapizzoto.github.io/quadriamo-app/app/</a> <button type="button" class="copy-link" data-url="https://carloludovicocapizzoto.github.io/quadriamo-app/app/" data-done="Copié ✓">Copier le lien</button></p></div></div>
-          <div class="phone-only"><p>Vous êtes déjà sur le téléphone : touchez le bouton.</p><p><a class="btn big" href="app/">Ouvrir Quadriamo →</a></p></div></div></li>
-        <li class="step"><span class="n">2</span><div><h3>Installez-la</h3><p>Avec <b>Chrome</b> : touchez <kbd>⋮</kbd> en haut à droite → <b>Installer l’application</b> → <b>Installer</b>.</p><p>Avec <b>Samsung Internet</b> : touchez <kbd>≡</kbd> en bas à droite → <b>Ajouter la page à</b> → <b>Installer comme application Web</b>.</p><p class="small muted">Avec d’autres navigateurs, cherchez « Installer » ou « Ajouter à l’écran d’accueil » dans le menu.</p></div></li>
+        <li class="step"><span class="n">1</span><div><h3>Téléchargez l’app</h3><p>Touchez le bouton sur votre téléphone Android : <b>Quadriamo.apk</b> se télécharge (1 Mo). Si Chrome indique que le fichier peut être dangereux, touchez <b>Télécharger quand même</b> : il le dit pour toute app hors Play Store.</p><p><a class="btn big" href="https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk">⤓ Télécharger Quadriamo pour Android</a></p>
+          <div class="desk-only"><p class="small muted">Sur un ordinateur ? Ouvrez ce lien sur le téléphone (ou envoyez-le-vous) :</p>
+            <p class="app-link"><a href="https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk">…/releases/download/android/Quadriamo.apk</a> <button type="button" class="copy-link" data-url="https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk" data-done="Copié ✓">Copier le lien</button></p></div></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Installez-la</h3><p>Ouvrez le fichier téléchargé (depuis la notification ou <b>Fichiers → Téléchargements</b>). La première fois, Android demande d’autoriser cette source : <b>Paramètres → Autoriser</b>, revenez et touchez <b>Installer</b>. Si Play Protect affiche « Application non reconnue » : <b>Plus de détails → Installer quand même</b>.</p><p class="small muted">Vous préférez ne rien télécharger ? Ouvrez <a href="app/">Quadriamo</a> dans Chrome → <kbd>⋮</kbd> → <b>Installer l’application</b>. C’est la même app.</p></div></li>
         <li class="step"><span class="n">3</span><div><h3>Créez votre compte</h3><p>Ouvrez Quadriamo depuis son icône et touchez <b>Créer un compte</b> : nom, e-mail, mot de passe. Vous recevez un <b>code à 6 chiffres</b> par e-mail : saisissez-le dans l’app et le compte est actif. Vous pouvez aussi l’utiliser sans compte : les données restent sur cet appareil.</p></div></li>
         <li class="step"><span class="n">4</span><div><h3>Configurez votre budget</h3><p>L’app vous guide pas à pas : devise, jour de paie, votre règle (conseillée 55-20-15-10), catégories et paiements récurrents. Puis notez votre première dépense avec <b>+</b>.</p></div></li>
       </ol>
@@ -305,11 +302,10 @@
     <div class="dev-panel" data-dev="android" role="tabpanel">
       <h2>Android</h2>
       <ol class="journey">
-        <li class="step"><span class="n">1</span><div><h3>Ábrela en el móvil</h3><div class="desk-only qr-big"><img src="qr.svg" alt="QR" width="220" height="220"><div><p>Escanea el código con la cámara del móvil: se abre Quadriamo.</p>
-            <p class="small muted">O abre este enlace en el móvil (o envíatelo):</p>
-            <p class="app-link"><a href="https://carloludovicocapizzoto.github.io/quadriamo-app/app/">carloludovicocapizzoto.github.io/quadriamo-app/app/</a> <button type="button" class="copy-link" data-url="https://carloludovicocapizzoto.github.io/quadriamo-app/app/" data-done="Copiado ✓">Copiar enlace</button></p></div></div>
-          <div class="phone-only"><p>Ya estás en el móvil: toca el botón.</p><p><a class="btn big" href="app/">Abrir Quadriamo →</a></p></div></div></li>
-        <li class="step"><span class="n">2</span><div><h3>Instálala</h3><p>Con <b>Chrome</b>: toca <kbd>⋮</kbd> arriba a la derecha → <b>Instalar aplicación</b> → <b>Instalar</b>.</p><p>Con <b>Samsung Internet</b>: toca <kbd>≡</kbd> abajo a la derecha → <b>Añadir página a</b> → <b>Instalar como aplicación web</b>.</p><p class="small muted">Con otros navegadores busca en el menú “Instalar” o “Añadir a pantalla de inicio”.</p></div></li>
+        <li class="step"><span class="n">1</span><div><h3>Descarga la app</h3><p>Toca el botón en tu móvil Android: se descarga <b>Quadriamo.apk</b> (1 MB). Si Chrome avisa de que el archivo puede ser dañino, toca <b>Descargar de todos modos</b>: lo dice con cualquier app que no venga de Play Store.</p><p><a class="btn big" href="https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk">⤓ Descargar Quadriamo para Android</a></p>
+          <div class="desk-only"><p class="small muted">¿En el ordenador? Abre este enlace en el móvil (o envíatelo):</p>
+            <p class="app-link"><a href="https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk">…/releases/download/android/Quadriamo.apk</a> <button type="button" class="copy-link" data-url="https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk" data-done="Copiado ✓">Copiar enlace</button></p></div></div></li>
+        <li class="step"><span class="n">2</span><div><h3>Instálala</h3><p>Abre el archivo descargado (desde la notificación o <b>Archivos → Descargas</b>). La primera vez Android pide permitir apps de esta fuente: <b>Ajustes → Permitir</b>, vuelve atrás y toca <b>Instalar</b>. Si Play Protect dice «App no reconocida»: <b>Más detalles → Instalar de todas formas</b>.</p><p class="small muted">¿Prefieres no descargar nada? Abre <a href="app/">Quadriamo</a> en Chrome → <kbd>⋮</kbd> → <b>Instalar aplicación</b>. Es la misma app.</p></div></li>
         <li class="step"><span class="n">3</span><div><h3>Crea tu cuenta</h3><p>Abre Quadriamo desde su icono y toca <b>Crear cuenta</b>: nombre, correo, contraseña. Te llega un <b>código de 6 cifras</b> por correo: escríbelo en la app y la cuenta queda activa. También puedes usarla sin cuenta: los datos se quedan en ese dispositivo.</p></div></li>
         <li class="step"><span class="n">4</span><div><h3>Configura tu presupuesto</h3><p>La app te guía paso a paso: moneda, día de cobro, tu regla (recomendada 55-20-15-10), categorías y pagos recurrentes. Luego apuntas tu primer gasto con <b>+</b>.</p></div></li>
       </ol>
