@@ -253,7 +253,7 @@ const es: Dict = {
   'imp.dupsOne': '1 podría estar ya en tus movimientos: revísalo antes de confirmar.',
 
   'beta.consentTitle': 'Ayúdanos a mejorar la beta',
-  'beta.consentText': 'Enviar estadísticas de uso anónimas (cuántas veces abres la app, cuántos movimientos registras). Nunca descripciones, importes ni categorías. Puedes cambiarlo en Ajustes.',
+  'beta.consentText': 'Enviar estadísticas de uso anónimas: qué pantallas abres, durante cuánto tiempo y qué funciones usas, además de posibles ralentizaciones. Nunca descripciones, importes ni categorías. Puedes cambiarlo en Perfil → Privacidad y datos.',
   'beta.yes': 'Sí, vale',
   'beta.no': 'No, gracias',
   'fb.title': '¿Qué tal te va con Quadriamo?',

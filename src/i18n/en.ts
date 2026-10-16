@@ -253,7 +253,7 @@ const en = {
   'imp.dupsOne': '1 may already be in your transactions: check it before confirming.',
 
   'beta.consentTitle': 'Help us improve the beta',
-  'beta.consentText': 'Send anonymous usage statistics (how often you open the app, how many transactions you log). Never descriptions, amounts or categories. You can change this in Settings.',
+  'beta.consentText': 'Send anonymous usage statistics: which screens you open, for how long and which features you use, plus any slowdowns. Never descriptions, amounts or categories. You can change this in Profile → Privacy and data.',
   'beta.yes': 'Yes, sure',
   'beta.no': 'No thanks',
   'fb.title': 'How is Quadriamo working for you?',

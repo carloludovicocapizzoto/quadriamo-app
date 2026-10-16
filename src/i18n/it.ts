@@ -253,7 +253,7 @@ const it: Dict = {
   'imp.dupsOne': '1 potrebbe essere già tra i tuoi movimenti: controllala prima di confermare.',
 
   'beta.consentTitle': 'Aiutaci a migliorare la beta',
-  'beta.consentText': 'Invia statistiche d’uso anonime (quante volte apri l’app, quanti movimenti registri). Mai descrizioni, importi o categorie. Puoi cambiarlo nelle Impostazioni.',
+  'beta.consentText': 'Invia statistiche d’uso anonime: quali schermate apri, per quanto tempo e quali funzioni usi, più eventuali rallentamenti. Mai descrizioni, importi o categorie. Puoi cambiarlo in Profilo → Privacy e dati.',
   'beta.yes': 'Sì, va bene',
   'beta.no': 'No grazie',
   'fb.title': 'Come ti trovi con Quadriamo?',

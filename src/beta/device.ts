@@ -1,6 +1,8 @@
 // Identità anonima del dispositivo e preferenze della beta (solo nel browser; niente dati del budget).
 import { local } from '../storage'
-const K = { device: 'quadriamo.device', stats: 'quadriamo.stats', firstUse: 'quadriamo.firstUse',
+// stats: v2 dal 16/10/2026, quando le statistiche sono diventate per sessione (schermate, tempi, funzioni): il consenso
+// dato prima valeva solo per i conteggi, quindi si chiede di nuovo una volta
+const K = { device: 'quadriamo.device', stats: 'quadriamo.stats.v2', firstUse: 'quadriamo.firstUse',
             feedbackAt: 'quadriamo.feedbackAt', lastOpen: 'quadriamo.lastOpen' } as const
 
 /** Un codice casuale; anche sui browser che non hanno randomUUID (iOS prima della 15.4). */

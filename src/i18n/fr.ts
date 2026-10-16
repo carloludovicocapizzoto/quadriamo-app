@@ -253,7 +253,7 @@ const fr: Dict = {
   'imp.dupsOne': '1 est peut-être déjà dans vos opérations : vérifiez avant de confirmer.',
 
   'beta.consentTitle': 'Aidez-nous à améliorer la bêta',
-  'beta.consentText': 'Envoyer des statistiques d’utilisation anonymes (fréquence d’ouverture, nombre d’opérations). Jamais de descriptions, montants ou catégories. Modifiable dans les Réglages.',
+  'beta.consentText': 'Envoyer des statistiques d’utilisation anonymes : les écrans ouverts, combien de temps et les fonctions utilisées, ainsi que les éventuels ralentissements. Jamais de descriptions, montants ou catégories. Modifiable dans Profil → Confidentialité et données.',
   'beta.yes': 'Oui, d’accord',
   'beta.no': 'Non merci',
   'fb.title': 'Comment se passe Quadriamo ?',
