@@ -62,11 +62,22 @@ o in un password manager). Nella GitHub Action arriva dai segreti `ANDROID_KEYST
 
 ### App a tutto schermo (senza barra dell'indirizzo)
 
-Android mostra l'app senza barra dell'indirizzo solo se il sito dichiara che l'app è sua, con il file
-`https://carloludovicocapizzoto.github.io/.well-known/assetlinks.json`. Quel file deve stare nella radice del
-dominio, quindi in un repository a parte chiamato `carloludovicocapizzoto.github.io` (con GitHub Pages attivo).
-Ogni build pubblica nella Release anche `assetlinks.json` già pronto da copiare lì. Con il dominio quadriamo.com
-il file andrà su quel dominio.
+Android apre l'app a tutto schermo solo se la radice del dominio dichiara che l'app è sua:
+`https://carloludovicocapizzoto.github.io/.well-known/assetlinks.json` (nome `com.quadriamo.app` + impronta della firma).
+**Oggi (16/10/2026) il file sta, provvisoriamente, nel repository del CV** `carloludovicocapizzoto.github.io`
+(solo quel file, invisibile nelle pagine). Verifica: API `digitalassetlinks.googleapis.com/v1/assetlinks:check` → `linked: true`.
+Ogni build dell'APK pubblica nella Release anche `assetlinks.json` aggiornato.
+
+### Quando ci sarà il dominio di Quadriamo
+
+1. Collegare il dominio all'app e impostare `BASE_PATH`; aggiornare gli indirizzi scritti nel codice:
+   `tools/android/build.mjs` (SITE), `src/admin/panels/Setup.tsx` (SITE), funzioni `report-email` (ADMIN_URL) e `send-push` (APP_URL),
+   link in `public/inizia.html` e `public/install.html`, email in `public/owner.js`, contatto in `public/help.json`;
+   in Supabase: Authentication → URL Configuration (Site URL e Redirect URLs).
+2. Pubblicare `assetlinks.json` nella radice del nuovo dominio (es. `public/.well-known/assetlinks.json`) e ricontrollare con l'API.
+3. Actions → Android → Run: stesso nome e stessa chiave, quindi è un aggiornamento. I tester reinstallano una volta;
+   il nuovo indirizzo ha una memoria del browser nuova, quindi si rientra nell'account e i dati tornano dalla sincronizzazione.
+4. Togliere `.well-known/` dal repository del CV.
 
 ## iPhone
 

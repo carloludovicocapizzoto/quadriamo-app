@@ -55,7 +55,7 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 - ✅ **Android: APK** costruito e firmato dalla GitHub Action "Android" (chiave in `.keys.local/`, copia di sicurezza fatta da Carlo):
   https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk
 - 🟡 Prova dell'APK su un telefono Android vero.
-- 🟡 App Android a tutto schermo: serve il file `assetlinks.json` nel repository `carloludovicocapizzoto.github.io` (o sul dominio quadriamo.com). Senza, l'app funziona ma con la barra dell'indirizzo in alto.
+- ✅ App Android a tutto schermo: `assetlinks.json` provvisorio nel repository del CV, verificato da Google (`linked: true`). Col dominio si sposta (docs/RELEASE.md).
 - 🔧 iOS nativo (TestFlight, App Store): richiede Apple Developer Program (99 $/anno), Xcode e un guscio nativo (Capacitor), con le notifiche via APNs.
 - 🔧 Play Store: stesso APK in formato AAB, account sviluppatore Google (25 $ una volta), scheda dello store, informativa sui dati.
 
