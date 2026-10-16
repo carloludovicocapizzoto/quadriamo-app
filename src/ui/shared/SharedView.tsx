@@ -13,10 +13,9 @@ import { Icon } from '../Icon'
 import { categoryName } from '../names'
 import { AmountInput } from '../kit/AmountInput'
 import { amountText } from '../kit/amount'
+import { local } from '../../storage'
 
 const LAST = 'q.sharedBudget'
-const remember = (id: string | null) => { try { if (id) localStorage.setItem(LAST, id); else localStorage.removeItem(LAST) } catch { /* niente */ } }
-const remembered = () => { try { return localStorage.getItem(LAST) } catch { return null } }
 
 /** Budget comune (di coppia o tra coinquilini): spese condivise, divisione scelta dagli utenti, chi deve quanto a chi. */
 /** Dentro la pagina del Profilo, che ha già Indietro e titolo. */
@@ -24,7 +23,7 @@ export function SharedView({ onLogin }: { onLogin: () => void }) {
   const { t } = useI18n()
   const sync = useSync()
   const [list, setList] = useState<SBudget[] | null>(null)
-  const [current, setCurrent] = useState<string | null>(remembered)
+  const [current, setCurrent] = useState<string | null>(() => local.get(LAST))
   const [error, setError] = useState('')
 
   const refreshList = useCallback(async () => {
@@ -44,12 +43,12 @@ export function SharedView({ onLogin }: { onLogin: () => void }) {
       
       {error && <p className="bad-text small">{error}</p>}
       {list.length > 1 && (
-        <div className="chips sh-pick">{list.map(b => <button key={b.id} className={`chip${b.id === current ? ' on' : ''}`} onClick={() => { setCurrent(b.id); remember(b.id) }}>{b.name}</button>)}</div>
+        <div className="chips sh-pick">{list.map(b => <button key={b.id} className={`chip${b.id === current ? ' on' : ''}`} onClick={() => { setCurrent(b.id); local.set(LAST, b.id) }}>{b.name}</button>)}</div>
       )}
       {current && list.some(b => b.id === current)
-        ? <BudgetDetail key={current} id={current} onLeft={() => { remember(null); setCurrent(null); void refreshList() }} />
+        ? <BudgetDetail key={current} id={current} onLeft={() => { local.set(LAST, null); setCurrent(null); void refreshList() }} />
         : null}
-      <StartCard first={!list.length} onReady={id => { remember(id); setCurrent(id); void refreshList() }} />
+      <StartCard first={!list.length} onReady={id => { local.set(LAST, id); setCurrent(id); void refreshList() }} />
     </div>
   )
 }

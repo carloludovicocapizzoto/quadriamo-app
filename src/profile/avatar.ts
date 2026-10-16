@@ -3,15 +3,16 @@
 // leggibile solo dal suo proprietario, e una copia resta qui per mostrarla subito e anche offline.
 import { useSyncExternalStore } from 'react'
 import { supabase } from '../sync/client'
+import { local } from '../storage'
 
 const KEY = 'q.avatar'
 const SIZE = 256
-const read = () => { try { return localStorage.getItem(KEY) } catch { return null } }
+const read = () => local.get(KEY)
 let current = read()
 const listeners = new Set<() => void>()
 const set = (v: string | null) => {
   current = v
-  try { if (v) localStorage.setItem(KEY, v); else localStorage.removeItem(KEY) } catch { /* niente */ }
+  local.set(KEY, v || null)
   listeners.forEach(f => f())
 }
 export const useAvatar = () => useSyncExternalStore(f => { listeners.add(f); return () => { listeners.delete(f) } }, () => current)

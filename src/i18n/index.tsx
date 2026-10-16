@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import en from './en'
 import { DICTS, I18nContext, LANG_KEY, LANGS, detectLang, type I18n, type Lang } from './core'
+import { local } from '../storage'
 
 function initialLang(): Lang {
-  try {
-    const saved = localStorage.getItem(LANG_KEY)
-    if (saved && saved in LANGS) return saved as Lang
-  } catch { /* storage non disponibile: si usa la lingua del browser */ }
+  const saved = local.get(LANG_KEY)
+  if (saved && saved in LANGS) return saved as Lang
   return detectLang()
 }
 
@@ -17,7 +16,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     lang,
     setLang: l => {
       setLangState(l)
-      try { localStorage.setItem(LANG_KEY, l) } catch { /* ignora */ }
+      local.set(LANG_KEY, l)
     },
     t: (key, vars) => {
       let s: string = DICTS[lang][key] ?? en[key] ?? ''

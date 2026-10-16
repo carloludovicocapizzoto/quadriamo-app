@@ -33,6 +33,7 @@ import sql0019 from '../../../supabase/migrations/0019_news_hub_cron.sql?raw'
 import sql0009 from '../../../supabase/migrations/0009_morning_push_cron.sql?raw'
 import sql0003 from '../../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
 import fnCode from '../../../supabase/functions/send-push/index.ts?raw'
+import { local } from '../../storage'
 
 const SITE = 'https://carloludovicocapizzoto.github.io/quadriamo-app/'
 
@@ -47,7 +48,7 @@ function Copy({ text, label: l = 'Copia' }: { text: string; label?: string }) {
 }
 // passi che Supabase non lascia controllare da fuori (impostazioni di accesso, modelli email): li segni tu come fatti
 const MANUAL_KEY = 'q.setupManual'
-const readManual = (): number[] => { try { return JSON.parse(localStorage.getItem(MANUAL_KEY) ?? '[]') } catch { return [] } }
+const readManual = () => local.json<number[]>(MANUAL_KEY, [])
 
 function Step({ n, ok, title, children, manual }: { n: number; ok: boolean | null; title: string; children?: React.ReactNode; manual?: { done: boolean; toggle: () => void } }) {
   const done = ok ?? manual?.done ?? null
@@ -70,7 +71,7 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
   const [manual, setManual] = useState<number[]>(readManual)
   const toggle = (n: number) => () => setManual(m => {
     const next = m.includes(n) ? m.filter(x => x !== n) : [...m, n]
-    try { localStorage.setItem(MANUAL_KEY, JSON.stringify(next)) } catch { /* niente */ }
+    local.setJson(MANUAL_KEY, next)
     return next
   })
   const dash = `https://supabase.com/dashboard/project/${ref}`

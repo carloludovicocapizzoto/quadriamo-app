@@ -1,5 +1,6 @@
 // Preferenze di questo dispositivo (non si sincronizzano: il tema o la vibrazione dipendono dal telefono che hai in mano).
 import { useSyncExternalStore } from 'react'
+import { local } from '../storage'
 
 export interface Prefs {
   theme: 'auto' | 'light' | 'dark'      // automatico = segue il sistema
@@ -9,7 +10,7 @@ export interface Prefs {
 }
 const KEY = 'q.prefs'
 const DEFAULTS: Prefs = { theme: 'auto', haptics: true, motion: 'system', text: 'normal' }
-const read = (): Prefs => { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') } } catch { return DEFAULTS } }
+const read = (): Prefs => ({ ...DEFAULTS, ...local.json<Partial<Prefs>>(KEY, {}) })
 
 let current = read()
 const listeners = new Set<() => void>()
@@ -17,7 +18,7 @@ const listeners = new Set<() => void>()
 export const getPrefs = () => current
 export function setPrefs(p: Partial<Prefs>) {
   current = { ...current, ...p }
-  try { localStorage.setItem(KEY, JSON.stringify(current)) } catch { /* niente: vale fino alla chiusura */ }
+  local.setJson(KEY, current)
   applyPrefs()
   listeners.forEach(f => f())
 }

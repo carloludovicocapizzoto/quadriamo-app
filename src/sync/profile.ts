@@ -1,5 +1,6 @@
 // Profilo dell'utente registrato (tabella profiles: ognuno legge e scrive solo il proprio).
 import { supabase } from './client'
+import { local } from '../storage'
 
 /** Nome e cognome dell'account (tabella profiles). Le risposte sensibili stanno nei dati dell'utente (PrivateProfile). */
 export interface Names { first_name: string | null; last_name: string | null }
@@ -10,9 +11,9 @@ export const CARDS = ['bank', 'credit', 'prepaid', 'Revolut', 'N26', 'Hype', 'Sa
 export const WHERE = ['bank', 'broker', 'etf', 'stocks', 'bonds', 'pension', 'crypto', 'realestate', 'other'] as const
 
 const flag = (key: string) => ({
-  set: () => { try { localStorage.setItem(key, '1') } catch { /* niente */ } },
-  get: () => { try { return localStorage.getItem(key) === '1' } catch { return false } },
-  clear: () => { try { localStorage.removeItem(key) } catch { /* niente */ } },
+  set: () => { local.set(key, '1') },
+  get: () => local.get(key) === '1',
+  clear: () => { local.set(key, null) },
 })
 /** Dopo la registrazione si propone il profilo una volta (anche se la conferma email arriva dopo). */
 export const profilePrompt = flag('q.profilePrompt')

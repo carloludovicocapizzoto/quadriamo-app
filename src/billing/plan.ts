@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../sync/client'
 import { useSync } from '../sync/context'
 import { navigate } from '../app/router'
+import { local } from '../storage'
 
 export const BETA_ALL_PRO = true
 export const PRICE = { month: 2.99, year: 24.99, currency: 'EUR' }
@@ -13,8 +14,8 @@ export interface Subscription { status: string; interval: 'month' | 'year' | nul
 export interface Plan { pro: boolean; beta: boolean; sub: Subscription | null; loading: boolean }
 
 const PREVIEW = 'q.planPreview'   // "free": mostra l'app come la vedrebbe chi non ha Pro (per provare la schermata di Pro)
-export const previewFree = () => { try { return localStorage.getItem(PREVIEW) === 'free' } catch { return false } }
-export const setPreviewFree = (on: boolean) => { try { if (on) localStorage.setItem(PREVIEW, 'free'); else localStorage.removeItem(PREVIEW) } catch { /* niente */ } }
+export const previewFree = () => local.get(PREVIEW) === 'free'
+export const setPreviewFree = (on: boolean) => { local.set(PREVIEW, on ? 'free' : null) }
 
 const isActive = (s: Subscription | null) => !!s && ['active', 'trialing', 'past_due'].includes(s.status)
 const listeners = new Set<() => void>()

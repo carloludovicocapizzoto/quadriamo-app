@@ -2,14 +2,15 @@
 // È legata a un codice casuale di questo dispositivo, che serve solo per aggiornarla o ritirarla.
 import type { PrivateProfile } from '../store/state'
 import { supabase } from './client'
+import { local } from '../storage'
 
 const KEY = 'q.researchToken'
 function token(create: boolean): string | null {
-  try {
-    let t = localStorage.getItem(KEY)
-    if (!t && create) { t = crypto.randomUUID(); localStorage.setItem(KEY, t) }
-    return t
-  } catch { return null }
+  const t = local.get(KEY)
+  if (t || !create) return t
+  // senza memoria niente codice: un codice nuovo a ogni invio conterebbe la stessa persona più volte
+  const fresh = crypto.randomUUID()
+  return local.set(KEY, fresh) ? fresh : null
 }
 
 function incomeBand(n: number | null): string | null {
@@ -22,7 +23,7 @@ export async function syncResearch(p: PrivateProfile | null, shares: number[]) {
   if (!supabase) return
   if (!p?.research) {
     const t = token(false)
-    if (t) { await supabase.rpc('remove_research', { p_token: t }); try { localStorage.removeItem(KEY) } catch { /* niente */ } }
+    if (t) { await supabase.rpc('remove_research', { p_token: t }); local.set(KEY, null) }
     return
   }
   const t = token(true)

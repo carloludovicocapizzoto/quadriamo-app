@@ -2,6 +2,7 @@
 import { supabase } from '../sync/client'
 import { deviceId } from './device'
 import { track } from './telemetry'
+import { local } from '../storage'
 
 const VAPID = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
 
@@ -44,10 +45,10 @@ async function register(sub: PushSubscription, lang: string) {
 }
 
 const NEWS_PREF = 'q.newsPush'
-export const newsWanted = () => { try { return localStorage.getItem(NEWS_PREF) !== 'off' } catch { return true } }
+export const newsWanted = () => local.get(NEWS_PREF) !== 'off'
 /** Notizie principali sì/no per questo dispositivo. */
 export async function setNewsPush(on: boolean) {
-  try { localStorage.setItem(NEWS_PREF, on ? 'on' : 'off') } catch { /* niente */ }
+  local.set(NEWS_PREF, on ? 'on' : 'off')
   const reg = await navigator.serviceWorker?.getRegistration()
   const sub = await reg?.pushManager.getSubscription()
   if (sub && supabase) await supabase.rpc('set_news_push', { p_endpoint: sub.endpoint, p_on: on })
@@ -57,13 +58,13 @@ export async function setNewsPush(on: boolean) {
  *  il promemoria "a sorpresa". Una volta al giorno per dispositivo. */
 export async function touchPush(day: string): Promise<void> {
   try {
-    if (localStorage.getItem('q.touched') === day) return
+    if (local.get('q.touched') === day) return
     if (!pushSupported() || Notification.permission !== 'granted') return
     const reg = await navigator.serviceWorker.getRegistration()
     const sub = await reg?.pushManager.getSubscription()
     if (!sub) return
     const { error } = await supabase!.rpc('touch_push', { p_endpoint: sub.endpoint, p_day: day })
-    if (!error) localStorage.setItem('q.touched', day)
+    if (!error) local.set('q.touched', day)
   } catch { /* offline: si riprova */ }
 }
 

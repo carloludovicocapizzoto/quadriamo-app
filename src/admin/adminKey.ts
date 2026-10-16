@@ -2,15 +2,17 @@
 // nell'intestazione "x-admin-key"; il database ne conosce solo l'impronta SHA-256 (supabase/migrations/0006_admin_key.sql).
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { supabase } from '../sync/client'
+import { local } from '../storage'
 
 const KEY = 'q.adminKey'
 export interface AdminKey { name: string; code: string }
 
 export function savedKey(): AdminKey | null {
-  try { const v = JSON.parse(localStorage.getItem(KEY) ?? 'null'); return v?.name && v?.code ? v : null } catch { return null }
+  const v = local.json<AdminKey | null>(KEY, null)
+  return v?.name && v?.code ? v : null
 }
 export function saveKey(k: AdminKey | null) {
-  try { if (k) localStorage.setItem(KEY, JSON.stringify(k)); else localStorage.removeItem(KEY) } catch { /* niente */ }
+  local.set(KEY, k ? JSON.stringify(k) : null)
 }
 
 /** Codice casuale di 24 caratteri (senza lettere che si confondono). */

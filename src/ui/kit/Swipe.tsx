@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useI18n } from '../../i18n/core'
 import { tap } from './motion'
+import { local } from '../../storage'
 
 const HINT = 'q.swipeHint'
 // zone che scorrono già di lato o dove si scrive: lì il gesto non cambia mese
@@ -15,10 +16,10 @@ export function Swipe({ id, onPrev, onNext, hint, children }: { id: string; onPr
   const start = useRef<{ x: number; y: number; on: boolean | null } | null>(null)
   const [dx, setDx] = useState(0)
   const [dir, setDir] = useState<'left' | 'right' | null>(null)
-  const [showHint, setShowHint] = useState(() => { try { return !!hint && !localStorage.getItem(HINT) } catch { return false } })
+  const [showHint, setShowHint] = useState(() => !!hint && local.get(HINT) == null)
   const go = (d: 'prev' | 'next') => {
     tap(); setDir(d === 'next' ? 'left' : 'right')
-    if (showHint) { setShowHint(false); try { localStorage.setItem(HINT, '1') } catch { /* niente */ } }
+    if (showHint) { setShowHint(false); local.set(HINT, '1') }
     if (d === 'next') onNext(); else onPrev()
   }
   useEffect(() => {

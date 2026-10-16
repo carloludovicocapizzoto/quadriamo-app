@@ -1,6 +1,7 @@
 // Filtri delle Notizie: tipo, argomento, lingua, area, fonte e ordinamento. Restano salvati sul telefono.
 // Nessun filtro = tutti i contenuti nella propria lingua e in inglese, nelle sezioni scelte dall'app.
 import type { Format, HubItem } from './hub'
+import { local } from '../storage'
 
 export type SourceGroup = 'press' | 'independent' | 'research' | 'video' | 'podcast'
 export type Sort = 'relevant' | 'recent'
@@ -16,9 +17,9 @@ export const EMPTY: NewsFilter = { types: [], topics: [], langs: [], areas: [], 
 
 const KEY = 'q.newsFilter'
 export function loadFilter(): NewsFilter {
-  try { return { ...EMPTY, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') } } catch { return EMPTY }
+  return { ...EMPTY, ...local.json<Partial<NewsFilter>>(KEY, {}) }
 }
-export function saveFilter(f: NewsFilter) { try { localStorage.setItem(KEY, JSON.stringify(f)) } catch { /* niente */ } }
+export function saveFilter(f: NewsFilter) { local.setJson(KEY, f) }
 
 /** Quanti filtri sono attivi (l'ordinamento conta se non è quello di partenza). */
 export const activeCount = (f: NewsFilter) =>
