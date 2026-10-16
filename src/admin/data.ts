@@ -1,6 +1,7 @@
 // Dati dell'area amministratore: tutto passa dalle funzioni admin_* del database, che rispondono solo
 // a chi è nella tabella admins (il controllo è nel database, non qui).
 import { db, keyHeaders } from './adminKey'
+import { downloadFile } from '../ui/kit/download'
 
 export interface Stats {
   devices: number; active_1: number; active_7: number; active_30: number; accounts: number; installed: number
@@ -134,8 +135,5 @@ export async function sendPush(title: string, body: string) {
 export function downloadCsv(name: string, rows: (string | number | boolean | null | undefined)[][]) {
   const cell = (v: unknown) => { const t = v == null ? '' : String(v); return /[";\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t }
   const csv = '﻿' + rows.map(r => r.map(cell).join(';')).join('\r\n')
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-  a.download = `${name}-${new Date().toISOString().slice(0, 10)}.csv`
-  a.click(); URL.revokeObjectURL(a.href)
+  downloadFile(name, 'csv', csv, 'text/csv;charset=utf-8')
 }

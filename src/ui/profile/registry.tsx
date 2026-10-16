@@ -6,7 +6,7 @@ import type { AppData } from '../../store/state'
 import { FeedbackCard } from '../beta/FeedbackCard'
 import { GoalsStrip } from '../goals/Goals'
 import { PlanCard, ProGate } from '../Pro'
-import { SettingsView } from '../SettingsView'
+import { SettingsView } from '../settings/SettingsView'
 import { SharedView } from '../shared/SharedView'
 import { CapitalPage } from '../capital/CapitalPage'
 import { Accessibility, Appearance, Delete, HelpCenter, Language, Licenses, Motion, Notifications, Personal, Progress, Security } from './pages'
@@ -21,18 +21,18 @@ export const PAGES: Record<ProfilePage, (p: PageProps) => ReactNode> = {
   personal: p => <Personal onLogin={p.onLogin} />,
   security: () => <Security />,
   plan: p => <PlanCard onLogin={p.onLogin} />,
-  budget: p => <SettingsView only={['general', 'fx', 'rule', 'categories']} onLogin={p.onLogin} />,
+  budget: () => <SettingsView only={['general', 'fx', 'rule', 'categories']} />,
   capital: () => <CapitalPage />,
-  recurring: p => <SettingsView only={['recurring']} onLogin={p.onLogin} />,
+  recurring: () => <SettingsView only={['recurring']} />,
   goals: p => <GoalsStrip goals={p.data.goals} today={p.today} currency={p.data.settings.currency} titled={false} />,
-  rules: p => <SettingsView only={['rules']} onLogin={p.onLogin} />,
+  rules: () => <SettingsView only={['rules']} />,
   shared: p => <ProGate feature="shared"><SharedView onLogin={p.onLogin} /></ProGate>,
   appearance: () => <Appearance />,
   language: () => <Language />,
   notifications: () => <Notifications />,
   motion: () => <Motion />,
   accessibility: () => <Accessibility />,
-  data: p => <SettingsView only={['data']} onLogin={p.onLogin} />,
+  data: () => <SettingsView only={['data']} />,
   delete: p => <Delete onDone={p.onHome} />,
   help: p => <HelpCenter onReport={() => p.onPage('feedback')} />,
   feedback: p => <FeedbackCard onClose={p.onBack} />,

@@ -6,23 +6,11 @@ import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
 import { useSync } from '../sync/context'
 import { profilePrompt, setupPending } from '../sync/profile'
-import { ProfileForm } from './ProfileForm'
 import { Icon } from './Icon'
 import { StepHeader, StepNav } from './Steps'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 type Msg = { text: string; bad?: boolean } | null
-
-/** Riquadro account nelle Impostazioni: stato dell'accesso; se non hai fatto l'accesso, un pulsante che apre la schermata di accesso. */
-export function AccountSection({ onLogin }: { onLogin?: () => void }) {
-  const { t } = useI18n()
-  const sync = useSync()
-  if (!sync.enabled) return null
-  const body = sync.recovery ? <NewPassword /> : sync.user ? <SignedIn /> : (
-    <><p className="muted small">{t('auth.intro')}</p>
-      <button className="btn primary" onClick={onLogin}><Icon name="user" size={16} />{t('onb.account')}</button></>)
-  return <section className="card" id="account"><h3 className="h-plain">{t('sync.title')}</h3>{body}</section>
-}
 
 /** Schermata di accesso: solo "Accedi / Crea account" (con password dimenticata). Niente impostazioni qui. */
 export function LoginScreen({ footer }: { footer?: ReactNode }) {
@@ -218,47 +206,5 @@ function NewPassword() {
       <button className="btn primary" disabled={busy}>{t('auth.savePassword')}</button>
       {msg && <p className={msg.bad ? 'bad-text small' : 'good-text small'} role="alert">{msg.text}</p>}
     </form>
-  )
-}
-
-function SignedIn() {
-  const { t, date } = useI18n()
-  const sync = useSync()
-  const { state } = useStore()
-  const [profile, setProfile] = useState(() => profilePrompt.get())
-  const [changePw, setChangePw] = useState(false)
-  const { msg, setMsg, run } = useRun()
-  const user = sync.user!
-  const time = sync.lastSync
-    ? `${date(sync.lastSync.slice(0, 10))} ${new Date(sync.lastSync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-    : null
-  const statusText = {
-    idle: '', syncing: t('sync.syncing'), ok: time ? t('sync.lastSync', { time }) : t('sync.ok'),
-    offline: t('sync.offline'), error: t('sync.error'),
-  }[sync.status] || (time ? t('sync.lastSync', { time }) : t('sync.never'))
-  return (
-    <>
-      {user.firstName && <p className="hello">{t('auth.hello', { name: user.firstName })}</p>}
-      <p>{t('sync.signedInAs', { email: user.email })}</p>
-      <p className={`small ${sync.status === 'error' ? 'bad-text' : 'muted'}`} role="status">
-        <span className={`dot ${sync.status}`} aria-hidden="true" /> {statusText}</p>
-      {state.data?.demo && <p className="muted small">{t('sync.demoHint')}</p>}
-
-      {profile && state.data
-        ? <div className="profile-box"><h4>{t('prof.title')}</h4><ProfileForm onDone={() => setProfile(false)} /></div>
-        : <button className="btn top-gap" onClick={() => setProfile(true)}><Icon name="user" size={16} />{t('prof.edit')}</button>}
-
-      {changePw && <div className="profile-box"><NewPassword /></div>}
-      <div className="stack-row top-gap">
-        <button className="btn" disabled={sync.status === 'syncing'} onClick={() => void sync.syncNow()}>{t('sync.now')}</button>
-        {!changePw && <button className="btn" onClick={() => setChangePw(true)}>{t('auth.changePassword')}</button>}
-        <button className="btn" onClick={() => void sync.signOut()}>{t('sync.signOut')}</button>
-        <button className="btn danger" onClick={() => {
-          if (confirm(t('sync.deleteConfirm'))) void run(async () => { await sync.deleteAccount(); setMsg({ text: t('sync.deleted') }) }, () => t('sync.error'))
-        }}>{t('sync.deleteAccount')}</button>
-      </div>
-      <p className="muted small top-gap">{t('sync.signOutHint')}</p>
-      {msg && <p className={msg.bad ? 'bad-text small' : 'good-text small'} role="alert">{msg.text}</p>}
-    </>
   )
 }
