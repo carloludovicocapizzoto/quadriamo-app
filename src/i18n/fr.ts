@@ -358,6 +358,7 @@ const fr: Dict = {
   'rep.another': "En envoyer un autre",
   'rep.error': "L’envoi a échoué. Vérifiez la connexion et réessayez.",
   'err.report': "Signaler le problème",
+  'upd.done': "Mise à jour vers la version {v}",
   'setup.salaryTitle': "Votre salaire",
   'setup.salaryText': "Combien entre chaque mois, environ ? On le répartit tout de suite en quatre parts et vous voyez combien dépenser chaque jour.",
   'setup.salaryLabel': "Salaire net du mois",

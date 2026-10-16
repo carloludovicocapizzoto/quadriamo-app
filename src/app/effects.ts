@@ -14,6 +14,7 @@ type T = I18n['t']
 import { navigate } from './router'
 import { toast } from './toast'
 import { ENV } from '../env'
+import { newRelease } from './updates'
 
 /** Avvio: vecchi indirizzi, pagina d'ingresso dai link (?join=, ?tab=news), indirizzo pulito, installazione. */
 export function useBootstrap() {
@@ -26,6 +27,15 @@ export function useBootstrap() {
     const onInstalled = () => { void track('install') }
     window.addEventListener('appinstalled', onInstalled)
     return () => window.removeEventListener('appinstalled', onInstalled)
+  }, [])
+}
+
+/** Dopo un aggiornamento: un messaggio breve con la versione nuova (una volta). */
+export function useUpdatedNotice(t: T) {
+  useEffect(() => {
+    const v = newRelease()
+    if (v) toast(t('upd.done', { v }), 3500)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- una volta all'avvio
   }, [])
 }
 

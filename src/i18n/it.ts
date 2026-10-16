@@ -358,6 +358,7 @@ const it: Dict = {
   'rep.another': "Mandane un’altra",
   'rep.error': "Non è partita. Controlla la connessione e riprova.",
   'err.report': "Segnala il problema",
+  'upd.done': "Aggiornata alla versione {v}",
   'setup.salaryTitle': "Il tuo stipendio",
   'setup.salaryText': "Quanto ti entra al mese, più o meno? Lo dividiamo subito nelle quattro parti e vedi quanto puoi spendere ogni giorno.",
   'setup.salaryLabel': "Stipendio netto del mese",

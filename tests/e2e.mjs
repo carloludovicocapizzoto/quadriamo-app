@@ -84,6 +84,10 @@ await step('Profilo → Capitale: inserisco 2.000 €', async () => {
 }, has('/2\\.000,00/', '.outcome'))
 await step('il capitale compare in Analisi → Investi', () => js(`location.hash = '#/analysis/investments'`), `/2\\.000,00/.test(document.querySelector('.cap-line')?.innerText ?? '')`)
 
+console.log('Installazione e aggiornamenti')
+await step('il service worker è registrato (app installabile, aggiornamenti automatici)', null,
+  `navigator.serviceWorker.getRegistration().then(r => !!r?.active)`)
+
 console.log('Tastiera')
 const press = (key, code) => cdp('Input.dispatchKeyEvent', { type: 'keyDown', key, code, text: key.length === 1 ? key : undefined, windowsVirtualKeyCode: key.toUpperCase().charCodeAt(0) })
 await step('G poi N apre le Notizie', async () => { await js(`document.activeElement?.blur()`); await press('g', 'KeyG'); await press('n', 'KeyN') }, `location.hash === '#/news'`)

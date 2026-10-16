@@ -5,6 +5,7 @@ import { applyPrefs } from './app/prefs'
 import { watchDiagnostics } from './app/diagnostics'
 import { watchErrors } from './app/errors'
 import { watchSessions } from './beta/sessions'
+import { watchUpdates } from './app/updates'
 import { SectionBoundary } from './app/SectionBoundary'
 import App from './App.tsx'
 import { I18nProvider } from './i18n'
@@ -15,6 +16,7 @@ applyPrefs()   // tema, movimento e testo prima del primo disegno: niente lampo 
 watchDiagnostics()  // diario tecnico in memoria: schermate, azioni, rallentamenti
 watchErrors()       // gli errori sui telefoni degli utenti arrivano all'area admin, con il diario
 watchSessions()     // come si usa l'app, solo con il consenso alle statistiche anonime
+watchUpdates()      // versioni nuove appena l'app torna in primo piano
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <I18nProvider>

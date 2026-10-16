@@ -16,7 +16,7 @@ import { TxForm } from '../ui/TxForm'
 import { Sheet } from '../ui/kit/Sheet'
 import { profilePrompt } from '../sync/profile'
 import { closeComposer, openComposer, useComposer } from './composer'
-import { useBootstrap, useDailyPing, useMorningSnapshot, useProReturn, usePushSync } from './effects'
+import { useBootstrap, useDailyPing, useMorningSnapshot, useProReturn, useUpdatedNotice, usePushSync } from './effects'
 import { useEntry } from './entryContext'
 import { SHORTCUTS, useShortcuts } from './shortcuts'
 import { closeFeedback, useFeedbackOpen } from './prompts'
@@ -65,6 +65,7 @@ export function AppShell() {
 
   useBootstrap()
   useProReturn(t)
+  useUpdatedNotice(t)
   useMorningSnapshot(data, thisMonth, streak, today, lang, t)
   usePushSync(lang, !!streak?.doneToday, today, !!data.demo)
   const ping = useDailyPing(data, state.loaded, !!sync.user, today, lang)

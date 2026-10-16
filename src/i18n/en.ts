@@ -358,6 +358,7 @@ const en = {
   'rep.another': "Send another",
   'rep.error': "It wasn’t sent. Check your connection and try again.",
   'err.report': "Report the problem",
+  'upd.done': "Updated to version {v}",
   'setup.salaryTitle': "Your salary",
   'setup.salaryText': "Roughly how much comes in each month? We split it into the four parts right away and you see how much you can spend each day.",
   'setup.salaryLabel': "Net monthly salary",
