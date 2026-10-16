@@ -112,7 +112,7 @@ export function AppShell() {
               else if (a === 'import') importStatement()
               else if (a === 'shared') go({ tab: 'profile', page: 'shared' })
               else if (a === 'recurring') go({ tab: 'profile', page: 'recurring' })
-              else go({ tab: 'home' })
+              else if (a === 'goals') go({ tab: 'profile', page: 'goals' })
             }} />}
             {route.tab === 'analysis' && <AnalysisScreen view={route.view} data={data} result={month} current={viewed} homeResult={thisMonth} today={today}
               year={route.year ?? viewed.year}
