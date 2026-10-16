@@ -35,6 +35,7 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 - ✅ Problema o idea, priorità, descrizione, screenshot e video, diagnostica visibile prima dell'invio; dispositivo, versione, sistema, lingua, ora e ultimi passi inclusi.
 - ✅ Area admin: segnalazioni ordinate per priorità, allegati, diario, stato (nuova, vista, risolta); allegati cancellati dopo 90 giorni.
 - ✅ Migrazione 0026 eseguita (passo 18).
+- 🟡 Mail a Carlo per ogni nuova segnalazione (funzione report-email + migrazione 0027, Resend gratuito): passo 19 della Configurazione.
 - ⚠️ Allegati solo con l'accesso (scelta voluta contro gli abusi): chi prova senza account manda solo il testo.
 - ⚠️ Entrando nell'admin con nome e codice gli allegati potrebbero non aprirsi (l'archivio di Supabase non vede il codice): in quel caso entrare con l'account.
 

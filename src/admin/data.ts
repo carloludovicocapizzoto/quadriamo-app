@@ -44,6 +44,7 @@ export interface Setup {
   adminName: string | null    // nome di chi è entrato con il codice
   siteFeedback: boolean | null  // script 0005 (feedback dal sito) eseguito
   betaTools: boolean | null   // script 0024–0026 (diagnostica, uso dell'app, segnalazioni) eseguiti
+  reportEmail: boolean | null // funzione report-email pubblicata e con i segreti di Resend (mail delle segnalazioni)
   admin: boolean              // questo account è amministratore
   fn: 'ok' | 'missing' | 'nosecrets' | 'unknown'   // funzione send-push pubblicata e con le chiavi
   cronSecret: boolean
@@ -104,6 +105,11 @@ export async function deleteReport(r: Report) {
   if (r.attachments.length) await db()!.storage.from('reports').remove(r.attachments)
   const { error } = await db()!.from('tester_reports').delete().eq('id', r.id); if (error) throw error
 }
+/** Una mail di prova all'indirizzo delle segnalazioni (passo 19). */
+export async function testReportEmail() {
+  const { error } = await db()!.functions.invoke('report-email', { body: { mode: 'test' }, headers: keyHeaders() })
+  if (error) throw error
+}
 export async function dropOldAttachments(rows: Report[], days = 90): Promise<number> {
   const old = rows.filter(r => r.attachments.length && Date.now() - Date.parse(r.created_at) > days * 864e5)
   for (const r of old) {
@@ -131,12 +137,12 @@ const NONE = '00000000-0000-0000-0000-000000000000'
 
 export async function checkSetup(signedIn: boolean): Promise<Setup> {
   const supabase = db()
-  const s: Setup = { connected: !!supabase, tables: null, profiles: null, research: null, v8: null, v10: null, v11: null, v13: null, v14: null, billing: null, news: null, siteFeedback: null, adminKeys: null, adminName: null, betaTools: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
+  const s: Setup = { connected: !!supabase, tables: null, profiles: null, research: null, v8: null, v10: null, v11: null, v13: null, v14: null, billing: null, news: null, siteFeedback: null, adminKeys: null, adminName: null, betaTools: null, reportEmail: null, admin: false, fn: 'unknown', cronSecret: false, reminder: false,
     vapidInApp: !!ENV.vapidKey }
   if (!supabase || !signedIn) return s
   // i controlli partono tutti insieme; quelli con un indirizzo finto ("check://") non toccano niente
   const key = ENV.supabase?.key ?? ''
-  const [ad, pr, rs, co, sh, tp, sn, bs, bf, news, an, sf, rp] = await Promise.all([
+  const [ad, pr, rs, co, sh, tp, sn, bs, bf, news, an, sf, rp, re] = await Promise.all([
     supabase.rpc('is_admin'),
     supabase.from('profiles').select('user_id', { head: true, count: 'exact' }),
     supabase.rpc('admin_research_stats'),
@@ -152,6 +158,7 @@ export async function checkSetup(signedIn: boolean): Promise<Setup> {
     supabase.rpc('admin_name'),
     supabase.rpc('site_feedback_ready'),
     supabase.rpc('admin_reports', { p_limit: 1 }),
+    supabase.functions.invoke('report-email', { body: { mode: 'check' } }),
   ])
   s.tables = exists(ad); s.admin = ad.data === true
   s.profiles = !(pr.error && (pr.error.code === 'PGRST205' || pr.error.code === '42P01'))
@@ -162,6 +169,7 @@ export async function checkSetup(signedIn: boolean): Promise<Setup> {
   s.adminKeys = exists(an); s.adminName = (an.data as string | null) ?? null
   s.siteFeedback = !sf.error
   s.betaTools = exists(rp)
+  s.reportEmail = !re.error && re.data?.configured === true
   if (!s.admin) return s
   const fn = await supabase.functions.invoke('send-push', { body: { mode: 'check' }, headers: keyHeaders() })
   if (fn.error) s.fn = 'missing'

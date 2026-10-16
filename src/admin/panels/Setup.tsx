@@ -1,7 +1,7 @@
 // Configurazione: i passi per collegare Supabase, con gli script da copiare e i controlli automatici.
 import { useState } from 'react'
 import { ENV } from '../../env'
-import { projectRef, type Setup } from '../data'
+import { projectRef, testReportEmail, type Setup } from '../data'
 import sql0002 from '../../../supabase/migrations/0002_beta_feedback_stats_push.sql?raw'
 import sql0004 from '../../../supabase/migrations/0004_profiles.sql?raw'
 import sql0005 from '../../../supabase/migrations/0005_site_feedback.sql?raw'
@@ -37,6 +37,8 @@ import sql0019 from '../../../supabase/migrations/0019_news_hub_cron.sql?raw'
 import sql0009 from '../../../supabase/migrations/0009_morning_push_cron.sql?raw'
 import sql0003 from '../../../supabase/migrations/0003_feedback_push_every_10_days.sql?raw'
 import fnCode from '../../../supabase/functions/send-push/index.ts?raw'
+import reportEmailCode from '../../../supabase/functions/report-email/index.ts?raw'
+import sql0027 from '../../../supabase/migrations/0027_report_email.sql?raw'
 import { local } from '../../storage'
 
 // l'indirizzo del sito (in sviluppo quello della produzione)
@@ -69,6 +71,19 @@ function Step({ n, ok, title, children, manual }: { n: number; ok: boolean | nul
       </div>
     </div>
   )
+}
+
+/** Dopo il passo 19: una mail di prova, per vedere che arriva davvero (e non nello spam). */
+function TestEmail() {
+  const [msg, setMsg] = useState<{ text: string; bad?: boolean } | null>(null)
+  const [busy, setBusy] = useState(false)
+  const send = async () => {
+    setBusy(true); setMsg(null)
+    try { await testReportEmail(); setMsg({ text: 'Mail di prova inviata: controlla la posta (anche lo spam la prima volta).' }) }
+    catch (e) { setMsg({ text: `Non partita: ${(e as Error).message}`, bad: true }) } finally { setBusy(false) }
+  }
+  return <div className="az-u-row"><button className="az-btn" disabled={busy} onClick={() => void send()}>✉︎ Manda una mail di prova</button>
+    {msg && <span className={`az-msg ${msg.bad ? 'error' : 'ok'}`} role="status">{msg.text}</span>}</div>
 }
 
 export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup; email: string; adminKey?: { name: string; hash: string }; onRecheck: () => void }) {
@@ -296,6 +311,19 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
           <div className="az-u-row"><Copy text={[sql0024, sql0025, sql0026].join('\n')} label="Copia lo script" />
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
         </Step>
+        <Step n={19} ok={setup.reportEmail} title="Una mail a te per ogni nuova segnalazione">
+          <ol>
+            <li>Crea un account gratuito su <a href="https://resend.com/signup" target="_blank" rel="noreferrer">Resend</a> con l'email dove vuoi ricevere le segnalazioni,
+              poi <b>API Keys → Create API Key</b> (permesso <i>Sending access</i>) e copia la chiave (inizia con <code>re_</code>).</li>
+            <li>In <a href={`${dash}/functions/secrets`} target="_blank" rel="noreferrer">Edge Functions → Secrets</a> aggiungi <code>RESEND_API_KEY</code> (la chiave)
+              e <code>NOTIFY_EMAIL</code> (la stessa email dell'account Resend: senza un dominio proprio Resend scrive solo lì).</li>
+            <li><b>Deploy a new function</b> → <b>Via Editor</b>, nome <code>report-email</code>: incolla il codice copiato da qui → <b>Deploy</b>. Nei dettagli spegni <b>Verify JWT</b>.</li>
+            <li>Copia lo script, incollalo in SQL Editor e premi <b>Run</b>: da adesso ogni segnalazione manda la mail.</li>
+          </ol>
+          <div className="az-u-row"><Copy text={reportEmailCode} label="1 · Copia il codice della funzione" /><Copy text={sql0027} label="2 · Copia lo script" />
+            <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
+        </Step>
+        {setup.reportEmail && <TestEmail />}
       </div>
       <div className="az-card">
         <h3>Altri controlli</h3>
