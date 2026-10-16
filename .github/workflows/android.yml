@@ -1,20 +1,13 @@
 # L'app per Android (APK) da mandare ai tester: si avvia a mano (Actions → Android → Run workflow).
 # Va rifatta solo se cambiano nome, icona o indirizzo: le novità dell'app arrivano da sole, senza reinstallare.
 # L'APK finisce in una Release con un indirizzo fisso, da mandare ai tester:
-#   beta:        …/releases/download/android-beta/Quadriamo-Beta.apk
-#   produzione:  …/releases/download/android/Quadriamo.apk
+#   https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk
 # Servono i segreti ANDROID_KEYSTORE_B64 e ANDROID_KEYSTORE_PASSWORD (la chiave di firma: sempre la stessa,
 # altrimenti chi ha già l'app non può aggiornarla). Vedi docs/RELEASE.md.
 name: Android
 
 on:
   workflow_dispatch:
-    inputs:
-      env:
-        description: Quale app
-        type: choice
-        options: [beta, production]
-        default: beta
 
 permissions:
   contents: write   # per pubblicare l'APK nella Release
@@ -40,7 +33,7 @@ jobs:
       - name: Chiave di firma
         run: echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > "$RUNNER_TEMP/quadriamo.p12"
       - name: APK
-        run: node tools/android/build.mjs ${{ inputs.env }}
+        run: node tools/android/build.mjs
         env:
           ANDROID_KEYSTORE: ${{ runner.temp }}/quadriamo.p12
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -49,13 +42,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG=${{ inputs.env == 'beta' && 'android-beta' || 'android' }}
+          TAG=android
           APK=$(ls dist-android/*.apk)
           NOTES="Versione $(node -p "require('./package.json').version") (build ${{ github.run_number }}). Installa l'APK sul telefono Android: le novità dell'app arrivano poi da sole."
-          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "Quadriamo per Android (${{ inputs.env }})" --notes "$NOTES" --prerelease
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "Quadriamo per Android" --notes "$NOTES" --prerelease
           gh release edit "$TAG" --notes "$NOTES"
           gh release upload "$TAG" "$APK" dist-android/assetlinks.json --clobber
       - uses: actions/upload-artifact@v4
         with:
-          name: android-${{ inputs.env }}
+          name: android
           path: dist-android/*.apk

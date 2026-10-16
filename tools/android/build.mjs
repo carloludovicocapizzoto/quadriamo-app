@@ -3,27 +3,25 @@
 // del sito, quindi notifiche, dati e aggiornamenti funzionano come nella PWA e una versione nuova arriva senza
 // reinstallare. Va ricostruita solo se cambiano nome, icona o indirizzo. Lo stesso progetto andrà sul Play Store.
 //
-// Uso (lo fa la GitHub Action "Android"): node tools/android/build.mjs beta|production
+// Uso (lo fa la GitHub Action "Android"): node tools/android/build.mjs
 // Servono: JAVA_HOME (JDK 17), ANDROID_HOME, ANDROID_KEYSTORE (file .p12), ANDROID_KEYSTORE_PASSWORD, VERSION_CODE.
 import { AndroidSdkTools, Config, ConsoleLog, GradleWrapper, JdkHelper, TwaGenerator, TwaManifest } from '@bubblewrap/core'
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
-const env = process.argv[2] === 'production' ? 'production' : 'beta'
 const SITE = 'https://carloludovicocapizzoto.github.io/quadriamo-app/'
-const base = env === 'beta' ? `${SITE}beta/` : SITE
-// identificativo per sempre (non si cambia dopo la prima installazione); la beta convive con l'app normale
-const PACKAGE = env === 'beta' ? 'com.quadriamo.app.beta' : 'com.quadriamo.app'
-const OUT = resolve('dist-android'), DIR = join(OUT, `project-${env}`)
+// identificativo per sempre: non si cambia dopo la prima installazione (è anche quello del Play Store)
+const PACKAGE = 'com.quadriamo.app'
+const OUT = resolve('dist-android'), DIR = join(OUT, 'project')
 const need = name => process.env[name] || (console.error(`Manca ${name}`), process.exit(1))
 const keystore = resolve(need('ANDROID_KEYSTORE')), password = need('ANDROID_KEYSTORE_PASSWORD')
 const version = JSON.parse(readFileSync('package.json', 'utf8')).version
 
 const log = new ConsoleLog('android')
-const manifestUrl = new URL('manifest.webmanifest', base)
+const manifestUrl = new URL('manifest.webmanifest', SITE)
 const res = await fetch(manifestUrl)
-if (!res.ok) { console.error(`Il manifest di ${env} non è online (${manifestUrl}): pubblica prima il sito.`); process.exit(1) }
+if (!res.ok) { console.error(`Il manifest non è online (${manifestUrl}): pubblica prima il sito.`); process.exit(1) }
 const twa = TwaManifest.fromWebManifestJson(manifestUrl, await res.json())
 Object.assign(twa, {
   packageId: PACKAGE, appVersionName: version, appVersionCode: Number(need('VERSION_CODE')),
@@ -43,7 +41,7 @@ await new GradleWrapper(process, sdk, DIR).assembleRelease()
 
 const unsigned = join(DIR, 'app/build/outputs/apk/release/app-release-unsigned.apk')
 const aligned = join(OUT, 'aligned.apk')
-const apk = join(OUT, env === 'beta' ? 'Quadriamo-Beta.apk' : 'Quadriamo.apk')
+const apk = join(OUT, 'Quadriamo.apk')
 await sdk.zipalign(unsigned, aligned)
 await sdk.apksigner(keystore, password, 'quadriamo', password, aligned, apk)
 rmSync(aligned)

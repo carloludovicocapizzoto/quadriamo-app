@@ -1,15 +1,14 @@
-# Checklist di pre-produzione · beta per i tester
+# Checklist di pre-produzione · app per i tester
 
 Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un passo di Carlo · 🔧 da sviluppare · ⚠️ rischio
 
 ## 1. Ambienti e configurazione
 
-- ✅ Tre ambienti: sviluppo, beta, produzione (`src/env.ts`, file `.env.<ambiente>`, variabili della GitHub Action). Cambiare ambiente o chiavi non tocca il codice.
+- ✅ Ambienti sviluppo e produzione (`src/env.ts`, file `.env.<ambiente>`, variabili della GitHub Action). Cambiare ambiente o chiavi non tocca il codice.
 - ✅ Feature flag per ambiente (`VITE_FLAGS`): oggi `tester`.
-- ✅ Beta e produzione sullo stesso sito senza mescolare i dati del telefono (chiavi `beta:`), nome "Quadriamo Beta" sull'icona.
 - ✅ **Decisione del 16 ottobre: un solo backend** finché chi usa l'app sono i tester. Gli strumenti per i tester (flag `tester`)
-  sono accesi in produzione. La beta separata è pronta nel codice: per riattivarla prima del lancio pubblico basta
-  un progetto Supabase dedicato e le variabili `BETA_VITE_*` (docs/RELEASE.md).
+  sono accesi in produzione; i dati di ognuno restano nel suo account e passano così come sono al lancio pubblico.
+- 🔧 Prima del lancio pubblico: un ambiente di prova separato (staging) con un suo progetto Supabase (docs/RELEASE.md).
 - ✅ Segreti mai nell'app: chiavi private in Supabase (Edge Functions → Secrets), firma Android in `.keys.local/` e nei segreti di GitHub.
 
 ## 2. Backend reale
@@ -21,7 +20,7 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 ## 3. Errori e diagnostica
 
 - ✅ Errori dal telefono all'area admin con diario degli ultimi passi, ambiente, commit, sistema (pannello Errori).
-- ✅ Rete di sicurezza su tutta l'app e su ogni sezione; nella beta, "Segnala il problema" dalla schermata d'errore.
+- ✅ Rete di sicurezza su tutta l'app e su ogni sezione, con "Segnala il problema" dalla schermata d'errore.
 - ✅ Migrazione 0024 eseguita in produzione (passo 18).
 - ⚠️ Gli errori fuori da React prima del primo disegno (es. un modulo che non si carica) arrivano solo se la rete c'è.
 
@@ -100,4 +99,4 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 1. ✅ Copia di sicurezza della chiave Android. ✅ Passo 18 in produzione. ✅ Segreti Android e primo APK.
 2. Facoltativo: repository `carloludovicocapizzoto.github.io` con `.well-known/assetlinks.json` per l'app a tutto schermo.
 3. Installare e provare l'APK su un telefono Android.
-4. Il progetto Supabase `quadriamo-beta` (creato e poi non usato) si può mettere in pausa o eliminare dal pannello di Supabase.
+4. Eliminare dal pannello di Supabase il progetto `quadriamo-beta` (creato e poi non usato, vuoto).

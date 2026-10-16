@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:beta": "tsc -b && vite build --mode beta",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",

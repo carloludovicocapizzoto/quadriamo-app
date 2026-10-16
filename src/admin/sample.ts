@@ -48,12 +48,12 @@ export const sampleUsage: UsageStats = {
 const trail = [{ s: 2.1, kind: 'nav', what: '#/' }, { s: 9.4, kind: 'action', what: 'addTx' }, { s: 15.0, kind: 'nav', what: '#/analysis/month' },
   { s: 15.8, kind: 'slow', what: '412 ms su #/analysis/month' }, { s: 21.3, kind: 'error', what: "Cannot read properties of undefined (reading 'share')" }]
 const diag = (os: string, lang: string) => ({ os, platform: os.startsWith('iOS') ? 'ios' : 'android', installed: true, lang, screen: '390x844@3', online: true,
-  release: '0.9.0+152', commit: '9dcbe05', env: 'beta', at: at(1, 21), timeZone: 'Europe/Rome', route: '#/analysis/month', trail })
+  release: '0.9.0+152', commit: '9dcbe05', env: 'production', at: at(1, 21), timeZone: 'Europe/Rome', route: '#/analysis/month', trail })
 export const sampleReports: Report[] = [
   { id: 'r1', created_at: at(0, 21), kind: 'bug', priority: 'blocking', message: 'Aprendo Analisi → Mese dopo aver aggiunto una spesa la pagina diventa bianca con "Qualcosa è andato storto".',
-    attachments: [], env: 'beta', version: '0.9.0+152', status: 'new', email: 'giulia@esempio.it', diagnostics: diag('iOS 18.1', 'it') },
+    attachments: [], env: 'production', version: '0.9.0+152', status: 'new', email: 'giulia@esempio.it', diagnostics: diag('iOS 18.1', 'it') },
   { id: 'r2', created_at: at(1, 12), kind: 'idea', priority: 'normal', message: 'Mi piacerebbe vedere il widget del capitale anche sul telefono senza doverlo aggiungere.',
-    attachments: [], env: 'beta', version: '0.9.0+150', status: 'seen', email: null, diagnostics: diag('Android 15', 'it') },
+    attachments: [], env: 'production', version: '0.9.0+150', status: 'seen', email: null, diagnostics: diag('Android 15', 'it') },
   { id: 'r3', created_at: at(3, 9), kind: 'bug', priority: 'low', message: 'Nel tema scuro il testo dei filtri delle notizie è poco leggibile.',
-    attachments: [], env: 'beta', version: '0.9.0+148', status: 'done', email: 'marco@esempio.it', diagnostics: null },
+    attachments: [], env: 'production', version: '0.9.0+148', status: 'done', email: 'marco@esempio.it', diagnostics: null },
 ]

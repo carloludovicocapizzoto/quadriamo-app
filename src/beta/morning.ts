@@ -2,10 +2,8 @@
 // parte e fino a quando); la mattina il service worker (public/push-sw.js) lo legge e calcola il numero del giorno.
 // Così gli importi non passano mai dal server: arriva solo la "sveglia".
 import { set } from 'idb-keyval'
-import { storageKey } from '../env'
 
-// la chiave la legge anche il service worker: con il prefisso della beta se l'app è la beta
-const MORNING_KEY = storageKey('quadriamo.morning')
+const MORNING_KEY = 'quadriamo.morning'   // la legge anche il service worker (public/push-sw.js)
 
 export interface MorningSnapshot {
   lang: string; currency: string; end: string            // fine del periodo (YYYY-MM-DD)

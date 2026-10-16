@@ -39,7 +39,7 @@ import sql0003 from '../../../supabase/migrations/0003_feedback_push_every_10_da
 import fnCode from '../../../supabase/functions/send-push/index.ts?raw'
 import { local } from '../../storage'
 
-// l'indirizzo del sito di questo ambiente (la beta in /beta/); in sviluppo quello della produzione
+// l'indirizzo del sito (in sviluppo quello della produzione)
 const SITE = `https://carloludovicocapizzoto.github.io${ENV.base === '/' ? '/quadriamo-app/' : ENV.base}`
 
 // l'editor delle funzioni di Supabase accetta un file solo: regole e lettura dei feed (condivise con i test) nello stesso file
@@ -290,10 +290,9 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
           <p className="az-hint">Finché non ci sono date future, il widget non compare.</p>
         </Step>
-        <Step n={18} ok={setup.betaTools} title="Beta: diagnostica, uso dell'app e segnalazioni dei tester">
+        <Step n={18} ok={setup.betaTools} title="Diagnostica, uso dell'app e segnalazioni dei tester">
           <p>Errori con gli ultimi passi, statistiche d'uso per sessione (solo con il consenso) e segnalazioni con screenshot e video
-            in un archivio privato. Copia lo script, incollalo in SQL Editor e premi <b>Run</b>; va eseguito sia nel progetto di
-            produzione sia in quello della beta. Poi trovi tutto nei pannelli <b>Uso dell'app</b>, <b>Segnalazioni</b> ed <b>Errori</b>.</p>
+            in un archivio privato. Copia lo script, incollalo in SQL Editor e premi <b>Run</b>. Poi trovi tutto nei pannelli <b>Uso dell'app</b>, <b>Segnalazioni</b> ed <b>Errori</b>.</p>
           <div className="az-u-row"><Copy text={[sql0024, sql0025, sql0026].join('\n')} label="Copia lo script" />
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
         </Step>

@@ -6,9 +6,9 @@ Come si pubblica una nuova versione: docs/RELEASE.md.
 
 ## 0.9.0 — 16 ottobre 2026 · prima beta per i tester
 
-- Tre ambienti separati: sviluppo, beta (con un suo progetto Supabase) e produzione, configurati senza toccare il codice.
+- Configurazione per ambiente (sviluppo, produzione) senza toccare il codice.
 - Versione e build visibili nell'app e salvate con statistiche, errori e feedback.
-- Per chi prova la beta: segnalazioni con priorità, screenshot, video e diagnostica; "Segnala il problema" dalla schermata d'errore.
+- Per i tester: segnalazioni con priorità, screenshot, video e diagnostica; "Segnala il problema" dalla schermata d'errore.
 - Errori con gli ultimi passi; statistiche d'uso per sessione (solo con il consenso); pannelli Uso dell'app e Segnalazioni nell'admin.
 - Aggiornamenti appena l'app torna in primo piano, con l'avviso della versione nuova.
 - App per Android (APK) da installare senza Play Store; protezione dagli script iniettati (Content Security Policy).

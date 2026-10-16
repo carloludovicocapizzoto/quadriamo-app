@@ -56,9 +56,8 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png', 'fonts/DMSerifDisplay-Regular.ttf', 'fonts/*.woff2'],
       manifest: {
         id: `${base}app/`,
-        // la beta installata accanto all'app normale si riconosce dal nome
-        name: mode === 'beta' ? 'Quadriamo Beta' : 'Quadriamo',
-        short_name: mode === 'beta' ? 'Q. Beta' : 'Quadriamo',
+        name: 'Quadriamo',
+        short_name: 'Quadriamo',
         categories: ['finance', 'productivity'],
         description: 'Your money, in four: the 55-20-15-10 budget planner.',
         lang: 'en',
@@ -83,7 +82,7 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,svg,png,ttf,woff2,json}'], globIgnores: ['fonts/DMSans.ttf'], importScripts: ['push-sw.js'],
         // aprire l'app = la pagina salvata con la stessa versione del codice: un aggiornamento arriva tutto insieme
         // (non la pagina vecchia dalla cache del browser per 10 minuti) e l'app si apre sempre, anche senza rete.
-        // Solo gli indirizzi dell'app di questo ambiente: la produzione non risponde mai al posto della beta.
+        // Solo gli indirizzi dell'app: il resto del sito resta com'è.
         navigateFallback: `${base}app/index.html`,
         navigateFallbackAllowlist: [new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}app/(index\\.html)?(\\?.*)?$`)],
       },
