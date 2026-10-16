@@ -1,35 +1,17 @@
 // Schermate per i contenuti social, fatte con i DATI DI ESEMPIO dell'app (nessun dato reale).
 // Uso: con il server di sviluppo acceso (npm run dev, porta 5173):  node marketing/shoot.mjs
 // Apre Chrome senza finestra come un telefono 375x812 (x2) e salva le immagini in marketing/shots/.
-import { spawn } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { openChrome, sleep } from '../tools/chrome.mjs'
 
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const APP = process.env.APP_URL ?? 'http://localhost:5173/app/'
 const LOCAL = process.env.LOCAL_URL ?? 'http://localhost:5180/app/'
 // OUT_DIR: cartella diversa (es. per il controllo visivo prima/dopo una modifica)
 const OUT = process.env.OUT_DIR ? process.env.OUT_DIR.replace(/\/?$/, '/') : new URL('./shots/', import.meta.url).pathname
-const PORT = 9333
 const LANG = process.argv[2] ?? 'it'   // it, en, fr, es
-const sleep = ms => new Promise(r => setTimeout(r, ms))
 
-// profilo di Chrome usa e getta: si cancella alla fine (senza, ogni giro lascia centinaia di MB nella cartella temporanea)
-const PROFILE = mkdtempSync(join(tmpdir(), 'qshot-'))
-const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${PROFILE}`,
-  '--lang=it-IT', '--hide-scrollbars', '--no-first-run', '--no-default-browser-check', 'about:blank'], { stdio: 'ignore' })
-let target
-for (let i = 0; i < 50 && !target; i++) {
-  try { target = (await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json()).find(t => t.type === 'page') } catch { await sleep(200) }
-}
-const ws = new WebSocket(target.webSocketDebuggerUrl)
-await new Promise(r => ws.addEventListener('open', r, { once: true }))
-let seq = 0
-const pending = new Map()
-ws.addEventListener('message', e => { const m = JSON.parse(e.data); if (m.method === 'Runtime.exceptionThrown') console.warn('errore nella pagina:', m.params.exceptionDetails.exception?.description?.split('\n').slice(0, 3).join(' | ')); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id) } })
-const cdp = (method, params = {}) => new Promise(r => { const id = ++seq; pending.set(id, r); ws.send(JSON.stringify({ id, method, params })) })
-const js = async expr => (await cdp('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true })).result?.result?.value
+const { cdp, js, close } = await openChrome({ args: ['--lang=it-IT', '--hide-scrollbars'], onError: e => console.warn('errore nella pagina:', e) })
 const click = async (text, scope = 'button, a, label') => {
   const ok = await js(`(() => { const el = [...document.querySelectorAll('${scope}')].find(b => b.textContent.trim().includes(${JSON.stringify(text)})); if (el) el.click(); return !!el })()`)
   if (!ok) console.warn('non trovato:', text)
@@ -42,7 +24,6 @@ const shot = async (name, prep = '') => {
 }
 const scrollTo = sel => `(() => { const el = ${sel}; if (el) { el.scrollIntoView({ block: 'start' }); window.scrollBy(0, -12) } })()`
 
-await cdp('Page.enable'); await cdp('Runtime.enable')
 // THEME=dark e WIDTH=1024 per il controllo visivo della modalità scura e del computer
 const W = Number(process.env.WIDTH ?? 375), WIDE = W > 600
 await cdp('Emulation.setDeviceMetricsOverride', { width: W, height: WIDE ? 800 : 812, deviceScaleFactor: WIDE ? 1 : 2, mobile: !WIDE })
@@ -125,5 +106,4 @@ await js(`document.querySelector('.persona-row').click()`); await sleep(900)
 await js(`[...document.querySelectorAll('button')].find(b => b.textContent.trim().startsWith('Avanti'))?.click()`); await sleep(900)
 await type('.salary-input', '980'); await js(`document.querySelectorAll('.salary-step input')[1].focus()`); await cdp('Input.insertText', { text: '380' }); await sleep(900)
 await shot('32-income.jpg', 'window.scrollTo(0,0)')
-ws.close(); chrome.kill()
-await new Promise(r => chrome.once('exit', r)); rmSync(PROFILE, { recursive: true, force: true })
+await close()
