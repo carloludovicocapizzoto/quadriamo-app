@@ -39,7 +39,7 @@
 /* ---------- griglia dei widget: le colonne dipendono dallo spazio del riquadro, non dallo schermo ----------
    telefono: una colonna · tablet: due · computer: tre o quattro. Ogni widget ha una taglia: piccolo, medio (due colonne), grande (riga intera) */
 .w-slot { position: relative; min-width: 0; }
-.w-slot:empty { display: none; }   /* un widget senza niente da mostrare non lascia un buco */
+.w-slot:not(:has(> :not(.w-drag))) { display: none; }   /* un widget senza niente da mostrare (c'è solo la maniglia) non lascia un buco */
 .w-slot.dragging { opacity: .35; }
 .w-slot.over { outline: 2px dashed var(--line); outline-offset: 6px; border-radius: var(--r-md); }
 /* maniglia per trascinare: solo con il mouse, compare passando sopra il widget */

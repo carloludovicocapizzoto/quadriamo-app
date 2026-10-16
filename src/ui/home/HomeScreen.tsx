@@ -68,6 +68,18 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
       </div>
   )
 
+  // senza entrate niente da dividere: niente quattro parti a zero (come il numero del giorno)
+  const ctx = { data, r, today, streak, parts: hasPlan ? blocks : null, daily: hasPlan ? left : 0, onOpen, onAll }
+  // il posto del widget: porta la taglia e, sul computer, si trascina dalla maniglia per cambiare l'ordine
+  const slot = (id: WidgetId) => (
+    <div key={id} className={`w-slot size-${sizeOf(s, id)}${drag === id ? ' dragging' : ''}${over === id && drag !== id ? ' over' : ''}`}
+         draggable={drag === id} onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id) }}
+         onDragOver={e => { if (drag) { e.preventDefault(); setOver(id) } }} onDrop={e => { e.preventDefault(); dropOn(id) }} onDragEnd={() => { setDrag(null); setOver(null) }}>
+      <button className="w-drag" aria-label={t('hw.drag')} onPointerDown={() => setDrag(id)} onPointerUp={() => setDrag(null)}><Icon name="list" size={16} /></button>
+      <Widget id={id} c={ctx} />
+    </div>
+  )
+
   return (
     <div className="home">
       <p className="home-date">{day.charAt(0).toUpperCase() + day.slice(1)}</p>
@@ -83,26 +95,12 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
       {/* la griglia sceglie quante colonne in base allo spazio (telefono 1, tablet 2, computer 3-4);
           sugli schermi larghi le cose "di contorno" (notizie, pagamenti, mercati, eventi) vanno nel pannello a destra */}
       <div className={wide ? 'home-layout' : undefined}>
-        <div className="home-grid">{main.map(id => (
-        // il posto del widget: porta la taglia e, sul computer, si trascina dalla maniglia per cambiare l'ordine
-        <div key={id} className={`w-slot size-${sizeOf(s, id)}${drag === id ? ' dragging' : ''}${over === id && drag !== id ? ' over' : ''}`}
-             draggable={drag === id} onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id) }}
-             onDragOver={e => { if (drag) { e.preventDefault(); setOver(id) } }} onDrop={e => { e.preventDefault(); dropOn(id) }} onDragEnd={() => { setDrag(null); setOver(null) }}>
-          <button className="w-drag" aria-label={t('hw.drag')} onPointerDown={() => setDrag(id)} onPointerUp={() => setDrag(null)}><Icon name="list" size={16} /></button>
-          <Widget id={id} c={{ data, r, today, streak, parts: blocks, daily: hasPlan ? left : 0, onOpen, onAll }} />
-        </div>))}</div>
-        {wide && side.length > 0 && <aside className="home-side">{side.map(id => (
-        // il posto del widget: porta la taglia e, sul computer, si trascina dalla maniglia per cambiare l'ordine
-        <div key={id} className={`w-slot size-${sizeOf(s, id)}${drag === id ? ' dragging' : ''}${over === id && drag !== id ? ' over' : ''}`}
-             draggable={drag === id} onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id) }}
-             onDragOver={e => { if (drag) { e.preventDefault(); setOver(id) } }} onDrop={e => { e.preventDefault(); dropOn(id) }} onDragEnd={() => { setDrag(null); setOver(null) }}>
-          <button className="w-drag" aria-label={t('hw.drag')} onPointerDown={() => setDrag(id)} onPointerUp={() => setDrag(null)}><Icon name="list" size={16} /></button>
-          <Widget id={id} c={{ data, r, today, streak, parts: blocks, daily: hasPlan ? left : 0, onOpen, onAll }} />
-        </div>))}</aside>}
+        <div className="home-grid">{main.map(slot)}</div>
+        {wide && side.length > 0 && <aside className="home-side">{side.map(slot)}</aside>}
       </div>
       <button className="link-btn home-edit" onClick={() => { tap(); setEdit(true) }}>{t('hw.edit')}</button>
 
-      <Sheet open={edit} onClose={() => setEdit(false)} title={t('hw.edit')}>{edit && <WidgetGallery ids={ids} ctx={{ data, r, today, streak, parts: blocks, daily: hasPlan ? left : 0, onOpen, onAll }} />}</Sheet>
+      <Sheet open={edit} onClose={() => setEdit(false)} title={t('hw.edit')}>{edit && <WidgetGallery ids={ids} ctx={ctx} />}</Sheet>
       <Sheet open={!!part} onClose={() => setPart(null)} title={part ? bucketName(part.bucket, t) : ''}>
         {part && <PartDetail b={part} r={r} cur={cur} color={BUCKET_COLORS[r.buckets.indexOf(part)]} onOpen={tx => { setPart(null); onOpen(tx) }}
                              onAll={() => { setPart(null); onAll() }} settings={s} />}

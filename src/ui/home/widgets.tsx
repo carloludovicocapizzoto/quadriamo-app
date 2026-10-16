@@ -17,7 +17,7 @@ import { Events, Markets } from './widgetsMore'
 
 export interface WidgetCtx {
   data: AppData; r: MonthResult; today: string; streak: Streak | null
-  parts: ReactNode                                   // i quattro blocchi (vivono nella Home: aprono il dettaglio)
+  parts: ReactNode                                   // i quattro blocchi (vivono nella Home: aprono il dettaglio); senza entrate niente
   daily: number                                      // quanto si può spendere oggi (il numero del giorno)
   onOpen: (tx: ClassifiedTx) => void; onAll: () => void
 }
@@ -64,7 +64,7 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
     </section>
   )
   switch (id) {
-    case 'parts': return <section className="widget w-parts">{c.parts}</section>
+    case 'parts': return c.parts ? <section className="widget w-parts">{c.parts}</section> : null
 
     case 'today': {
       // quanto hai speso oggi rispetto al numero del giorno, e le spese di oggi
