@@ -39,6 +39,7 @@ import sql0003 from '../../../supabase/migrations/0003_feedback_push_every_10_da
 import fnCode from '../../../supabase/functions/send-push/index.ts?raw'
 import reportEmailCode from '../../../supabase/functions/report-email/index.ts?raw'
 import sql0027 from '../../../supabase/migrations/0027_report_email.sql?raw'
+import sql0028 from '../../../supabase/migrations/0028_shared_budgets_hardening.sql?raw'
 import { local } from '../../storage'
 
 // l'indirizzo del sito (in sviluppo quello della produzione)
@@ -324,6 +325,12 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
         </Step>
         {setup.reportEmail && <TestEmail />}
+        <Step n={20} ok={null} manual={{ done: manual.includes(20), toggle: toggle(20) }} title="Sicurezza: budget comuni con regole più strette">
+          <p>Dal controllo di sicurezza: chi era in un budget comune poteva cambiarne il creatore o spostare un'altra persona.
+            Ora si cambia solo quello che l'app permette. Copia lo script, incollalo in SQL Editor e premi <b>Run</b>.</p>
+          <div className="az-u-row"><Copy text={sql0028} label="Copia lo script" />
+            <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
+        </Step>
       </div>
       <div className="az-card">
         <h3>Altri controlli</h3>

@@ -68,7 +68,11 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 - ✅ Corretto: chi entra nell'admin con il codice ora legge gli errori (prima non poteva).
 - ⚠️ Il token di accesso sta nella memoria del browser (normale per una web app; la CSP riduce il rischio). Con l'app nativa andrà nel portachiavi del sistema.
 - ⚠️ I dati sul telefono non sono cifrati oltre alla protezione del dispositivo (come per ogni PWA).
-- 🔧 Prima del rilascio: controllo completo delle policy di tutte le tabelle storiche (0002–0023) con lo stesso banco di prova su Postgres usato per 0024–0026.
+- ✅ Controllo completo delle regole di accesso (0001–0028) su Postgres vero, ora nei test automatici (`tests/db.test.ts`): ogni modifica
+  al database viene provata in CI. Tutte le tabelle hanno RLS; i dati di un utente li legge solo lui; le funzioni dell'area admin rifiutano
+  chi non è amministratore.
+- ✅ Trovato e corretto: nei budget comuni un membro poteva farsi creatore del budget o spostare un'altra persona (migrazione 0028).
+- 🟡 **Migrazione 0028** da eseguire in produzione (passo 20 della Configurazione).
 
 ## 9. Prestazioni (telefono medio: CPU 4 volte più lenta, rete 4G)
 
@@ -93,7 +97,7 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 3. Testi legali definitivi (privacy con statistiche, segnalazioni e allegati; termini; dati del titolare).
 4. Prezzo Pro e scheda per la partita IVA.
 5. Guscio nativo per iOS (Capacitor) quando si apre l'Apple Developer Program.
-6. Le due ottimizzazioni del punto 9 e il controllo delle policy storiche del punto 8.
+6. Le due ottimizzazioni del punto 9.
 
 ## Cosa deve fare Carlo, in ordine
 
