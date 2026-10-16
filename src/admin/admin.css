@@ -176,3 +176,14 @@ kbd { font: 500 11px/1 var(--font-ui); padding: 3px 6px; border-radius: 5px; bac
 .az-cmd-group { padding: 10px 10px 4px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .az-cmd-none { padding: 16px; color: var(--muted); }
 .az-cmd-foot { padding: 8px 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+
+/* errori e segnalazioni: riga che si apre, traccia del codice, diario tecnico */
+.az-row-open { cursor: pointer; }
+.az-pre { white-space: pre-wrap; font: 12px/1.5 ui-monospace, Menlo, monospace; margin: 0; color: var(--muted); }
+.az-h4 { margin: 14px 0 6px; font-size: 13px; font-weight: 600; }
+.az-trail { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 12.5px; }
+.az-trail li { display: grid; grid-template-columns: 56px 80px 1fr; gap: 8px; padding: 3px 0; border-top: 1px solid var(--line); }
+.az-trail .s { color: var(--grey); font-variant-numeric: tabular-nums; text-align: right; }
+.az-trail .k { color: var(--grey); }
+.az-trail .k-error .w, .az-trail .k-error .k { color: var(--bad); }
+.az-trail .k-slow .k { color: var(--accent); }

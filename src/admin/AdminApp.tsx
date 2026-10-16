@@ -7,10 +7,9 @@ import { newCode, saveKey, savedKey, sha256Hex, type AdminKey } from './adminKey
 import { checkSetup, loadAccounts, loadAlternatives, loadCohorts, loadDevices, loadFeedback, loadPush, loadResearch, loadStats, sendPush,
   type Account, type Cohort, type Device, type Feedback, type PushSub, type ResearchStats, type Setup, type Stats } from './data'
 import { sampleAccounts, sampleAlternatives, sampleCohorts, sampleDevices, sampleFeedback, samplePush, sampleResearch, sampleSetup, sampleStats } from './sample'
-import { ErrorsPanel } from './ErrorsPanel'
 import { Icon, type IconName } from '../ui/Icon'
 import { CommandPalette, type Command } from './CommandPalette'
-import { AccountsPanel, DashboardPanel, DevicesPanel, FeedbackPanel, PushPanel, ResearchPanel, SetupPanel } from './panels'
+import { AccountsPanel, DashboardPanel, DevicesPanel, ErrorsPanel, FeedbackPanel, PushPanel, ResearchPanel, SetupPanel } from './panels'
 import { ENV } from '../env'
 
 type Panel = 'dashboard' | 'dispositivi' | 'account' | 'ricerca' | 'feedback' | 'notifiche' | 'errori' | 'configurazione'

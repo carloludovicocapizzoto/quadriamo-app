@@ -19,6 +19,16 @@ export function platform(): string {
   if (/Android/.test(ua)) return 'android'
   return 'desktop'
 }
+/** Sistema e versione, quando il browser li dice (iOS 18.1, Android 15, macOS, Windows). */
+export function osName(): string {
+  const ua = navigator.userAgent
+  const ios = /OS (\d+)[_.](\d+)/.exec(ua)
+  if (platform() === 'ios') return ios ? `iOS ${ios[1]}.${ios[2]}` : 'iOS'
+  const android = /Android (\d+(?:\.\d+)?)/.exec(ua)
+  if (android) return `Android ${android[1]}`
+  return /Mac/.test(ua) ? 'macOS' : /Windows/.test(ua) ? 'Windows' : /Linux/.test(ua) ? 'Linux' : 'altro'
+}
+
 /** App installata: dalla Home/Dock, oppure l'app per computer (Mac/Windows) che si presenta come "QuadriamoDesktop". */
 export const isStandalone = () =>
   window.matchMedia?.('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true ||

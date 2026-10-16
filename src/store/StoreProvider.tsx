@@ -1,14 +1,17 @@
-import { useEffect, useReducer, useRef, type ReactNode } from 'react'
+import { useCallback, useEffect, useReducer, useRef, type ReactNode } from 'react'
+import { note } from '../app/diagnostics'
 import { StoreContext } from './context'
 import { loadData, requestPersistence, saveData } from './persist'
-import { reducer } from './state'
+import { reducer, type Action } from './state'
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, { loaded: false, data: null })
+  const [state, apply] = useReducer(reducer, { loaded: false, data: null })
+  // ogni azione finisce nel diario tecnico, solo col suo tipo (mai importi o testi)
+  const dispatch = useCallback((a: Action) => { note('action', a.type); apply(a) }, [])
   const first = useRef(true)
 
   useEffect(() => {
-    loadData().then(data => dispatch({ type: 'load', data }))
+    loadData().then(data => apply({ type: 'load', data }))
     requestPersistence()
   }, [])
 
