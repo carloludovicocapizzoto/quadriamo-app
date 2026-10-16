@@ -44,6 +44,9 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 - ✅ Versione (package.json) + build (numero di commit) + commit, visibili nel Profilo e salvati con errori, statistiche e segnalazioni.
 - ✅ CHANGELOG.md e docs/RELEASE.md.
 - ✅ L'APK Android non va reinstallato per le novità: solo se cambiano nome, icona o indirizzo.
+- ✅ Corretto: aprire l'app usa la pagina salvata con il codice della stessa versione (prima la cache di GitHub Pages poteva
+  ripresentare la pagina vecchia per 10 minuti, e senza rete l'app si apriva solo finché quella cache durava). Ora si apre
+  sempre anche offline; provato nei test che usano l'app.
 
 ## 7. Distribuzione
 

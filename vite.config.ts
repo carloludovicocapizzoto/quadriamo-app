@@ -79,7 +79,14 @@ export default defineConfig(({ mode }) => ({
           { src: 'icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,ttf,woff2,json}'], globIgnores: ['fonts/DMSans.ttf'], navigateFallback: null, importScripts: ['push-sw.js'] },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,ttf,woff2,json}'], globIgnores: ['fonts/DMSans.ttf'], importScripts: ['push-sw.js'],
+        // aprire l'app = la pagina salvata con la stessa versione del codice: un aggiornamento arriva tutto insieme
+        // (non la pagina vecchia dalla cache del browser per 10 minuti) e l'app si apre sempre, anche senza rete.
+        // Solo gli indirizzi dell'app di questo ambiente: la produzione non risponde mai al posto della beta.
+        navigateFallback: `${base}app/index.html`,
+        navigateFallbackAllowlist: [new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}app/(index\\.html)?(\\?.*)?$`)],
+      },
     }),
   ],
   build: {

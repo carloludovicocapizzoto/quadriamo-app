@@ -87,6 +87,11 @@ await step('il capitale compare in Analisi → Investi', () => js(`location.hash
 console.log('Installazione e aggiornamenti')
 await step('il service worker è registrato (app installabile, aggiornamenti automatici)', null,
   `navigator.serviceWorker.getRegistration().then(r => !!r?.active)`)
+await step('senza rete l\'app si riapre lo stesso, con i dati', async () => {
+  await cdp('Network.enable'); await cdp('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1 })
+  await js(`location.hash = '#/'`); await cdp('Page.reload'); await sleep(1500)
+}, `/12,50/.test(document.querySelector('.w-today')?.innerText ?? '')`)
+await cdp('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 })
 
 console.log('Tastiera')
 const press = (key, code) => cdp('Input.dispatchKeyEvent', { type: 'keyDown', key, code, text: key.length === 1 ? key : undefined, windowsVirtualKeyCode: key.toUpperCase().charCodeAt(0) })
