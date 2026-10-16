@@ -45,3 +45,23 @@
 .ed-facts { list-style: none; margin: var(--s3) 0 var(--s4); padding: 0; }
 .ed-facts li { display: flex; justify-content: space-between; gap: var(--s4); padding: var(--s3) 0; border-top: 1px solid var(--line); font-size: 15px; }
 .ed-facts span { color: var(--muted); }
+.ev-custom { justify-self: start; }
+
+/* la richiesta delle notifiche: cosa ne ricavi, poi il popup del sistema solo se lo vuoi */
+.notify-ask { display: grid; gap: var(--s3); padding-bottom: var(--s2); }
+.notify-ask h2 { margin: 0; font-size: var(--t-title); letter-spacing: -.02em; }
+.notify-ask p { margin: 0; }
+.na-ico { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--fill); }
+.na-list { list-style: none; margin: var(--s1) 0 var(--s3); padding: 0; display: grid; gap: var(--s2); }
+.na-list li { display: flex; gap: var(--s2); align-items: flex-start; }
+.na-list svg { flex-shrink: 0; margin-top: 3px; color: var(--good); }
+.na-later { justify-self: center; }
+
+/* Profilo → Notifiche */
+.row-input { font: inherit; color: var(--text); background: var(--fill); border: 0; border-radius: var(--r-md); padding: 6px 10px; min-height: 36px; }
+.notif-quiet { display: flex; gap: var(--s4); flex-wrap: wrap; }
+.notif-quiet label { display: flex; align-items: center; gap: var(--s2); color: var(--muted); font-size: 15px; }
+.notif-days { flex-wrap: wrap; gap: var(--s2); }
+.notif-days .chips { width: 100%; gap: 6px; }
+.notif-days .chip { min-height: 34px; padding: 0 10px; font-size: 14px; }
+.notif-blocked { background: var(--warn-bg); color: var(--text); border-radius: var(--r-md); padding: var(--s3) var(--s4); margin: var(--s2) 0; }

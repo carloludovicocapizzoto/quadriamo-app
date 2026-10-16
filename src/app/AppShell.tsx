@@ -16,7 +16,7 @@ import { TxForm } from '../ui/TxForm'
 import { Sheet } from '../ui/kit/Sheet'
 import { profilePrompt } from '../sync/profile'
 import { closeComposer, openComposer, useComposer } from './composer'
-import { useBootstrap, useDailyPing, useMorningSnapshot, useProReturn, useUpdatedNotice, usePushSync } from './effects'
+import { useBootstrap, useDailyPing, useMorningSnapshot, useProReturn, useReminderSync, useUpdatedNotice, usePushSync } from './effects'
 import { useEntry } from './entryContext'
 import { SHORTCUTS, useShortcuts } from './shortcuts'
 import { closeFeedback, useFeedbackOpen } from './prompts'
@@ -26,6 +26,7 @@ import { useModel, ymKey } from './useModel'
 import { SectionBoundary } from './SectionBoundary'
 import { ENV } from '../env'
 import { EventSheet } from '../ui/calendar/EventSheet'
+import { NotifyAsk } from '../ui/notify/NotifyAsk'
 
 // le pagine meno usate si scaricano solo quando servono
 // le altre sezioni si scaricano a parte; appena il telefono è libero si precaricano, così il primo tocco è immediato
@@ -70,6 +71,7 @@ export function AppShell() {
   useUpdatedNotice(t)
   useMorningSnapshot(data, thisMonth, streak, today, lang, t)
   usePushSync(lang, !!streak?.doneToday, today, !!data.demo)
+  useReminderSync(data.settings, lang, !!data.demo)
   const ping = useDailyPing(data, state.loaded, !!sync.user, today, lang)
 
   if (!month || !thisMonth || !viewed) return null
@@ -134,6 +136,7 @@ export function AppShell() {
       {note && <div key={note.id} className="toast" role="status">{note.text}</div>}
       <StreakCelebration s={streak} />
       <EventSheet id={eventOpen} onClose={() => setEventOpen(null)} />
+      <NotifyAsk />
       <Sheet open={keysHelp} onClose={() => setKeysHelp(false)} title={t('kb.title')}>
         <ul className="group-list kb-list">{SHORTCUTS.map(([k, label]) => (
           <li key={k}><div className="row"><span className="row-main">{t(label as 'kb.new')}</span><span className="row-value">{k.split(' ').map(x => <kbd key={x}>{x}</kbd>)}</span></div></li>))}</ul>

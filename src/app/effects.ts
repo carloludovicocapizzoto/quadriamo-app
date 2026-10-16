@@ -15,6 +15,8 @@ import { navigate } from './router'
 import { toast } from './toast'
 import { ENV } from '../env'
 import { newRelease } from './updates'
+import { notifyPrefs, syncPushPrefs, syncReminders } from '../beta/reminders'
+import type { Settings } from '../engine'
 
 /** Avvio: vecchi indirizzi, pagina d'ingresso dai link (?join=, ?tab=news), indirizzo pulito, installazione. */
 export function useBootstrap() {
@@ -65,6 +67,21 @@ export function useMorningSnapshot(data: AppData | null, month: MonthResult | nu
 export function usePushSync(lang: string, doneToday: boolean, today: string, demo: boolean) {
   useEffect(() => { void syncPush(lang) }, [lang])
   useEffect(() => { if (doneToday && !demo) void touchPush(today) }, [doneToday, today, demo])
+}
+
+/** Promemoria del calendario e categorie delle notifiche sul server: dopo ogni modifica (un attimo dopo l'ultima) e all'apertura.
+ *  Mai con i dati di esempio. */
+export function useReminderSync(settings: Settings, lang: string, demo: boolean) {
+  const { events, notify, currency } = settings
+  useEffect(() => {
+    if (demo) return
+    const id = setTimeout(() => {
+      const prefs = notifyPrefs(notify)
+      void syncReminders(events, prefs, currency, lang).catch(() => undefined)
+      void syncPushPrefs(prefs).catch(() => undefined)
+    }, 1500)
+    return () => clearTimeout(id)
+  }, [events, notify, currency, lang, demo])
 }
 
 /** Statistiche anonime (solo con consenso): una fotografia al giorno con soli conteggi. Restituisce l'invio manuale. */

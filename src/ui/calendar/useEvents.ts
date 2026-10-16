@@ -20,6 +20,7 @@ export function useEvents() {
 
 /** Un evento nuovo da compilare: di partenza una bolletta mensile da oggi. */
 export function blankEvent(today: string, over: Partial<CalEvent> = {}): CalEvent {
+  // di partenza un promemoria il giorno prima: utile e discreto (si toglie o se ne aggiungono altri)
   return { id: newId(), kind: 'bill', title: '', amount: null, category: 'fixedCosts', date: today, repeat: { every: 1, unit: 'month' },
-    until: null, done: [], active: true, ...over }
+    until: null, done: [], active: true, reminders: [{ days: 1 }], ...over }
 }

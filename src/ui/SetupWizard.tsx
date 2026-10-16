@@ -1,11 +1,9 @@
 import { useState, type FormEvent } from 'react'
-import { isStandalone } from '../beta/device'
 import { SPLIT, applyPersona, daysBetween, defaultPolicy, mainIncome, monthOf, periodOf, todayIso, updateCapital, type CapitalKind, type Persona } from '../engine'
 import { useStore } from '../store/context'
 import { newId } from '../store/state'
 import { parseAmount } from './kit/amount'
 import { BUCKET_COLORS, bucketName } from './names'
-import { enablePush, pushSupported } from '../beta/push'
 import { useI18n } from '../i18n/core'
 import type { Dict } from '../i18n/en'
 import { useSync } from '../sync/context'
@@ -23,12 +21,11 @@ const STEPS: [SettingsSection, keyof Dict][] = [
   ['rules', 'rules.title'], ['fx', 'settings.fx'], ['data', 'settings.data'],
 ]
 
-type Kind = { kind: 'persona' } | { kind: 'notify' } | { kind: 'salary' } | { kind: 'capital' } | { kind: 'recurring' } | { kind: 'settings'; section: SettingsSection; title: keyof Dict } | { kind: 'profile' }
-const isDesktopApp = () => 'quadriamoDesktop' in window || /QuadriamoDesktop\//.test(navigator.userAgent)
+type Kind = { kind: 'persona' } | { kind: 'salary' } | { kind: 'capital' } | { kind: 'recurring' } | { kind: 'settings'; section: SettingsSection; title: keyof Dict } | { kind: 'profile' }
 
 /**
- * Configurazione a passaggi dopo la registrazione (o senza il server, in sviluppo). Con l'account, il primo passaggio chiede
- * subito di attivare le notifiche (dove il dispositivo le supporta) e l'ultimo è il profilo facoltativo.
+ * Configurazione a passaggi dopo la registrazione (o senza il server, in sviluppo); con l'account l'ultimo è il profilo facoltativo.
+ * Le notifiche non si chiedono qui: arrivano con il primo promemoria del calendario (ui/notify/ask), quando servono davvero.
  */
 export function SetupWizard({ onDone }: { onDone: () => void }) {
   const { t } = useI18n()
@@ -37,12 +34,10 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
   const [ready, setReady] = useState(false)
   // fine della configurazione: un attimo di "Tutto pronto!", poi si entra nell'app
   const finish = () => { setReady(true); window.scrollTo(0, 0); setTimeout(onDone, 1600) }
-  const [canNotify] = useState(() => !!sync.user && pushSupported() && !isDesktopApp() && (isStandalone() || !/iPhone|iPad|iPod/.test(navigator.userAgent)))
   const { state } = useStore()
   const student = state.data?.settings.persona === 'student'
   const steps: Kind[] = [
     { kind: 'persona' },
-    ...(canNotify ? [{ kind: 'notify' } as Kind] : []),
     // subito dopo valuta e giorno: lo stipendio, per vedere il proprio numero del giorno prima ancora di registrare una spesa
     ...STEPS.flatMap(([section, title]) => section === 'general'
       ? [{ kind: 'settings', section, title } as Kind, { kind: 'salary' } as Kind, { kind: 'capital' } as Kind]
@@ -67,7 +62,7 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
       </section>
     )
   }
-  const title = cur.kind === 'persona' ? t('setup.personaTitle') : cur.kind === 'notify' ? t('setup.notifyTitle')
+  const title = cur.kind === 'persona' ? t('setup.personaTitle')
     : cur.kind === 'salary' ? t(student ? 'setup.incomeTitle' : 'setup.salaryTitle')
     : cur.kind === 'capital' ? t('setup.capitalTitle')
     : cur.kind === 'recurring' ? t('settings.recurring')
@@ -77,7 +72,6 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
       <StepHeader n={step} total={total} title={title} />
       <div className="step-body" key={step}>
         {cur.kind === 'persona' && <PersonaStep onPick={() => { window.scrollTo(0, 0); setStep(step + 1) }} />}
-        {cur.kind === 'notify' && <NotifyStep />}
         {cur.kind === 'settings' && <SettingsView only={[cur.section]} wizard />}
         {cur.kind === 'recurring' && <RecurringList />}
         {cur.kind === 'salary' && <SalaryStep />}
@@ -114,28 +108,6 @@ function PersonaStep({ onPick }: { onPick: () => void }) {
           <Icon name={cur === o.p ? 'check' : 'chevron'} size={18} className="row-chev" />
         </button></li>
       ))}</ul>
-    </div>
-  )
-}
-
-/** Primo passaggio dopo la registrazione: il pulsante apre subito l'avviso del sistema per consentire le notifiche. */
-function NotifyStep() {
-  const { t, lang } = useI18n()
-  const [state, setState] = useState<'idle' | 'busy' | 'on' | 'denied'>(() =>
-    typeof Notification !== 'undefined' && Notification.permission === 'granted' ? 'on' : 'idle')
-  async function ask() {
-    setState('busy')
-    try { setState((await enablePush(lang)) ? 'on' : 'denied') } catch { setState('denied') }
-  }
-  return (
-    <div className="notify-step">
-      <div className="notify-bell" aria-hidden="true"><Icon name="bell" size={30} /></div>
-      <p>{t('setup.notifyText')}</p>
-      {state === 'on'
-        ? <p className="good-text"><b><Icon name="check" size={16} />{t('setup.notifyOn')}</b></p>
-        : <button type="button" className="btn primary big-btn" disabled={state === 'busy'} onClick={() => void ask()}><Icon name="bell" size={18} />{t('setup.notifyBtn')}</button>}
-      {state === 'denied' && <p className="small muted">{t('setup.notifyDenied')}</p>}
-      <p className="small muted">{t('setup.notifyHint')}</p>
     </div>
   )
 }

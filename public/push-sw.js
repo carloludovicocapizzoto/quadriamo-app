@@ -74,14 +74,16 @@ function nudgeNotification(lang, late) {
   })
 }
 
-function readSnapshot() {
+function readSnapshot() { return readKey('quadriamo.morning') }
+
+function readKey(key) {
   return new Promise(function (resolve) {
     try {
       var req = indexedDB.open('keyval-store')
       req.onerror = function () { resolve(null) }
       req.onsuccess = function () {
         try {
-          var get = req.result.transaction('keyval', 'readonly').objectStore('keyval').get('quadriamo.morning')
+          var get = req.result.transaction('keyval', 'readonly').objectStore('keyval').get(key)
           get.onsuccess = function () { resolve(get.result || null) }
           get.onerror = function () { resolve(null) }
         } catch { resolve(null) }
@@ -102,15 +104,42 @@ function morningNotification(lang) {
   })
 }
 
+// promemoria del calendario: il server manda solo i nomi e il giorno; l'importo lo aggiunge il telefono
+// (IndexedDB "quadriamo.reminders", salvato dall'app in src/beta/reminders.ts)
+var REMIND = {
+  it: { today: 'Oggi', tomorrow: 'Domani', inDays: 'Tra {n} giorni', late: 'Ancora da fare', many: '{n} scadenze' },
+  en: { today: 'Today', tomorrow: 'Tomorrow', inDays: 'In {n} days', late: 'Still to do', many: '{n} payments due' },
+  fr: { today: 'Aujourd’hui', tomorrow: 'Demain', inDays: 'Dans {n} jours', late: 'Encore à faire', many: '{n} échéances' },
+  es: { today: 'Hoy', tomorrow: 'Mañana', inDays: 'En {n} días', late: 'Aún por hacer', many: '{n} vencimientos' },
+}
+function reminderNotification(data) {
+  return readKey('quadriamo.reminders').then(function (s) {
+    var lang = (s && s.lang) || data.lang || 'en'
+    var w = REMIND[lang] || REMIND.en
+    var titles = data.titles || []
+    var n = Math.round((Date.parse(data.day + 'T00:00:00Z') - Date.parse(isoToday() + 'T00:00:00Z')) / 864e5)
+    var when = n < 0 ? w.late : n === 0 ? w.today : n === 1 ? w.tomorrow : w.inDays.replace('{n}', String(n))
+    var fmt = s && s.currency ? new Intl.NumberFormat(lang, { style: 'currency', currency: s.currency }) : null
+    var withAmount = function (t) { var a = s && s.amounts && s.amounts[t]; return fmt && a != null ? t + ' ' + fmt.format(a) : t }
+    var date = new Intl.DateTimeFormat(lang, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(data.day + 'T00:00:00Z'))
+    if (titles.length === 1) {
+      var a = s && s.amounts && s.amounts[titles[0]]
+      return { title: when + ': ' + titles[0], body: (fmt && a != null ? fmt.format(a) + ' · ' : '') + date }
+    }
+    return { title: when + ': ' + w.many.replace('{n}', String(titles.length)), body: titles.map(withAmount).join(' · ') }
+  })
+}
+
 self.addEventListener('push', function (event) {
   var data = {}
   try { data = event.data ? event.data.json() : {} } catch { data = { title: 'Quadriamo', body: event.data && event.data.text() } }
   var ready = data.kind === 'morning' ? morningNotification(data.lang)
     : data.kind === 'nudge' ? nudgeNotification(data.lang, !!data.late)
+    : data.kind === 'reminder' ? reminderNotification(data)
     : Promise.resolve({ title: data.title, body: data.body })
   event.waitUntil(ready.then(function (n) {
     return self.registration.showNotification(n.title || 'Quadriamo', {
-      body: n.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-64.png', tag: data.kind || 'quadriamo',
+      body: n.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-64.png', tag: data.kind === 'reminder' ? 'reminder-' + data.day + '-' + (data.titles || []).join('|') : data.kind || 'quadriamo',
       data: { url: data.url || './app/?feedback=1' },
     })
   }))

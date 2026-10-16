@@ -3,6 +3,7 @@
 // settimane, mesi o anni) e può avere una fine. Gli eventi di spesa con importo e categoria entrano nel budget del mese
 // come facevano i "pagamenti ricorrenti" (month.ts, recurringOf): stessi conti, una fonte sola.
 import { addDays, daysBetween, makeDate, parseDate, periodOf } from './dates'
+import type { Reminder } from './reminders'
 import type { Recurring, Settings, YearMonth } from './types'
 
 export type EventKind = 'rent' | 'bill' | 'loan' | 'mortgage' | 'subscription' | 'payment'
@@ -34,6 +35,9 @@ export interface CalEvent {
   until: string | null               // "YYYY-MM-DD": l'ultima volta possibile (es. l'ultima rata); null = senza fine
   done: string[]                     // le volte segnate come fatte ("YYYY-MM-DD")
   active: boolean
+  time?: string | null               // "HH:MM" facoltativa: serve ai promemoria "N ore prima"
+  reminders?: Reminder[]             // quando avvisare (engine/reminders)
+  nag?: boolean                      // ripeti ogni giorno finché non è segnato come fatto
 }
 
 export const presetOf = (r: Repeat | null): RepeatPreset | 'once' | 'custom' => {

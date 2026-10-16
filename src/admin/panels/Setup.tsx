@@ -41,6 +41,7 @@ import fnCode from '../../../supabase/functions/send-push/index.ts?raw'
 import reportEmailCode from '../../../supabase/functions/report-email/index.ts?raw'
 import sql0027 from '../../../supabase/migrations/0027_report_email.sql?raw'
 import sql0028 from '../../../supabase/migrations/0028_shared_budgets_hardening.sql?raw'
+import sql0029 from '../../../supabase/migrations/0029_reminders.sql?raw'
 import { local } from '../../storage'
 
 // l'indirizzo del sito (in sviluppo quello della produzione)
@@ -332,6 +333,17 @@ export function SetupPanel({ setup, email, adminKey, onRecheck }: { setup: Setup
             Ora si cambia solo quello che l'app permette. Copia lo script, incollalo in SQL Editor e premi <b>Run</b>.</p>
           <div className="az-u-row"><Copy text={sql0028} label="Copia lo script" />
             <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a></div>
+        </Step>
+        <Step n={21} ok={null} manual={{ done: manual.includes(21), toggle: toggle(21) }} title="Promemoria del calendario e notifiche per categoria">
+          <p>I promemoria di pagamenti, bollette e scadenze. Il server riceve solo l'ora e il nome dell'evento, mai gli importi.</p>
+          <ol>
+            <li>Prima lo script: copialo, incollalo in SQL Editor e premi <b>Run</b>.</li>
+            <li>Poi aggiorna la funzione <code>send-push</code>: pulsante qui sotto → send-push → Code → <b>Cmd+A</b>, <b>Cmd+V</b> → <b>Deploy</b>.</li>
+          </ol>
+          <div className="az-u-row"><Copy text={sql0029} label="1 · Copia lo script" /><Copy text={fnCode} label="2 · Copia il codice della funzione" />
+            <a className="az-btn" href={`${dash}/sql/new`} target="_blank" rel="noreferrer">↗ Apri SQL Editor</a>
+            <a className="az-btn" href={`${dash}/functions/send-push/code`} target="_blank" rel="noreferrer">↗ Apri send-push → Code</a></div>
+          <p className="az-hint">Da allora la notifica del mattino rispetta anche il suo interruttore nel Profilo.</p>
         </Step>
       </div>
       <div className="az-card">

@@ -4,6 +4,16 @@ Una voce per versione, dalla più recente. Il numero tra parentesi nell'app (es.
 cresce a ogni modifica pubblicata, così ogni segnalazione dei tester indica esattamente quale codice stavano usando.
 Come si pubblica una nuova versione: docs/RELEASE.md.
 
+## 0.11.0 — 16 ottobre 2026 · promemoria e notifiche
+
+- Promemoria su ogni evento del calendario: 30, 14, 7, 3, 1 giorno prima, il giorno stesso, qualche ora prima, a un orario preciso,
+  e se vuoi ogni giorno finché non lo segni come fatto (al massimo una settimana).
+- Profilo → Notifiche: categorie (scadenze, mattino, promemoria se dimentichi, notizie), orario preferito, ore di silenzio,
+  giorni attivi e un tetto giornaliero (oltre, gli avvisi si uniscono in uno solo).
+- Il permesso per le notifiche si chiede al primo promemoria, con una spiegazione prima; se lo neghi non si richiede più.
+- Al server arrivano solo l'ora e il nome dell'evento: gli importi li aggiunge il telefono.
+- Corretto: la notifica del mattino ora rispetta il suo interruttore.
+
 ## 0.10.0 — 16 ottobre 2026 · calendario finanziario
 
 - Analisi → Calendario: giorno, settimana, mese e agenda, con quello che esce e quello che entra.

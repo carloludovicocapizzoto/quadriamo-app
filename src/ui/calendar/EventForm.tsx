@@ -2,8 +2,8 @@
 // ripetizione (le più comuni con un nome, oppure "ogni N giorni/settimane/mesi/anni") e fine (mai, dopo N volte, in una data).
 import { useState } from 'react'
 import {
-  EVENT_KINDS, KIND_SIDE, REPEAT_PRESETS, presetOf, remainingCount, untilAfterCount,
-  type CalEvent, type EventKind, type Repeat, type RepeatPreset,
+  EVENT_KINDS, KIND_SIDE, REMINDER_DAYS, REMINDER_HOURS, REPEAT_PRESETS, presetOf, remainingCount, untilAfterCount,
+  type CalEvent, type EventKind, type Reminder, type Repeat, type RepeatPreset,
 } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
@@ -11,6 +11,7 @@ import { AmountInput } from '../kit/AmountInput'
 import { amountText, parseAmount } from '../kit/amount'
 import { tap } from '../kit/motion'
 import { categoryName } from '../names'
+import { askNotifications } from '../notify/ask'
 import type { Settings } from '../../engine'
 
 const k = (s: string) => s as keyof Dict
@@ -40,6 +41,12 @@ export function EventForm({ event, settings, today, onSave, onDelete }: {
       repeat: kind === 'reminder' || kind === 'tax' ? null : e.repeat ?? { every: 1, unit: 'month' } })
     if (kind === 'reminder' || kind === 'tax') setPreset('once')
   }
+  const has = (r: Reminder) => (e.reminders ?? []).some(x => JSON.stringify(x) === JSON.stringify(r))
+  const toggleReminder = (r: Reminder) => {
+    tap()
+    set({ reminders: has(r) ? (e.reminders ?? []).filter(x => JSON.stringify(x) !== JSON.stringify(r)) : [...(e.reminders ?? []), r] })
+  }
+  const custom = (e.reminders ?? []).filter((r): r is { at: string } => 'at' in r)
   const pickPreset = (p: typeof preset) => {
     tap(); setPreset(p)
     set({ repeat: p === 'once' ? null : p === 'custom' ? e.repeat ?? { every: 1, unit: 'week' } : { ...REPEAT_PRESETS[p] } })
@@ -51,8 +58,11 @@ export function EventForm({ event, settings, today, onSave, onDelete }: {
     if (side === 'out' && e.category && !(value && value > 0)) return setErr(t('ev.errAmount'))
     const until = !e.repeat || end === 'never' ? null
       : end === 'count' ? untilAfterCount(e, Math.max(1, Number(count) || 1)) : e.until && e.until >= e.date ? e.until : null
+    const reminders = (e.reminders ?? []).filter(r => !('hours' in r) || e.time)
     onSave({ ...e, title: e.title.trim().slice(0, 60), amount: value && value > 0 ? value : null,
-      category: side === 'out' ? e.category : null, until })
+      category: side === 'out' ? e.category : null, until, reminders, nag: reminders.length > 0 && !!e.nag })
+    // il primo promemoria è il momento giusto per chiedere le notifiche (mai al primo avvio)
+    if (reminders.length) askNotifications()
   }
 
   return (
@@ -104,6 +114,25 @@ export function EventForm({ event, settings, today, onSave, onDelete }: {
         {end === 'date' && <div className="txs-rows"><label className="txs-row"><span>{t('ev.lastTime')}</span>
           <input type="date" min={e.date} value={e.until ?? ''} onChange={x => set({ until: x.target.value || null })} /></label></div>}
       </>}
+
+      <p className="small fb-q"><b>{t('rem.title')}</b></p>
+      <div className="chips" role="group" aria-label={t('rem.title')}>
+        {REMINDER_DAYS.map(d => <button key={d} type="button" aria-pressed={has({ days: d })} className={`chip${has({ days: d }) ? ' on' : ''}`}
+          onClick={() => toggleReminder({ days: d })}>{d === 0 ? t('rem.sameDay') : d === 1 ? t('rem.dayBefore') : t('rem.daysBefore', { n: d })}</button>)}
+        {e.time && REMINDER_HOURS.map(h => <button key={`h${h}`} type="button" aria-pressed={has({ hours: h })} className={`chip${has({ hours: h }) ? ' on' : ''}`}
+          onClick={() => toggleReminder({ hours: h })}>{h === 1 ? t('rem.hourBefore') : t('rem.hoursBefore', { n: h })}</button>)}
+      </div>
+      <div className="txs-rows">
+        <label className="txs-row"><span>{t('rem.time')}</span>
+          <input type="time" value={e.time ?? ''} onChange={x => set({ time: x.target.value || null })} aria-describedby="rem-time-hint" /></label>
+        {custom.map((r, i) => <label key={i} className="txs-row"><span>{t('rem.at')}</span>
+          <span className="ev-every"><input type="datetime-local" value={r.at} onChange={x => set({ reminders: (e.reminders ?? []).map(y => y === r ? { at: x.target.value } : y) })} />
+            <button type="button" className="icon-btn" aria-label={t('rem.remove')} onClick={() => set({ reminders: (e.reminders ?? []).filter(y => y !== r) })}>×</button></span></label>)}
+      </div>
+      <p id="rem-time-hint" className="small muted">{t('rem.timeHint')}</p>
+      <button type="button" className="link-btn ev-custom" onClick={() => { tap(); set({ reminders: [...(e.reminders ?? []), { at: `${e.date}T${e.time ?? '09:00'}` }] }) }}>+ {t('rem.addCustom')}</button>
+      {(e.reminders ?? []).length > 0 && <label className="check wrap-text"><input type="checkbox" checked={!!e.nag} onChange={x => set({ nag: x.target.checked })} />
+        <span>{t('rem.nag')}<br /><small className="muted">{t('rem.nagHint')}</small></span></label>}
 
       {err && <p className="small bad-text" role="alert">{err}</p>}
       <button className="btn primary wide top-gap" onClick={save}>{onDelete ? t('action.save') : t('ev.create')}</button>

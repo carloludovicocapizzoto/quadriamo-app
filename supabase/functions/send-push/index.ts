@@ -8,6 +8,8 @@
 //   Il testo, con i giorni di "slancio", lo scrive il telefono; quello delle 23 dice che a mezzanotte la giornata si chiude
 // - mode "news": ogni 2 ore (serve CRON_SECRET) -> la notizia più importante per il budget delle ultime ore, se c'è,
 //   a chi non ha spento "Notizie principali"; al massimo 2 al giorno per lingua, mai la stessa due volte
+// - mode "reminders": ogni 10 minuti (serve CRON_SECRET) -> i promemoria del calendario arrivati (tabella push_reminders,
+//   calcolati dal telefono: solo ora e nomi, mai importi) a ogni dispositivo dell'utente con i promemoria accesi (0029)
 // - mode "scheduled": la chiama il promemoria automatico giornaliero (serve CRON_SECRET) -> a chi non riceve
 //   un promemoria da almeno 10 giorni
 // Segreti da impostare in Supabase (Edge Functions -> Secrets): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, CRON_SECRET.
@@ -49,7 +51,7 @@ async function handle(req: Request): Promise<Response> {
   const { mode = 'manual', title, body } = await req.json().catch(() => ({}))
   const url = Deno.env.get('SUPABASE_URL')!
 
-  if (mode === 'scheduled' || mode === 'morning' || mode === 'nudge' || mode === 'news') {
+  if (mode === 'scheduled' || mode === 'morning' || mode === 'nudge' || mode === 'news' || mode === 'reminders') {
     if (!env('CRON_SECRET') || (req.headers.get('x-cron-secret') ?? '').trim() !== env('CRON_SECRET')) return json({ error: 'forbidden' }, 403)
   } else {
     // solo l'amministratore: si controlla con il SUO accesso (o con il suo codice x-admin-key), tramite is_admin()
@@ -64,11 +66,15 @@ async function handle(req: Request): Promise<Response> {
 
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
   if (mode === 'news') return json(await sendNews(admin, url))
+  if (mode === 'reminders') return json(await sendReminders(admin))
   let q = admin.from('push_subscriptions').select('endpoint, p256dh, auth_key, lang, created_at, last_prompt_at, last_active, last_nudge_at')
   if (mode === 'scheduled') {
     const cutoff = new Date(Date.now() - DAYS * 864e5).toISOString()
     q = q.lt('created_at', cutoff).or(`last_prompt_at.is.null,last_prompt_at.lt.${cutoff}`)
   }
+  // ognuno riceve solo le categorie che ha lasciato accese (0008, 0029)
+  if (mode === 'morning') q = q.eq('morning', true)
+  if (mode === 'nudge') q = q.eq('nudge', true)
   const { data: all, error } = await q
   if (error) return json({ error: error.message }, 500)
   const subs = mode === 'nudge' ? (all ?? []).filter(nudgeToday) : all
@@ -98,6 +104,37 @@ async function handle(req: Request): Promise<Response> {
     }
   }
   return json({ mode, total: subs?.length ?? 0, sent, removed, failed, ...(lastError ? { lastError } : {}) })
+}
+
+// ---------- promemoria del calendario ----------
+// Il telefono li calcola e li manda (replace_reminders, 0029): solo l'ora e i nomi, mai gli importi. Qui si consegnano
+// quelli arrivati (anche in ritardo fino a 6 ore, se un giro è saltato) a ogni dispositivo dell'utente con i promemoria accesi.
+const REMINDER_APP_URL = APP_URL.replace('?feedback=1', '#/analysis/calendar')
+// deno-lint-ignore no-explicit-any
+async function sendReminders(admin: any) {
+  const now = new Date()
+  const { data: due, error } = await admin.from('push_reminders').select('id, user_id, day, titles')
+    .is('sent_at', null).lte('fire_at', now.toISOString()).gte('fire_at', new Date(now.getTime() - 6 * 3600e3).toISOString()).limit(500)
+  if (error) return { mode: 'reminders', error: error.message }
+  try {
+    webpush.setVapidDetails('https://carloludovicocapizzoto.github.io/quadriamo-app/', env('VAPID_PUBLIC_KEY'), env('VAPID_PRIVATE_KEY'))
+  } catch (e) { return { mode: 'reminders', error: `chiavi VAPID non valide: ${(e as Error).message}` } }
+  let sent = 0, removed = 0, failed = 0
+  for (const r of due ?? []) {
+    const { data: subs } = await admin.from('push_subscriptions').select('endpoint, p256dh, auth_key, lang').eq('user_id', r.user_id).eq('reminders', true)
+    for (const s of subs ?? []) {
+      const payload = JSON.stringify({ kind: 'reminder', lang: s.lang ?? 'en', day: r.day, titles: r.titles, url: REMINDER_APP_URL })
+      try {
+        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth_key } }, payload, { TTL: 6 * 3600 })
+        sent++
+      } catch (e) {
+        const code = (e as { statusCode?: number }).statusCode
+        if (code === 404 || code === 410) { removed++; await admin.from('push_subscriptions').delete().eq('endpoint', s.endpoint) } else failed++
+      }
+    }
+    await admin.from('push_reminders').update({ sent_at: now.toISOString() }).eq('id', r.id)
+  }
+  return { mode: 'reminders', total: due?.length ?? 0, sent, removed, failed }
 }
 
 // ---------- promemoria a sorpresa ----------

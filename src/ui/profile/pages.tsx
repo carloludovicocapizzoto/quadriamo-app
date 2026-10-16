@@ -13,7 +13,6 @@ import { LICENSES } from '../../profile/licenses'
 import { useStore } from '../../store/context'
 import type { AppData } from '../../store/state'
 import { useSync } from '../../sync/context'
-import { NewsPushToggle, PushToggle } from '../beta/PushToggle'
 import { Icon } from '../Icon'
 import { Group, Row } from '../kit/List'
 import { Avatar } from './Avatar'
@@ -155,17 +154,6 @@ export function Language() {
   const { lang, setLang } = useI18n()
   return <Group>{Object.entries(LANGS).map(([c, n]) =>
     <Row key={c} label={n} value={lang === c ? <Icon name="check" size={18} /> : null} onClick={() => setLang(c as Lang)} />)}</Group>
-}
-
-export function Notifications() {
-  const { t } = useI18n()
-  return <>
-    <section className="notif-page"><PushToggle /><NewsPushToggle /></section>
-    <Group title={t('notif.which')} foot={t('notif.privacy')}>
-      {(['morning', 'nudge', 'news', 'feedback'] as const).map(k =>
-        <Row key={k} label={t(`notif.${k}` as keyof Dict)} detail={t(`notif.${k}D` as keyof Dict)} />)}
-    </Group>
-  </>
 }
 
 export function Motion() {

@@ -110,4 +110,15 @@ describe('database: migrazioni e regole di accesso', () => {
     expect((await db.query<{ n: number }>('select count(*)::int n from public.econ_events')).rows[0].n).toBe(20)
     expect(await count('anon', null, 'public.econ_events')).toBe(20)
   })
+
+  it('promemoria: il telefono li sostituisce, li vede solo chi li ha, senza account niente (0029)', async () => {
+    const rows = (titles: string[], inMin: number) => ({ at: new Date(Date.now() + inMin * 60e3).toISOString(), day: '2026-11-01', titles })
+    const call = (uid: string | null, list: unknown[]) => as(uid ? 'authenticated' : 'anon', uid, `select public.replace_reminders('${JSON.stringify(list)}'::jsonb)`)
+    expect(await call(A, [rows(['Affitto'], 60), rows(['Luce', 'Gas'], 120), rows(['Troppo lontano'], 90 * 24 * 60)])).toBe(1)
+    expect(await count('authenticated', A, 'public.push_reminders')).toBe(2)          // quello oltre i 60 giorni non entra
+    expect(await call(A, [rows(['Solo questo'], 30)])).toBe(1)
+    expect(await count('authenticated', A, 'public.push_reminders')).toBe(1)          // sostituiti, non aggiunti
+    expect(await count('authenticated', B, 'public.push_reminders')).toBe(0)          // quelli di Anna non li vede Bruno
+    expect(await call(null, [rows(['x'], 30)])).toMatch(/permission denied|not signed in/)
+  })
 })

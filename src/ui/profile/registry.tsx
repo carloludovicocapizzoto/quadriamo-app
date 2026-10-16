@@ -9,8 +9,9 @@ import { PlanCard, ProGate } from '../Pro'
 import { SettingsView } from '../settings/SettingsView'
 import { SharedView } from '../shared/SharedView'
 import { CapitalPage } from '../capital/CapitalPage'
-import { Accessibility, Appearance, Delete, HelpCenter, Language, Licenses, Motion, Notifications, Personal, Progress, Security } from './pages'
+import { Accessibility, Appearance, Delete, HelpCenter, Language, Licenses, Motion, Personal, Progress, Security } from './pages'
 import { RecurringList } from '../calendar/RecurringList'
+import { NotificationsPage } from '../notify/NotificationsPage'
 
 export interface PageProps {
   data: AppData; streak: Streak | null; today: string; badges: Badge[]
@@ -30,7 +31,7 @@ export const PAGES: Record<ProfilePage, (p: PageProps) => ReactNode> = {
   shared: p => <ProGate feature="shared"><SharedView onLogin={p.onLogin} /></ProGate>,
   appearance: () => <Appearance />,
   language: () => <Language />,
-  notifications: () => <Notifications />,
+  notifications: () => <NotificationsPage />,
   motion: () => <Motion />,
   accessibility: () => <Accessibility />,
   data: () => <SettingsView only={['data']} />,

@@ -43,6 +43,7 @@ export interface Settings {
   schema?: number                   // aggiornamenti dei dati già applicati (vedi migrate)
   capital?: import('./capital').Capital | null   // capitale iniziale (engine/capital): separato dal budget del mese
   homeWidgetSizes?: Record<string, 's' | 'm' | 'l'>   // taglia scelta per ogni widget (vuoto = quella di partenza)
+  notify?: import('./reminders').NotifyPrefs   // preferenze delle notifiche (vuoto = quelle di partenza)
   homeWidgets?: string[]            // i widget della Home, in ordine (vuoto = quelli di partenza, vedi ui/home/widgets)
 }
 
