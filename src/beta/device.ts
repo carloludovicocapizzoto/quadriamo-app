@@ -3,9 +3,13 @@ import { local } from '../storage'
 const K = { device: 'quadriamo.device', stats: 'quadriamo.stats', firstUse: 'quadriamo.firstUse',
             feedbackAt: 'quadriamo.feedbackAt', lastOpen: 'quadriamo.lastOpen' } as const
 
+/** Un codice casuale; anche sui browser che non hanno randomUUID (iOS prima della 15.4). */
+export const uuid = () => globalThis.crypto?.randomUUID?.() ??
+  '00000000-0000-4000-8000-' + (Date.now().toString(16) + Math.random().toString(16).slice(2)).slice(-12).padStart(12, '0')
+
 export function deviceId(): string {
   let id = local.get(K.device)
-  if (!id) { id = globalThis.crypto?.randomUUID?.() ?? '00000000-0000-4000-8000-' + Date.now().toString(16).padStart(12, '0').slice(-12); local.set(K.device, id) }
+  if (!id) { id = uuid(); local.set(K.device, id) }
   return id
 }
 

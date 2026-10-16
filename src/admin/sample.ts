@@ -1,5 +1,5 @@
 // Dati finti per vedere l'area amministratore prima della configurazione (/admin/?demo=1): nessun dato reale.
-import type { Account, Cohort, Device, Feedback, PushSub, ResearchStats, Setup, Stats } from './data'
+import type { Account, Cohort, Device, Feedback, PushSub, ResearchStats, Setup, Stats, UsageStats } from './data'
 
 const day = (n: number) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10)
 const at = (n: number, h = 10) => `${day(n)}T${String(h).padStart(2, '0')}:15:00Z`
@@ -34,3 +34,14 @@ export const sampleResearch: ResearchStats = { answers: 14, min: 5,
 export const sampleSetup: Setup = { connected: true, tables: true, profiles: true, research: true, v8: true, v10: true, v11: true, v13: true, v14: true, billing: { fn: true, configured: true, webhook: true, test: true }, news: true, siteFeedback: true, adminKeys: true, adminName: null, admin: true, fn: 'ok', cronSecret: true, reminder: true, vapidInApp: true }
 export const sampleCohorts: Cohort[] = [8, 7, 6, 5, 4, 3, 2, 1].map((w, i) => ({ week: day(w * 7 + 3), new_devices: [3, 5, 4, 8, 9, 12, 10, 7][i], back_7: [2, 3, 3, 5, 6, 7, 0, 0][i], ready: w > 1 }))
 export const sampleAlternatives: Record<string, number> = { spreadsheet: 6, nothing: 5, bank_app: 4, notes: 2, other_app: 2 }
+export const sampleUsage: UsageStats = {
+  devices: 23, min: 5, sessions: 412, median_seconds: 74, slow_share: 6, error_share: 1,
+  daily: Array.from({ length: 30 }, (_, i) => ({ day: day(29 - i), sessions: wave(i) + 4 })),
+  screens: [['#/', 23, 405, 41], ['#/analysis/month', 19, 160, 38], ['#/news', 15, 88, 64], ['#/analysis/transactions', 14, 71, 29],
+    ['#/profile', 12, 40, 12], ['#/analysis/year', 9, 22, 33], ['#/profile/budget', 7, 11, 52], ['#/profile/capital', 5, 6, 47]]
+    .map(([screen, devices, sessions, avg_seconds]) => ({ screen: screen as string, devices: devices as number, sessions: sessions as number, avg_seconds: avg_seconds as number })),
+  exits: [{ screen: '#/', sessions: 301 }, { screen: '#/analysis/month', sessions: 58 }, { screen: '#/news', sessions: 33 }],
+  paths: [{ from: '#/', to: '#/analysis/month', times: 140 }, { from: '#/', to: '#/news', times: 80 }, { from: '#/analysis/month', to: '#/analysis/transactions', times: 52 }, { from: '#/', to: '#/profile', times: 37 }],
+  actions: [{ action: 'setInvestments', devices: 5, times: 6 }, { action: 'saveGoal', devices: 6, times: 9 }, { action: 'deleteTx', devices: 9, times: 21 },
+    { action: 'setSettings', devices: 14, times: 48 }, { action: 'updateTx', devices: 17, times: 95 }, { action: 'addTx', devices: 23, times: 1240 }],
+}

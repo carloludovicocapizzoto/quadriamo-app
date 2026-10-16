@@ -10,7 +10,7 @@ import { ProGate } from '../Pro'
 import { YearNav, YearView } from '../YearView'
 import { TransactionsScreen } from './TransactionsScreen'
 
-import { ANALYSIS_VIEWS, type AnalysisView } from '../../app/router'
+import { ANALYSIS_LABEL, ANALYSIS_VIEWS, type AnalysisView } from '../../app/router'
 
 /** Analisi: mese, anno e investimenti in una pagina, con le schede in alto (come le sezioni di un'app). */
 export function AnalysisScreen({ view, onView, data, result, current, homeResult, today, year, onYear, onMonth, onOpen }: {
@@ -23,7 +23,7 @@ export function AnalysisScreen({ view, onView, data, result, current, homeResult
     <div className="screen screen-wide">
       <h1 className="screen-title">{t('nav.analysis')}</h1>
       <Segmented value={view} onChange={onView} options={ANALYSIS_VIEWS.map(v => ({ id: v, badge: v === 'transactions' ? inbox : 0,
-        label: t(v === 'transactions' ? 'nav.transactions' : v === 'month' ? 'ana.month' : v === 'year' ? 'ana.year' : 'nav.investments') }))} />
+        label: t(ANALYSIS_LABEL[v]) }))} />
 
       <div key={view} className="view-in">
         {view === 'transactions' && <TransactionsScreen embedded data={data} current={current} result={result} today={today} onMonth={onMonth} onOpen={onOpen} />}

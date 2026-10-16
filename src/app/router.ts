@@ -1,6 +1,7 @@
 // Navigazione dell'app: un solo modo di cambiare pagina, scritto nell'indirizzo (#/analysis/transactions).
 // Così il tasto Indietro (Android, browser) torna alla pagina precedente come in un'app nativa.
 import { useSyncExternalStore } from 'react'
+import type { Dict } from '../i18n/en'
 import { PROFILE_PAGES, type ProfilePage } from '../profile/pages'
 export type { ProfilePage }
 
@@ -15,6 +16,7 @@ export type Route =
 
 /** Le viste di Analisi nell'ordine delle schede: prima le letture del mese e dell'anno, i movimenti in fondo. La prima è quella di partenza. */
 export const ANALYSIS_VIEWS: AnalysisView[] = ['month', 'year', 'investments', 'transactions']
+export const ANALYSIS_LABEL: Record<AnalysisView, keyof Dict> = { month: 'ana.month', year: 'ana.year', investments: 'nav.investments', transactions: 'nav.transactions' }
 
 export function parse(hash: string): Route {
   const [path, query = ''] = hash.replace(/^#\/?/, '').split('?')

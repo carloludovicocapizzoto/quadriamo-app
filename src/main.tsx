@@ -4,6 +4,7 @@ import './styles/index.css'
 import { applyPrefs } from './app/prefs'
 import { watchDiagnostics } from './app/diagnostics'
 import { watchErrors } from './app/errors'
+import { watchSessions } from './beta/sessions'
 import { SectionBoundary } from './app/SectionBoundary'
 import App from './App.tsx'
 import { I18nProvider } from './i18n'
@@ -13,6 +14,7 @@ import { SyncProvider } from './sync/SyncProvider'
 applyPrefs()   // tema, movimento e testo prima del primo disegno: niente lampo di colore
 watchDiagnostics()  // diario tecnico in memoria: schermate, azioni, rallentamenti
 watchErrors()       // gli errori sui telefoni degli utenti arrivano all'area admin, con il diario
+watchSessions()     // come si usa l'app, solo con il consenso alle statistiche anonime
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <I18nProvider>

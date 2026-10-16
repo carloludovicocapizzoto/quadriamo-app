@@ -78,6 +78,18 @@ export const loadResearch = () => rpc<ResearchStats>('admin_research_stats')
 export const loadCohorts = () => rpc<Cohort[]>('admin_cohorts', { p_weeks: 8 })
 export const loadAlternatives = () => rpc<Record<string, number>>('admin_alternatives')
 export const loadPush = () => rpc<PushSub[]>('admin_push_list')
+export const loadUsage = (days: number) => rpc<UsageStats>('admin_usage', { p_days: days })
+
+/** Come si usa l'app (0025): solo totali, solo voci usate da almeno `min` dispositivi. Sotto la soglia arrivano solo devices e min. */
+export interface UsageStats {
+  devices: number; min: number
+  sessions?: number; median_seconds?: number | null; slow_share?: number | null; error_share?: number | null
+  daily?: { day: string; sessions: number }[]
+  screens?: { screen: string; devices: number; sessions: number; avg_seconds: number }[]
+  exits?: { screen: string; sessions: number }[]
+  paths?: { from: string; to: string; times: number }[]
+  actions?: { action: string; devices: number; times: number }[]
+}
 
 export async function checkSetup(signedIn: boolean): Promise<Setup> {
   const supabase = db()

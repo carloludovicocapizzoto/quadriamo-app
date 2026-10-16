@@ -12,10 +12,16 @@ const MAX = 40
 const opened = performance.now()
 const trail: TrailEntry[] = []
 
+const listeners = new Set<(e: TrailEntry) => void>()
+
 export function note(kind: TrailKind, what: string) {
-  trail.push({ s: Math.round((performance.now() - opened) / 100) / 10, kind, what: what.slice(0, 120) })
+  const e = { s: Math.round((performance.now() - opened) / 100) / 10, kind, what: what.slice(0, 120) }
+  trail.push(e)
   if (trail.length > MAX) trail.shift()
+  for (const l of listeners) l(e)
 }
+/** Chi vuole seguire il diario mentre si scrive (le statistiche di sessione). */
+export const onNote = (fn: (e: TrailEntry) => void) => { listeners.add(fn) }
 export const trailNow = (): TrailEntry[] => trail.slice()
 export const route = () => (location.hash.split('?')[0] || '#/').slice(0, 80)
 

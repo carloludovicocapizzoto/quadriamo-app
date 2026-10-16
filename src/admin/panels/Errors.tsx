@@ -1,7 +1,7 @@
 // Errori dell'app sui dispositivi degli utenti (tabella client_errors, 0022 + 0024): raggruppati per messaggio,
 // i più recenti in alto. Aprendo un errore: dove è successo nel codice e gli ultimi passi prima (diario tecnico).
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import { supabase } from '../../sync/client'
+import { db } from '../adminKey'
 import { Trail, type TrailRow } from './Trail'
 import { dt } from './format'
 
@@ -14,7 +14,7 @@ export function ErrorsPanel() {
   const [rows, setRows] = useState<Row[] | null>(null)
   const [err, setErr] = useState('')
   const [open, setOpen] = useState<string | null>(null)
-  const load = () => void supabase!.from('client_errors').select('*').order('at', { ascending: false }).limit(500)
+  const load = () => void db()!.from('client_errors').select('*').order('at', { ascending: false }).limit(500)
     .then(({ data, error }) => { if (error) setErr(error.message); else setRows(data as Row[]) })
   useEffect(load, [])
   const groups = useMemo(() => {
@@ -22,7 +22,7 @@ export function ErrorsPanel() {
     for (const r of rows ?? []) by.set(r.message, [...(by.get(r.message) ?? []), r])
     return [...by.entries()].map(([message, list]) => ({ message, list, last: list[0] }))
   }, [rows])
-  const clear = async () => { if (!confirm('Cancellare tutti gli errori?')) return; await supabase!.from('client_errors').delete().gt('id', 0); load() }
+  const clear = async () => { if (!confirm('Cancellare tutti gli errori?')) return; await db()!.from('client_errors').delete().gt('id', 0); load() }
 
   if (err) return <div className="az-card"><p className="az-hint">Non riesco a leggere gli errori: {err}. Hai eseguito lo script del passo 16 in Configurazione?</p></div>
   if (!rows) return <div className="az-card"><p className="az-hint">Carico…</p></div>
