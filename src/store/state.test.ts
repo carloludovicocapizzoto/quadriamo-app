@@ -33,11 +33,11 @@ describe('validateSettings', () => {
     s.buckets[0].share = 0.5
     expect(validateSettings(s)).toContain('sharesNot100')
   })
-  it('rejects a bad start day and a bad recurring payment', () => {
+  it('rejects a bad start day and a calendar payment without amount', () => {
     const s = base().data!.settings
     s.monthStartDay = 31
-    s.recurring.push({ name: 'Gym', amount: 0, category: 'health', day: 1, active: true })
-    expect(validateSettings(s)).toEqual(expect.arrayContaining(['startDay', 'recurring']))
+    s.events.push({ id: 'g', kind: 'payment', title: 'Gym', amount: 0, category: 'health', date: '2026-10-01', repeat: { every: 1, unit: 'month' }, until: null, done: [], active: true })
+    expect(validateSettings(s)).toEqual(expect.arrayContaining(['startDay', 'event']))
   })
 })
 
@@ -225,7 +225,7 @@ describe('migrate', () => {
     const ids = m.settings.categories.map(c => c.id)
     expect(ids.indexOf('loans')).toBe(ids.indexOf('fixedCosts') + 1)
     expect(m.settings.categories.find(c => c.id === 'loans')!.defaultBucket).toBe('essentials')
-    expect(m.settings.schema).toBe(4)
+    expect(m.settings.schema).toBe(5)
     // cancellata dall'utente: non torna
     const removed = { ...m, settings: { ...m.settings, categories: m.settings.categories.filter(c => c.id !== 'loans') } }
     expect(migrate(removed)).toBe(removed)
@@ -238,11 +238,14 @@ describe('migrate, affitto', () => {
     const st = { ...d.settings, schema: 2, categories: d.settings.categories.filter(c => c.id !== 'rent'),
       recurring: [{ name: 'Affitto', amount: 380, category: 'fixedCosts', day: 1, active: true }, { name: 'Telefono', amount: 8, category: 'fixedCosts', day: 5, active: true }],
       rules: [{ id: 'r', keyword: 'affitto', category: 'fixedCosts', paidFrom: null, enabled: true }] }
-    const m = migrate({ ...d, settings: st })!.settings
+    const m = migrate({ ...d, settings: st as typeof d.settings })!.settings
     expect(m.categories.find(c => c.id === 'rent')?.defaultBucket).toBe('first')
-    expect(m.recurring.map(r => r.category)).toEqual(['rent', 'fixedCosts'])
+    // poi (schema 5) i pagamenti ricorrenti diventano eventi mensili del calendario, con identificativi fissi
+    expect(m.events.map(e => [e.id, e.kind, e.category, e.date, e.repeat?.unit])).toEqual([
+      ['rec1', 'rent', 'rent', '2026-10-01', 'month'], ['rec2', 'payment', 'fixedCosts', '2026-10-05', 'month']])
+    expect('recurring' in m).toBe(false)
     expect(m.rules?.[0].category).toBe('rent')
-    expect(m.schema).toBe(4)
+    expect(m.schema).toBe(5)
   })
 })
 
@@ -253,7 +256,7 @@ describe('aggiornamento dei dati salvati', () => {
     const s = migrate(old)!.settings
     const ids = s.categories.map(c => c.id)
     expect(ids.slice(ids.indexOf('funShopping'), ids.indexOf('funShopping') + 3)).toEqual(['funShopping', 'travel', 'tech'])
-    expect(s.schema).toBe(4)
+    expect(s.schema).toBe(5)
     // cancellata dall'utente dopo l'aggiornamento: non torna
     const removed = { ...d, settings: { ...s, categories: s.categories.filter(c => c.id !== 'travel') } }
     expect(migrate(removed)!.settings.categories.some(c => c.id === 'travel')).toBe(false)

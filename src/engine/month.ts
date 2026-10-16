@@ -1,8 +1,9 @@
 // Calcolo di un mese: è la traduzione delle formule dei fogli mese dell'Excel di Quadriamo.
-import { compareYm, makeDate, monthOf, parseDate, periodOf, prevMonth, ymKey } from './dates'
+import { compareYm, monthOf, periodOf, prevMonth, ymKey } from './dates'
+import { budgetEvents, occurrences } from './calendar'
 import {
   CUSTOM, FIRST, SPLIT,
-  type BucketRow, type CheckKind, type ClassifiedTx, type MonthResult, type Recurring, type Settings,
+  type BucketRow, type CheckKind, type ClassifiedTx, type MonthResult, type Settings,
   type Transaction, type YearMonth,
 } from './types'
 
@@ -55,45 +56,25 @@ function transactionsOf(ym: YearMonth, all: Transaction[], s: Settings): Transac
 }
 
 /**
- * Ricorrenti del mese: compaiono quando il mese è iniziato (c'è almeno un movimento con importo)
- * e contano solo dal loro giorno; prima sono "upcoming" senza importo.
+ * I pagamenti del calendario nel mese (engine/calendar: affitto, bollette, rate…): compaiono quando il mese è iniziato
+ * (c'è almeno un movimento con importo) e contano solo dal loro giorno; prima sono "upcoming", con l'importo previsto a parte.
  */
 export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, today: string): ClassifiedTx[] {
   if (!manual.some(t => t.amount != null)) return []
-  const { start } = periodOf(ym, s.monthStartDay)
-  const st = parseDate(start)
-  return s.recurring
-    .filter(r => r.active && r.name && !(r.until && ymKey(ym) > r.until))
-    .map((r, i) => {
-      const date = r.day == null ? start : makeDate(st.year, st.month + (r.day < st.day ? 1 : 0), r.day)
-      const due = date <= today
-      return {
-        ...classify({ id: `rec-${ymKey(ym)}-${i}`, date, description: r.name, category: r.category,
-                      amount: due ? r.amount : null }, s),
-        recurring: true,
-        upcoming: !due,
-      }
-    })
+  const { start, end } = periodOf(ym, s.monthStartDay)
+  return budgetEvents(s).flatMap(e => occurrences(e, start, end).map(date => {
+    const due = date <= today
+    return {
+      ...classify({ id: `ev-${e.id}-${date}`, date, description: e.title, category: e.category, amount: due ? e.amount : null }, s),
+      recurring: true, upcoming: !due, planned: e.amount ?? 0, eventId: e.id,
+    }
+  })).sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
 }
 
 /** Somma delle quote di un'entrata divisa a modo mio (1 = 100%), arrotondata per non sbagliare sui decimali. */
 export const splitTotal = (split: Record<string, number> | null | undefined) =>
   Math.round(Object.values(split ?? {}).reduce((a, x) => a + x, 0) * 1000) / 1000
 export const splitOk = (split: Record<string, number> | null | undefined) => splitTotal(split) === 1
-
-/** Rate che restano dal mese `ym` compreso; null se il pagamento non ha una fine. */
-export function installmentsLeft(r: Recurring, ym: YearMonth): number | null {
-  if (!r.until) return null
-  const [y, m] = r.until.split('-').map(Number)
-  return Math.max(0, (y - ym.year) * 12 + m - ym.month + 1)
-}
-
-/** Ultimo mese di un pagamento che ha ancora `n` rate da `ym` compreso; senza n, nessuna fine. */
-export function untilAfter(ym: YearMonth, n: number | null): string | undefined {
-  if (!n || n < 1) return undefined
-  const i = ym.year * 12 + ym.month - 1 + n - 1
-  return ymKey({ year: Math.floor(i / 12), month: i % 12 + 1 })
-}
 
 /** Problemi di una singola riga (le righe rosse dell'Excel). */
 export function rowIssues(t: ClassifiedTx, s: Settings): CheckKind[] {
@@ -106,7 +87,7 @@ export function rowIssues(t: ClassifiedTx, s: Settings): CheckKind[] {
   if (t.type === 'unknown') out.push('unknownCategory')
   if (t.amount != null && t.amountIn == null) out.push('missingFx')
   if (t.category && t.amount != null &&
-      s.recurring.some(r => r.active && r.category === t.category && r.amount === t.amount)) out.push('recurringDuplicate')
+      budgetEvents(s).some(e => e.category === t.category && e.amount === t.amount)) out.push('recurringDuplicate')
   return out
 }
 
@@ -145,7 +126,7 @@ export function computeMonth(
   // spese "prima delle parti" (es. l'affitto): escono dalle entrate prima della divisione. Quelle ancora in arrivo
   // contano con l'importo previsto, così le parti non sembrano più ricche all'inizio del mese
   const paidFirst = txs.filter(t => t.bucket === FIRST && t.type === 'expense')
-    .reduce((a, t) => a + (t.amountIn ?? (t.upcoming ? s.recurring.find(x => x.name === t.description && x.category === t.category)?.amount ?? 0 : 0)), 0)
+    .reduce((a, t) => a + (t.amountIn ?? (t.upcoming ? t.planned ?? 0 : 0)), 0)
   const base = split - paidFirst   // se l'affitto supera le entrate, la differenza pesa sulla prima parte (non sparisce)
 
   const buckets: BucketRow[] = s.buckets.map((b, i) => {

@@ -1,7 +1,7 @@
 // Controllo delle impostazioni prima di salvarle.
 import { CUSTOM, splitOk, type Settings } from '../engine'
 
-export type SettingsError = 'sharesNot100' | 'bucketName' | 'startDay' | 'categoryName' | 'categorySplit' | 'recurring'
+export type SettingsError = 'sharesNot100' | 'bucketName' | 'startDay' | 'categoryName' | 'categorySplit' | 'event'
 
 export function validateSettings(s: Settings): SettingsError[] {
   const out: SettingsError[] = []
@@ -11,7 +11,8 @@ export function validateSettings(s: Settings): SettingsError[] {
   if (!Number.isInteger(s.monthStartDay) || s.monthStartDay < 1 || s.monthStartDay > 28) out.push('startDay')
   if (s.categories.some(c => !c.name.trim())) out.push('categoryName')
   if (s.categories.some(c => c.type === 'income' && c.defaultBucket === CUSTOM && !splitOk(c.split))) out.push('categorySplit')
-  if (s.recurring.some(r => !r.name.trim() || !(r.amount > 0) || !s.categories.some(c => c.id === r.category) ||
-                            (r.day != null && (r.day < 1 || r.day > 31)))) out.push('recurring')
+  // un evento ha un titolo; se entra nel budget (ha una categoria) ha anche un importo e la categoria esiste
+  if (s.events.some(e => !e.title.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(e.date) || (e.repeat && !(e.repeat.every >= 1)) ||
+                         (e.category != null && (!(Number(e.amount) > 0) || !s.categories.some(c => c.id === e.category))))) out.push('event')
   return out
 }

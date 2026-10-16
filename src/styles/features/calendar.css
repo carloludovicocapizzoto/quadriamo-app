@@ -1,0 +1,47 @@
+/* Analisi → Calendario e pagamenti ricorrenti. Tipografia e linee sottili, niente riquadri: un punto per tipo
+   (scuro le uscite, verde le entrate, grigio i promemoria), il giorno scelto in inchiostro, oggi sottolineato. */
+.calendar { display: grid; gap: var(--s3); }
+.cal-modes { margin-top: var(--s1); }
+.calendar .month-nav { margin: var(--s1) 0 0; }
+.cal-today { justify-self: center; margin-top: calc(-1 * var(--s2)); }
+.cal-sum { display: flex; gap: var(--s6); margin: 0; }
+.cal-sum div { display: grid; gap: 2px; }
+.cal-sum dt { font-size: var(--t-sm); color: var(--muted); }
+.cal-sum dd { margin: 0; font-size: var(--t-h2); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.cal-month { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 2px; }
+.cal-wd { text-align: center; font-size: var(--t-cap); color: var(--muted); padding-bottom: var(--s1); text-transform: uppercase; }
+.cal-day { display: grid; justify-items: center; gap: 3px; padding: 7px 0 6px; border: 0; background: none; color: var(--text);
+  border-radius: var(--r-md); font: inherit; font-variant-numeric: tabular-nums; cursor: pointer; }
+.cal-day > span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; font-size: 15px; }
+.cal-day.out { color: var(--faint); }
+.cal-day.today > span { box-shadow: inset 0 -2px 0 var(--text); border-radius: 0; }
+.cal-day.on > span { background: var(--accent); color: var(--on-accent); border-radius: 50%; box-shadow: none; font-weight: 600; }
+.cal-dots { display: flex; gap: 3px; height: 5px; font-style: normal; }
+.cal-dots b, .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--faint); }
+.side-out .cal-dot, .cal-dots .side-out { background: var(--text); }
+.side-in .cal-dot, .cal-dots .side-in { background: var(--good); }
+@media (hover: hover) { .cal-day:not(.on):hover > span { background: var(--fill); } }
+
+.cal-list .cal-row { gap: var(--s3); }
+.cal-row .cal-dot { flex-shrink: 0; width: 7px; height: 7px; }
+.cal-row.side-in .row-value { color: var(--good); }
+.cal-row.done .row-main > span, .cal-row.done .row-value { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+.cal-done { color: var(--good); flex-shrink: 0; }
+.cal-none { margin: var(--s1) 0 var(--s3); }
+.cal-group .day-label.today { color: var(--text); font-weight: 600; }
+.cal-add { justify-self: start; }
+
+.event-form { display: grid; gap: var(--s3); }
+.ev-kinds { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--s4)); padding: 0 var(--s4); }
+.ev-kinds::-webkit-scrollbar { display: none; }
+.ev-kinds .chip { flex-shrink: 0; }
+.ev-every { display: flex; gap: var(--s2); }
+.ev-every input { width: 64px; }
+
+.event-detail { display: grid; gap: var(--s2); padding-bottom: var(--s2); }
+.event-detail h2 { margin: 0; font-size: var(--t-h2); }
+.eyebrow-small { margin: 0; font-size: var(--t-sm); color: var(--muted); }
+.ed-facts { list-style: none; margin: var(--s3) 0 var(--s4); padding: 0; }
+.ed-facts li { display: flex; justify-content: space-between; gap: var(--s4); padding: var(--s3) 0; border-top: 1px solid var(--line); font-size: 15px; }
+.ed-facts span { color: var(--muted); }

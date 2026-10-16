@@ -1,0 +1,53 @@
+import { describe, expect, it } from 'vitest'
+import { agenda, budgetEvents, nextOccurrence, occurrences, presetOf, remainingCount, untilAfterCount, type CalEvent } from './calendar'
+import { defaultSettings } from './defaults'
+
+const ev = (over: Partial<CalEvent>): CalEvent => ({
+  id: 'e', kind: 'bill', title: 'Luce', amount: 40, category: 'fixedCosts', date: '2026-01-31',
+  repeat: { every: 1, unit: 'month' }, until: null, done: [], active: true, ...over,
+})
+
+describe('calendario: quando cade un evento', () => {
+  it('ogni mese tiene il giorno, e il 31 diventa l\'ultimo giorno dei mesi corti', () => {
+    expect(occurrences(ev({}), '2026-01-01', '2026-05-31')).toEqual(['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30', '2026-05-31'])
+    expect(occurrences(ev({ date: '2027-12-31', repeat: { every: 2, unit: 'month' } }), '2028-01-01', '2028-03-01')).toEqual(['2028-02-29'])
+  })
+  it('trimestrale, annuale, ogni due settimane, una volta', () => {
+    expect(occurrences(ev({ date: '2026-01-15', repeat: { every: 3, unit: 'month' } }), '2026-01-01', '2026-12-31'))
+      .toEqual(['2026-01-15', '2026-04-15', '2026-07-15', '2026-10-15'])
+    expect(occurrences(ev({ date: '2024-03-10', repeat: { every: 1, unit: 'year' } }), '2026-01-01', '2027-12-31')).toEqual(['2026-03-10', '2027-03-10'])
+    expect(occurrences(ev({ date: '2026-10-02', repeat: { every: 2, unit: 'week' } }), '2026-10-01', '2026-10-31')).toEqual(['2026-10-02', '2026-10-16', '2026-10-30'])
+    expect(occurrences(ev({ date: '2026-10-20', repeat: null }), '2026-10-01', '2026-10-31')).toEqual(['2026-10-20'])
+    expect(occurrences(ev({ date: '2026-09-20', repeat: null }), '2026-10-01', '2026-10-31')).toEqual([])
+  })
+  it('si ferma alla fine (ultima rata) e conta quante ne restano', () => {
+    const rata = ev({ date: '2026-01-10', until: untilAfterCount({ date: '2026-01-10', repeat: { every: 1, unit: 'month' } }, 12) })
+    expect(rata.until).toBe('2026-12-10')
+    expect(occurrences(rata, '2026-11-01', '2027-03-01')).toEqual(['2026-11-10', '2026-12-10'])
+    expect(remainingCount(rata, '2026-10-16')).toBe(2)   // il 10 ottobre è già passato
+    expect(nextOccurrence(rata, '2026-12-11')).toBeNull()
+    expect(remainingCount(ev({}), '2026-10-16')).toBeNull()
+  })
+  it('una ripetizione partita anni fa resta veloce e precisa', () => {
+    // l'8 maggio 2001 era un martedì: ogni martedì
+    expect(occurrences(ev({ date: '2001-05-08', repeat: { every: 1, unit: 'week' } }), '2026-10-01', '2026-10-15')).toEqual(['2026-10-06', '2026-10-13'])
+  })
+  it('riconosce le ripetizioni con un nome', () => {
+    expect(presetOf(null)).toBe('once')
+    expect(presetOf({ every: 3, unit: 'month' })).toBe('quarterly')
+    expect(presetOf({ every: 10, unit: 'day' })).toBe('custom')
+  })
+})
+
+describe('calendario: budget e agenda', () => {
+  const s = { ...defaultSettings({ firstMonth: { year: 2026, month: 10 } }) }
+  it('nel budget solo spese attive con importo e categoria di spesa', () => {
+    s.events = [ev({ id: 'a' }), ev({ id: 'b', kind: 'salary', category: 'salary' }), ev({ id: 'c', amount: null }), ev({ id: 'd', active: false }),
+      ev({ id: 'e', kind: 'reminder' }), ev({ id: 'f', category: 'salary' })]
+    expect(budgetEvents(s).map(e => e.id)).toEqual(['a'])
+  })
+  it('l\'agenda mette in fila le volte di tutti gli eventi, con quelle già fatte', () => {
+    const list = agenda([ev({ id: 'a', title: 'Luce', date: '2026-10-05', done: ['2026-10-05'] }), ev({ id: 'b', title: 'Affitto', date: '2026-10-01' })], '2026-10-01', '2026-10-31')
+    expect(list.map(x => [x.date, x.event.title, x.done])).toEqual([['2026-10-01', 'Affitto', false], ['2026-10-05', 'Luce', true]])
+  })
+})

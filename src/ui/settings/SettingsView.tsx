@@ -7,11 +7,10 @@ import { DataSection } from './Data'
 import { useSettingsDraft } from './draft'
 import { FxSection } from './Fx'
 import { GeneralSection } from './General'
-import { RecurringSection } from './Recurring'
 import { RuleSection } from './Rule'
 import { RulesSection } from './Rules'
 
-export type SettingsSection = 'general' | 'fx' | 'rule' | 'categories' | 'rules' | 'recurring' | 'data'
+export type SettingsSection = 'general' | 'fx' | 'rule' | 'categories' | 'rules' | 'data'
 
 export function SettingsView({ only, wizard = false }: { only: SettingsSection[]; wizard?: boolean }) {
   const { t } = useI18n()
@@ -26,7 +25,6 @@ export function SettingsView({ only, wizard = false }: { only: SettingsSection[]
         {show('rule') && <RuleSection d={d} />}
         {show('categories') && <CategoriesSection d={d} />}
         {show('rules') && <RulesSection d={d} />}
-        {show('recurring') && <RecurringSection d={d} />}
         {show('data') && <DataSection d={d} wizard={wizard} />}
       </Fragment>
 

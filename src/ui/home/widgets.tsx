@@ -2,7 +2,7 @@
 // o un indicatore che informa (non decora). L'utente sceglie quali vedere, in che ordine e di che dimensione.
 import type { ReactNode } from 'react'
 import { capitalAdvice, capitalSummary, dailySpending, forecastMonth, goalStatus, lastDays, missions, portfolioSummary,
-  type ClassifiedTx, type MonthResult, type Streak } from '../../engine'
+  type ClassifiedTx, type MonthResult, type Streak, KIND_SIDE, addDays, agenda } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import type { AppData } from '../../store/state'
@@ -55,7 +55,7 @@ function TrendTag({ delta, base, goodWhenDown }: { delta: number; base: number; 
 }
 
 export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
-  const { t, money } = useI18n()
+  const { t, money, date } = useI18n()
   const s = c.data.settings, cur = s.currency
   const box = (body: ReactNode, more?: () => void, attention = false) => (
     <section className={`widget w-${id}${attention ? ' attention' : ''}`}>
@@ -110,16 +110,16 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
     }
 
     case 'upcoming': {
-      const list = c.r.transactions.filter(x => x.upcoming).sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+      // i prossimi 30 giorni dal calendario: affitto, bollette, rate, abbonamenti (quelli non ancora fatti)
+      const list = agenda(s.events, c.today, addDays(c.today, 29)).filter(x => KIND_SIDE[x.event.kind] === 'out' && !x.done)
       if (!list.length) return null
-      // l'importo dei pagamenti futuri non è ancora contato nel mese: si mostra quello previsto dalla spesa ricorrente
-      const planned = (tx: ClassifiedTx) => s.recurring.find(r => r.name === tx.description && r.category === tx.category)?.amount ?? 0
-      const total = list.reduce((a, x) => a + planned(x), 0)
+      const total = list.reduce((a, x) => a + (x.event.amount ?? 0), 0)
       return box(<>
         <p className="w-big"><Money value={total} currency={cur} /><small> {t('hw.upcomingCount', { n: list.length })}</small></p>
-        <ul className="w-rows">{list.slice(0, 3).map(tx => (
-          <li key={tx.id}><span>{tx.description}</span><small>{tx.date ? new Date(tx.date).getDate() : ''}</small><Money value={planned(tx)} currency={cur} /></li>))}</ul>
-      </>)
+        <ul className="w-rows">{list.slice(0, 3).map(x => (
+          <li key={x.event.id + x.date}><span>{x.event.title}</span><small>{date(x.date, { day: 'numeric', month: 'short' })}</small>
+            {x.event.amount != null ? <Money value={x.event.amount} currency={cur} /> : <span />}</li>))}</ul>
+      </>, () => navigate({ tab: 'analysis', view: 'calendar' }))
     }
 
     case 'tips': {

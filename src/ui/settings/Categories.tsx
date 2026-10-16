@@ -16,7 +16,7 @@ export function CategoriesSection({ d: { data, draft, edit } }: { d: SettingsDra
     if (used && !confirm(t('settings.deleteCategoryUsed', { n: used }))) return
     edit(s => {
       s.categories = s.categories.filter(c => c.id !== id)
-      s.recurring = s.recurring.filter(r => r.category !== id)
+      s.events = s.events.filter(e => e.category !== id)
     })
   }
 

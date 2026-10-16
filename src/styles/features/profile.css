@@ -4,20 +4,9 @@
 .rule-row i { width: 10px; height: 10px; border-radius: var(--r-sm); flex: none; }
 .edit-list { list-style: none; padding: 0; margin: 8px 0 12px; display: grid; gap: 8px; }
 .edit-list li { display: grid; grid-template-columns: 1.4fr 1fr 1fr 44px; gap: 6px; align-items: center; }
-.edit-list.recurring li { grid-template-columns: 1.5fr .8fr 1fr .9fr .9fr auto 44px; }
 @media (max-width: 560px) {
   .edit-list li { grid-template-columns: 1fr 1fr 44px; }
   .edit-list li > :first-child { grid-column: 1 / -1; }
-  /* nome · importo e giorno · categoria · rate rimaste e attivo */
-  .edit-list.recurring li { grid-template-columns: 1fr 1fr 44px;
-    grid-template-areas: "name name name" "amount day x" "cat cat cat" "left active active"; }
-  .edit-list.recurring li > :nth-child(1) { grid-area: name; }
-  .edit-list.recurring li > :nth-child(2) { grid-area: amount; }
-  .edit-list.recurring li > :nth-child(3) { grid-area: cat; }
-  .edit-list.recurring li > :nth-child(4) { grid-area: day; }
-  .edit-list.recurring li > :nth-child(5) { grid-area: left; }
-  .edit-list.recurring li > :nth-child(6) { grid-area: active; }
-  .edit-list.recurring li > :nth-child(7) { grid-area: x; }
   .edit-list li { padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 }
 .save-bar { position: fixed; left: 0; right: 0; bottom: calc(var(--bar-h) + var(--bar-gap) + var(--s2)); display: flex; gap: 12px;

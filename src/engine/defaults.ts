@@ -1,5 +1,6 @@
 import { seedRules } from './rules'
 import { FIRST, type Category, type Recurring, type Settings } from './types'
+import { fromRecurring } from './calendar'
 
 /** Regola consigliata 55-20-15-10. Gli id non cambiano mai; i nomi si traducono o si rinominano. */
 export const DEFAULT_BUCKETS = [
@@ -48,9 +49,9 @@ export function defaultSettings(opts: {
     firstMonth: opts.firstMonth,
     buckets: DEFAULT_BUCKETS.map(b => ({ id: b.id, name: name(b.id), share: b.share, startingBalance: 0 })),
     categories: DEFAULT_CATEGORIES.map(c => ({ ...c, name: name(c.id) })),
-    recurring: opts.recurring ?? [],
+    events: (opts.recurring ?? []).map((r, i) => fromRecurring(r, { monthStartDay: 1, firstMonth: opts.firstMonth }, `rec${i + 1}`)),
     fxRates: {},
     rules: seedRules(),
-    schema: 4,
+    schema: 5,
   }
 }

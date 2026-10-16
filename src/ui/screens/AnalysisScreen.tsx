@@ -9,10 +9,11 @@ import { InvestmentsView } from '../InvestmentsView'
 import { ProGate } from '../Pro'
 import { YearNav, YearView } from '../YearView'
 import { TransactionsScreen } from './TransactionsScreen'
+import { CalendarView } from '../calendar/CalendarView'
 
 import { ANALYSIS_LABEL, ANALYSIS_VIEWS, type AnalysisView } from '../../app/router'
 
-/** Analisi: mese, anno e investimenti in una pagina, con le schede in alto (come le sezioni di un'app). */
+/** Analisi: mese, anno, calendario e investimenti in una pagina, con le schede in alto (come le sezioni di un'app). */
 export function AnalysisScreen({ view, onView, data, result, current, homeResult, today, year, onYear, onMonth, onOpen }: {
   view: AnalysisView; onView: (v: AnalysisView) => void; data: AppData; result: MonthResult; current: YearMonth; homeResult: MonthResult
   today: string; year: number; onYear: (y: number) => void; onMonth: (ym: YearMonth) => void; onOpen: (tx: ClassifiedTx) => void
@@ -40,6 +41,7 @@ export function AnalysisScreen({ view, onView, data, result, current, homeResult
                     onOpenMonth={m => { onMonth(m); onView('month'); window.scrollTo(0, 0) }} />
           </Swipe>
         </>}
+        {view === 'calendar' && <CalendarView settings={data.settings} today={today} />}
         {view === 'investments' && <ProGate feature="investments">
           <InvestmentsView settings={data.settings} transactions={data.transactions} today={today} year={year} onYear={onYear} /></ProGate>}
       </div>

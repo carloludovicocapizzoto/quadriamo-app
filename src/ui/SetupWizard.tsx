@@ -15,14 +15,15 @@ import { Icon } from './Icon'
 import { StepHeader, StepNav } from './Steps'
 import { AmountInput } from './kit/AmountInput'
 import { amountText } from './kit/amount'
+import { RecurringList } from './calendar/RecurringList'
 
 // configurazione iniziale: ogni sezione delle Impostazioni è un passaggio, nell'ordine in cui serve
 const STEPS: [SettingsSection, keyof Dict][] = [
   ['general', 'settings.general'], ['rule', 'settings.rule'], ['categories', 'settings.categories'],
-  ['recurring', 'settings.recurring'], ['rules', 'rules.title'], ['fx', 'settings.fx'], ['data', 'settings.data'],
+  ['rules', 'rules.title'], ['fx', 'settings.fx'], ['data', 'settings.data'],
 ]
 
-type Kind = { kind: 'persona' } | { kind: 'notify' } | { kind: 'salary' } | { kind: 'capital' } | { kind: 'settings'; section: SettingsSection; title: keyof Dict } | { kind: 'profile' }
+type Kind = { kind: 'persona' } | { kind: 'notify' } | { kind: 'salary' } | { kind: 'capital' } | { kind: 'recurring' } | { kind: 'settings'; section: SettingsSection; title: keyof Dict } | { kind: 'profile' }
 const isDesktopApp = () => 'quadriamoDesktop' in window || /QuadriamoDesktop\//.test(navigator.userAgent)
 
 /**
@@ -45,6 +46,8 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
     // subito dopo valuta e giorno: lo stipendio, per vedere il proprio numero del giorno prima ancora di registrare una spesa
     ...STEPS.flatMap(([section, title]) => section === 'general'
       ? [{ kind: 'settings', section, title } as Kind, { kind: 'salary' } as Kind, { kind: 'capital' } as Kind]
+      // dopo le categorie, i pagamenti che si ripetono (affitto, bollette, abbonamenti): gli stessi del calendario
+      : section === 'categories' ? [{ kind: 'settings', section, title } as Kind, { kind: 'recurring' } as Kind]
       : [{ kind: 'settings', section, title } as Kind]),
     ...(sync.user ? [{ kind: 'profile' } as Kind] : []),
   ]
@@ -67,6 +70,7 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
   const title = cur.kind === 'persona' ? t('setup.personaTitle') : cur.kind === 'notify' ? t('setup.notifyTitle')
     : cur.kind === 'salary' ? t(student ? 'setup.incomeTitle' : 'setup.salaryTitle')
     : cur.kind === 'capital' ? t('setup.capitalTitle')
+    : cur.kind === 'recurring' ? t('settings.recurring')
     : cur.kind === 'profile' ? t('setup.profile') : t(cur.title)
   return (
     <section className="card wizard">
@@ -75,6 +79,7 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
         {cur.kind === 'persona' && <PersonaStep onPick={() => { window.scrollTo(0, 0); setStep(step + 1) }} />}
         {cur.kind === 'notify' && <NotifyStep />}
         {cur.kind === 'settings' && <SettingsView only={[cur.section]} wizard />}
+        {cur.kind === 'recurring' && <RecurringList />}
         {cur.kind === 'salary' && <SalaryStep />}
         {cur.kind === 'capital' && <CapitalStep />}
         {cur.kind === 'profile' && <ProfileForm withShares={false} onDone={finish} />}
@@ -146,14 +151,16 @@ function SalaryStep() {
   const student = data.settings.persona === 'student'
   const already = data.transactions.find(x => x.category === income && x.date && x.date >= period.start && x.date <= period.end)
   const rentName = t('setup.rentName')
-  const rent = data.settings.recurring.find(x => x.name === rentName && x.category === 'rent')
+  const rent = data.settings.events.find(x => x.id === 'setup-rent')
   const [rentRaw, setRentRaw] = useState(rent ? amountText(rent.amount, lang) : '')
   const saveRent = (v: string) => {
     setRentRaw(v)
     const n = parseAmount(v)
-    const others = data.settings.recurring.filter(x => x !== rent)
-    const recurring = n && n > 0 ? [...others, { name: rentName, amount: n, category: 'rent', day: 1, active: true }] : others
-    dispatch({ type: 'setSettings', settings: { ...data.settings, recurring } })
+    const others = data.settings.events.filter(x => x !== rent)
+    // l'affitto è un evento del calendario: ogni mese dal primo giorno del periodo, prima delle quattro parti
+    const events = n && n > 0 ? [...others, { id: 'setup-rent', kind: 'rent' as const, title: rentName, amount: n, category: 'rent', date: period.start,
+      repeat: { every: 1, unit: 'month' as const }, until: null, done: [], active: true }] : others
+    dispatch({ type: 'setSettings', settings: { ...data.settings, events } })
   }
   const [raw, setRaw] = useState(already?.amount ? amountText(already.amount, lang) : '')
   const amount = parseAmount(raw) ?? 0

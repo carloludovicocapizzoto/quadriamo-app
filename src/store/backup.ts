@@ -6,7 +6,7 @@ import type { AppData } from './types'
 export function parseBackup(text: string): AppData {
   const d = JSON.parse(text)
   const ok = d && d.version === 1 && d.settings && Array.isArray(d.settings.buckets) && d.settings.buckets.length === 4 &&
-    Array.isArray(d.settings.categories) && Array.isArray(d.settings.recurring) && Array.isArray(d.transactions) &&
+    Array.isArray(d.settings.categories) && (Array.isArray(d.settings.events) || Array.isArray(d.settings.recurring)) && Array.isArray(d.transactions) &&
     typeof d.settings.currency === 'string' && d.settings.firstMonth &&
     d.transactions.every((t: Transaction) => typeof t.id === 'string' && typeof t.description === 'string')
   if (!ok) throw new Error('invalid backup')

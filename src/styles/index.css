@@ -6,6 +6,7 @@
 @import './sheet.css';
 @import './features/home.css';
 @import './features/goals.css';
+@import './features/calendar.css';
 @import './features/news.css';
 @import './features/transactions.css';
 @import './features/analysis.css';

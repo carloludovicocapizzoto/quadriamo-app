@@ -21,10 +21,11 @@ import { useEntry } from './entryContext'
 import { SHORTCUTS, useShortcuts } from './shortcuts'
 import { closeFeedback, useFeedbackOpen } from './prompts'
 import { ANALYSIS_VIEWS, navigate, useRoute, type Route } from './router'
-import { toast, useToast } from './toast'
+import { useToast } from './toast'
 import { useModel, ymKey } from './useModel'
 import { SectionBoundary } from './SectionBoundary'
 import { ENV } from '../env'
+import { EventSheet } from '../ui/calendar/EventSheet'
 
 // le pagine meno usate si scaricano solo quando servono
 // le altre sezioni si scaricano a parte; appena il telefono è libero si precaricano, così il primo tocco è immediato
@@ -44,6 +45,7 @@ export function AppShell() {
   const { today, viewed, month, thisMonth, streak } = useModel(data, route)
   useEffect(() => { idle(() => { void loadAnalysis(); void loadNews(); void loadProfile() }) }, [])
   const [keysHelp, setKeysHelp] = useState(false)
+  const [eventOpen, setEventOpen] = useState<string | null>(null)
   const openKeys = useCallback(() => setKeysHelp(true), [])
   useShortcuts(openKeys)
 
@@ -72,7 +74,8 @@ export function AppShell() {
 
   if (!month || !thisMonth || !viewed) return null
   const openTx = (tx: ClassifiedTx | Transaction) => {
-    if ('recurring' in tx && tx.recurring) { toast(t('tx.recurringHint')); return }
+    // un pagamento del calendario (affitto, bolletta…): si apre il suo evento
+    if ('eventId' in tx && tx.eventId) { setEventOpen(tx.eventId); return }
     const orig = data.transactions.find(x => x.id === tx.id)
     if (orig) openComposer({ tx: orig })
   }
@@ -130,6 +133,7 @@ export function AppShell() {
 
       {note && <div key={note.id} className="toast" role="status">{note.text}</div>}
       <StreakCelebration s={streak} />
+      <EventSheet id={eventOpen} onClose={() => setEventOpen(null)} />
       <Sheet open={keysHelp} onClose={() => setKeysHelp(false)} title={t('kb.title')}>
         <ul className="group-list kb-list">{SHORTCUTS.map(([k, label]) => (
           <li key={k}><div className="row"><span className="row-main">{t(label as 'kb.new')}</span><span className="row-value">{k.split(' ').map(x => <kbd key={x}>{x}</kbd>)}</span></div></li>))}</ul>

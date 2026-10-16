@@ -10,6 +10,7 @@ import { SettingsView } from '../settings/SettingsView'
 import { SharedView } from '../shared/SharedView'
 import { CapitalPage } from '../capital/CapitalPage'
 import { Accessibility, Appearance, Delete, HelpCenter, Language, Licenses, Motion, Notifications, Personal, Progress, Security } from './pages'
+import { RecurringList } from '../calendar/RecurringList'
 
 export interface PageProps {
   data: AppData; streak: Streak | null; today: string; badges: Badge[]
@@ -23,7 +24,7 @@ export const PAGES: Record<ProfilePage, (p: PageProps) => ReactNode> = {
   plan: p => <PlanCard onLogin={p.onLogin} />,
   budget: () => <SettingsView only={['general', 'fx', 'rule', 'categories']} />,
   capital: () => <CapitalPage />,
-  recurring: () => <SettingsView only={['recurring']} />,
+  recurring: () => <RecurringList />,
   goals: p => <GoalsStrip goals={p.data.goals} today={p.today} currency={p.data.settings.currency} titled={false} />,
   rules: () => <SettingsView only={['rules']} />,
   shared: p => <ProGate feature="shared"><SharedView onLogin={p.onLogin} /></ProGate>,

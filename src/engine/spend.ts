@@ -19,7 +19,7 @@ export function safeToSpend(r: MonthResult, s: Settings, today: string): SafeToS
   return r.buckets.filter(b => spending.has(b.bucket.id)).map(b => {
     const reserved = r.transactions
       .filter(t => t.upcoming && t.bucket === b.bucket.id)
-      .reduce((a, t) => a + (s.recurring.find(x => x.name === t.description && x.category === t.category)?.amount ?? 0), 0)
+      .reduce((a, t) => a + (t.planned ?? 0), 0)
     const free = b.remaining - reserved
     return { bucketId: b.bucket.id, remaining: b.remaining, reserved, free, daysLeft, perDay: Math.max(0, free) / daysLeft }
   })

@@ -6,7 +6,7 @@ import { PROFILE_PAGES, type ProfilePage } from '../profile/pages'
 export type { ProfilePage }
 
 export type Tab = 'home' | 'news' | 'analysis' | 'profile'
-export type AnalysisView = 'transactions' | 'month' | 'year' | 'investments'
+export type AnalysisView = 'transactions' | 'month' | 'year' | 'calendar' | 'investments'
 
 export type Route =
   | { tab: 'home' }
@@ -15,8 +15,8 @@ export type Route =
   | { tab: 'profile'; page?: ProfilePage }
 
 /** Le viste di Analisi nell'ordine delle schede: prima le letture del mese e dell'anno, i movimenti in fondo. La prima è quella di partenza. */
-export const ANALYSIS_VIEWS: AnalysisView[] = ['month', 'year', 'investments', 'transactions']
-export const ANALYSIS_LABEL: Record<AnalysisView, keyof Dict> = { month: 'ana.month', year: 'ana.year', investments: 'nav.investments', transactions: 'nav.transactions' }
+export const ANALYSIS_VIEWS: AnalysisView[] = ['month', 'year', 'calendar', 'investments', 'transactions']
+export const ANALYSIS_LABEL: Record<AnalysisView, keyof Dict> = { month: 'ana.month', year: 'ana.year', calendar: 'cal.title', investments: 'nav.investments', transactions: 'nav.transactions' }
 
 export function parse(hash: string): Route {
   const [path, query = ''] = hash.replace(/^#\/?/, '').split('?')

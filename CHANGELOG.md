@@ -4,6 +4,14 @@ Una voce per versione, dalla più recente. Il numero tra parentesi nell'app (es.
 cresce a ogni modifica pubblicata, così ogni segnalazione dei tester indica esattamente quale codice stavano usando.
 Come si pubblica una nuova versione: docs/RELEASE.md.
 
+## 0.10.0 — 16 ottobre 2026 · calendario finanziario
+
+- Analisi → Calendario: giorno, settimana, mese e agenda, con quello che esce e quello che entra.
+- Eventi di ogni tipo (affitto, bollette, rate, mutuo, abbonamenti, stipendio, dividendi, cedole, scadenze fiscali, promemoria)
+  che si ripetono ogni mese, ogni 2, 3 o 6 mesi, ogni anno o come vuoi, con una fine (dopo N volte o in una data).
+- I pagamenti ricorrenti sono ora eventi del calendario: stessi conti, nessun dato da reinserire. "Segna come fatto" su ogni scadenza.
+- La Home mostra i pagamenti dei prossimi 30 giorni; toccando un pagamento ricorrente tra i movimenti si apre il suo evento.
+
 ## 0.9.0 — 16 ottobre 2026 · prima beta per i tester
 
 - Configurazione per ambiente (sviluppo, produzione) senza toccare il codice.

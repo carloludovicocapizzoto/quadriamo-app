@@ -84,6 +84,19 @@ await step('Profilo → Capitale: inserisco 2.000 €', async () => {
 }, has('/2\\.000,00/', '.outcome'))
 await step('il capitale compare in Analisi → Investi', () => js(`location.hash = '#/analysis/investments'`), `/2\\.000,00/.test(document.querySelector('.cap-line')?.innerText ?? '')`)
 
+console.log('Calendario')
+await step('Analisi → Calendario: creo una bolletta mensile', async () => {
+  await js(`location.hash = '#/analysis/calendar'`); await sleep(800)
+  await click(byText('/Nuovo evento/'))
+  await sleep(700)
+  await js(`(() => { const set = (el, v) => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })) }
+    const f = document.querySelector('.event-form'); set(f.querySelector('input:not([type])'), 'Luce e gas') })()`)
+  await click(`document.querySelector('.event-form input[inputmode]')`); await js(`document.querySelector('.event-form input[inputmode]').focus()`); await type('45')
+  await click(byText('/Aggiungi al calendario/'))
+}, `/Luce e gas/.test(document.querySelector('.calendar')?.innerText ?? '')`)
+await step('l\'agenda la mostra anche il mese prossimo', () => click(byText('/^Agenda$/')),
+  `(document.querySelector('.calendar')?.innerText.match(/Luce e gas/g) ?? []).length >= 2`)
+
 console.log('Lingua')
 await step('Profilo → Lingua → English: l\'app passa all\'inglese', async () => {
   await js(`location.hash = '#/profile/language'`); await sleep(800)

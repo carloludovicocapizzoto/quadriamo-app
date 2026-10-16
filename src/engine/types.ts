@@ -18,6 +18,7 @@ export interface Category {
   split?: Record<string, number> // entrate divise "a modo mio": quota per bucket (somma 1)
 }
 
+/** Il vecchio "pagamento ricorrente" (fino allo schema 4): si legge ancora da dati e backup di prima, poi diventa un evento. */
 export interface Recurring {
   name: string
   amount: number
@@ -33,7 +34,7 @@ export interface Settings {
   firstMonth: YearMonth             // primo mese tracciato: qui si applicano i saldi iniziali
   buckets: Bucket[]
   categories: Category[]
-  recurring: Recurring[]
+  events: import('./calendar').CalEvent[]   // calendario: pagamenti, entrate, scadenze, promemoria (engine/calendar)
   fxRates: Record<string, number>   // 1 unità della valuta = rate unità della tua valuta (automatici, BCE)
   fxManual?: Record<string, number> // cambi scritti a mano: hanno la precedenza su quelli automatici
   fxDate?: string                   // data dei cambi automatici
@@ -73,8 +74,10 @@ export interface ClassifiedTx extends Transaction {
   type: TxType | null               // null = senza categoria
   bucket: string | null             // id bucket, SPLIT per le entrate divise, null se non determinabile
   amountIn: number | null           // importo nella valuta dell'utente; null se manca il cambio o l'importo
-  recurring?: boolean
-  upcoming?: boolean                // ricorrente del mese non ancora arrivato al suo giorno
+  recurring?: boolean               // viene da un evento del calendario (affitto, bolletta, rata…)
+  upcoming?: boolean                // non ancora arrivato al suo giorno: l'importo non conta ancora
+  planned?: number                  // l'importo previsto dall'evento (anche quando è ancora in arrivo)
+  eventId?: string                  // l'evento del calendario da cui viene
 }
 
 export type CheckKind =
