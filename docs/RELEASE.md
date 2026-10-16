@@ -2,6 +2,9 @@
 
 ## I tre ambienti
 
+> Dal 16 ottobre 2026 si usa **un solo backend** (la produzione, con il flag `tester` acceso) finché chi usa l'app sono i tester.
+> La beta separata qui sotto è pronta: si riattiva con un progetto Supabase dedicato e le variabili `BETA_*`.
+
 | | Sviluppo | Beta | Produzione |
 |---|---|---|---|
 | Comando | `npm run dev` | `npm run build:beta` | `npm run build` |
@@ -25,7 +28,7 @@ hanno il prefisso `beta:` (`storageKey` in `src/env.ts`, e `public/push-sw.js` p
 ### Feature flag
 
 `VITE_FLAGS` nei file `.env.<ambiente>`, separati da virgola. Oggi:
-- `tester` — strumenti per chi prova la beta (segnalazioni con allegati e diagnostica).
+- `tester` — strumenti per chi prova l'app (segnalazioni con allegati e diagnostica). Oggi acceso in tutti gli ambienti.
 
 ## Versioni
 
