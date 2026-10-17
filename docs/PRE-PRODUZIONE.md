@@ -1,6 +1,6 @@
 # Checklist di pre-produzione · app per i tester
 
-Stato al 17 ottobre 2026, versione 0.13.0. ✅ pronto · 🟡 pronto, manca un passo di Carlo · 🔧 da sviluppare · ⚠️ rischio
+Stato al 17 ottobre 2026, versione 0.20.0. ✅ pronto · 🟡 pronto, manca un passo di Carlo · 🔧 da sviluppare · ⚠️ rischio
 
 ## 1. Ambienti e configurazione
 
@@ -30,12 +30,28 @@ Stato al 17 ottobre 2026, versione 0.13.0. ✅ pronto · 🟡 pronto, manca un p
 - ✅ Centro notifiche (Profilo): le notifiche arrivate restano sul telefono (ultime 100), con ricerca, filtri e azioni.
 - ✅ Versamenti verso un obiettivo o il fondo di emergenza, PAC dal piano in Investimenti, scadenze degli obiettivi nel calendario.
 - ✅ Proposte "Sembrano ricorrenti" dai movimenti: nulla si aggiunge senza conferma.
-- 🔧 Informativa privacy: aggiungere che, per i promemoria, il server conserva l'ora e il nome dell'evento (non gli importi)
-  fino a 7 giorni dopo l'invio. Oggi dice solo che non riceve importi.
+- ✅ Informativa privacy aggiornata (17/10, italiano e inglese): promemoria con ora e nome dell'evento sul server (mai importi),
+  cancellati entro 7 giorni; documenti senza scansioni; centro notifiche solo sul telefono.
 - ⚠️ Centro notifiche e proposte scartate valgono per il singolo telefono (non si sincronizzano tra dispositivi).
 - ⚠️ I promemoria arrivano solo con l'account e dopo che il telefono è stato online almeno una volta dopo l'ultima modifica
   (è lui a calcolarli e a mandarli al server). Su iPhone le notifiche funzionano solo con l'app aggiunta alla schermata Home.
 - ⚠️ Le proposte dai movimenti sono provate su dati di esempio: con dati veri vanno osservate nelle prime settimane dei tester.
+
+## 2c. Calendario 2.0, abbonamenti, documenti, «Adesso», ricevuta, widget (0.14.0 – 0.20.0)
+
+- ✅ Calendario 2.0: riepilogo del mese (previsione di fine mese, già pagato, da pagare), un colore per tipo, giorni più pesanti, timeline.
+  «In ritardo» solo per le scadenze seguite «finché non è fatto»: i pagamenti automatici contano come pagati dal loro giorno.
+- ✅ Abbonamenti: catalogo di 80 servizi con monogrammi nostri (nessun logo di marchi), ricerca, metodo di pagamento (solo
+  un'etichetta), storico dei prezzi con gli aumenti. Nessun prezzo di listino nel catalogo (cambiano spesso).
+- ✅ Costo annuale (treemap) con «Prova senza»: è una simulazione, non cancella nulla.
+- ✅ Documenti con scadenza, promemoria e rinnovi: solo nome, categoria e date.
+- ✅ «Adesso» in Home: solo regole calcolate sul telefono; le anomalie guardano solo le spese variabili.
+- ✅ Ricevuta del mese: immagine e PDF creati sul telefono, condivisione con il menu del sistema.
+- ✅ Widget nuovi (mese in miniatura, abbonamenti, documenti) e preferiti in cima.
+- ✅ Centro assistenza aggiornato nelle 4 lingue (11 domande nuove; risposta sulle rate corretta).
+- ⚠️ Prestazioni della Home con «Adesso» (calcola il confronto con i mesi precedenti) non ancora rimisurate sul telefono medio:
+  da rifare con lo stesso metodo della sezione 9 prima dei tester.
+- ⚠️ Widget sulla schermata Home del telefono e del computer: non disponibili (servono le app native). La comunicazione non li promette.
 
 ## 3. Errori e diagnostica
 
@@ -64,7 +80,8 @@ Stato al 17 ottobre 2026, versione 0.13.0. ✅ pronto · 🟡 pronto, manca un p
 - ✅ L'app installata controlla la versione nuova ogni volta che torna in primo piano e ogni ora; si aggiorna al ritorno e mostra "Aggiornata alla versione …".
 - ✅ Versione (package.json) + build (numero di commit) + commit, visibili nel Profilo e salvati con errori, statistiche e segnalazioni.
 - ✅ CHANGELOG.md e docs/RELEASE.md.
-- ✅ Prima di ogni pubblicazione: 193 test automatici (motore, database su Postgres, interfaccia) e 25 passi di prova dell'app vera nel browser.
+- ✅ Prima di ogni pubblicazione: 211 test automatici (motore, database su Postgres, interfaccia) e 32 passi di prova dell'app vera
+  nel browser (dal 17/10 anche abbonamenti, aumento di prezzo, costo annuale, documenti, «Adesso», ricevuta e centro assistenza).
 - ✅ L'APK Android non va reinstallato per le novità: solo se cambiano nome, icona o indirizzo.
 - ✅ Corretto: aprire l'app usa la pagina salvata con il codice della stessa versione (prima la cache di GitHub Pages poteva
   ripresentare la pagina vecchia per 10 minuti, e senza rete l'app si apriva solo finché quella cache durava). Ora si apre
@@ -122,6 +139,13 @@ Stato al 17 ottobre 2026, versione 0.13.0. ✅ pronto · 🟡 pronto, manca un p
 4. Prezzo Pro e scheda per la partita IVA.
 5. Guscio nativo per iOS (Capacitor) quando si apre l'Apple Developer Program.
 
+## 12. Comunicazione
+
+- ✅ Sito aggiornato in 4 lingue (titolo «Cosa conta oggi, per i tuoi soldi.», funzioni nuove, «Fatto bene», FAQ da 10, schermate nuove).
+- ✅ Campagna rifatta sull'app 0.20 (`marketing/`, copia sul Desktop in «1 Da pubblicare/Campagna»), con le regole su cosa non dire
+  (niente «AI», niente loghi dei servizi, niente widget fuori dall'app): `marketing/BRIEF.md` §12.
+- 🔧 Newsletter ed email marketing: scritte, si inviano quando ci sono dominio e servizio di invio.
+
 ## Cosa deve fare Carlo, in ordine
 
 1. ✅ Copia di sicurezza della chiave Android. ✅ Passi 18, 20 e 21 in produzione. ✅ Segreti Android e APK. ✅ assetlinks.json (repository del CV, provvisorio).
@@ -130,3 +154,4 @@ Stato al 17 ottobre 2026, versione 0.13.0. ✅ pronto · 🟡 pronto, manca un p
 4. Eliminare dal pannello di Supabase il progetto `quadriamo-beta` (vuoto) e la vecchia funzione `new-ingest`.
 5. Facoltativo: mail per ogni segnalazione (passo 19, account gratuito Resend).
 6. Dare un'email vera per il titolare del trattamento (`public/owner.js`), anche provvisoria in attesa del dominio.
+7. Facoltativo: scegliere il titolo del sito (oggi «Cosa conta oggi, per i tuoi soldi.»; alternative in `marketing/campagna/10-landing.md`).
