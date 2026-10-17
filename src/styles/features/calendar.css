@@ -77,3 +77,9 @@
 .nc-more { flex-shrink: 0; color: var(--muted); }
 .nc-foot { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); margin-top: var(--s3); }
 .nc-actions > p { margin: 0 0 var(--s2); }
+
+/* Proposte dai movimenti: in fondo al calendario, due azioni testuali sotto ogni riga */
+.cal-suggest { margin-top: var(--s5); }
+.sug-actions { display: flex; gap: var(--s4); margin-top: var(--s1); }
+.sug-actions .link-btn { min-height: 32px; padding: 0; }
+.sug-actions .link-btn.muted { color: var(--muted); font-weight: 400; }

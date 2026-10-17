@@ -4,6 +4,15 @@ Una voce per versione, dalla più recente. Il numero tra parentesi nell'app (es.
 cresce a ogni modifica pubblicata, così ogni segnalazione dei tester indica esattamente quale codice stavano usando.
 Come si pubblica una nuova versione: docs/RELEASE.md.
 
+## 0.13.0 — 17 ottobre 2026 · proposte dai movimenti
+
+- Calendario → «Sembrano ricorrenti»: Quadriamo trova nei tuoi movimenti quello che torna ogni mese (bollette, abbonamenti,
+  stipendio, paghetta, versamenti nel PAC) e lo propone, al massimo tre alla volta. «Aggiungi al calendario» apre il modulo
+  già compilato; «No» la scarta per sempre. Niente si aggiunge senza di te.
+- Solo regole, nessuna AI: stessa descrizione e categoria in almeno 3 mesi degli ultimi 6, una volta al mese, a circa un mese
+  di distanza, con importi simili (identici per svago e cibo, così l'aperitivo non diventa una scadenza), l'ultima da non più
+  di 45 giorni, e non già nel calendario.
+
 ## 0.12.0 — 17 ottobre 2026 · centro notifiche e collegamenti
 
 - Profilo → Centro notifiche: le notifiche arrivate restano sul telefono (le ultime 100), con ricerca e filtri

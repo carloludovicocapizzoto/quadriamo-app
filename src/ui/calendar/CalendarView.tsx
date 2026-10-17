@@ -14,6 +14,7 @@ import { tap } from '../kit/motion'
 import { Sheet } from '../kit/Sheet'
 import { EventDetail } from './EventDetail'
 import { EventForm } from './EventForm'
+import { Suggestions } from './Suggestions'
 import { blankEvent, useEvents } from './useEvents'
 
 type Mode = 'day' | 'week' | 'month' | 'agenda'
@@ -95,6 +96,7 @@ export function CalendarView({ settings, today }: { settings: Settings; today: s
 
   if (!events.length) return <>
     <Empty title={t('cal.emptyTitle')} text={t('cal.emptyText')} action={{ label: t('cal.add'), onClick: () => setEdit(blankEvent(today)) }} />
+    <Suggestions today={today} onAdd={setEdit} />
     <Sheet open={!!edit} onClose={() => setEdit(null)} title={t('cal.add')}>
       {edit && <EventForm event={edit} settings={settings} today={today} onSave={e => { save(e); setEdit(null) }} />}
     </Sheet>
@@ -146,6 +148,7 @@ export function CalendarView({ settings, today }: { settings: Settings; today: s
         </section>
       )) : items.length ? <ul className="group-list cal-list">{items.map(x => row(x, true))}</ul> : <p className="muted small cal-none">{t('cal.nothingAgenda', { n: AGENDA_DAYS })}</p>}
 
+      <Suggestions today={today} onAdd={setEdit} />
       <button className="link-btn cal-add" onClick={() => { tap(); setEdit(blankEvent(mode === 'agenda' ? today : day)) }}>+ {t('cal.add')}</button>
 
       <Sheet open={!!open} onClose={() => setOpen(null)}>
