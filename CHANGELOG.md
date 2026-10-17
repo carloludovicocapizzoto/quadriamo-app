@@ -4,6 +4,16 @@ Una voce per versione, dalla più recente. Il numero tra parentesi nell'app (es.
 cresce a ogni modifica pubblicata, così ogni segnalazione dei tester indica esattamente quale codice stavano usando.
 Come si pubblica una nuova versione: docs/RELEASE.md.
 
+## 0.18.0 — 17 ottobre 2026 · Adesso
+
+- Home → «Adesso», sotto il numero del giorno: risponde a "cosa devo fare oggi?". Un titolo (quante cose chiedono
+  un'azione, oppure "niente di urgente"), le prime tre voci e le altre a richiesta.
+- Cosa può comparire, in ordine di urgenza: pagamenti da seguire scaduti (con «Fatto»), i pagamenti di oggi, documenti
+  scaduti o in scadenza, il mese che a questo ritmo finisce sotto zero, il prossimo pagamento, un abbonamento aumentato,
+  una categoria molto sopra il solito (solo spese variabili), la prossima entrata, la sera le spese non ancora segnate,
+  un obiettivo in scadenza e indietro. Ogni voce porta dove serve.
+- Solo regole, calcolate sul telefono.
+
 ## 0.17.0 — 17 ottobre 2026 · documenti
 
 - Profilo → Documenti: carta d'identità, patente, assicurazioni, contratti… divisi per categoria (personali, auto, casa,

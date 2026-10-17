@@ -162,3 +162,28 @@ kbd { display: inline-block; min-width: 22px; padding: 2px 6px; margin-left: 4px
   box-shadow: inset 0 0 0 .5px var(--glass-line); }
 .mono.long { font-size: calc(var(--mono-size, 40px) * .3); }
 .mono.plain { font-weight: 600; color: var(--muted); }
+
+/* Home → Adesso (ui/home/Now): titolo che risponde a "cosa devo fare oggi?", poi poche righe; le altre si aprono
+   con un'espansione naturale (righe della griglia da 0 a 1fr, a molla) */
+.now { display: grid; gap: var(--s2); margin: var(--s2) 0 var(--s4); }
+.now-eyebrow { margin: 0; font-size: var(--t-cap); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.now-head { margin: 0 0 var(--s1); font-size: var(--t-h2); font-weight: 600; letter-spacing: -.01em; line-height: 1.25; }
+.now-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.now-list > li { animation: fade-up var(--d-spring) var(--spring-gentle) both; }
+.now-list > li + li .now-row { border-top: 1px solid var(--line); }
+.now-row { display: flex; align-items: center; gap: var(--s3); padding: 10px 0; cursor: pointer; border-radius: var(--r-md); outline-offset: 2px; }
+.now-row:active { transform: scale(.99); transition: transform var(--d-fast) var(--ease); }
+.now-main { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.now-main > span { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.now-main small { font-size: var(--t-sm); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.now-end { flex-shrink: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.now-ico { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 9px; background: var(--fill); color: var(--text); }
+.now-ico.warn { background: var(--warn-bg); color: var(--warn); }
+.now-ico.bad { background: var(--bad-bg); color: var(--bad); }
+.now-act { min-height: 32px; padding: 0 12px; border: 0; border-radius: var(--r-full); background: var(--accent); color: var(--on-accent);
+  font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.now-more { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--d-spring) var(--spring-gentle); }
+.now-more > ul { overflow: hidden; }
+.now-more.open { grid-template-rows: 1fr; }
+.now-more > ul > li:first-child .now-row { border-top: 1px solid var(--line); }
+.now-toggle { justify-self: start; min-height: 32px; padding: 0; font-size: 14px; }

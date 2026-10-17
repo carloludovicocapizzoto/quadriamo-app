@@ -15,6 +15,7 @@ import { useStore } from '../../store/context'
 import { Widget } from './widgets'
 import { SIDE, shown, sizeOf, type WidgetId } from './catalog'
 import { WidgetGallery } from './WidgetGallery'
+import { Now } from './Now'
 import { useMedia } from '../kit/useMedia'
 
 /**
@@ -90,6 +91,9 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
         <Money className="hero-amount" value={left} currency={cur} />
         <p className="hero-sub">{daysLeft > 1 ? t('home.heroSub', { n: daysLeft }) : t('home.heroLast')}</p>
       </section>}
+
+      {/* Adesso: cosa conta oggi, prima dei widget */}
+      <Now data={data} r={r} today={today} hasPlan={hasPlan} onLog={() => onAdd('expense')} />
 
       {/* i widget scelti, in ordine; quelli del mese compaiono quando ci sono le entrate */}
       {/* la griglia sceglie quante colonne in base allo spazio (telefono 1, tablet 2, computer 3-4);
