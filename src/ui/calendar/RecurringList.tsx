@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { KIND_SIDE, daysBetween, nextOccurrence, presetOf, recentIncrease, remainingCount, todayIso, yearlyCost, type CalEvent } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
+import { navigate } from '../../app/router'
 import { useStore } from '../../store/context'
 import { Icon } from '../Icon'
 import { Monogram } from '../kit/Monogram'
@@ -44,6 +45,7 @@ export function RecurringList() {
       <p className="cs-label">{t('sub.yearTotal')}</p>
       <Money className="cs-hero" value={yearly} currency={cur} />
       <p className="muted small">{subs.length === 1 ? t('sub.yearLineOne', { month: money(yearly / 12, cur) }) : t('sub.yearLine', { month: money(yearly / 12, cur), n: subs.length })}</p>
+      <button className="link-btn" onClick={() => { tap(); navigate({ tab: 'profile', page: 'yearCost' }) }}>{t('yc.open')} →</button>
     </section>}
 
     <section className="group">

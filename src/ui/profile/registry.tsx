@@ -11,6 +11,7 @@ import { SharedView } from '../shared/SharedView'
 import { CapitalPage } from '../capital/CapitalPage'
 import { Accessibility, Appearance, Delete, HelpCenter, Language, Licenses, Motion, Personal, Progress, Security } from './pages'
 import { RecurringList } from '../calendar/RecurringList'
+import { YearCost } from '../subs/YearCost'
 import { InboxPage } from '../notify/InboxPage'
 import { NotificationsPage } from '../notify/NotificationsPage'
 
@@ -27,6 +28,7 @@ export const PAGES: Record<ProfilePage, (p: PageProps) => ReactNode> = {
   budget: () => <SettingsView only={['general', 'fx', 'rule', 'categories']} />,
   capital: () => <CapitalPage />,
   recurring: () => <RecurringList />,
+  yearCost: p => <YearCost onAdd={() => p.onPage('recurring')} />,
   goals: p => <GoalsStrip goals={p.data.goals} today={p.today} currency={p.data.settings.currency} titled={false} />,
   rules: () => <SettingsView only={['rules']} />,
   shared: p => <ProGate feature="shared"><SharedView onLogin={p.onLogin} /></ProGate>,

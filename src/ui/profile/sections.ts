@@ -39,6 +39,7 @@ export const SECTIONS: { title: keyof Dict; items: Item[] }[] = [
     { page: 'budget', label: 'prof.budget' },
     { page: 'capital', label: 'prof.capital' },
     { page: 'recurring', label: 'prof.recurring' },
+    { page: 'yearCost', label: 'yc.title', when: () => false },   // si apre da Abbonamenti
     { page: 'goals', label: 'prof.goalsPage' },
     { page: 'rules', label: 'prof.rules' },
     { page: 'shared', label: 'prof.shared' },

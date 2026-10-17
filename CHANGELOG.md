@@ -4,6 +4,14 @@ Una voce per versione, dalla più recente. Il numero tra parentesi nell'app (es.
 cresce a ogni modifica pubblicata, così ogni segnalazione dei tester indica esattamente quale codice stavano usando.
 Come si pubblica una nuova versione: docs/RELEASE.md.
 
+## 0.16.0 — 17 ottobre 2026 · costo annuale
+
+- Profilo → Abbonamenti → Costo annuale: ogni abbonamento è un blocco grande quanto costa in un anno (treemap squarified,
+  disegnata da noi), tinto nel colore del servizio.
+- Toccando un blocco: al mese, in un anno, categoria, ripetizione, storico degli aumenti con la percentuale.
+- «Prova senza»: il blocco esce, gli altri si ridispongono con una molla e in cima compare quanto risparmieresti in un anno.
+  Si possono provare più abbonamenti insieme e rimetterli con un tocco. È solo una simulazione.
+
 ## 0.15.0 — 17 ottobre 2026 · abbonamenti
 
 - Profilo → Abbonamenti e ricorrenti: in cima quanto costano gli abbonamenti in un anno (e al mese), poi ognuno con il suo
