@@ -40,6 +40,28 @@ export interface CalEvent {
   reminders?: Reminder[]             // quando avvisare (engine/reminders)
   nag?: boolean                      // ripeti ogni giorno finché non è segnato come fatto
   goalId?: string | null             // versamento (kind 'saving') verso un obiettivo: "fatto" lo aggiunge all'obiettivo; senza = fondo di emergenza
+  service?: string | null            // abbonamento dal catalogo (content/services): monogramma e categoria
+  method?: string | null             // come si paga (solo un'etichetta: carta, conto, PayPal…)
+  prices?: PriceChange[]             // storico dei prezzi: ogni volta che l'importo cambia
+}
+
+/** Come si paga: solo un'etichetta per ricordarselo (nessun collegamento alla banca). */
+export const PAY_METHODS = ['card', 'account', 'paypal', 'applepay', 'googlepay', 'satispay', 'cash'] as const
+
+export interface PriceChange { date: string; from: number; to: number }
+
+/** Quante volte in un anno si ripete (0 se una volta sola). */
+export function timesPerYear(r: Repeat | null): number {
+  if (!r) return 0
+  return r.unit === 'day' ? 365 / r.every : r.unit === 'week' ? 52 / r.every : r.unit === 'month' ? 12 / r.every : 1 / r.every
+}
+/** Quanto costa in un anno, al prezzo di oggi. */
+export const yearlyCost = (e: Pick<CalEvent, 'amount' | 'repeat'>) => Math.round((e.amount ?? 0) * timesPerYear(e.repeat) * 100) / 100
+
+/** L'evento salvato con lo storico del prezzo aggiornato, se l'importo è cambiato rispetto a prima (al massimo 24 cambi). */
+export function withPriceChange(prev: CalEvent | undefined, next: CalEvent, today: string): CalEvent {
+  if (!prev || prev.amount == null || next.amount == null || prev.amount === next.amount) return next
+  return { ...next, prices: [...(next.prices ?? prev.prices ?? []), { date: today, from: prev.amount, to: next.amount }].slice(-24) }
 }
 
 export const presetOf = (r: Repeat | null): RepeatPreset | 'once' | 'custom' => {
@@ -169,4 +191,10 @@ export function periodSummary(items: { date: string; event: CalEvent; done: bool
   s.heavy = Object.entries(s.load).filter(([, v]) => v >= s.out * 0.15).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([d]) => d)
   for (const k of ['income', 'out', 'paid', 'toPay', 'overdue'] as const) s[k] = r2(s[k])
   return s
+}
+
+/** L'ultimo aumento di prezzo dell'ultimo anno, in percentuale (null se non ce ne sono). */
+export function recentIncrease(e: Pick<CalEvent, 'prices'>, today: string): number | null {
+  const last = [...(e.prices ?? [])].reverse().find(p => daysBetween(p.date, today) <= 365)
+  return last && last.to > last.from && last.from > 0 ? Math.round((last.to / last.from - 1) * 100) : null
 }

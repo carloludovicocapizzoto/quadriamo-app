@@ -1,44 +1,92 @@
-// Profilo → Pagamenti ricorrenti (e il passaggio della configurazione iniziale): gli eventi del calendario che si ripetono
-// e fanno uscire soldi, con la prossima data e le rate che restano. Sono gli stessi del calendario, visti dal lato delle spese fisse.
+// Profilo → Abbonamenti e ricorrenti (e il passaggio della configurazione iniziale): gli eventi del calendario che si
+// ripetono e fanno uscire soldi. In cima gli abbonamenti, con quanto costano in un anno, il rinnovo, come li paghi e gli
+// aumenti di prezzo; sotto gli altri pagamenti fissi (affitto, rate, bollette). Sono gli stessi eventi del calendario.
 import { useState } from 'react'
-import { KIND_SIDE, nextOccurrence, presetOf, remainingCount, todayIso, type CalEvent } from '../../engine'
+import { KIND_SIDE, daysBetween, nextOccurrence, presetOf, recentIncrease, remainingCount, todayIso, yearlyCost, type CalEvent } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import { useStore } from '../../store/context'
 import { Icon } from '../Icon'
+import { Monogram } from '../kit/Monogram'
 import { Money } from '../kit/Money'
 import { tap } from '../kit/motion'
 import { Sheet } from '../kit/Sheet'
+import { ServicePicker } from '../subs/ServicePicker'
 import { EventForm } from './EventForm'
 import { blankEvent, useEvents } from './useEvents'
 
 const k = (s: string) => s as keyof Dict
 
 export function RecurringList() {
-  const { t, date } = useI18n()
+  const { t, date, money } = useI18n()
   const { state } = useStore()
   const settings = state.data!.settings
+  const cur = settings.currency
   const { events, save, remove } = useEvents()
   const [edit, setEdit] = useState<CalEvent | null>(null)
+  const [picking, setPicking] = useState(false)
   const today = todayIso()
-  const list = events.filter(e => e.repeat && KIND_SIDE[e.kind] === 'out')
-    .map(e => ({ e, next: nextOccurrence(e, today), left: remainingCount(e, today) }))
+  const withNext = (list: CalEvent[]) => list.map(e => ({ e, next: nextOccurrence(e, today), left: remainingCount(e, today) }))
     .sort((a, b) => (a.next ?? '9').localeCompare(b.next ?? '9'))
+  const subs = withNext(events.filter(e => e.kind === 'subscription' && e.repeat))
+  const others = withNext(events.filter(e => e.kind !== 'subscription' && e.repeat && KIND_SIDE[e.kind] === 'out'))
+  const yearly = subs.filter(x => x.e.active && x.next).reduce((a, x) => a + yearlyCost(x.e), 0)
   const isNew = edit && !events.some(e => e.id === edit.id)
+  const when = (next: string | null) => {
+    if (!next) return t('rec.ended')
+    const n = daysBetween(today, next)
+    return n === 0 ? t('sub.renewToday') : n === 1 ? t('sub.renewTomorrow') : n <= 7 ? t('sub.renewIn', { n }) : t('rec.next', { date: date(next, { day: 'numeric', month: 'short' }) })
+  }
+  const cycle = (e: CalEvent) => t(k(`rp.${presetOf(e.repeat)}`))
+
   return <>
-    <p className="muted small">{t('rec.hint')}</p>
-    {list.length > 0 && <ul className="group-list">{list.map(({ e, next, left }) => (
-      <li key={e.id}><button className={`row${e.active ? '' : ' muted'}`} onClick={() => { tap(); setEdit(e) }}>
-        <span className="row-main"><span>{e.title}</span>
-          <small>{t(k(`rp.${presetOf(e.repeat)}`))}{next ? ` · ${t('rec.next', { date: date(next, { day: 'numeric', month: 'short' }) })}` : ` · ${t('rec.ended')}`}{left != null && left > 0 ? ` · ${t('ev.left', { n: left })}` : ''}</small></span>
-        {e.amount != null && <span className="row-value"><Money value={e.amount} currency={settings.currency} /></span>}
-        <Icon name="chevron" size={18} className="row-chev" />
-      </button></li>))}
-    </ul>}
-    <button className="link-btn" onClick={() => { tap(); setEdit(blankEvent(today)) }}>+ {t('rec.add')}</button>
-    <Sheet open={!!edit} onClose={() => setEdit(null)} title={isNew ? t('rec.add') : t('ev.edit')}>
-      {edit && <EventForm event={edit} settings={settings} today={today} onSave={e => { save(e); setEdit(null) }}
-        onDelete={isNew ? undefined : () => { remove(edit.id); setEdit(null) }} />}
+    {subs.length > 0 && <section className="subs-head">
+      <p className="cs-label">{t('sub.yearTotal')}</p>
+      <Money className="cs-hero" value={yearly} currency={cur} />
+      <p className="muted small">{subs.length === 1 ? t('sub.yearLineOne', { month: money(yearly / 12, cur) }) : t('sub.yearLine', { month: money(yearly / 12, cur), n: subs.length })}</p>
+    </section>}
+
+    <section className="group">
+      <h2 className="group-title">{t('sub.title')}</h2>
+      {subs.length > 0 ? <ul className="group-list subs-list">{subs.map(({ e, next }) => {
+        const up = recentIncrease(e, today)
+        return <li key={e.id}><button className={`row${e.active ? '' : ' muted'}`} onClick={() => { tap(); setEdit(e) }}>
+          <Monogram service={e.service} name={e.title} size={38} />
+          <span className="row-main"><span>{e.title}</span>
+            <small>{[cycle(e), when(next), e.method ? t(k(`pm.${e.method}`)) : null].filter(Boolean).join(' · ')}</small></span>
+          <span className="row-value subs-price">{e.amount != null && <Money value={e.amount} currency={cur} />}
+            {up != null && <small className="subs-up">+{up}%</small>}</span>
+          <Icon name="chevron" size={18} className="row-chev" />
+        </button></li>
+      })}</ul> : <p className="muted small">{t('sub.empty')}</p>}
+      <button className="link-btn" onClick={() => { tap(); setPicking(true) }}>+ {t('sub.add')}</button>
+    </section>
+
+    <section className="group">
+      <h2 className="group-title">{t('rec.others')}</h2>
+      <p className="muted small">{t('rec.hint')}</p>
+      {others.length > 0 && <ul className="group-list">{others.map(({ e, next, left }) => (
+        <li key={e.id}><button className={`row${e.active ? '' : ' muted'}`} onClick={() => { tap(); setEdit(e) }}>
+          <span className="row-main"><span>{e.title}</span>
+            <small>{cycle(e)}{next ? ` · ${t('rec.next', { date: date(next, { day: 'numeric', month: 'short' }) })}` : ` · ${t('rec.ended')}`}{left != null && left > 0 ? ` · ${t('ev.left', { n: left })}` : ''}</small></span>
+          {e.amount != null && <span className="row-value"><Money value={e.amount} currency={cur} /></span>}
+          <Icon name="chevron" size={18} className="row-chev" />
+        </button></li>))}
+      </ul>}
+      <button className="link-btn" onClick={() => { tap(); setEdit(blankEvent(today)) }}>+ {t('rec.add')}</button>
+    </section>
+
+    <Sheet open={picking} onClose={() => setPicking(false)} title={t('sub.add')}>
+      {picking && <ServicePicker onPick={(s, name) => {
+        setPicking(false)
+        setEdit(blankEvent(today, { kind: 'subscription', title: name.slice(0, 60), service: s?.id ?? null, category: 'fixedCosts',
+          repeat: s?.yearly ? { every: 1, unit: 'year' } : { every: 1, unit: 'month' } }))
+      }} />}
+    </Sheet>
+    <Sheet open={!!edit} onClose={() => setEdit(null)} title={isNew ? (edit?.kind === 'subscription' ? t('sub.add') : t('rec.add')) : t('ev.edit')}>
+      {edit && <EventForm event={edit} settings={settings} today={today} focusAmount={!!isNew && !!edit.title}
+        onSave={e => { save(e); setEdit(null) }} onDelete={isNew ? undefined : () => { remove(edit.id); setEdit(null) }} />}
     </Sheet>
   </>
 }
+

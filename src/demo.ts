@@ -34,7 +34,10 @@ export function demoAppData(today: string, lang = 'it'): AppData {
     { name: tx.phone, amount: 7.99, category: 'fixedCosts', day: 5, active: true },
     { name: tx.music, amount: 5.99, category: 'fixedCosts', day: 18, active: true },
   ]
-  const settings = applyPersona(defaultSettings({ firstMonth: months[0], recurring }), 'student')
+  const base = applyPersona(defaultSettings({ firstMonth: months[0], recurring }), 'student')
+  // la musica e il telefono sono abbonamenti: monogramma, rinnovo e costo annuale (Profilo → Abbonamenti e ricorrenti)
+  const settings = { ...base, events: base.events.map(e => e.title === tx.music ? { ...e, kind: 'subscription' as const, service: 'spotify', method: 'card' }
+    : e.title === tx.phone ? { ...e, kind: 'subscription' as const, service: 'iliad', method: 'card' } : e) }
   settings.buckets.forEach((b, i) => { b.startingBalance = [20, 0, 60, 0][i] })
 
   const rows: [number, string, string, number][] = [

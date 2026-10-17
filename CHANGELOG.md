@@ -4,6 +4,16 @@ Una voce per versione, dalla più recente. Il numero tra parentesi nell'app (es.
 cresce a ogni modifica pubblicata, così ogni segnalazione dei tester indica esattamente quale codice stavano usando.
 Come si pubblica una nuova versione: docs/RELEASE.md.
 
+## 0.15.0 — 17 ottobre 2026 · abbonamenti
+
+- Profilo → Abbonamenti e ricorrenti: in cima quanto costano gli abbonamenti in un anno (e al mese), poi ognuno con il suo
+  monogramma, la ripetizione, quando si rinnova, come lo paghi e gli aumenti di prezzo dell'ultimo anno; sotto gli altri pagamenti fissi.
+- Aggiungere un abbonamento: catalogo di 80 servizi (video, musica, cloud, app, giornali, giochi, sport, telefono, formazione)
+  con ricerca istantanea e categorie, poi il modulo già compilato con il cursore sul prezzo. Monogrammi disegnati da noi,
+  nessun logo di marchi. Nel calendario, scrivendo il nome di un abbonamento arrivano i servizi suggeriti.
+- Come lo paghi (carta, conto, PayPal, Apple Pay, Google Pay, Satispay, contanti): solo un'etichetta, nessun collegamento alla banca.
+- Storico dei prezzi: ogni cambio d'importo resta nell'evento; nel dettaglio il cambio e quanto costa in un anno.
+
 ## 0.14.0 — 17 ottobre 2026 · calendario 2.0
 
 - In cima al mese, su una superficie in vetro: quanto resta a fine mese (previsione), la linea di quanto è già pagato,

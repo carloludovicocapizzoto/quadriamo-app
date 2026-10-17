@@ -154,3 +154,11 @@ kbd { display: inline-block; min-width: 22px; padding: 2px 6px; margin-left: 4px
 .glass-card { position: relative; padding: var(--s5); border-radius: var(--r-lg); border: .5px solid var(--glass-line);
   background: color-mix(in srgb, var(--bg-a, var(--bg)) 62%, transparent);
   -webkit-backdrop-filter: saturate(170%) blur(22px); backdrop-filter: saturate(170%) blur(22px); }
+
+/* Monogramma di un servizio (kit/Monogram): la sigla nel colore del marchio, niente loghi */
+.mono { display: inline-grid; place-items: center; flex-shrink: 0; width: var(--mono-size, 40px); height: var(--mono-size, 40px);
+  border-radius: calc(var(--mono-size, 40px) * .26); background: var(--mono-bg, var(--fill-2)); color: var(--mono-fg, var(--text));
+  font-weight: 700; font-size: calc(var(--mono-size, 40px) * .42); letter-spacing: -.03em; line-height: 1; user-select: none;
+  box-shadow: inset 0 0 0 .5px var(--glass-line); }
+.mono.long { font-size: calc(var(--mono-size, 40px) * .3); }
+.mono.plain { font-weight: 600; color: var(--muted); }

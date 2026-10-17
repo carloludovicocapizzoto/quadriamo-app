@@ -1,8 +1,9 @@
 // Nuovo evento o modifica: tipo, nome, importo e categoria (per i pagamenti che entrano nel budget), prima data,
 // ripetizione (le più comuni con un nome, oppure "ogni N giorni/settimane/mesi/anni") e fine (mai, dopo N volte, in una data).
-import { useState } from 'react'
+// Per gli abbonamenti: mentre scrivi il nome arrivano i servizi del catalogo (monogramma e ripetizione giusta), e come lo paghi.
+import { useEffect, useRef, useState } from 'react'
 import {
-  EVENT_KINDS, KIND_SIDE, REMINDER_DAYS, REMINDER_HOURS, REPEAT_PRESETS, presetOf, remainingCount, untilAfterCount,
+  EVENT_KINDS, KIND_SIDE, PAY_METHODS, REMINDER_DAYS, REMINDER_HOURS, REPEAT_PRESETS, presetOf, remainingCount, untilAfterCount,
   type CalEvent, type EventKind, type Reminder, type Repeat, type RepeatPreset,
 } from '../../engine'
 import { useI18n } from '../../i18n/core'
@@ -13,6 +14,8 @@ import { tap } from '../kit/motion'
 import { categoryName } from '../names'
 import { askNotifications } from '../notify/ask'
 import { useStore } from '../../store/context'
+import { searchServices, serviceById } from '../../content/services'
+import { Monogram } from '../kit/Monogram'
 import type { Settings } from '../../engine'
 
 const k = (s: string) => s as keyof Dict
@@ -22,8 +25,8 @@ const KIND_CATEGORY: Partial<Record<EventKind, string>> = { rent: 'rent', bill: 
   saving: 'safetyFundSaving', pac: 'investmentsSaving' }
 
 
-export function EventForm({ event, settings, today, onSave, onDelete }: {
-  event: CalEvent; settings: Settings; today: string; onSave: (e: CalEvent) => void; onDelete?: () => void
+export function EventForm({ event, settings, today, focusAmount, onSave, onDelete }: {
+  event: CalEvent; settings: Settings; today: string; focusAmount?: boolean; onSave: (e: CalEvent) => void; onDelete?: () => void
 }) {
   const { t, lang } = useI18n()
   const [e, setE] = useState(event)
@@ -38,6 +41,17 @@ export function EventForm({ event, settings, today, onSave, onDelete }: {
   const { state } = useStore()
   const goals = (state.data?.goals ?? []).filter(g => !g.removed)
   const pacMonthly = state.data?.investments?.pac.monthly ?? 0
+  // dal catalogo si arriva col nome già scelto: si scrive subito il prezzo (dopo l'apertura del foglio, che prende il focus)
+  const root = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!focusAmount) return
+    const id = setTimeout(() => root.current?.querySelector<HTMLInputElement>('input[inputmode=decimal]')?.focus({ preventScroll: true }), 450)
+    return () => clearTimeout(id)
+  }, [focusAmount])
+  // il tipo scelto resta visibile nella riga dei tipi, che scorre di lato
+  useEffect(() => { root.current?.querySelector('.ev-kinds .chip.on')?.scrollIntoView({ inline: 'center', block: 'nearest' }) }, [])
+  // suggerimenti dal catalogo: solo per un abbonamento non ancora collegato a un servizio, mentre scrivi il nome
+  const hints = e.kind === 'subscription' && !e.service && e.title.trim().length >= 2 ? searchServices(e.title, null, 4) : []
 
   const pickKind = (kind: EventKind) => {
     tap()
@@ -69,13 +83,14 @@ export function EventForm({ event, settings, today, onSave, onDelete }: {
       : end === 'count' ? untilAfterCount(e, Math.max(1, Number(count) || 1)) : e.until && e.until >= e.date ? e.until : null
     const reminders = (e.reminders ?? []).filter(r => !('hours' in r) || e.time)
     onSave({ ...e, title: e.title.trim().slice(0, 60), amount: value && value > 0 ? value : null,
-      category: side === 'out' ? e.category : null, goalId: e.kind === 'saving' && e.goalId ? e.goalId : undefined, until, reminders, nag: reminders.length > 0 && !!e.nag })
+      category: side === 'out' ? e.category : null, goalId: e.kind === 'saving' && e.goalId ? e.goalId : undefined,
+      method: side === 'out' && e.method ? e.method : undefined, until, reminders, nag: reminders.length > 0 && !!e.nag })
     // il primo promemoria è il momento giusto per chiedere le notifiche (mai al primo avvio)
     if (reminders.length) askNotifications()
   }
 
   return (
-    <div className="event-form">
+    <div className="event-form" ref={root}>
       <div className="chips ev-kinds" role="radiogroup" aria-label={t('ev.kind')}>
         {EVENT_KINDS.map(kind => <button key={kind} type="button" role="radio" aria-checked={e.kind === kind}
           className={`chip${e.kind === kind ? ' on' : ''}`} onClick={() => pickKind(kind)}>{t(k(`ev.kind.${kind}`))}</button>)}
@@ -83,7 +98,14 @@ export function EventForm({ event, settings, today, onSave, onDelete }: {
 
       <div className="txs-rows">
         <label className="txs-row"><span>{t('ev.title')}</span>
-          <input value={e.title} maxLength={60} placeholder={t(k(`ev.ph.${e.kind}`))} onChange={x => set({ title: x.target.value })} /></label>
+          <span className="ev-name"><input value={e.title} maxLength={60} placeholder={t(k(`ev.ph.${e.kind}`))}
+              onChange={x => set({ title: x.target.value, ...(e.service && x.target.value !== serviceById(e.service)?.name ? { service: null } : {}) })} />
+            {e.service && <Monogram service={e.service} name={e.title} size={28} />}</span></label>
+        {hints.length > 0 && <div className="ev-hints" role="listbox" aria-label={t('sub.search')}>
+          {hints.map(h => <button key={h.id} type="button" role="option" aria-selected="false" className="ev-hint"
+            onClick={() => { tap(); set({ title: h.name, service: h.id, repeat: h.yearly ? { every: 1, unit: 'year' } : e.repeat ?? { every: 1, unit: 'month' } }); setPreset(h.yearly ? 'yearly' : presetOf(e.repeat ?? { every: 1, unit: 'month' })) }}>
+            <Monogram service={h.id} name={h.name} size={24} /><span>{h.name}</span></button>)}
+        </div>}
         {side !== 'none' && <label className="txs-row"><span>{t('ev.amount')}</span>
           <AmountInput value={amount} onChange={setAmount} placeholder={t('ev.optional')} aria-label={t('ev.amount')} /></label>}
         {side === 'out' && <label className="txs-row"><span>{t('ev.category')}</span>
@@ -101,6 +123,13 @@ export function EventForm({ event, settings, today, onSave, onDelete }: {
       </div>
       {side === 'out' && <p className="small muted">{e.category ? t('ev.inBudgetHint') : t('ev.noBudgetHint')}
         {e.kind === 'saving' && e.goalId ? ` ${t('ev.goalHint')}` : e.kind === 'pac' && pacMonthly > 0 ? ` ${t('ev.pacHint')}` : ''}</p>}
+      {side === 'out' && <>
+        <p className="small fb-q"><b>{t('pm.title')}</b></p>
+        <div className="chips" role="radiogroup" aria-label={t('pm.title')}>
+          {PAY_METHODS.map(m => <button key={m} type="button" role="radio" aria-checked={e.method === m} className={`chip${e.method === m ? ' on' : ''}`}
+            onClick={() => { tap(); set({ method: e.method === m ? null : m }) }}>{t(k(`pm.${m}`))}</button>)}
+        </div>
+      </>}
 
       <p className="small fb-q"><b>{t('ev.repeat')}</b></p>
       <div className="chips" role="radiogroup" aria-label={t('ev.repeat')}>

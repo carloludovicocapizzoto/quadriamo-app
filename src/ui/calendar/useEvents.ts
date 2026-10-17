@@ -1,6 +1,6 @@
 // Gli eventi del calendario stanno nelle impostazioni (settings.events): qui le operazioni che li cambiano.
 // Ogni modifica passa da setSettings, quindi si salva e si sincronizza come il resto delle impostazioni.
-import { goalContributionId, type CalEvent } from '../../engine'
+import { goalContributionId, todayIso, withPriceChange, type CalEvent } from '../../engine'
 import { useStore } from '../../store/context'
 import { newId } from '../../store/state'
 
@@ -10,7 +10,12 @@ export function useEvents() {
   const set = (events: CalEvent[]) => dispatch({ type: 'setSettings', settings: { ...settings, events } })
   return {
     events: settings.events,
-    save: (e: CalEvent) => set(settings.events.some(x => x.id === e.id) ? settings.events.map(x => x.id === e.id ? e : x) : [...settings.events, e]),
+    // un nuovo prezzo resta nello storico (Costo annuale, dettaglio dell'abbonamento)
+    save: (e: CalEvent) => {
+      const prev = settings.events.find(x => x.id === e.id)
+      const next = withPriceChange(prev, e, todayIso())
+      set(prev ? settings.events.map(x => x.id === e.id ? next : x) : [...settings.events, next])
+    },
     remove: (id: string) => set(settings.events.filter(e => e.id !== id)),
     /** Segna (o toglie) come fatta una volta dell'evento. Un versamento verso un obiettivo aggiunge (o toglie) la cifra all'obiettivo. */
     toggleDone: (id: string, date: string) => {

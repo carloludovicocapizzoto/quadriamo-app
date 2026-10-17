@@ -1,5 +1,5 @@
 // Il dettaglio di una voce del calendario: quando, quanto, come si ripete, quante ne restano; "Fatto" e "Modifica".
-import { KIND_SIDE, nextOccurrence, presetOf, remainingCount, type CalEvent } from '../../engine'
+import { KIND_SIDE, nextOccurrence, presetOf, remainingCount, yearlyCost, type CalEvent } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import { Icon } from '../Icon'
@@ -12,7 +12,7 @@ const k = (s: string) => s as keyof Dict
 export function EventDetail({ event, date: day, currency, today, onToggle, onEdit }: {
   event: CalEvent; date: string; currency: string; today: string; onToggle: () => void; onEdit: () => void
 }) {
-  const { t, date } = useI18n()
+  const { t, date, money } = useI18n()
   const done = event.done.includes(day)
   const side = KIND_SIDE[event.kind]
   const preset = presetOf(event.repeat)
@@ -20,6 +20,8 @@ export function EventDetail({ event, date: day, currency, today, onToggle, onEdi
   const next = event.repeat ? nextOccurrence(event, day > today ? day : today) : null
   const left = remainingCount(event, today)
   const goals = useStore().state.data?.goals
+  const lastPrice = event.prices?.[event.prices.length - 1]
+  const yearly = yearlyCost(event)
   const goal = event.kind === 'saving' ? goals?.find(g => g.id === event.goalId && !g.removed) : undefined
   return (
     <div className="event-detail">
@@ -32,6 +34,9 @@ export function EventDetail({ event, date: day, currency, today, onToggle, onEdi
         {event.kind === 'saving' && <li><span>{t('ev.goal')}</span><b>{goal?.name ?? t('ev.goalEmergency')}</b></li>}
         {next && next !== day && <li><span>{t('ev.nextTime')}</span><b>{date(next, { day: 'numeric', month: 'long' })}</b></li>}
         {left != null && <li><span>{t('ev.leftLabel')}</span><b>{left}</b></li>}
+        {event.method && <li><span>{t('pm.title')}</span><b>{t(k(`pm.${event.method}`))}</b></li>}
+        {lastPrice && <li><span>{t('ev.priceChange')}</span><b>{money(lastPrice.from, currency)} → {money(lastPrice.to, currency)} · {date(lastPrice.date, { day: 'numeric', month: 'short', year: 'numeric' })}</b></li>}
+        {event.kind === 'subscription' && yearly > 0 && <li><span>{t('ev.yearly')}</span><b>{money(yearly, currency)}</b></li>}
         {side === 'out' && <li><span>{t('ev.budget')}</span><b>{event.category ? t('ev.inBudget') : t('ev.noBudget')}</b></li>}
       </ul>
       <button className={`btn wide${done ? '' : ' primary'}`} onClick={() => { tap(); onToggle() }}>

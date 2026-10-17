@@ -6,6 +6,7 @@ import { GOAL_EVENT, KIND_SIDE, parseDate, presetOf, toneOf, type CalEvent } fro
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import { Icon } from '../Icon'
+import { Monogram } from '../kit/Monogram'
 import { Money } from '../kit/Money'
 import { tap } from '../kit/motion'
 
@@ -41,7 +42,7 @@ export function Timeline({ days, byDay, today, selected, currency, compactEmpty,
               return (
                 <li key={x.event.id + x.date}>
                   <button className={`tl-row tone-${toneOf(x.event.kind)}${x.done ? ' done' : ''}`} onClick={() => { tap(); onOpen(x) }}>
-                    <span className="tl-dot" aria-hidden="true" />
+                    {x.event.service ? <Monogram service={x.event.service} name={x.event.title} size={26} /> : <span className="tl-dot" aria-hidden="true" />}
                     <span className="tl-main"><span>{x.event.title}</span>
                       <small>{late && <b className="tl-late">{t('cal.overdue')}</b>}
                         {[kind === x.event.title ? null : kind, repeatLabel(x.event), x.done ? t('ev.done') : null].filter(Boolean).join(' · ')}</small></span>

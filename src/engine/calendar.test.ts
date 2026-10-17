@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GOAL_EVENT, agenda, periodSummary, toneOf, budgetEvents, goalContributionId, goalEvents, nextOccurrence, occurrences, presetOf, remainingCount, untilAfterCount, type CalEvent } from './calendar'
+import { GOAL_EVENT, agenda, recentIncrease, timesPerYear, withPriceChange, yearlyCost, periodSummary, toneOf, budgetEvents, goalContributionId, goalEvents, nextOccurrence, occurrences, presetOf, remainingCount, untilAfterCount, type CalEvent } from './calendar'
 import { defaultSettings } from './defaults'
 
 const ev = (over: Partial<CalEvent>): CalEvent => ({
@@ -76,5 +76,22 @@ describe('riepilogo del mese nel calendario', () => {
     expect(s).toMatchObject({ income: 1500, out: 590, paid: 430, toPay: 160, overdue: 60, heavy: ['2026-10-01', '2026-10-20'] })
     expect(s.load['2026-10-10']).toBe(60)
     expect([rent, pac, pay, note].map(e => toneOf(e.kind))).toEqual(['out', 'save', 'in', 'note'])
+  })
+})
+
+describe('abbonamenti: costo annuale e storico dei prezzi', () => {
+  it('costo in un anno per ogni ripetizione', () => {
+    expect(yearlyCost({ amount: 10, repeat: { every: 1, unit: 'month' } })).toBe(120)
+    expect(yearlyCost({ amount: 60, repeat: { every: 1, unit: 'year' } })).toBe(60)
+    expect(yearlyCost({ amount: 30, repeat: { every: 3, unit: 'month' } })).toBe(120)
+    expect(timesPerYear(null)).toBe(0)
+  })
+  it('un cambio di prezzo finisce nello storico; lo stesso prezzo no', () => {
+    const a = ev({ id: 'n', kind: 'subscription', title: 'Netflix', amount: 12.99 })
+    const b = withPriceChange(a, { ...a, amount: 17.99 }, '2026-10-11')
+    expect(b.prices).toEqual([{ date: '2026-10-11', from: 12.99, to: 17.99 }])
+    expect(withPriceChange(b, { ...b, title: 'Netflix Standard' }, '2026-10-12').prices).toHaveLength(1)
+    expect(recentIncrease(b, '2026-10-17')).toBe(38)
+    expect(recentIncrease(b, '2027-11-01')).toBeNull()
   })
 })

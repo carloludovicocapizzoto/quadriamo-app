@@ -129,3 +129,33 @@
 .sug-actions { display: flex; gap: var(--s4); margin-top: var(--s1); }
 .sug-actions .link-btn { min-height: 32px; padding: 0; }
 .sug-actions .link-btn.muted { color: var(--muted); font-weight: 400; }
+
+/* Abbonamenti: quanto costano in un anno in cima, poi righe con il monogramma; gli aumenti di prezzo in ambra */
+.subs-head { display: grid; gap: 2px; margin: var(--s2) 0 var(--s4); }
+.subs-head .muted { margin: 0; }
+.subs-list .row { gap: var(--s3); }
+.subs-price { display: grid; justify-items: end; gap: 1px; }
+.subs-up { font-size: var(--t-cap); font-weight: 600; color: var(--warn); }
+.tl-row .mono { margin: 0 -3px; }
+
+/* Scelta del servizio: ricerca, categorie che scorrono, i più usati in griglia come icone di app */
+.sp { display: grid; gap: var(--s3); align-content: start; min-height: 62vh; }
+.sp .news-search { margin: 0; }
+.sp-cats { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--s5)); padding: 0 var(--s5); }
+.sp-cats::-webkit-scrollbar { display: none; }
+.sp-cats .chip { flex-shrink: 0; }
+.sp-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s4) var(--s2); }
+.sp-grid li { animation: fade-up var(--d-spring) var(--spring-gentle) both; }
+.sp-grid button { display: grid; justify-items: center; gap: 6px; width: 100%; padding: 4px 0; border: 0; background: none; color: var(--text);
+  font: inherit; font-size: 12px; text-align: center; cursor: pointer; }
+.sp-grid button span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-grid button:active .mono { transform: scale(.92); transition: transform var(--d-fast) var(--ease); }
+.sp-list .row { gap: var(--s3); }
+
+/* nel modulo: il monogramma accanto al nome e i servizi suggeriti mentre scrivi */
+.ev-name { display: flex; align-items: center; gap: var(--s2); flex: 1; min-width: 0; justify-content: flex-end; }
+.ev-name input { min-width: 0; }
+.ev-hints { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: calc(-1 * var(--s1)); }
+.ev-hint { display: inline-flex; align-items: center; gap: var(--s2); min-height: 36px; padding: 4px 12px 4px 6px; border: 0;
+  border-radius: var(--r-md); background: var(--fill); color: var(--text); font: inherit; font-size: 14px; cursor: pointer;
+  animation: fade-up var(--d-base) var(--ease) both; }
