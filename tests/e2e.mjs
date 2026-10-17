@@ -106,6 +106,50 @@ await step('Profilo → Centro notifiche: una notifica arrivata si archivia', as
   await click(byText('/^Archivia$/', '.bs-body button'))
 }, `!document.querySelector('.nc-list') && ${has('/Nessuna notifica/')}`)
 
+console.log('Abbonamenti, documenti, ricevuta')
+// imposta il valore di un campo come lo farebbe React (evento input), poi lo conferma (change)
+const setField = (sel, v) => js(`(() => { const el = document.querySelector('${sel}'); if (!el) return false
+  Object.getOwnPropertyDescriptor(el.constructor.prototype, 'value').set.call(el, ${JSON.stringify(v)})
+  el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); return true })()`)
+const inDays = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10)
+await step('Profilo → Abbonamenti: aggiungo Netflix dal catalogo', async () => {
+  await js(`location.hash = '#/profile/recurring'`); await sleep(800)
+  await click(byText('/Aggiungi abbonamento/')); await sleep(700)
+  await setField('.sp input[type=search]', 'net'); await sleep(400)
+  await click(`document.querySelector('.sp-list .row')`); await sleep(900)
+  await js(`document.querySelector('.event-form input[inputmode=decimal]').focus()`); await type('12,99')
+  await setField('.event-form input[type=date]', inDays(5))   // non oggi: «Oggi» in Home resta quello che hai speso
+  await click(byText('/Aggiungi al calendario/', '.event-form button'))
+}, `/Netflix/.test(document.querySelector('.subs-list')?.innerText ?? '') && /12,99/.test(document.querySelector('.subs-list')?.innerText ?? '')`)
+await step('cambiando il prezzo, l\'aumento resta nello storico', async () => {
+  await sleep(600)
+  await click(`[...document.querySelectorAll('.subs-list .row')].find(r => /Netflix/.test(r.textContent))`); await sleep(900)
+  await setField('.event-form input[inputmode=decimal]', '17,99'); await sleep(200)
+  await click(byText('/^Salva$/', '.event-form button'))
+}, `/[+]38%/.test(document.querySelector('.subs-list')?.innerText ?? '')`)
+await step('Costo annuale: «Prova senza» mostra quanto risparmieresti', async () => {
+  await js(`location.hash = '#/profile/yearCost'`); await sleep(1000)
+  await click(`document.querySelector('.yc-tile')`); await sleep(900)
+  await click(byText('/Prova senza/', '.bs-body button'))
+}, `!!document.querySelector('.yc-saved')`)
+await step('Profilo → Documenti: la patente scade tra 20 giorni', async () => {
+  await js(`location.hash = '#/profile/documents'`); await sleep(800)
+  await click(byText('/Aggiungi documento/')); await sleep(700)
+  await click(byText('/^Auto$/', '.event-form [role=radio]'))
+  await click(byText('/^Patente$/', '.doc-preset'))
+  await setField('.event-form input[type=date]', inDays(20))
+  await click(byText('/^Aggiungi documento$/', '.event-form button'))
+}, has('/Tra 20 giorni/'))
+await step('Home → «Adesso» ricorda la patente', () => js(`location.hash = '#/'`), `/Patente/.test(document.querySelector('.now')?.innerText ?? '')`)
+await step('Analisi → Mese → Ricevuta del mese', async () => {
+  await js(`location.hash = '#/analysis/month'`); await sleep(1000)
+  await click(byText('/Ricevuta del mese/'))
+}, `/RESTA PER ORA/.test(document.querySelector('.rc-paper')?.innerText ?? '')`)
+await step('Centro assistenza: le risposte sulle funzioni nuove', async () => {
+  await js(`document.querySelector('.bs-root.open')?.click()`); await sleep(500)
+  await js(`location.hash = '#/profile/help'`)
+}, has('/Cos.è «Adesso»[?]/'))
+
 console.log('Lingua')
 await step('Profilo → Lingua → English: l\'app passa all\'inglese', async () => {
   await js(`location.hash = '#/profile/language'`); await sleep(800)

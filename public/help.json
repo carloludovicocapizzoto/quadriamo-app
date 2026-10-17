@@ -46,7 +46,61 @@
      },
      {
       "q": "Come registro una rata o un finanziamento?",
-      "a": "In Profilo → Spese ricorrenti aggiungi la rata con importo, giorno e quante rate mancano. Dopo l'ultima smette da sola di contare."
+      "a": "In Profilo → Abbonamenti e ricorrenti tocca «Aggiungi un pagamento», scegli il tipo Rata, l'importo e la prima data, poi in Fine «Dopo un numero di volte» e quante rate mancano. Dopo l'ultima smette da sola di contare, e la trovi anche nel calendario."
+     }
+    ]
+   },
+   {
+    "title": "Oggi e calendario",
+    "items": [
+     {
+      "q": "Cos'è «Adesso»?",
+      "a": "La parte della Home sotto il numero del giorno: ti dice cosa conta oggi, in ordine di urgenza. Un pagamento da segnare come fatto, i pagamenti di oggi, un documento in scadenza, il prossimo pagamento, un abbonamento aumentato, una categoria sopra il solito. Lo calcola il telefono, con regole semplici; toccando una voce vai dove serve."
+     },
+     {
+      "q": "Come aggiungo affitto, bollette o stipendio al calendario?",
+      "a": "In Analisi → Calendario tocca «Nuovo evento», scegli il tipo (affitto, bolletta, rata, stipendio…), il nome, l'importo e la data. Scegli quando si ripete (ogni mese, ogni 2, 3 o 6 mesi, ogni anno) e, se serve, quando finisce. Con un importo e una categoria, il pagamento entra nel budget dal suo giorno."
+     },
+     {
+      "q": "Come funzionano i promemoria?",
+      "a": "Nell'evento scegli quando avvisarti: 30, 14, 7, 3 o 1 giorno prima, il giorno stesso, qualche ora prima o a un orario preciso. Per le cose che rimandi c'è «Ricordamelo ogni giorno finché non è fatto». In Profilo → Notifiche scegli l'orario, le ore di silenzio, i giorni attivi e un massimo al giorno. Gli importi li aggiunge il telefono: al server arrivano solo l'ora e il nome."
+     },
+     {
+      "q": "Cosa vuol dire «in ritardo»?",
+      "a": "Compare solo per le scadenze che segui «finché non è fatto» e che non hai ancora segnato. I pagamenti normali contano come pagati dal loro giorno, come nel budget. Quando paghi, tocca «Fatto» in «Adesso» o «Segna come fatto» nell'evento."
+     },
+     {
+      "q": "Cosa sono le proposte «Sembrano ricorrenti»?",
+      "a": "In fondo al calendario Quadriamo propone le spese che tornano ogni mese nei tuoi movimenti (stessa descrizione, importo simile). Con «Aggiungi al calendario» si apre il modulo già compilato; con «No» la proposta sparisce. Niente si aggiunge senza di te."
+     },
+     {
+      "q": "Posso partire dai risparmi che ho già?",
+      "a": "Sì: in Profilo → Capitale inserisci i risparmi e li dividi per uso (fondo di emergenza, liquidità, da far crescere, solo grandi acquisti…), ognuno con la sua regola. Restano separati dal budget del mese: vedi quanto è protetto e quanto puoi usare."
+     }
+    ]
+   },
+   {
+    "title": "Abbonamenti, documenti e ricevuta",
+    "items": [
+     {
+      "q": "Come aggiungo un abbonamento?",
+      "a": "In Profilo → Abbonamenti e ricorrenti tocca «Aggiungi abbonamento»: cerca il servizio tra 80 (o scrivi il nome se non c'è), poi il prezzo, la ripetizione e come lo paghi. Se cambi il prezzo, Quadriamo tiene lo storico e ti mostra gli aumenti."
+     },
+     {
+      "q": "Cos'è il costo annuale?",
+      "a": "In Abbonamenti e ricorrenti tocca «Vedi il costo annuale»: ogni abbonamento è un blocco grande quanto costa in un anno. Toccando un blocco vedi i dettagli e con «Prova senza» quanto risparmieresti. È solo una simulazione: niente viene cancellato."
+     },
+     {
+      "q": "Come aggiungo un documento in scadenza?",
+      "a": "In Profilo → Documenti tocca «Aggiungi documento», scegli la categoria, il nome e la scadenza. Ti avvisa 30 e 7 giorni prima (puoi cambiarlo). Quando rinnovi, tocca «Rinnovato» e scrivi la nuova data. Solo nome e date: nessuna scansione."
+     },
+     {
+      "q": "Cos'è la ricevuta del mese?",
+      "a": "In Analisi → Mese tocca «Ricevuta del mese»: il riepilogo del mese come uno scontrino, con le categorie, il confronto col mese prima e qualche curiosità. Puoi condividerla, salvarla come immagine o come PDF. La crea il tuo telefono."
+     },
+     {
+      "q": "Come personalizzo la Home?",
+      "a": "In fondo alla Home tocca «Personalizza la Home»: aggiungi o togli i widget, scegli la taglia (S, M, L), trascinali per cambiare l'ordine e tocca la stella per tenere un widget sempre in cima."
      }
     ]
    },
@@ -84,7 +138,7 @@
      },
      {
       "q": "Le notifiche non arrivano.",
-      "a": "Attivale in Profilo → Notifiche. Su iPhone servono iOS 16.4 o successivo e l'app installata nella schermata Home."
+      "a": "Attivale in Profilo → Notifiche. Su iPhone servono iOS 16.4 o successivo e l'app installata nella schermata Home. Le notifiche arrivate restano in Profilo → Centro notifiche."
      }
     ]
    }
@@ -135,7 +189,61 @@
      },
      {
       "q": "How do I record an instalment or a loan?",
-      "a": "In Profile → Recurring expenses add the instalment with amount, day and how many are left. After the last one it stops counting by itself."
+      "a": "In Profile → Subscriptions and recurring tap “Add a payment”, choose the Loan payment type, the amount and the first date, then under Ends pick “After a number of times” and how many payments are left. After the last one it stops counting by itself, and you also find it in the calendar."
+     }
+    ]
+   },
+   {
+    "title": "Today and calendar",
+    "items": [
+     {
+      "q": "What is “Now”?",
+      "a": "The part of Home below the daily number: it tells you what matters today, in order of urgency. A payment to mark as done, today's payments, a document about to expire, the next payment, a subscription that went up, a category above usual. Your phone works it out with simple rules; tap an item to go where it matters."
+     },
+     {
+      "q": "How do I add rent, bills or salary to the calendar?",
+      "a": "In Insights → Calendar tap “New event”, choose the type (rent, bill, loan payment, salary…), the name, the amount and the date. Choose how it repeats (every month, every 2, 3 or 6 months, every year) and, if needed, when it ends. With an amount and a category, the payment counts in the budget from its day."
+     },
+     {
+      "q": "How do reminders work?",
+      "a": "In the event choose when to be reminded: 30, 14, 7, 3 or 1 day before, on the day, a few hours before or at an exact time. For things you put off there is “Remind me every day until it’s done”. In Profile → Notifications choose the time, quiet hours, active days and a daily maximum. Your phone adds the amounts: the server only gets the time and the name."
+     },
+     {
+      "q": "What does “overdue” mean?",
+      "a": "It only appears for due dates you follow “until it’s done” and haven't marked yet. Regular payments count as paid from their day, as in the budget. When you pay, tap “Done” in “Now” or “Mark as done” in the event."
+     },
+     {
+      "q": "What are the “Looks like it repeats” suggestions?",
+      "a": "At the bottom of the calendar Quadriamo suggests expenses that come back every month in your transactions (same description, similar amount). “Add to calendar” opens the form already filled in; “No” hides the suggestion. Nothing is added without you."
+     },
+     {
+      "q": "Can I start from the savings I already have?",
+      "a": "Yes: in Profile → Capital enter your savings and split them by purpose (emergency fund, cash, to grow, big purchases only…), each with its own rule. They stay apart from the monthly budget: you see how much is protected and how much you can use."
+     }
+    ]
+   },
+   {
+    "title": "Subscriptions, documents and receipt",
+    "items": [
+     {
+      "q": "How do I add a subscription?",
+      "a": "In Profile → Subscriptions and recurring tap “Add subscription”: search among 80 services (or type the name if it isn't there), then the price, how often and how you pay. If you change the price, Quadriamo keeps the history and shows you increases."
+     },
+     {
+      "q": "What is the annual cost?",
+      "a": "In Subscriptions and recurring tap “See the annual cost”: each subscription is a block as big as what it costs in a year. Tap a block for details and “Try without it” to see how much you would save. It is only a simulation: nothing is cancelled."
+     },
+     {
+      "q": "How do I add a document that expires?",
+      "a": "In Profile → Documents tap “Add document”, choose the category, the name and the expiry date. It reminds you 30 and 7 days before (you can change it). When you renew, tap “Renewed” and enter the new date. Only names and dates: no scans."
+     },
+     {
+      "q": "What is the monthly receipt?",
+      "a": "In Insights → Month tap “Monthly receipt”: your month summed up as a receipt, with categories, the comparison with last month and a few facts. Share it or save it as an image or PDF. Your phone creates it."
+     },
+     {
+      "q": "How do I customise Home?",
+      "a": "At the bottom of Home tap “Customize Home”: add or remove widgets, choose the size (S, M, L), drag them to reorder and tap the star to keep a widget always at the top."
      }
     ]
    },
@@ -173,7 +281,7 @@
      },
      {
       "q": "Notifications don't arrive.",
-      "a": "Turn them on in Profile → Notifications. On iPhone you need iOS 16.4 or later and the app installed on the Home Screen."
+      "a": "Turn them on in Profile → Notifications. On iPhone you need iOS 16.4 or later and the app installed on the Home Screen. Notifications you receive stay in Profile → Notification center."
      }
     ]
    }
@@ -224,7 +332,61 @@
      },
      {
       "q": "¿Cómo registro una cuota o un préstamo?",
-      "a": "En Perfil → Gastos recurrentes añade la cuota con importe, día y cuántas quedan. Después de la última deja de contar sola."
+      "a": "En Perfil → Suscripciones y recurrentes toca «Añadir un pago», elige el tipo Cuota, el importe y la primera fecha, y en Fin «Tras un número de veces» con las cuotas que faltan. Después de la última deja de contar sola, y también la encuentras en el calendario."
+     }
+    ]
+   },
+   {
+    "title": "Hoy y calendario",
+    "items": [
+     {
+      "q": "¿Qué es «Ahora»?",
+      "a": "La parte del inicio bajo el número del día: te dice lo que importa hoy, por orden de urgencia. Un pago por marcar como hecho, los pagos de hoy, un documento que vence, el próximo pago, una suscripción que ha subido, una categoría por encima de lo habitual. Lo calcula tu teléfono con reglas sencillas; toca un elemento para ir donde hace falta."
+     },
+     {
+      "q": "¿Cómo añado alquiler, facturas o sueldo al calendario?",
+      "a": "En Análisis → Calendario toca «Nuevo evento», elige el tipo (alquiler, factura, cuota, sueldo…), el nombre, el importe y la fecha. Elige cuándo se repite (cada mes, cada 2, 3 o 6 meses, cada año) y, si hace falta, cuándo termina. Con un importe y una categoría, el pago cuenta en el presupuesto desde su día."
+     },
+     {
+      "q": "¿Cómo funcionan los recordatorios?",
+      "a": "En el evento elige cuándo avisarte: 30, 14, 7, 3 o 1 día antes, el mismo día, unas horas antes o a una hora exacta. Para lo que vas dejando está «Recuérdamelo cada día hasta que esté hecho». En Perfil → Notificaciones elige la hora, las horas de silencio, los días activos y un máximo al día. Los importes los añade el teléfono: al servidor solo llegan la hora y el nombre."
+     },
+     {
+      "q": "¿Qué significa «con retraso»?",
+      "a": "Solo aparece en los vencimientos que sigues «hasta que esté hecho» y aún no has marcado. Los pagos normales cuentan como pagados desde su día, como en el presupuesto. Cuando pagues, toca «Hecho» en «Ahora» o «Marcar como hecho» en el evento."
+     },
+     {
+      "q": "¿Qué son las sugerencias «Parece que se repite»?",
+      "a": "Al final del calendario Quadriamo propone los gastos que vuelven cada mes en tus movimientos (misma descripción, importe parecido). «Añadir al calendario» abre el formulario ya rellenado; «No» oculta la sugerencia. Nada se añade sin ti."
+     },
+     {
+      "q": "¿Puedo empezar con los ahorros que ya tengo?",
+      "a": "Sí: en Perfil → Capital introduce tus ahorros y divídelos por uso (fondo de emergencia, liquidez, para hacer crecer, solo grandes compras…), cada uno con su regla. Se quedan separados del presupuesto del mes: ves cuánto está protegido y cuánto puedes usar."
+     }
+    ]
+   },
+   {
+    "title": "Suscripciones, documentos y recibo",
+    "items": [
+     {
+      "q": "¿Cómo añado una suscripción?",
+      "a": "En Perfil → Suscripciones y recurrentes toca «Añadir suscripción»: busca entre 80 servicios (o escribe el nombre si no está), luego el precio, cada cuánto y cómo lo pagas. Si cambias el precio, Quadriamo guarda el historial y te muestra las subidas."
+     },
+     {
+      "q": "¿Qué es el coste anual?",
+      "a": "En Suscripciones y recurrentes toca «Ver el coste anual»: cada suscripción es un bloque tan grande como lo que cuesta en un año. Toca un bloque para ver los detalles y «Probar sin ella» para saber cuánto ahorrarías. Es solo una simulación: no se cancela nada."
+     },
+     {
+      "q": "¿Cómo añado un documento que vence?",
+      "a": "En Perfil → Documentos toca «Añadir documento», elige la categoría, el nombre y el vencimiento. Te avisa 30 y 7 días antes (puedes cambiarlo). Cuando lo renueves, toca «Renovado» y escribe la nueva fecha. Solo nombre y fechas: sin escaneos."
+     },
+     {
+      "q": "¿Qué es el recibo del mes?",
+      "a": "En Análisis → Mes toca «Recibo del mes»: el resumen del mes como un recibo, con las categorías, la comparación con el mes anterior y algunas curiosidades. Compártelo o guárdalo como imagen o PDF. Lo crea tu teléfono."
+     },
+     {
+      "q": "¿Cómo personalizo el inicio?",
+      "a": "Al final del inicio toca «Personalizar el inicio»: añade o quita widgets, elige el tamaño (S, M, L), arrástralos para cambiar el orden y toca la estrella para tener un widget siempre arriba."
      }
     ]
    },
@@ -262,7 +424,7 @@
      },
      {
       "q": "No llegan las notificaciones.",
-      "a": "Actívalas en Perfil → Notificaciones. En iPhone necesitas iOS 16.4 o posterior y la app instalada en la pantalla de inicio."
+      "a": "Actívalas en Perfil → Notificaciones. En iPhone necesitas iOS 16.4 o posterior y la app instalada en la pantalla de inicio. Las notificaciones recibidas se quedan en Perfil → Centro de notificaciones."
      }
     ]
    }
@@ -313,7 +475,61 @@
      },
      {
       "q": "Comment enregistrer une mensualité ou un prêt ?",
-      "a": "Dans Profil → Dépenses récurrentes, ajoutez la mensualité avec montant, jour et nombre restant. Après la dernière, elle cesse de compter toute seule."
+      "a": "Dans Profil → Abonnements et récurrents, touchez « Ajouter un paiement », choisissez le type Mensualité, le montant et la première date, puis dans Fin « Après un nombre de fois » et le nombre de mensualités restantes. Après la dernière, elle cesse de compter toute seule, et vous la retrouvez aussi dans le calendrier."
+     }
+    ]
+   },
+   {
+    "title": "Aujourd’hui et calendrier",
+    "items": [
+     {
+      "q": "Qu’est-ce que « Maintenant » ?",
+      "a": "La partie de l’accueil sous le chiffre du jour : elle vous dit ce qui compte aujourd’hui, par ordre d’urgence. Un paiement à marquer comme fait, les paiements du jour, un document qui expire, le prochain paiement, un abonnement qui a augmenté, une catégorie au-dessus de l’habitude. Votre téléphone le calcule avec des règles simples ; touchez un élément pour aller où il faut."
+     },
+     {
+      "q": "Comment ajouter loyer, factures ou salaire au calendrier ?",
+      "a": "Dans Analyse → Calendrier, touchez « Nouvel événement », choisissez le type (loyer, facture, mensualité, salaire…), le nom, le montant et la date. Choisissez la répétition (chaque mois, tous les 2, 3 ou 6 mois, chaque année) et, si besoin, la fin. Avec un montant et une catégorie, le paiement compte dans le budget à partir de son jour."
+     },
+     {
+      "q": "Comment fonctionnent les rappels ?",
+      "a": "Dans l’événement, choisissez quand être prévenu : 30, 14, 7, 3 ou 1 jour avant, le jour même, quelques heures avant ou à une heure précise. Pour ce que vous repoussez, il y a « Me le rappeler chaque jour jusqu’à ce que ce soit fait ». Dans Profil → Notifications, choisissez l’heure, les heures de silence, les jours actifs et un maximum par jour. Votre téléphone ajoute les montants : le serveur ne reçoit que l’heure et le nom."
+     },
+     {
+      "q": "Que signifie « en retard » ?",
+      "a": "Cela n’apparaît que pour les échéances que vous suivez « jusqu’à ce que ce soit fait » et pas encore marquées. Les paiements normaux comptent comme payés à partir de leur jour, comme dans le budget. Quand vous payez, touchez « Fait » dans « Maintenant » ou « Marquer comme fait » dans l’événement."
+     },
+     {
+      "q": "Que sont les suggestions « Cela semble se répéter » ?",
+      "a": "En bas du calendrier, Quadriamo propose les dépenses qui reviennent chaque mois dans vos opérations (même description, montant proche). « Ajouter au calendrier » ouvre le formulaire déjà rempli ; « Non » masque la suggestion. Rien n’est ajouté sans vous."
+     },
+     {
+      "q": "Puis-je partir de l’épargne que j’ai déjà ?",
+      "a": "Oui : dans Profil → Capital, saisissez votre épargne et répartissez-la par usage (épargne de précaution, liquidités, à faire fructifier, grands achats seulement…), chacune avec sa règle. Elle reste séparée du budget du mois : vous voyez ce qui est protégé et ce que vous pouvez utiliser."
+     }
+    ]
+   },
+   {
+    "title": "Abonnements, documents et ticket",
+    "items": [
+     {
+      "q": "Comment ajouter un abonnement ?",
+      "a": "Dans Profil → Abonnements et récurrents, touchez « Ajouter un abonnement » : cherchez parmi 80 services (ou tapez le nom s’il n’y est pas), puis le prix, la répétition et le moyen de paiement. Si vous changez le prix, Quadriamo garde l’historique et vous montre les hausses."
+     },
+     {
+      "q": "Qu’est-ce que le coût annuel ?",
+      "a": "Dans Abonnements et récurrents, touchez « Voir le coût annuel » : chaque abonnement est un bloc aussi grand que ce qu’il coûte sur un an. Touchez un bloc pour les détails et « Essayer sans » pour voir ce que vous économiseriez. C’est seulement une simulation : rien n’est résilié."
+     },
+     {
+      "q": "Comment ajouter un document qui expire ?",
+      "a": "Dans Profil → Documents, touchez « Ajouter un document », choisissez la catégorie, le nom et l’échéance. Il vous prévient 30 et 7 jours avant (modifiable). Quand vous renouvelez, touchez « Renouvelé » et saisissez la nouvelle date. Seulement le nom et les dates : aucun scan."
+     },
+     {
+      "q": "Qu’est-ce que le ticket du mois ?",
+      "a": "Dans Analyse → Mois, touchez « Ticket du mois » : le résumé du mois sous forme de ticket, avec les catégories, la comparaison avec le mois précédent et quelques curiosités. Partagez-le ou enregistrez-le en image ou en PDF. Votre téléphone le crée."
+     },
+     {
+      "q": "Comment personnaliser l’accueil ?",
+      "a": "En bas de l’accueil, touchez « Personnaliser l’accueil » : ajoutez ou retirez des widgets, choisissez la taille (S, M, L), faites-les glisser pour changer l’ordre et touchez l’étoile pour garder un widget toujours en haut."
      }
     ]
    },
@@ -351,7 +567,7 @@
      },
      {
       "q": "Les notifications n'arrivent pas.",
-      "a": "Activez-les dans Profil → Notifications. Sur iPhone, il faut iOS 16.4 ou plus récent et l'app installée sur l'écran d'accueil."
+      "a": "Activez-les dans Profil → Notifications. Sur iPhone, il faut iOS 16.4 ou plus récent et l'app installée sur l'écran d'accueil. Les notifications reçues restent dans Profil → Centre de notifications."
      }
     ]
    }
