@@ -37,3 +37,5 @@ tools/android/node_modules
 dist-android
 .keys.local/
 marketing/site-shots/
+marketing/out/video/_work/
+marketing/shots-campaign/
