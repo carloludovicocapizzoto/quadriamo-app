@@ -2,7 +2,7 @@
 // o un indicatore che informa (non decora). L'utente sceglie quali vedere, in che ordine e di che dimensione.
 import type { ReactNode } from 'react'
 import { capitalAdvice, capitalSummary, dailySpending, forecastMonth, goalStatus, lastDays, missions, portfolioSummary,
-  type ClassifiedTx, type MonthResult, type Streak, KIND_SIDE, addDays, agenda } from '../../engine'
+  type ClassifiedTx, type MonthResult, type Streak, KIND_SIDE, addDays, agenda, daysBetween } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import type { AppData } from '../../store/state'
@@ -14,6 +14,8 @@ import { categoryName } from '../names'
 import { TxRow } from '../TxRow'
 import type { WidgetId } from './catalog'
 import { Events, Markets } from './widgetsMore'
+import { CalendarMini, Documents, Subscriptions } from './widgetsPlan'
+import { Monogram } from '../kit/Monogram'
 
 export interface WidgetCtx {
   data: AppData; r: MonthResult; today: string; streak: Streak | null
@@ -116,9 +118,12 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
       const total = list.reduce((a, x) => a + (x.event.amount ?? 0), 0)
       return box(<>
         <p className="w-big"><Money value={total} currency={cur} /><small> {t('hw.upcomingCount', { n: list.length })}</small></p>
-        <ul className="w-rows">{list.slice(0, 3).map(x => (
-          <li key={x.event.id + x.date}><span>{x.event.title}</span><small>{date(x.date, { day: 'numeric', month: 'short' })}</small>
-            {x.event.amount != null ? <Money value={x.event.amount} currency={cur} /> : <span />}</li>))}</ul>
+        <ul className="w-rows w-up">{list.slice(0, 3).map(x => {
+          const n = daysBetween(c.today, x.date)
+          return <li key={x.event.id + x.date}><Monogram service={x.event.service} name={x.event.title} size={26} /><span>{x.event.title}</span>
+            <small>{n === 0 ? t('now.today') : n === 1 ? t('now.tomorrow') : n <= 7 ? t('now.inDays', { n }) : date(x.date, { day: 'numeric', month: 'short' })}</small>
+            {x.event.amount != null ? <Money value={x.event.amount} currency={cur} /> : <span />}</li>
+        })}</ul>
       </>, () => navigate({ tab: 'analysis', view: 'calendar' }))
     }
 
@@ -199,6 +204,9 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
       </>, () => navigate({ tab: 'profile', page: 'progress' }))
     }
 
+    case 'calendar': return <CalendarMini c={c} box={box} />
+    case 'subscriptions': return <Subscriptions c={c} box={box} />
+    case 'documents': return <Documents c={c} box={box} />
     case 'markets': return <Markets box={b => box(b)} />
     case 'events': return <Events c={c} box={b => box(b)} />
   }

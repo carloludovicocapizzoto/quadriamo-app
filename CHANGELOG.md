@@ -4,6 +4,15 @@ Una voce per versione, dalla più recente. Il numero tra parentesi nell'app (es.
 cresce a ogni modifica pubblicata, così ogni segnalazione dei tester indica esattamente quale codice stavano usando.
 Come si pubblica una nuova versione: docs/RELEASE.md.
 
+## 0.20.0 — 17 ottobre 2026 · widget
+
+- Tre widget nuovi per la Home: «Questo mese» (il calendario in miniatura con un punto per tipo, i giorni più pesanti
+  e quanto resta da pagare), «Abbonamenti» (quanto costano in un anno, i monogrammi dei più cari, gli aumenti) e
+  «Documenti» (la prossima scadenza). Ognuno apre la sua pagina e compare solo se ci sono dati.
+- «Prossimi pagamenti» con i monogrammi e i giorni che mancano (oggi, domani, tra 3 giorni).
+- Preferiti: la stella nella galleria dei widget; i preferiti restano sempre in cima alla Home.
+- I widget entrano uno dopo l'altro all'apertura della Home.
+
 ## 0.19.0 — 17 ottobre 2026 · ricevuta del mese
 
 - Analisi → Mese → «Ricevuta del mese»: il mese come uno scontrino. Categorie dalla più cara (con quante volte),

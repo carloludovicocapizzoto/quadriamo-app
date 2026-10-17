@@ -144,3 +144,28 @@
 .wg-btn:active { transform: scale(.88); }
 .wg-btn.add { background: var(--good); color: #fff; }
 .wg-tile.off .wg-preview { opacity: .7; }
+
+/* ---------- widget dal calendario (widgetsPlan) ---------- */
+.w-cal { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 2px; margin-top: var(--s2); font-size: 12px; font-variant-numeric: tabular-nums; text-align: center; }
+.w-cal-wd { color: var(--faint); font-size: 10px; padding-bottom: 2px; }
+.w-cal-d { display: grid; justify-items: center; gap: 1px; padding: 2px 0; color: var(--text); }
+.w-cal-d.past { color: var(--faint); }
+.w-cal-d.today { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.w-cal-d.heavy { color: var(--bad); font-weight: 600; }
+.w-cal-d i { display: flex; gap: 2px; height: 4px; }
+.w-cal-d b { width: 4px; height: 4px; border-radius: 50%; background: var(--tone); }
+.w-monos { display: flex; gap: 6px; margin-top: var(--s2); align-items: center; }
+.w-monos-more { font-size: var(--t-sm); color: var(--muted); }
+.w-doc { font-size: 20px; }
+.w-doc.soon { color: var(--warn); } .w-doc.expired { color: var(--bad); }
+.w-up li { grid-template-columns: auto 1fr auto auto; align-items: center; }
+.w-up li > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* microinterazioni: i widget entrano uno dopo l'altro; toccarli dà una pressione fisica; nella galleria la stella dei preferiti */
+.home-grid > .w-slot, .home-side > .w-slot { animation: fade-up var(--d-spring) var(--spring-gentle) both; }
+.widget { transition: transform var(--d-fast) var(--ease); }
+.widget:has(.w-more:active) { transform: scale(.985); }
+.wg-fav { display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: var(--r-sm); background: none; color: var(--faint); cursor: pointer; flex-shrink: 0; }
+.wg-fav.on { color: var(--b1); }
+.wg-fav.on svg { fill: currentColor; }
+.wg-fav:active { transform: scale(.85); transition: transform var(--d-fast) var(--ease); }

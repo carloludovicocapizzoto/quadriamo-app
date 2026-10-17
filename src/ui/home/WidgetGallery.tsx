@@ -8,7 +8,7 @@ import { useStore } from '../../store/context'
 import { reducedMotion } from '../../app/prefs'
 import { Icon } from '../Icon'
 import { tap } from '../kit/motion'
-import { DEFAULT_WIDGETS, WIDGETS, sizeOf, type WidgetId, type WidgetSize } from './catalog'
+import { DEFAULT_WIDGETS, WIDGETS, isFav, sizeOf, type WidgetId, type WidgetSize } from './catalog'
 import { Widget, type WidgetCtx } from './widgets'
 
 const k = (s: string) => s as keyof Dict
@@ -48,6 +48,7 @@ export function WidgetGallery({ ids, ctx }: { ids: WidgetId[]; ctx: WidgetCtx })
   const commit = (next: WidgetId[]) => { flip.remember(); setOrder(next); save({ homeWidgets: next }) }
   const remove = (id: WidgetId) => { tap(); commit(order.filter(x => x !== id)) }
   const add = (id: WidgetId) => { tap(); commit([...order, id]) }
+  const fav = (id: WidgetId) => { tap(); const list = settings.homeFavs ?? []; save({ homeFavs: list.includes(id) ? list.filter(x => x !== id) : [...list, id] }) }
   const resize = (id: WidgetId, z: WidgetSize) => { tap(); save({ homeWidgetSizes: { ...settings.homeWidgetSizes, [id]: z } }) }
   const available = WIDGETS.filter(w => !order.includes(w))
 
@@ -100,6 +101,8 @@ export function WidgetGallery({ ids, ctx }: { ids: WidgetId[]; ctx: WidgetCtx })
             <div className="wg-preview" aria-hidden="true"><div className="wg-scale"><Widget id={id} c={ctx} /></div>
               <p className="wg-empty">{t(k(`hw.${id}D`))}</p></div>
             <div className="wg-foot">
+              <button className={`wg-fav${isFav(settings, id) ? ' on' : ''}`} aria-pressed={isFav(settings, id)} aria-label={t('wg.fav')} title={t('wg.fav')}
+                onClick={() => fav(id)}><Icon name="star" size={16} /></button>
               <span className="wg-name">{t(k(`hw.${id}`))}</span>
               <span className="chips wg-sizes" role="radiogroup" aria-label={t('hw.size')}>{(['s', 'm', 'l'] as WidgetSize[]).map(z => (
                 <button key={z} role="radio" aria-checked={sizeOf(settings, id) === z} className={sizeOf(settings, id) === z ? 'on' : ''} onClick={() => resize(id, z)}>{t(k(`hw.size.${z}`))}</button>))}</span>

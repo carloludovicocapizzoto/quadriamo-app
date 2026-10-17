@@ -13,7 +13,7 @@ import { BUCKET_COLORS, bucketName } from '../names'
 import { TxRow } from '../TxRow'
 import { useStore } from '../../store/context'
 import { Widget } from './widgets'
-import { SIDE, shown, sizeOf, type WidgetId } from './catalog'
+import { SIDE, isFav, shown, sizeOf, type WidgetId } from './catalog'
 import { WidgetGallery } from './WidgetGallery'
 import { Now } from './Now'
 import { useMedia } from '../kit/useMedia'
@@ -73,7 +73,8 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
   const ctx = { data, r, today, streak, parts: hasPlan ? blocks : null, daily: hasPlan ? left : 0, onOpen, onAll }
   // il posto del widget: porta la taglia e, sul computer, si trascina dalla maniglia per cambiare l'ordine
   const slot = (id: WidgetId) => (
-    <div key={id} className={`w-slot size-${sizeOf(s, id)}${drag === id ? ' dragging' : ''}${over === id && drag !== id ? ' over' : ''}`}
+    <div key={id} className={`w-slot size-${sizeOf(s, id)}${isFav(s, id) ? ' fav' : ''}${drag === id ? ' dragging' : ''}${over === id && drag !== id ? ' over' : ''}`}
+         style={{ animationDelay: `${Math.min(ids.indexOf(id), 8) * 45}ms` }}
          draggable={drag === id} onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id) }}
          onDragOver={e => { if (drag) { e.preventDefault(); setOver(id) } }} onDrop={e => { e.preventDefault(); dropOn(id) }} onDragEnd={() => { setDrag(null); setOver(null) }}>
       <button className="w-drag" aria-label={t('hw.drag')} onPointerDown={() => setDrag(id)} onPointerUp={() => setDrag(null)}><Icon name="list" size={16} /></button>
