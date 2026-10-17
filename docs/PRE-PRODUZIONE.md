@@ -1,6 +1,6 @@
 # Checklist di pre-produzione · app per i tester
 
-Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un passo di Carlo · 🔧 da sviluppare · ⚠️ rischio
+Stato al 17 ottobre 2026, versione 0.13.0. ✅ pronto · 🟡 pronto, manca un passo di Carlo · 🔧 da sviluppare · ⚠️ rischio
 
 ## 1. Ambienti e configurazione
 
@@ -15,7 +15,27 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 
 - ✅ Accesso, database con RLS, sincronizzazione, foto profilo (archivio privato), notifiche push, profilo, notizie, statistiche, segnalazioni, backup (copia JSON/CSV sul telefono + sincronizzazione).
 - ✅ I dati di esempio si aprono solo su scelta dell'utente e non vengono mai sincronizzati, contati nelle statistiche o usati per le notifiche.
-- ✅ Niente IA (scelta di Carlo): consigli a regole.
+- ✅ Niente IA (scelta di Carlo): consigli a regole, e anche le proposte del calendario sono regole.
+
+## 2b. Calendario, promemoria e notifiche (0.10.0 – 0.13.0)
+
+- ✅ Calendario in Analisi (giorno, settimana, mese, agenda) con eventi di ogni tipo, ripetizioni e fine; i vecchi pagamenti
+  ricorrenti sono diventati eventi senza cambiare i conti del budget.
+- ✅ Promemoria per evento (giorni o ore prima, orario preciso, ogni giorno finché non è fatto) e preferenze in Profilo → Notifiche:
+  categorie, orario, ore di silenzio, giorni attivi, tetto giornaliero. Email spenta finché non c'è il dominio.
+- ✅ Permesso chiesto solo al primo promemoria, dopo una spiegazione; dopo un rifiuto non si richiede, si riattiva dal Profilo.
+- ✅ Al server arrivano solo l'ora e il nome dell'evento (tabella `push_reminders`, cancellati 7 giorni dopo): gli importi li aggiunge il telefono.
+  Invio ogni 10 minuti (cron + send-push "reminders"). Migrazione 0029 e send-push eseguiti in produzione (passo 21).
+- ✅ Corretto: la notifica del mattino ora rispetta il suo interruttore.
+- ✅ Centro notifiche (Profilo): le notifiche arrivate restano sul telefono (ultime 100), con ricerca, filtri e azioni.
+- ✅ Versamenti verso un obiettivo o il fondo di emergenza, PAC dal piano in Investimenti, scadenze degli obiettivi nel calendario.
+- ✅ Proposte "Sembrano ricorrenti" dai movimenti: nulla si aggiunge senza conferma.
+- 🔧 Informativa privacy: aggiungere che, per i promemoria, il server conserva l'ora e il nome dell'evento (non gli importi)
+  fino a 7 giorni dopo l'invio. Oggi dice solo che non riceve importi.
+- ⚠️ Centro notifiche e proposte scartate valgono per il singolo telefono (non si sincronizzano tra dispositivi).
+- ⚠️ I promemoria arrivano solo con l'account e dopo che il telefono è stato online almeno una volta dopo l'ultima modifica
+  (è lui a calcolarli e a mandarli al server). Su iPhone le notifiche funzionano solo con l'app aggiunta alla schermata Home.
+- ⚠️ Le proposte dai movimenti sono provate su dati di esempio: con dati veri vanno osservate nelle prime settimane dei tester.
 
 ## 3. Errori e diagnostica
 
@@ -44,6 +64,7 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 - ✅ L'app installata controlla la versione nuova ogni volta che torna in primo piano e ogni ora; si aggiorna al ritorno e mostra "Aggiornata alla versione …".
 - ✅ Versione (package.json) + build (numero di commit) + commit, visibili nel Profilo e salvati con errori, statistiche e segnalazioni.
 - ✅ CHANGELOG.md e docs/RELEASE.md.
+- ✅ Prima di ogni pubblicazione: 193 test automatici (motore, database su Postgres, interfaccia) e 25 passi di prova dell'app vera nel browser.
 - ✅ L'APK Android non va reinstallato per le novità: solo se cambiano nome, icona o indirizzo.
 - ✅ Corretto: aprire l'app usa la pagina salvata con il codice della stessa versione (prima la cache di GitHub Pages poteva
   ripresentare la pagina vecchia per 10 minuti, e senza rete l'app si apriva solo finché quella cache durava). Ora si apre
@@ -54,7 +75,7 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 - ✅ iPhone: PWA dalla schermata Home (gratis). Notifiche e aggiornamenti dall'icona.
 - ✅ **Android: APK** costruito e firmato dalla GitHub Action "Android" (chiave in `.keys.local/`, copia di sicurezza fatta da Carlo):
   https://github.com/carloludovicocapizzoto/quadriamo-app/releases/download/android/Quadriamo.apk
-- 🟡 Prova dell'APK su un telefono Android vero.
+- 🟡 Prova dell'APK su un telefono Android vero (reinstallarlo dopo l'assetlinks per averlo a tutto schermo).
 - ✅ App Android a tutto schermo: `assetlinks.json` provvisorio nel repository del CV, verificato da Google (`linked: true`). Col dominio si sposta (docs/RELEASE.md).
 - 🔧 iOS nativo (TestFlight, App Store): richiede Apple Developer Program (99 $/anno), Xcode e un guscio nativo (Capacitor), con le notifiche via APNs.
 - 🔧 Play Store: stesso APK in formato AAB, account sviluppatore Google (25 $ una volta), scheda dello store, informativa sui dati.
@@ -68,11 +89,12 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 - ✅ Corretto: chi entra nell'admin con il codice ora legge gli errori (prima non poteva).
 - ⚠️ Il token di accesso sta nella memoria del browser (normale per una web app; la CSP riduce il rischio). Con l'app nativa andrà nel portachiavi del sistema.
 - ⚠️ I dati sul telefono non sono cifrati oltre alla protezione del dispositivo (come per ogni PWA).
-- ✅ Controllo completo delle regole di accesso (0001–0028) su Postgres vero, ora nei test automatici (`tests/db.test.ts`): ogni modifica
+- ✅ Controllo completo delle regole di accesso (0001–0029) su Postgres vero, ora nei test automatici (`tests/db.test.ts`): ogni modifica
   al database viene provata in CI. Tutte le tabelle hanno RLS; i dati di un utente li legge solo lui; le funzioni dell'area admin rifiutano
   chi non è amministratore.
 - ✅ Trovato e corretto: nei budget comuni un membro poteva farsi creatore del budget o spostare un'altra persona (migrazione 0028).
-- 🟡 **Migrazione 0028** da eseguire in produzione (passo 20 della Configurazione).
+- ✅ Migrazione 0028 eseguita in produzione (passo 20).
+- ✅ Promemoria (0029): ognuno vede solo i suoi; li scrive solo il proprio telefono, al massimo 200 e nei prossimi 60 giorni, nomi tagliati a 60 caratteri.
 
 ## 9. Prestazioni (telefono medio: CPU 4 volte più lenta, rete 4G)
 
@@ -95,13 +117,16 @@ Stato al 16 ottobre 2026, versione 0.9.0. ✅ pronto · 🟡 pronto, manca un pa
 
 1. Dominio quadriamo.com, hosting commerciale, SMTP con il dominio.
 2. Supabase Pro (backup giornalieri, niente sospensione) quando ci sono utenti veri.
-3. Testi legali definitivi (privacy con statistiche, segnalazioni e allegati; termini; dati del titolare).
+3. Testi legali definitivi (privacy con statistiche, segnalazioni, allegati e promemoria; termini; dati del titolare: oggi
+   `public/owner.js` ha un indirizzo segnaposto).
 4. Prezzo Pro e scheda per la partita IVA.
 5. Guscio nativo per iOS (Capacitor) quando si apre l'Apple Developer Program.
 
 ## Cosa deve fare Carlo, in ordine
 
-1. ✅ Copia di sicurezza della chiave Android. ✅ Passo 18 in produzione. ✅ Segreti Android e primo APK.
-2. Facoltativo: repository `carloludovicocapizzoto.github.io` con `.well-known/assetlinks.json` per l'app a tutto schermo.
-3. Installare e provare l'APK su un telefono Android.
-4. Eliminare dal pannello di Supabase il progetto `quadriamo-beta` (creato e poi non usato, vuoto).
+1. ✅ Copia di sicurezza della chiave Android. ✅ Passi 18, 20 e 21 in produzione. ✅ Segreti Android e APK. ✅ assetlinks.json (repository del CV, provvisorio).
+2. Installare e provare l'APK su un telefono Android (disinstallare la versione vecchia e reinstallare).
+3. Provare un promemoria sull'iPhone: evento con promemoria tra qualche minuto → notifica → compare nel Centro notifiche.
+4. Eliminare dal pannello di Supabase il progetto `quadriamo-beta` (vuoto) e la vecchia funzione `new-ingest`.
+5. Facoltativo: mail per ogni segnalazione (passo 19, account gratuito Resend).
+6. Dare un'email vera per il titolare del trattamento (`public/owner.js`), anche provvisoria in attesa del dominio.
