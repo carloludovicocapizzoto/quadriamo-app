@@ -71,7 +71,7 @@ export function AppShell() {
   useUpdatedNotice(t)
   useMorningSnapshot(data, thisMonth, streak, today, lang, t)
   usePushSync(lang, !!streak?.doneToday, today, !!data.demo)
-  useReminderSync(data.settings, lang, !!data.demo)
+  useReminderSync(data.settings, data.goals, name => t('cal.goalDue', { name }), lang, !!data.demo)
   const ping = useDailyPing(data, state.loaded, !!sync.user, today, lang)
 
   if (!month || !thisMonth || !viewed) return null

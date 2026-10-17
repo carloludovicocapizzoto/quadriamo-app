@@ -5,6 +5,7 @@ import type { Dict } from '../../i18n/en'
 import { Icon } from '../Icon'
 import { Money } from '../kit/Money'
 import { tap } from '../kit/motion'
+import { useStore } from '../../store/context'
 
 const k = (s: string) => s as keyof Dict
 
@@ -18,6 +19,8 @@ export function EventDetail({ event, date: day, currency, today, onToggle, onEdi
   const repeat = preset === 'custom' && event.repeat ? t('rp.customLine', { n: event.repeat.every, unit: t(k(`unit.${event.repeat.unit}`)) }) : t(k(`rp.${preset}`))
   const next = event.repeat ? nextOccurrence(event, day > today ? day : today) : null
   const left = remainingCount(event, today)
+  const goals = useStore().state.data?.goals
+  const goal = event.kind === 'saving' ? goals?.find(g => g.id === event.goalId && !g.removed) : undefined
   return (
     <div className="event-detail">
       <p className="eyebrow-small">{t(k(`ev.kind.${event.kind}`))}</p>
@@ -26,6 +29,7 @@ export function EventDetail({ event, date: day, currency, today, onToggle, onEdi
       <p className="outcome-label">{date(day, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
       <ul className="ed-facts">
         <li><span>{t('ev.repeat')}</span><b>{repeat}</b></li>
+        {event.kind === 'saving' && <li><span>{t('ev.goal')}</span><b>{goal?.name ?? t('ev.goalEmergency')}</b></li>}
         {next && next !== day && <li><span>{t('ev.nextTime')}</span><b>{date(next, { day: 'numeric', month: 'long' })}</b></li>}
         {left != null && <li><span>{t('ev.leftLabel')}</span><b>{left}</b></li>}
         {side === 'out' && <li><span>{t('ev.budget')}</span><b>{event.category ? t('ev.inBudget') : t('ev.noBudget')}</b></li>}

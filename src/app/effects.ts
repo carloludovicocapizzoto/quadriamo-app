@@ -16,7 +16,7 @@ import { toast } from './toast'
 import { ENV } from '../env'
 import { newRelease } from './updates'
 import { notifyPrefs, syncPushPrefs, syncReminders } from '../beta/reminders'
-import type { Settings } from '../engine'
+import { goalEvents, todayIso, type Goal, type Settings } from '../engine'
 
 /** Avvio: vecchi indirizzi, pagina d'ingresso dai link (?join=, ?tab=news), indirizzo pulito, installazione. */
 export function useBootstrap() {
@@ -71,17 +71,20 @@ export function usePushSync(lang: string, doneToday: boolean, today: string, dem
 
 /** Promemoria del calendario e categorie delle notifiche sul server: dopo ogni modifica (un attimo dopo l'ultima) e all'apertura.
  *  Mai con i dati di esempio. */
-export function useReminderSync(settings: Settings, lang: string, demo: boolean) {
+export function useReminderSync(settings: Settings, goals: Goal[] | undefined, goalTitle: (name: string) => string, lang: string, demo: boolean) {
   const { events, notify, currency } = settings
   useEffect(() => {
     if (demo) return
     const id = setTimeout(() => {
       const prefs = notifyPrefs(notify)
-      void syncReminders(events, prefs, currency, lang).catch(() => undefined)
+      // anche le scadenze degli obiettivi, una settimana prima
+      const all = [...events, ...goalEvents(goals, todayIso(), goalTitle)]
+      void syncReminders(all, prefs, currency, lang).catch(() => undefined)
       void syncPushPrefs(prefs).catch(() => undefined)
     }, 1500)
     return () => clearTimeout(id)
-  }, [events, notify, currency, lang, demo])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- goalTitle cambia solo con la lingua
+  }, [events, goals, notify, currency, lang, demo])
 }
 
 /** Statistiche anonime (solo con consenso): una fotografia al giorno con soli conteggi. Restituisce l'invio manuale. */

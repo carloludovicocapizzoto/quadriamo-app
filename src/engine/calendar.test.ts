@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { agenda, budgetEvents, nextOccurrence, occurrences, presetOf, remainingCount, untilAfterCount, type CalEvent } from './calendar'
+import { GOAL_EVENT, agenda, budgetEvents, goalContributionId, goalEvents, nextOccurrence, occurrences, presetOf, remainingCount, untilAfterCount, type CalEvent } from './calendar'
 import { defaultSettings } from './defaults'
 
 const ev = (over: Partial<CalEvent>): CalEvent => ({
@@ -49,5 +49,16 @@ describe('calendario: budget e agenda', () => {
   it('l\'agenda mette in fila le volte di tutti gli eventi, con quelle già fatte', () => {
     const list = agenda([ev({ id: 'a', title: 'Luce', date: '2026-10-05', done: ['2026-10-05'] }), ev({ id: 'b', title: 'Affitto', date: '2026-10-01' })], '2026-10-01', '2026-10-31')
     expect(list.map(x => [x.date, x.event.title, x.done])).toEqual([['2026-10-01', 'Affitto', false], ['2026-10-05', 'Luce', true]])
+  })
+})
+
+describe('scadenze degli obiettivi nel calendario', () => {
+  const g = (id: string, deadline: string | null, saved: number, removed?: boolean) => ({ id, name: id, target: 100, deadline, icon: 'target',
+    contributions: saved ? [{ id: 'c', date: '2026-01-01', amount: saved }] : [], createdAt: '2026-01-01', updatedAt: '', removed })
+  it("l'ultimo giorno del mese scelto, solo per gli obiettivi aperti, con un promemoria una settimana prima", () => {
+    const list = goalEvents([g('Viaggio', '2027-02', 20), g('Fatto', '2027-02', 100), g('Senza', null, 0), g('Via', '2027-02', 0, true)], '2026-10-17', n => `Scadenza: ${n}`)
+    expect(list).toHaveLength(1)
+    expect(list[0]).toMatchObject({ id: GOAL_EVENT + 'Viaggio', title: 'Scadenza: Viaggio', date: '2027-02-28', reminders: [{ days: 7 }] })
+    expect(goalContributionId('e1', '2026-11-01')).toBe('ev-e1-2026-11-01')
   })
 })

@@ -4,6 +4,16 @@ Una voce per versione, dalla più recente. Il numero tra parentesi nell'app (es.
 cresce a ogni modifica pubblicata, così ogni segnalazione dei tester indica esattamente quale codice stavano usando.
 Come si pubblica una nuova versione: docs/RELEASE.md.
 
+## 0.12.0 — 17 ottobre 2026 · centro notifiche e collegamenti
+
+- Profilo → Centro notifiche: le notifiche arrivate restano sul telefono (le ultime 100), con ricerca e filtri
+  (tutte, da leggere, importanti, archiviate); per ognuna: apri, letta/da leggere, importante, archivia, elimina.
+  Toccandola porta dove serve (scadenze al calendario, notizie alle Notizie). Il numero da leggere compare nel Profilo.
+- Calendario: nuovi tipi «Versamento» (verso il fondo di emergenza o un obiettivo) e «PAC» (parte dalla cifra del piano in Investimenti).
+  Segnare come fatto un versamento verso un obiettivo aggiunge la cifra all'obiettivo; annullare la toglie.
+- Le scadenze degli obiettivi compaiono nel calendario con quanto manca, e una settimana prima arriva un promemoria.
+- Cambiando tipo di evento, la categoria segue il tipo (se non l'avevi cambiata tu).
+
 ## 0.11.0 — 16 ottobre 2026 · promemoria e notifiche
 
 - Promemoria su ogni evento del calendario: 30, 14, 7, 3, 1 giorno prima, il giorno stesso, qualche ora prima, a un orario preciso,

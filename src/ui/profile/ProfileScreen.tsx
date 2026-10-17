@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useInbox } from '../../beta/inbox'
 import { badges, goalStatus, monthOf, monthlyTrend, prevMonth, type Streak } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import { usePrefs } from '../../app/prefs'
@@ -39,6 +40,7 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
     if (!supabase || !sync.user) return
     void supabase.rpc('is_admin').then(({ data: ok }) => setIsAdmin(ok === true))
   }, [sync.user])
+  const unread = useInbox().filter(x => !x.read && !x.archived).length
   const list = useMemo(() => {
     // solo i mesi già chiusi (fino a 12)
     const months = monthlyTrend(prevMonth(monthOf(today, data.settings.monthStartDay)), 12, data.transactions, data.settings, today)
@@ -55,7 +57,7 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
   )
 
   const ctx: Ctx = {
-    signedIn: !!sync.user, isAdmin, prefs, contactEmail: help?.contact ?? '', version: ENV.label, stats,
+    signedIn: !!sync.user, isAdmin, prefs, contactEmail: help?.contact ?? '', version: ENV.label, stats, unread,
     privacyUrl: `${LEGAL.privacy}?lang=${lang}`, termsUrl: `${LEGAL.terms}?lang=${lang}`, t,
     setStats: on => { setStats(on); setStatsConsent(on ? 'yes' : 'no') },
     invite: async () => {

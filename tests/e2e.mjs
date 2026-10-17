@@ -96,6 +96,14 @@ await step('Analisi → Calendario: creo una bolletta mensile', async () => {
 }, `/Luce e gas/.test(document.querySelector('.calendar')?.innerText ?? '')`)
 await step('l\'agenda la mostra anche il mese prossimo', () => click(byText('/^Agenda$/')),
   `(document.querySelector('.calendar')?.innerText.match(/Luce e gas/g) ?? []).length >= 2`)
+await step('Profilo → Centro notifiche: una notifica arrivata si archivia', async () => {
+  // come la salverebbe il service worker (public/push-sw.js)
+  await js(`new Promise(ok => { const r = indexedDB.open('keyval-store'); r.onsuccess = () => { const tx = r.result.transaction('keyval', 'readwrite');
+    tx.objectStore('keyval').put([{ id: 'e2e', at: new Date().toISOString(), kind: 'reminder', title: 'Domani: Luce e gas', body: '62,00 €', url: './app/' }], 'quadriamo.inbox'); tx.oncomplete = ok } })`)
+  await js(`location.hash = '#/profile/inbox'`); await sleep(800)
+  await click(`document.querySelector('.nc-more')`); await sleep(500)
+  await click(byText('/^Archivia$/', '.bs-body button'))
+}, `!document.querySelector('.nc-list') && ${has('/Nessuna notifica/')}`)
 
 console.log('Lingua')
 await step('Profilo → Lingua → English: l\'app passa all\'inglese', async () => {

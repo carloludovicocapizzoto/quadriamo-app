@@ -4,7 +4,7 @@ export const PROFILE_PAGES = [
   'progress',
   'personal', 'security', 'plan',
   'budget', 'capital', 'recurring', 'goals', 'rules', 'shared',
-  'appearance', 'language', 'notifications', 'motion', 'accessibility',
+  'appearance', 'language', 'inbox', 'notifications', 'motion', 'accessibility',
   'data', 'delete',
   'help', 'feedback', 'licenses',
 ] as const

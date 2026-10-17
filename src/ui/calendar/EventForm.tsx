@@ -12,12 +12,14 @@ import { amountText, parseAmount } from '../kit/amount'
 import { tap } from '../kit/motion'
 import { categoryName } from '../names'
 import { askNotifications } from '../notify/ask'
+import { useStore } from '../../store/context'
 import type { Settings } from '../../engine'
 
 const k = (s: string) => s as keyof Dict
 const PRESETS: (RepeatPreset | 'once' | 'custom')[] = ['once', 'monthly', 'bimonthly', 'quarterly', 'semiannual', 'yearly', 'custom']
 /** La categoria proposta per un tipo di pagamento (si può cambiare). */
-const KIND_CATEGORY: Partial<Record<EventKind, string>> = { rent: 'rent', bill: 'fixedCosts', loan: 'loans', mortgage: 'loans', subscription: 'fixedCosts', tax: 'other' }
+const KIND_CATEGORY: Partial<Record<EventKind, string>> = { rent: 'rent', bill: 'fixedCosts', loan: 'loans', mortgage: 'loans', subscription: 'fixedCosts', tax: 'other',
+  saving: 'safetyFundSaving', pac: 'investmentsSaving' }
 
 
 export function EventForm({ event, settings, today, onSave, onDelete }: {
@@ -33,13 +35,20 @@ export function EventForm({ event, settings, today, onSave, onDelete }: {
   const set = (p: Partial<CalEvent>) => setE(x => ({ ...x, ...p }))
   const side = KIND_SIDE[e.kind]
   const spending = settings.categories.filter(c => c.type !== 'income')
+  const { state } = useStore()
+  const goals = (state.data?.goals ?? []).filter(g => !g.removed)
+  const pacMonthly = state.data?.investments?.pac.monthly ?? 0
 
   const pickKind = (kind: EventKind) => {
     tap()
     const out = KIND_SIDE[kind] === 'out'
-    set({ kind, category: out ? (e.category && KIND_SIDE[e.kind] === 'out' ? e.category : KIND_CATEGORY[kind] ?? 'other') : null,
+    // la categoria segue il tipo, a meno che tu non ne abbia scelta un'altra
+    const chosen = e.category && KIND_SIDE[e.kind] === 'out' && e.category !== (KIND_CATEGORY[e.kind] ?? 'other')
+    set({ kind, category: out ? (chosen ? e.category : KIND_CATEGORY[kind] ?? 'other') : null,
       repeat: kind === 'reminder' || kind === 'tax' ? null : e.repeat ?? { every: 1, unit: 'month' } })
     if (kind === 'reminder' || kind === 'tax') setPreset('once')
+    // il PAC parte dalla cifra del piano in Investimenti, se non ne hai già scritta una
+    if (kind === 'pac' && !amount && pacMonthly > 0) setAmount(amountText(pacMonthly, lang))
   }
   const has = (r: Reminder) => (e.reminders ?? []).some(x => JSON.stringify(x) === JSON.stringify(r))
   const toggleReminder = (r: Reminder) => {
@@ -60,7 +69,7 @@ export function EventForm({ event, settings, today, onSave, onDelete }: {
       : end === 'count' ? untilAfterCount(e, Math.max(1, Number(count) || 1)) : e.until && e.until >= e.date ? e.until : null
     const reminders = (e.reminders ?? []).filter(r => !('hours' in r) || e.time)
     onSave({ ...e, title: e.title.trim().slice(0, 60), amount: value && value > 0 ? value : null,
-      category: side === 'out' ? e.category : null, until, reminders, nag: reminders.length > 0 && !!e.nag })
+      category: side === 'out' ? e.category : null, goalId: e.kind === 'saving' && e.goalId ? e.goalId : undefined, until, reminders, nag: reminders.length > 0 && !!e.nag })
     // il primo promemoria è il momento giusto per chiedere le notifiche (mai al primo avvio)
     if (reminders.length) askNotifications()
   }
@@ -82,10 +91,16 @@ export function EventForm({ event, settings, today, onSave, onDelete }: {
             {spending.map(c => <option key={c.id} value={c.id}>{categoryName(c, t)}</option>)}
             <option value="">{t('ev.noBudget')}</option>
           </select></label>}
+        {e.kind === 'saving' && goals.length > 0 && <label className="txs-row"><span>{t('ev.goal')}</span>
+          <select value={e.goalId ?? ''} onChange={x => set({ goalId: x.target.value || null })}>
+            <option value="">{t('ev.goalEmergency')}</option>
+            {goals.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select></label>}
         <label className="txs-row"><span>{e.repeat ? t('ev.first') : t('ev.date')}</span>
           <input type="date" value={e.date} onChange={x => set({ date: x.target.value || today })} /></label>
       </div>
-      {side === 'out' && <p className="small muted">{e.category ? t('ev.inBudgetHint') : t('ev.noBudgetHint')}</p>}
+      {side === 'out' && <p className="small muted">{e.category ? t('ev.inBudgetHint') : t('ev.noBudgetHint')}
+        {e.kind === 'saving' && e.goalId ? ` ${t('ev.goalHint')}` : e.kind === 'pac' && pacMonthly > 0 ? ` ${t('ev.pacHint')}` : ''}</p>}
 
       <p className="small fb-q"><b>{t('ev.repeat')}</b></p>
       <div className="chips" role="radiogroup" aria-label={t('ev.repeat')}>

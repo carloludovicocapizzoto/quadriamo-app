@@ -65,3 +65,15 @@
 .notif-days .chips { width: 100%; gap: 6px; }
 .notif-days .chip { min-height: 34px; padding: 0 10px; font-size: 14px; }
 .notif-blocked { background: var(--warn-bg); color: var(--text); border-radius: var(--r-md); padding: var(--s3) var(--s4); margin: var(--s2) 0; }
+
+/* Centro notifiche: righe tipografiche; un punto per quelle da leggere, il titolo in grassetto finché non le apri */
+.nc .chips { margin-bottom: var(--s3); }
+.nc-list > li { display: flex; align-items: center; }
+.nc-row { flex: 1; min-width: 0; gap: var(--s3); align-items: flex-start; }
+.nc-dot { flex-shrink: 0; width: 7px; height: 7px; margin-top: 0.55em; border-radius: 50%; background: transparent; }
+.nc-list .unread .nc-dot { background: var(--accent); }
+.nc-list .unread .row-main > span:first-child { font-weight: 600; }
+.nc-body { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--text) !important; }
+.nc-more { flex-shrink: 0; color: var(--muted); }
+.nc-foot { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); margin-top: var(--s3); }
+.nc-actions > p { margin: 0 0 var(--s2); }

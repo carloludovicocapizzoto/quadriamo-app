@@ -11,6 +11,7 @@ import { SharedView } from '../shared/SharedView'
 import { CapitalPage } from '../capital/CapitalPage'
 import { Accessibility, Appearance, Delete, HelpCenter, Language, Licenses, Motion, Personal, Progress, Security } from './pages'
 import { RecurringList } from '../calendar/RecurringList'
+import { InboxPage } from '../notify/InboxPage'
 import { NotificationsPage } from '../notify/NotificationsPage'
 
 export interface PageProps {
@@ -31,6 +32,7 @@ export const PAGES: Record<ProfilePage, (p: PageProps) => ReactNode> = {
   shared: p => <ProGate feature="shared"><SharedView onLogin={p.onLogin} /></ProGate>,
   appearance: () => <Appearance />,
   language: () => <Language />,
+  inbox: p => <InboxPage today={p.today} onPage={p.onPage} />,
   notifications: () => <NotificationsPage />,
   motion: () => <Motion />,
   accessibility: () => <Accessibility />,

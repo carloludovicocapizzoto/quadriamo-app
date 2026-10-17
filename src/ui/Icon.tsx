@@ -35,6 +35,7 @@ const P: Record<string, string> = {
   news: 'M5 5h11v14H6.5A1.5 1.5 0 0 1 5 17.5ZM16 9h3v8.5a1.5 1.5 0 0 1-3 0ZM8 9h5M8 12.5h5M8 16h3',
   refresh: 'M19.5 8A8 8 0 1 0 20 13M20 4v4.5h-4.5',
   external: 'M14 5h5v5M19 5l-8 8M18 14v4.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10',
+  more: 'M5.5 12h.5M11.75 12h.5M18 12h.5',
   message: 'M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4Z',
 }
 export type IconName = keyof typeof P

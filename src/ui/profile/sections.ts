@@ -11,6 +11,7 @@ export interface Ctx {
   prefs: Prefs
   contactEmail: string
   version: string
+  unread: number                    // notifiche non lette nel centro notifiche
   stats: boolean
   privacyUrl: string
   termsUrl: string
@@ -45,6 +46,7 @@ export const SECTIONS: { title: keyof Dict; items: Item[] }[] = [
   { title: 'prof.sec.prefs', items: [
     { page: 'appearance', label: 'prof.appearance', value: c => c.t(`theme.${c.prefs.theme}`) },
     { page: 'language', label: 'prof.language' },
+    { page: 'inbox', label: 'prof.inbox', value: c => c.unread ? String(c.unread) : null },
     { page: 'notifications', label: 'prof.notifications' },
     { page: 'motion', label: 'prof.motion' },
     { page: 'accessibility', label: 'prof.accessibility' },

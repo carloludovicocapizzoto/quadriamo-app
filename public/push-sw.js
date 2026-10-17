@@ -76,6 +76,40 @@ function nudgeNotification(lang, late) {
 
 function readSnapshot() { return readKey('quadriamo.morning') }
 
+// centro notifiche: ogni notifica mostrata resta sul telefono (IndexedDB "quadriamo.inbox", al massimo 100).
+// Solo il service worker scrive qui; letta, importante, archiviata ed eliminata le segna l'app a parte (src/beta/inbox.ts)
+var INBOX_KEY = 'quadriamo.inbox', INBOX_MAX = 100
+var inboxQueue = Promise.resolve()
+function withStore(mode, fn) {
+  return new Promise(function (resolve) {
+    try {
+      var req = indexedDB.open('keyval-store')
+      req.onupgradeneeded = function () { req.result.createObjectStore('keyval') }
+      req.onerror = function () { resolve(null) }
+      req.onsuccess = function () {
+        try {
+          var tx = req.result.transaction('keyval', mode)
+          fn(tx.objectStore('keyval'), resolve)
+          tx.onerror = function () { resolve(null) }
+        } catch { resolve(null) }
+      }
+    } catch { resolve(null) }
+  })
+}
+function updateInbox(change) {
+  inboxQueue = inboxQueue.then(function () {
+    return withStore('readwrite', function (store, done) {
+      var get = store.get(INBOX_KEY)
+      get.onsuccess = function () {
+        var list = change(Array.isArray(get.result) ? get.result : [])
+        store.put(list.slice(0, INBOX_MAX), INBOX_KEY).onsuccess = function () { done(true) }
+      }
+      get.onerror = function () { done(null) }
+    })
+  })
+  return inboxQueue
+}
+
 function readKey(key) {
   return new Promise(function (resolve) {
     try {
@@ -137,19 +171,31 @@ self.addEventListener('push', function (event) {
     : data.kind === 'nudge' ? nudgeNotification(data.lang, !!data.late)
     : data.kind === 'reminder' ? reminderNotification(data)
     : Promise.resolve({ title: data.title, body: data.body })
+  var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
   event.waitUntil(ready.then(function (n) {
-    return self.registration.showNotification(n.title || 'Quadriamo', {
-      body: n.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-64.png', tag: data.kind === 'reminder' ? 'reminder-' + data.day + '-' + (data.titles || []).join('|') : data.kind || 'quadriamo',
-      data: { url: data.url || './app/?feedback=1' },
+    var title = n.title || 'Quadriamo', url = data.url || './app/?feedback=1'
+    var saved = updateInbox(function (list) {
+      return [{ id: id, at: new Date().toISOString(), kind: data.kind || 'message', title: title, body: n.body || '', url: url, day: data.day || null }].concat(list)
     })
+    var shown = self.registration.showNotification(title, {
+      body: n.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-64.png', tag: data.kind === 'reminder' ? 'reminder-' + data.day + '-' + (data.titles || []).join('|') : data.kind || 'quadriamo',
+      data: { url: url, id: id },
+    })
+    // l'app aperta aggiorna subito il centro notifiche
+    var told = saved.then(function () { return self.clients.matchAll({ type: 'window' }) })
+      .then(function (list) { list.forEach(function (c) { c.postMessage({ type: 'inbox' }) }) })
+    return Promise.all([told, shown])
   }))
 })
 
 self.addEventListener('notificationclick', function (event) {
   event.notification.close()
   var url = (event.notification.data && event.notification.data.url) || './app/?feedback=1'
-  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
+  var id = event.notification.data && event.notification.data.id
+  // aperta dalla notifica: nel centro notifiche risulta già letta
+  var opened = id ? updateInbox(function (list) { return list.map(function (x) { return x.id === id ? Object.assign({}, x, { opened: true }) : x }) }) : null
+  event.waitUntil(Promise.all([opened, self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
     for (var i = 0; i < list.length; i++) { if ('focus' in list[i]) { list[i].navigate(url); return list[i].focus() } }
     return self.clients.openWindow(url)
-  }))
+  })]))
 })

@@ -3,15 +3,16 @@
 // settimane, mesi o anni) e può avere una fine. Gli eventi di spesa con importo e categoria entrano nel budget del mese
 // come facevano i "pagamenti ricorrenti" (month.ts, recurringOf): stessi conti, una fonte sola.
 import { addDays, daysBetween, makeDate, parseDate, periodOf } from './dates'
+import { goalStatus, type Goal } from './goals'
 import type { Reminder } from './reminders'
 import type { Recurring, Settings, YearMonth } from './types'
 
-export type EventKind = 'rent' | 'bill' | 'loan' | 'mortgage' | 'subscription' | 'payment'
+export type EventKind = 'rent' | 'bill' | 'loan' | 'mortgage' | 'subscription' | 'payment' | 'saving' | 'pac'
   | 'salary' | 'income' | 'dividend' | 'coupon' | 'tax' | 'reminder'
 
 /** In uscita (pagamenti) o in entrata: decide colore, segno e se può entrare nel budget come spesa. */
 export const KIND_SIDE: Record<EventKind, 'out' | 'in' | 'none'> = {
-  rent: 'out', bill: 'out', loan: 'out', mortgage: 'out', subscription: 'out', payment: 'out', tax: 'out',
+  rent: 'out', bill: 'out', loan: 'out', mortgage: 'out', subscription: 'out', payment: 'out', saving: 'out', pac: 'out', tax: 'out',
   salary: 'in', income: 'in', dividend: 'in', coupon: 'in', reminder: 'none',
 }
 export const EVENT_KINDS = Object.keys(KIND_SIDE) as EventKind[]
@@ -38,6 +39,7 @@ export interface CalEvent {
   time?: string | null               // "HH:MM" facoltativa: serve ai promemoria "N ore prima"
   reminders?: Reminder[]             // quando avvisare (engine/reminders)
   nag?: boolean                      // ripeti ogni giorno finché non è segnato come fatto
+  goalId?: string | null             // versamento (kind 'saving') verso un obiettivo: "fatto" lo aggiunge all'obiettivo; senza = fondo di emergenza
 }
 
 export const presetOf = (r: Repeat | null): RepeatPreset | 'once' | 'custom' => {
@@ -113,3 +115,21 @@ export function fromRecurring(r: Recurring, s: { monthStartDay: number; firstMon
     until: r.until ? periodOf({ year: uy, month: um }, s.monthStartDay).end : null, done: [], active: r.active,
   }
 }
+
+/** Prefisso degli eventi che il calendario ricava dagli obiettivi (non si salvano: si toccano per aprire l'obiettivo). */
+export const GOAL_EVENT = 'goal:'
+
+/**
+ * Le scadenze degli obiettivi non ancora raggiunti, come eventi da mostrare (l'ultimo giorno del mese scelto),
+ * con un promemoria una settimana prima. `title` dà il testo nella lingua dell'utente.
+ */
+export function goalEvents(goals: Goal[] | undefined, today: string, title: (name: string) => string): CalEvent[] {
+  return (goals ?? []).filter(g => !g.removed && g.deadline && !goalStatus(g, today).done).map(g => {
+    const [y, m] = g.deadline!.split('-').map(Number)
+    return { id: GOAL_EVENT + g.id, kind: 'reminder', title: title(g.name), amount: null, category: null, date: makeDate(y, m + 1, 0),
+      repeat: null, until: null, done: [], active: true, reminders: [{ days: 7 }] }
+  })
+}
+
+/** L'id del versamento segnato in un obiettivo da un evento del calendario: uno per ogni volta, così si può anche togliere. */
+export const goalContributionId = (eventId: string, date: string) => `ev-${eventId}-${date}`

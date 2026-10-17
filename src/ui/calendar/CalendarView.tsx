@@ -1,10 +1,12 @@
 // Analisi → Calendario: quello che succederà ai tuoi soldi. Quattro viste (giorno, settimana, mese, agenda), un punto per
 // ogni scadenza nel mese (scuro le uscite, verde le entrate, grigio i promemoria), e il dettaglio di ogni voce.
 import { useMemo, useState } from 'react'
-import { KIND_SIDE, addDays, agenda, daysBetween, makeDate, parseDate, presetOf, type CalEvent, type Settings } from '../../engine'
+import { GOAL_EVENT, KIND_SIDE, addDays, agenda, goalEvents, goalStatus, daysBetween, makeDate, parseDate, presetOf, type CalEvent, type Settings } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
+import { navigate } from '../../app/router'
 import { local } from '../../storage'
+import { useStore } from '../../store/context'
 import { Icon } from '../Icon'
 import { Empty } from '../kit/Empty'
 import { Money } from '../kit/Money'
@@ -24,8 +26,11 @@ const AGENDA_DAYS = 60
 const monday = (iso: string) => addDays(iso, -((new Date(iso + 'T00:00:00Z').getUTCDay() + 6) % 7))
 
 export function CalendarView({ settings, today }: { settings: Settings; today: string }) {
-  const { t, date, lang } = useI18n()
-  const { events, save, remove, toggleDone } = useEvents()
+  const { t, date, lang, money } = useI18n()
+  const { events: own, save, remove, toggleDone } = useEvents()
+  // con le scadenze degli obiettivi (si toccano per aprire l'obiettivo)
+  const goals = useStore().state.data?.goals
+  const events = useMemo(() => [...own, ...goalEvents(goals, today, name => t('cal.goalDue', { name }))], [own, goals, today, t])
   const [mode, setModeState] = useState<Mode>(() => (MODES as string[]).includes(local.get(MODE_KEY) ?? '') ? local.get(MODE_KEY) as Mode : 'month')
   const [day, setDay] = useState(today)
   const [open, setOpen] = useState<{ event: CalEvent; date: string } | null>(null)
@@ -65,7 +70,11 @@ export function CalendarView({ settings, today }: { settings: Settings; today: s
     return a
   }, { out: 0, in: 0 })
 
-  const kindLabel = (e: CalEvent) => t(k(`ev.kind.${e.kind}`))
+  const kindLabel = (e: CalEvent) => {
+    if (!e.id.startsWith(GOAL_EVENT)) return t(k(`ev.kind.${e.kind}`))
+    const g = goals?.find(x => GOAL_EVENT + x.id === e.id)
+    return g ? t('cal.goalLeft', { amount: money(goalStatus(g, today).left, cur) }) : ''
+  }
   const repeatLabel = (e: CalEvent) => {
     const p = presetOf(e.repeat)
     return p === 'once' ? null : p === 'custom' && e.repeat ? t('rp.customLine', { n: e.repeat.every, unit: t(k(`unit.${e.repeat.unit}`)) }) : t(k(`rp.${p}`)).toLowerCase()
@@ -73,7 +82,7 @@ export function CalendarView({ settings, today }: { settings: Settings; today: s
   const row = (x: (typeof items)[number], showDate = false) => {
     const side = KIND_SIDE[x.event.kind]
     return (
-      <li key={x.event.id + x.date}><button className={`row cal-row side-${side}${x.done ? ' done' : ''}`} onClick={() => { tap(); setOpen({ event: x.event, date: x.date }) }}>
+      <li key={x.event.id + x.date}><button className={`row cal-row side-${side}${x.done ? ' done' : ''}`} onClick={() => { tap(); if (x.event.id.startsWith(GOAL_EVENT)) navigate({ tab: 'profile', page: 'goals' }); else setOpen({ event: x.event, date: x.date }) }}>
         <span className="cal-dot" aria-hidden="true" />
         <span className="row-main"><span>{x.event.title}</span>
           <small>{[showDate ? date(x.date, { weekday: 'short', day: 'numeric', month: 'short' }) : null,
