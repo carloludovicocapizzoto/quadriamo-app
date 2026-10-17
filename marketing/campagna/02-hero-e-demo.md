@@ -8,7 +8,7 @@ Nessuna «AI», nessun logo di servizi, nessun widget fuori dall'app (BRIEF §12
 
 ---
 
-## H01 — «Quadriamo, adesso» (manifesto) · 60 s (✅ versione corta da 40 s montata: `out/video/hero-01-quadriamo-adesso.mp4`)
+## H01 — «Quadriamo, adesso» (manifesto) · 60 s (✅ versione da 51 s montata: `out/video/hero-01-quadriamo-adesso.mp4`)
 **Idea** la giornata dei tuoi soldi, dalla mattina alla fine del mese, senza un suono di troppo.
 | T | Immagini | Voce | Motion e suono |
 |---|---|---|---|

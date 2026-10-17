@@ -16,6 +16,7 @@ arancioni, "Opzioni", tab Movimenti in barra), niente funzioni superate. Fonte d
 | `08-newsletter-ed-email.md` | Newsletter (lancio, aggiornamenti, roadmap) ed email marketing | 10 + 15 |
 | `09-campagne-funzioni.md` | Campagne dedicate alle funzioni nuove (concept, claim, piano, asset) | 10 |
 | `10-landing.md` | La landing page riscritta: headline, sottotitolo, CTA, funzioni, prove, FAQ | 1 |
+| `11-voce.md` | La voce di Quadriamo: carattere, ritmo, pause, enfasi, pronuncia, tecnica, copioni annotati | — |
 | `../TESTI.md` | Didascalie pronte per i contenuti già prodotti in `out/` | — |
 
 Già prodotti (in `marketing/out/`): carosello da 10, 8 post, 8 storie, 4 pin, post a meme, 5 reel e 1 hero con voce.

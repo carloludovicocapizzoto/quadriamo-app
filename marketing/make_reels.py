@@ -5,8 +5,10 @@ Ogni scena è disegnata fotogramma per fotogramma con Pillow e passata a ffmpeg:
   phone  — il telefono entra dal basso con una molla; zoom lento su un dettaglio (focus) o scorrimento tra due
            schermate (stack); dissolvenza tra il prima e il dopo (swap)
   end    — il marchio, «Gratis durante la beta», «Link nella bio»
-La durata di ogni scena segue la sua frase (voice.py). Musica e suoni sono generati qui (niente diritti): si possono
-sostituire in CapCut/Instagram con un brano della libreria, tenendolo basso sotto la voce.
+La durata di ogni scena segue la sua battuta, letta da voice.perform con lo stile del video (reel o hero) e il ritmo
+progressivo: la prima battuta è il gancio, l'ultima il finale. Nelle battute «|» è una pausa breve, «||» una pausa lunga
+(guida di lettura: campagna/11-voce.md). Musica e suoni sono generati qui (niente diritti) e la musica si abbassa sotto la
+voce; si possono sostituire in CapCut/Instagram con un brano della libreria, tenendolo basso sotto la voce.
 Uso (dalla cartella quadriamo-app): <python con Pillow, numpy, kokoro-onnx, soundfile> marketing/make_reels.py [nome]
 """
 import math, os, subprocess, sys
@@ -14,13 +16,13 @@ import numpy as np
 import soundfile as sf
 from PIL import Image, ImageDraw
 from brandkit import CAMPAIGN_SHOTS, CREAM, OUT, SITE, SOFT, glass, lockup, mark, sans, scene, title as headline, wordmark
-from voice import SR, STUDIO, say
+from voice import SR, perform, studio
 
 W, H, FPS = 1080, 1920, 30
 DST = os.path.join(OUT, 'video')
 WORK = os.path.join(DST, '_work')
 os.makedirs(WORK, exist_ok=True)
-LEAD, TAIL, MIN_SCENE = 0.35, 0.6, 2.2
+LEAD, TAIL, MIN_SCENE = 0.25, 0.45, 2.0
 
 
 def ease_out(t):
@@ -208,13 +210,28 @@ def whoosh(n=0.45):
     return (smooth * env * 0.05).astype(np.float32)
 
 
-def build(name, scenes):
-    """scenes: [(tipo, frase, opzioni)]. Scrive out/video/<name>.mp4."""
+def duck(voice, bed, depth=0.4, attack=0.06, release=0.35):
+    """La musica scende (a `depth` del volume) mentre la voce parla e risale piano nelle pause."""
+    env = np.abs(voice[:len(bed)])
+    win = int(0.05 * SR)
+    env = np.convolve(env, np.ones(win) / win, mode='same') > 0.01
+    gain, g = np.ones(len(bed), np.float32), 1.0
+    a, r = 1 / (attack * SR), 1 / (release * SR)
+    for i in range(0, len(bed), 64):   # a blocchi: abbastanza fine per l'orecchio, veloce da calcolare
+        target = depth if env[i] else 1.0
+        g = max(target, g - a * 64) if target < g else min(target, g + r * 64)
+        gain[i:i + 64] = g
+    return bed * gain
+
+
+def build(name, scenes, style='reel'):
+    """scenes: [(tipo, battuta, opzioni)]. Scrive out/video/<name>.mp4."""
     work = os.path.join(WORK, name)
     os.makedirs(work, exist_ok=True)
     voice_track, durations = [], []
-    for kind, line, opts in scenes:
-        v = say(line) if line else np.zeros(0, np.float32)
+    for k, (kind, line, opts) in enumerate(scenes):
+        part = 'hook' if k == 0 else 'end' if k == len(scenes) - 1 else 'body'
+        v = perform(line, style, part) if line else np.zeros(0, np.float32)
         sec = max(opts.get('min', MIN_SCENE), LEAD + len(v) / SR + TAIL)
         seg = np.zeros(int(round(sec * SR)), np.float32)
         s0 = int(LEAD * SR)
@@ -224,9 +241,9 @@ def build(name, scenes):
     raw = os.path.join(work, 'voce.raw.wav')
     sf.write(raw, np.concatenate(voice_track), SR)
     voice = os.path.join(work, 'voce.wav')
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', raw, '-af', STUDIO, '-ar', str(SR), voice], check=True)
+    studio(raw, voice)
     v, _ = sf.read(voice, dtype='float32')
-    bed = pad(total)[:len(v)]
+    bed = duck(v, pad(total)[:len(v)] * 1.6)
     fx = np.zeros_like(bed)
     pos = 0.0
     for sec in durations[:-1]:
@@ -257,51 +274,51 @@ def build(name, scenes):
 
 REELS = {
     'reel-01-adesso': [
-        ('title', 'Ogni mattina, la stessa domanda: cosa devo sapere oggi?', dict(lines=['Cosa devo sapere', 'oggi?'], section='home', sub='Sono le 8:12.')),
-        ('phone', 'Quadriamo te lo dice con un numero: quanto puoi spendere oggi.', dict(shot='01-home.png', section='home', text='Quanto puoi spendere oggi.', focus=(0.3, 0.12, 1.35))),
-        ('phone', 'E sotto, quello che conta: una bolletta da segnare, un pagamento domani, un abbonamento aumentato.', dict(shot='01-home.png', section='home', text='E cosa conta, in fila.', focus=(0.5, 0.36, 1.45))),
-        ('phone', 'Il resto lo trovi scorrendo. Niente di più.', dict(shot='01-home.png', section='home', text='Il resto, quando vuoi.', stack='40-tall-home.png')),
-        ('end', 'Quadriamo. Gratis durante la beta. Link nella bio.', dict()),
+        ('title', 'Ogni mattina, | la stessa domanda. || Cosa devo sapere, oggi?', dict(lines=['Cosa devo sapere', 'oggi?'], section='home', sub='Sono le 8:12.')),
+        ('phone', 'Quadriamo te lo dice con un numero: | quanto puoi spendere oggi.', dict(shot='01-home.png', section='home', text='Quanto puoi spendere oggi.', focus=(0.3, 0.12, 1.35))),
+        ('phone', 'E sotto, | quello che conta. | Una bolletta da segnare. | Un pagamento domani. | Un abbonamento aumentato.', dict(shot='01-home.png', section='home', text='E cosa conta, in fila.', focus=(0.5, 0.36, 1.45))),
+        ('phone', 'Il resto | lo trovi scorrendo. || Niente di più.', dict(shot='01-home.png', section='home', text='Il resto, quando vuoi.', stack='40-tall-home.png')),
+        ('end', 'Quadriamo. || Gratis durante la beta. | Link nella bio.', dict()),
     ],
     'reel-02-costo-annuale': [
-        ('title', 'Quanto paghi di abbonamenti in un anno? Indovina.', dict(lines=['Quanto paghi', 'di abbonamenti', 'in un anno?'], section='profile')),
-        ('phone', 'Li aggiungi in pochi secondi: cerchi il servizio, lo tocchi, scrivi il prezzo.', dict(shot='11-service-picker.png', section='profile', text='Ottanta servizi, in un attimo.')),
-        ('phone', 'Se un prezzo sale, lo vedi. Netflix: più trentotto per cento.', dict(shot='10-subscriptions.png', section='profile', text='Gli aumenti, in evidenza.', focus=(0.8, 0.5, 1.55))),
-        ('phone', 'Poi ogni abbonamento diventa un blocco, grande quanto costa in un anno.', dict(shot='13-year-cost.png', section='profile', text='Ogni blocco, un anno.')),
-        ('phone', 'Togline uno. Senza DAZN risparmieresti quattrocentodiciannove euro l’anno.', dict(shot='13-year-cost.png', section='profile', text='Prova senza.', swap='15-year-cost-without.png')),
-        ('end', 'Quadriamo. Gratis durante la beta.', dict()),
+        ('title', 'Quanto paghi di abbonamenti in un anno? || Indovina.', dict(lines=['Quanto paghi', 'di abbonamenti', 'in un anno?'], section='profile')),
+        ('phone', 'Li aggiungi in pochi secondi: | cerchi il servizio, lo tocchi, scrivi il prezzo.', dict(shot='11-service-picker.png', section='profile', text='Ottanta servizi, in un attimo.')),
+        ('phone', 'Se un prezzo sale, lo vedi. || Netflix: | più trentotto per cento.', dict(shot='10-subscriptions.png', section='profile', text='Gli aumenti, in evidenza.', focus=(0.8, 0.5, 1.55))),
+        ('phone', 'Poi ogni abbonamento diventa un blocco, | grande quanto costa in un anno.', dict(shot='13-year-cost.png', section='profile', text='Ogni blocco, un anno.')),
+        ('phone', 'Togline uno. || Senza DAZN, | risparmieresti quattrocentodiciannove euro l’anno.', dict(shot='13-year-cost.png', section='profile', text='Prova senza.', swap='15-year-cost-without.png')),
+        ('end', 'Quadriamo. || Gratis durante la beta.', dict()),
     ],
     'reel-03-ricevuta': [
-        ('title', 'Ottobre è finito. Ecco lo scontrino.', dict(lines=['Ottobre è finito.', 'Ecco lo scontrino.'], section='analysis')),
-        ('phone', 'Dove sono andati i soldi, il confronto con settembre, il giorno più caro.', dict(shot='16-receipt.png', section='analysis', text='Il mese, in uno scontrino.', stack=('41-tall-receipt.png', 0.615))),
-        ('phone', 'Lo salvi o lo condividi. Lo crea il tuo telefono, nessun server.', dict(shot='41-tall-receipt.png@0.985', section='analysis', text='Da condividere.', focus=(0.5, 0.62, 1.35))),
-        ('end', 'Quadriamo. La ricevuta del mese. Gratis durante la beta.', dict(section='analysis')),
+        ('title', 'Ottobre è finito. || Ecco lo scontrino.', dict(lines=['Ottobre è finito.', 'Ecco lo scontrino.'], section='analysis')),
+        ('phone', 'Dove sono andati i soldi. | Il confronto con settembre. | Il giorno più caro.', dict(shot='16-receipt.png', section='analysis', text='Il mese, in uno scontrino.', stack=('41-tall-receipt.png', 0.615))),
+        ('phone', 'Lo salvi, | o lo condividi. || Lo crea il tuo telefono. | Nessun server.', dict(shot='41-tall-receipt.png@0.985', section='analysis', text='Da condividere.', focus=(0.5, 0.62, 1.35))),
+        ('end', 'Quadriamo. || La ricevuta del mese. | Gratis durante la beta.', dict(section='analysis')),
     ],
     'reel-04-niente-sorprese': [
-        ('title', 'Il giorno prima del volo, scopri che la carta d’identità è scaduta.', dict(lines=['Il giorno prima', 'del volo.'], section='profile', sub='La carta d’identità è scaduta.')),
-        ('phone', 'Quadriamo te lo dice un mese prima. Anche per patente e assicurazioni.', dict(shot='18-documents.png', section='profile', text='Le scadenze, prima.')),
-        ('phone', 'E nel calendario vedi cosa hai pagato, cosa devi pagare e quanto resta a fine mese.', dict(shot='04-calendar.png', section='analysis', text='Il mese, giorno per giorno.', focus=(0.5, 0.2, 1.3))),
-        ('phone', 'I promemoria arrivano al momento giusto. Mai troppi.', dict(shot='09-inbox.png', section='profile', text='Promemoria discreti.')),
-        ('end', 'Quadriamo. Niente sorprese. Gratis durante la beta.', dict()),
+        ('title', 'Il giorno prima del volo, | scopri che la carta d’identità | è scaduta.', dict(lines=['Il giorno prima', 'del volo.'], section='profile', sub='La carta d’identità è scaduta.')),
+        ('phone', 'Quadriamo te lo dice un mese prima. | Anche per patente e assicurazioni.', dict(shot='18-documents.png', section='profile', text='Le scadenze, prima.')),
+        ('phone', 'E nel calendario vedi cosa hai pagato, | cosa devi pagare, | e quanto resta a fine mese.', dict(shot='04-calendar.png', section='analysis', text='Il mese, giorno per giorno.', focus=(0.5, 0.2, 1.3))),
+        ('phone', 'I promemoria arrivano al momento giusto. || Mai troppi.', dict(shot='09-inbox.png', section='profile', text='Promemoria discreti.')),
+        ('end', 'Quadriamo. || Niente sorprese. | Gratis durante la beta.', dict()),
     ],
     'reel-05-parti-da-dove-sei': [
-        ('title', 'Hai dei risparmi. Ma quanto puoi davvero toccare?', dict(lines=['Hai dei risparmi.', 'Quanto puoi toccare?'], section='invest')),
-        ('phone', 'Dividili per uso: fondo di emergenza, liquidità, da far crescere. Ognuno con la sua regola.', dict(shot='19-capital.png', section='invest', text='Ogni euro con la sua regola.')),
-        ('phone', 'Il tuo budget parte dalla tua situazione reale.', dict(shot='01-home.png', section='home', text='Il budget parte da qui.')),
-        ('end', 'Quadriamo. Gratis durante la beta.', dict()),
+        ('title', 'Hai dei risparmi. || Ma quanto puoi davvero toccare?', dict(lines=['Hai dei risparmi.', 'Quanto puoi toccare?'], section='invest')),
+        ('phone', 'Dividili per uso: | fondo di emergenza, | liquidità, | da far crescere. || Ognuno con la sua regola.', dict(shot='19-capital.png', section='invest', text='Ogni euro con la sua regola.')),
+        ('phone', 'Il tuo budget | parte dalla tua situazione reale.', dict(shot='01-home.png', section='home', text='Il budget parte da qui.')),
+        ('end', 'Quadriamo. || Gratis durante la beta.', dict()),
     ],
     'hero-01-quadriamo-adesso': [
-        ('title', 'I tuoi soldi, in quattro.', dict(lines=['I tuoi soldi,', 'in quattro.'], section='home', min=3.0)),
-        ('phone', 'Ogni mattina, un numero: quanto puoi spendere oggi.', dict(shot='01-home.png', section='home', text='Oggi.', focus=(0.3, 0.12, 1.3))),
-        ('phone', 'E quello che conta, prima che tu lo chieda.', dict(shot='01-home.png', section='home', text='Adesso.', focus=(0.5, 0.36, 1.4))),
-        ('phone', 'Il mese, giorno per giorno: cosa hai pagato, cosa arriva, quanto resta.', dict(shot='04-calendar.png', section='analysis', text='Niente sorprese.')),
-        ('phone', 'I promemoria arrivano al momento giusto, e non di più.', dict(shot='09-inbox.png', section='profile', text='Discreto.')),
-        ('phone', 'Gli abbonamenti, grandi quanto costano davvero.', dict(shot='13-year-cost.png', section='profile', text='Quello che non vedi.', swap='15-year-cost-without.png')),
-        ('phone', 'I documenti, prima che scadano.', dict(shot='18-documents.png', section='profile', text='In tempo.')),
-        ('phone', 'I risparmi che hai già, ognuno con la sua regola.', dict(shot='19-capital.png', section='invest', text='Parti da dove sei.')),
-        ('phone', 'E a fine mese, il mese in uno scontrino.', dict(shot='16-receipt.png', section='analysis', text='Il mese, stampato.', stack=('41-tall-receipt.png', 0.615))),
-        ('title', 'Calcolato sul tuo telefono. I tuoi dati li vedi solo tu.', dict(lines=['I tuoi soldi', 'sono affari tuoi.'], section='home')),
-        ('end', 'Quadriamo. Gratis durante la beta.', dict()),
+        ('title', 'I tuoi soldi, || in quattro.', dict(lines=['I tuoi soldi,', 'in quattro.'], section='home', min=3.0)),
+        ('phone', 'Ogni mattina, un numero: | quanto puoi spendere oggi.', dict(shot='01-home.png', section='home', text='Oggi.', focus=(0.3, 0.12, 1.3))),
+        ('phone', 'E quello che conta, | prima che tu lo chieda.', dict(shot='01-home.png', section='home', text='Adesso.', focus=(0.5, 0.36, 1.4))),
+        ('phone', 'Il mese, giorno per giorno. | Cosa hai pagato, | cosa arriva, | quanto resta.', dict(shot='04-calendar.png', section='analysis', text='Niente sorprese.')),
+        ('phone', 'I promemoria arrivano al momento giusto. || E non di più.', dict(shot='09-inbox.png', section='profile', text='Discreto.')),
+        ('phone', 'Gli abbonamenti, | grandi quanto costano davvero.', dict(shot='13-year-cost.png', section='profile', text='Quello che non vedi.', swap='15-year-cost-without.png')),
+        ('phone', 'I documenti, | prima che scadano.', dict(shot='18-documents.png', section='profile', text='In tempo.')),
+        ('phone', 'I risparmi che hai già, | ognuno con la sua regola.', dict(shot='19-capital.png', section='invest', text='Parti da dove sei.')),
+        ('phone', 'E a fine mese, | il mese in uno scontrino.', dict(shot='16-receipt.png', section='analysis', text='Il mese, stampato.', stack=('41-tall-receipt.png', 0.615))),
+        ('title', 'Calcolato sul tuo telefono. || I tuoi dati, | li vedi solo tu.', dict(lines=['I tuoi soldi', 'sono affari tuoi.'], section='home')),
+        ('end', 'Quadriamo. || Gratis durante la beta.', dict()),
     ],
 }
 
@@ -309,4 +326,4 @@ if __name__ == '__main__':
     only = sys.argv[1:]
     for name, sc in REELS.items():
         if not only or name in only:
-            build(name, sc)
+            build(name, sc, 'hero' if name.startswith('hero') else 'reel')

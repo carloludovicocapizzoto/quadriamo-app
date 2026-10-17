@@ -70,18 +70,18 @@ mettile in `marketing/meme/foto/1.jpg`…`4.jpg` e rigenera. Mai fotogrammi di f
 4. **Documenti con le scadenze** — Carta d'identità, patente, assicurazioni: un promemoria prima che scadano.
 
 ## Reel con la voce narrante — `out/video/`
-La voce è sintetica (Kokoro, generata sul Mac: nessun diritto da pagare). Sotto c'è un tappeto musicale morbido
-generato dallo script e un fruscio sulle transizioni: si possono sostituire con un brano della libreria di Instagram/TikTok,
+La voce è sintetica (Kokoro, generata sul Mac: nessun diritto da pagare), letta con la guida `campagna/11-voce.md`: pause naturali, ritmo progressivo (gancio, corpo, finale), catena da studio, −14 LUFS. Per gli spot a pagamento conviene registrarla con una voce professionista, con gli stessi copioni annotati. Sotto c'è un tappeto musicale morbido
+generato dallo script, che si abbassa mentre si parla, e un fruscio sulle transizioni: si possono sostituire con un brano della libreria di Instagram/TikTok,
 tenendolo a circa −20 dB sotto la voce.
 
 | File | Durata | Didascalia |
 |---|---|---|
-| reel-01-adesso | ~23 s | Cosa devo sapere oggi? Un numero, e quello che conta. Il resto, quando vuoi. |
-| reel-02-costo-annuale | ~27 s | Indovina quanto paghi di abbonamenti in un anno. Poi prova a toglierne uno. |
-| reel-03-ricevuta | ~18 s | Ottobre è finito. Ecco lo scontrino. 🧾 |
-| reel-04-niente-sorprese | ~23 s | La carta d'identità scade il giorno prima del volo? Non più. |
-| reel-05-parti-da-dove-sei | ~17 s | Hai dei risparmi. Quanto puoi davvero toccare? |
-| hero-01-quadriamo-adesso | ~40 s | Quadriamo, adesso. I tuoi soldi, in quattro. |
+| reel-01-adesso | ~28 s | Cosa devo sapere oggi? Un numero, e quello che conta. Il resto, quando vuoi. |
+| reel-02-costo-annuale | ~30 s | Indovina quanto paghi di abbonamenti in un anno. Poi prova a toglierne uno. |
+| reel-03-ricevuta | ~22 s | Ottobre è finito. Ecco lo scontrino. 🧾 |
+| reel-04-niente-sorprese | ~27 s | La carta d'identità scade il giorno prima del volo? Non più. |
+| reel-05-parti-da-dove-sei | ~20 s | Hai dei risparmi. Quanto puoi davvero toccare? |
+| hero-01-quadriamo-adesso | ~51 s | Quadriamo, adesso. I tuoi soldi, in quattro. |
 
 ## Rigenerare
 1. App con i dati di esempio accesa (`npm run dev`), poi `THEME=dark node marketing/shoot-campaign.mjs` e `THEME=light …`
