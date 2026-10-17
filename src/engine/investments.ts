@@ -59,10 +59,13 @@ export const emptyInvestments = (): Investments => ({
 export function portfolioSummary(inv: Investments, s: Settings, today: string) {
   const hs = inv.holdings.map(h => ({ holding: h, ...valueHolding(h, s) }))
   const ds = inv.deposits.map(d => ({ deposit: d, ...depositInterest(d, today) }))
-  const invested = hs.reduce((a, h) => a + (h.invested ?? 0), 0) + ds.reduce((a, d) => a + d.deposit.amount, 0)
-  const value = hs.reduce((a, h) => a + (h.value ?? 0), 0) + ds.reduce((a, d) => a + d.value, 0)
-  return { holdings: hs, deposits: ds, invested, value, gain: value - invested,
-           return: invested ? (value - invested) / invested : null, missing: hs.filter(h => h.missingValue).length }
+  const invested = hs.some(h => h.invested == null) ? null
+    : hs.reduce((a, h) => a + h.invested!, 0) + ds.reduce((a, d) => a + d.deposit.amount, 0)
+  const missing = hs.filter(h => h.value == null).length
+  const value = missing ? null : hs.reduce((a, h) => a + h.value!, 0) + ds.reduce((a, d) => a + d.value, 0)
+  const gain = value != null && invested != null ? value - invested : null
+  return { holdings: hs, deposits: ds, invested, value, gain,
+           return: gain != null && invested ? gain / invested : null, missing }
 }
 
 /** Proiezione del PAC anno per anno: versato e valore atteso. */

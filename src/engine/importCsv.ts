@@ -1,5 +1,6 @@
 // Import degli estratti conto in CSV (Revolut, N26 e formati generici delle banche).
 // Restituisce righe "grezze": data, descrizione, importo con segno (negativo = uscita), valuta.
+import { isIsoDate } from './dates'
 
 export interface ImportRow { date: string; description: string; amount: number; currency: string | null }
 
@@ -9,8 +10,17 @@ export interface ColumnMap { date: number; description: number[]; amount: number
 /** Divide un CSV in righe e celle, rispettando le virgolette. Riconosce il separatore (, ; o tab). */
 function parseCsv(text: string): string[][] {
   const clean = text.replace(/^﻿/, '')
-  const first = clean.split(/\r?\n/, 1)[0] ?? ''
-  const counts = [',', ';', '\t'].map(d => [d, first.split(d).length] as const)
+  const counts = [',', ';', '\t'].map(d => {
+    let count = 0, quoted = false
+    for (let i = 0; i < clean.length; i++) {
+      const ch = clean[i]
+      if (ch === '"' && quoted && clean[i + 1] === '"') i++
+      else if (ch === '"') quoted = !quoted
+      else if (!quoted && (ch === '\r' || ch === '\n')) break
+      else if (!quoted && ch === d) count++
+    }
+    return [d, count] as const
+  })
   const sep = counts.sort((a, b) => b[1] - a[1])[0][0]
   const rows: string[][] = []
   let row: string[] = [], cell = '', q = false
@@ -29,6 +39,7 @@ function parseCsv(text: string): string[][] {
       row = []
     } else cell += ch
   }
+  if (q) return []
   row.push(cell)
   if (row.some(c => c.trim())) rows.push(row.map(c => c.trim()))
   return rows
@@ -59,12 +70,13 @@ export function detectColumns(header: string[]): ColumnMap | null {
 /** Data in vari formati -> "YYYY-MM-DD". Con giorno e mese ambigui (es. 03/04) vale il formato europeo giorno/mese. */
 export function parseBankDate(s: string): string | null {
   const t = s.trim()
-  let m = t.match(/^(\d{4})-(\d{2})-(\d{2})/)
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`
-  m = t.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/)
+  let m = t.match(/^(\d{4})-(\d{2})-(\d{2})(?=$|[T\s]\d{2}:\d{2})/)
+  if (m) return isIsoDate(m[0]) ? m[0] : null
+  m = t.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2}|\d{4})(?=$|\s\d{2}:\d{2})/)
   if (m) {
     const y = m[3].length === 2 ? `20${m[3]}` : m[3]
-    return `${y}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`
+    const date = `${y}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`
+    return isIsoDate(date) ? date : null
   }
   return null
 }
@@ -74,10 +86,16 @@ export function parseBankAmount(s: string): number | null {
   let t = s.replace(/[\s€$£]|EUR|USD|GBP|CHF/g, '').replace('−', '-')
   if (!t) return null
   const neg = t.startsWith('-') || (t.startsWith('(') && t.endsWith(')'))
-  t = t.replace(/[-+()]/g, '')
+  if (t.startsWith('(') && t.endsWith(')')) t = t.slice(1, -1)
+  else t = t.replace(/^[-+]/, '')
+  if (!/^[\d.,]+$/.test(t)) return null
   const lc = t.lastIndexOf(','), ld = t.lastIndexOf('.')
-  if (lc > -1 && ld > -1) t = lc > ld ? t.replace(/\./g, '').replace(',', '.') : t.replace(/,/g, '')
+  if (lc > -1 && ld > -1) {
+    if (!(lc > ld ? /^\d{1,3}(\.\d{3})+,\d+$/ : /^\d{1,3}(,\d{3})+\.\d+$/).test(t)) return null
+    t = lc > ld ? t.replace(/\./g, '').replace(',', '.') : t.replace(/,/g, '')
+  }
   else if (lc > -1) t = t.replace(',', '.')
+  if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(t)) return null
   const n = Number(t)
   return Number.isFinite(n) ? (neg ? -n : n) : null
 }

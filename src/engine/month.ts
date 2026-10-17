@@ -74,7 +74,8 @@ export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, t
 /** Somma delle quote di un'entrata divisa a modo mio (1 = 100%), arrotondata per non sbagliare sui decimali. */
 export const splitTotal = (split: Record<string, number> | null | undefined) =>
   Math.round(Object.values(split ?? {}).reduce((a, x) => a + x, 0) * 1000) / 1000
-export const splitOk = (split: Record<string, number> | null | undefined) => splitTotal(split) === 1
+export const splitOk = (split: Record<string, number> | null | undefined) =>
+  Object.values(split ?? {}).every(x => Number.isFinite(x) && x >= 0 && x <= 1) && splitTotal(split) === 1
 
 /** Problemi di una singola riga (le righe rosse dell'Excel). */
 export function rowIssues(t: ClassifiedTx, s: Settings): CheckKind[] {

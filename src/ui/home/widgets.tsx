@@ -166,7 +166,7 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
         {/* protetto e utilizzabile come una barra sola divisa in due */}
         <div className="w-split" aria-hidden="true"><span style={{ flex: sum.protected }} /><span style={{ flex: sum.usable }} /></div>
         <p className="w-legend"><span>{t('cap.protected')} {money(sum.protected, cur)}</span><span>{t('cap.usable')} {money(sum.usable, cur)}</span></p>
-        {inv > 0 && <p className="w-note">{t('hw.withInvest', { amount: money(sum.total + inv, cur) })}</p>}
+        {inv != null && inv > 0 && <p className="w-note">{t('hw.withInvest', { amount: money(sum.total + inv, cur) })}</p>}
       </>, () => navigate({ tab: 'profile', page: 'capital' }))
     }
 
