@@ -69,7 +69,8 @@ await step('segno una spesa di 12,50 €', async () => {
   await click(`document.querySelector('.cat-pick button')`)
   await click(`document.querySelector('.tx-sheet button[type=submit]')`)
 }, `/12,50/.test(document.querySelector('.w-today')?.innerText ?? '')`)
-await step('dopo aver ricaricato la pagina, la spesa c\'è ancora', () => cdp('Page.reload'), `/12,50/.test(document.querySelector('.w-today')?.innerText ?? '')`)
+// il salvataggio sul dispositivo parte appena la schermata si aggiorna: una persona non ricarica nello stesso istante
+await step('dopo aver ricaricato la pagina, la spesa c\'è ancora', async () => { await sleep(500); await cdp('Page.reload') }, `/12,50/.test(document.querySelector('.w-today')?.innerText ?? '')`)
 
 console.log('Le altre sezioni')
 await step('Analisi → Mese mostra come finisce il mese', () => js(`location.hash = '#/analysis/month'`), `!!document.querySelector('.outcome-amount')`)
