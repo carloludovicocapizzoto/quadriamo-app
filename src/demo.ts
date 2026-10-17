@@ -10,16 +10,16 @@ const VARIABLE = new Set(['groceries', 'eatingOut', 'transport', 'funShopping', 
 const TEXT: Record<Lang, Record<string, string>> = {
   it: { saturday: 'Uscita del sabato', clothes: 'Vestiti', gift: 'Regalo di compleanno', sushi: 'Sushi con le amiche', allowance: 'Assegno dei genitori', partTime: 'Part-time in libreria', lidl: 'Spesa Lidl', esse: 'Spesa Esselunga', apero: 'Aperitivo con i coinquilini',
     books: 'Libri e fotocopie', pizza: 'Pizza con il gruppo di studio', cinema: 'Cinema', train: 'Treno per tornare a casa', kebab: 'Kebab dopo lezione',
-    fund: 'Fondo imprevisti', concert: 'Concerto', rent: 'Affitto', pass: 'Abbonamento bus e metro', phone: 'Telefono', music: 'Spotify Student', goal: 'Erasmus a Lisbona' },
+    fund: 'Fondo imprevisti', concert: 'Concerto', rent: 'Affitto', pass: 'Abbonamento bus e metro', phone: 'Telefono', music: 'Spotify Student', goal: 'Erasmus a Lisbona', idCard: "Carta d'identità" },
   en: { saturday: 'Saturday night out', clothes: 'Clothes', gift: 'Birthday present', sushi: 'Sushi with friends', allowance: 'Allowance from parents', partTime: 'Part-time at the bookshop', lidl: 'Groceries (Lidl)', esse: 'Groceries (supermarket)', apero: 'Drinks with flatmates',
     books: 'Books and photocopies', pizza: 'Pizza with the study group', cinema: 'Cinema', train: 'Train home', kebab: 'Kebab after class',
-    fund: 'Emergency fund', concert: 'Concert', rent: 'Rent', pass: 'Bus and metro pass', phone: 'Phone', music: 'Spotify Student', goal: 'Erasmus in Lisbon' },
+    fund: 'Emergency fund', concert: 'Concert', rent: 'Rent', pass: 'Bus and metro pass', phone: 'Phone', music: 'Spotify Student', goal: 'Erasmus in Lisbon', idCard: 'ID card' },
   fr: { saturday: 'Sortie du samedi', clothes: 'Vêtements', gift: 'Cadeau d’anniversaire', sushi: 'Sushi entre amis', allowance: 'Aide des parents', partTime: 'Job à la librairie', lidl: 'Courses Lidl', esse: 'Courses supermarché', apero: 'Apéro avec les colocs',
     books: 'Livres et photocopies', pizza: 'Pizza avec le groupe de révision', cinema: 'Cinéma', train: 'Train pour rentrer', kebab: 'Kebab après les cours',
-    fund: 'Fonds imprévus', concert: 'Concert', rent: 'Loyer', pass: 'Abonnement bus et métro', phone: 'Téléphone', music: 'Spotify Student', goal: 'Erasmus à Lisbonne' },
+    fund: 'Fonds imprévus', concert: 'Concert', rent: 'Loyer', pass: 'Abonnement bus et métro', phone: 'Téléphone', music: 'Spotify Student', goal: 'Erasmus à Lisbonne', idCard: "Carte d'identité" },
   es: { saturday: 'Salida del sábado', clothes: 'Ropa', gift: 'Regalo de cumpleaños', sushi: 'Sushi con amigas', allowance: 'Ayuda de los padres', partTime: 'Media jornada en la librería', lidl: 'Compra Lidl', esse: 'Compra supermercado', apero: 'Cañas con los compañeros de piso',
     books: 'Libros y fotocopias', pizza: 'Pizza con el grupo de estudio', cinema: 'Cine', train: 'Tren para volver a casa', kebab: 'Kebab después de clase',
-    fund: 'Fondo de imprevistos', concert: 'Concierto', rent: 'Alquiler', pass: 'Abono de bus y metro', phone: 'Teléfono', music: 'Spotify Student', goal: 'Erasmus en Lisboa' },
+    fund: 'Fondo de imprevistos', concert: 'Concierto', rent: 'Alquiler', pass: 'Abono de bus y metro', phone: 'Teléfono', music: 'Spotify Student', goal: 'Erasmus en Lisboa', idCard: 'DNI' },
 }
 
 export function demoAppData(today: string, lang = 'it'): AppData {
@@ -38,6 +38,15 @@ export function demoAppData(today: string, lang = 'it'): AppData {
   // la musica e il telefono sono abbonamenti: monogramma, rinnovo e costo annuale (Profilo → Abbonamenti e ricorrenti)
   const settings = { ...base, events: base.events.map(e => e.title === tx.music ? { ...e, kind: 'subscription' as const, service: 'spotify', method: 'card' }
     : e.title === tx.phone ? { ...e, kind: 'subscription' as const, service: 'iliad', method: 'card' } : e) }
+  // le entrate previste e un documento in scadenza, così calendario, "Adesso" e Documenti hanno qualcosa da mostrare
+  // (le entrate del calendario non cambiano i conti: i soldi arrivano dai movimenti)
+  const start = makeDate(months[0].year, months[0].month, 1)
+  settings.events.push(
+    { id: 'demo-ev-allowance', kind: 'income', title: tx.allowance, amount: 750, category: null, date: start, repeat: { every: 1, unit: 'month' }, until: null, done: [], active: true },
+    { id: 'demo-ev-parttime', kind: 'salary', title: tx.partTime, amount: 280, category: null, date: addDays(start, 14), repeat: { every: 1, unit: 'month' }, until: null, done: [], active: true },
+    { id: 'demo-ev-idcard', kind: 'document', title: tx.idCard, amount: null, category: null, date: addDays(today, 38), repeat: null, until: null, done: [], active: true,
+      reminders: [{ days: 30 }, { days: 7 }], doc: { category: 'personal' } },
+  )
   settings.buckets.forEach((b, i) => { b.startingBalance = [20, 0, 60, 0][i] })
 
   const rows: [number, string, string, number][] = [

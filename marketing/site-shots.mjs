@@ -37,6 +37,9 @@ for (const lang of ['it', 'en', 'fr', 'es']) for (const theme of ['light', 'dark
   for (const ch of '1,20') await cdp('Input.insertText', { text: ch }); await sleep(500); await shot(`${p}-add.jpg`)
   await js(`document.querySelector('.bs-root')?.click()`); await sleep(600)
   await js(`location.hash = '#/profile/progress'`); await sleep(1200); await js(hide); await shot(`${p}-streak.jpg`)
+  // il calendario del mese: riepilogo in vetro, griglia, giorni pesanti
+  await js(`localStorage.setItem('q.calMode', 'month'); location.hash = '#/analysis/calendar'`); await sleep(1400); await js(hide)
+  await js(`document.querySelector('.cal-summary')?.scrollIntoView({ block: 'start' }); window.scrollBy(0, -96)`); await sleep(500); await shot(`${p}-calendar.jpg`)
   await js(`location.hash = '#/'`); await sleep(600)
 }
 await close()

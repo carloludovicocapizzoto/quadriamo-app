@@ -42,10 +42,10 @@
 .cs-bar i { display: block; height: 100%; width: 100%; background: var(--good); transform-origin: left; transform: scaleX(var(--w));
   transition: transform var(--d-spring) var(--spring-gentle); animation: grow var(--d-spring) var(--spring-gentle) both; }
 .cs-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); margin: 0; }
-.cs-grid dt { font-size: var(--t-cap); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-.cs-grid dd { margin: 2px 0 0; font-size: 14px; letter-spacing: -.01em; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cs-grid dt { font-size: var(--t-cap); color: var(--muted); text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cs-grid dd { margin: 2px 0 0; font-size: 15px; letter-spacing: -.01em; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .cs-late { margin: 0; font-size: var(--t-sm); color: var(--bad); }
-@media (max-width: 359px) { .cs-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 479px) { .cs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--s3); } }
 
 /* la timeline: la data a sinistra, le voci a destra; i giorni entrano uno dopo l'altro */
 .cal-week-title { margin: var(--s3) 0 0; font-size: var(--t-sm); font-weight: 600; color: var(--muted); }

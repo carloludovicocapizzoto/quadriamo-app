@@ -66,5 +66,5 @@
     // sul telefono il disegno occupa la metà alta dello schermo: conta il passo che si legge sotto
     }, { rootMargin: window.matchMedia('(max-width: 860px)').matches ? '-55% 0px -25% 0px' : '-45% 0px -45% 0px' })
     steps.forEach(function (s) { io.observe(s) })
-  } else if (phone) { phone.setAttribute('data-step', '6') }
+  } else if (phone) { phone.setAttribute('data-step', '7') }
 })()

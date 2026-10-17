@@ -237,5 +237,5 @@ input, select, textarea { font-size: max(16px, 1em); }
 .story-phone { position: sticky; top: 96px; justify-self: center; display: grid; }
 .story-phone .shot { grid-area: 1 / 1; opacity: 0; transition: opacity .45s ease; }
 .story-phone[data-step="1"] [data-for="1"], .story-phone[data-step="2"] [data-for="2"], .story-phone[data-step="3"] [data-for="3"],
-.story-phone[data-step="4"] [data-for="4"], .story-phone[data-step="5"] [data-for="5"], .story-phone[data-step="6"] [data-for="6"] { opacity: 1; }
+.story-phone[data-step="4"] [data-for="4"], .story-phone[data-step="5"] [data-for="5"], .story-phone[data-step="6"] [data-for="6"], .story-phone[data-step="7"] [data-for="7"] { opacity: 1; }
 @media (max-width: 760px) { .story-phone { top: 76px; width: 200px; border-radius: 32px; padding: 6px; } .story-phone .shot { border-radius: 26px; } }
