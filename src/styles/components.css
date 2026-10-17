@@ -187,3 +187,45 @@ kbd { display: inline-block; min-width: 22px; padding: 2px 6px; margin-left: 4px
 .now-more.open { grid-template-rows: 1fr; }
 .now-more > ul > li:first-child .now-row { border-top: 1px solid var(--line); }
 .now-toggle { justify-self: start; min-height: 32px; padding: 0; font-size: 14px; }
+
+/* Ricevuta del mese (ui/receipt): uno scontrino in carattere monospaziato su carta in vetro, righe che si stampano una
+   dopo l'altra. Larghezza fissa di --w caratteri, come l'immagine condivisa (draw.ts). */
+.rc { display: grid; gap: var(--s4); justify-items: center; }
+.rc-paper { --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace; width: min(100%, calc(var(--w) * 1ch + 2 * var(--s5)));
+  font-family: var(--mono); font-size: clamp(12px, 3.3vw, 14px); line-height: 1.55; font-variant-numeric: tabular-nums; letter-spacing: 0;
+  padding: var(--s6) var(--s5); border-radius: 4px;
+  -webkit-mask: linear-gradient(-45deg, transparent 6px, #000 0) bottom left / 12px 12px repeat-x, linear-gradient(45deg, transparent 6px, #000 0) bottom left / 12px 12px repeat-x,
+    linear-gradient(#000, #000) center / 100% calc(100% - 12px) no-repeat, linear-gradient(135deg, transparent 6px, #000 0) top left / 12px 12px repeat-x,
+    linear-gradient(-135deg, transparent 6px, #000 0) top left / 12px 12px repeat-x;
+  mask: linear-gradient(-45deg, transparent 6px, #000 0) bottom left / 12px 12px repeat-x, linear-gradient(45deg, transparent 6px, #000 0) bottom left / 12px 12px repeat-x,
+    linear-gradient(#000, #000) center / 100% calc(100% - 12px) no-repeat, linear-gradient(135deg, transparent 6px, #000 0) top left / 12px 12px repeat-x,
+    linear-gradient(-135deg, transparent 6px, #000 0) top left / 12px 12px repeat-x; }
+.rc-paper > p { margin: 0; white-space: pre; animation: fade var(--d-base) var(--ease) both; }
+.rc-paper .dim { color: var(--muted); }
+.rc-center { text-align: center; }
+.rc-center.big { font-family: "DM Serif Display", Georgia, serif; font-size: 2.1em; line-height: 1.3; letter-spacing: .01em; }
+.rc-dot { color: var(--b1); }
+.rc-row { display: flex; justify-content: space-between; gap: 1ch; }
+.rc-row.bold { font-weight: 700; font-size: 1.1em; }
+.rc-paper hr { border: 0; border-top: 1.5px solid var(--text); margin: .55em 0; opacity: .85; }
+.rc-paper hr.dash { border-top-style: dashed; opacity: .5; }
+.rc-bar { display: grid; gap: 2px; margin-bottom: .35em; animation: fade var(--d-base) var(--ease) both; }
+.rc-bar .rc-row { margin: 0; white-space: pre; }
+.rc-bar i { display: block; height: .45em; background: var(--fill-2); overflow: hidden; }
+.rc-bar b { display: block; height: 100%; background: var(--text); transform-origin: left; transform: scaleX(var(--s)); animation: grow var(--d-spring) var(--spring-gentle) both .3s; }
+.rc-barcode { display: flex; justify-content: center; gap: 2px; height: 3.2em; margin: .3em 0 !important; }
+.rc-barcode i { display: block; height: 100%; background: var(--text); }
+.rc-gap { height: .6em; }
+.rc-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s2); }
+.rc-actions .btn { gap: 6px; }
+.rc-msg { margin: 0; }
+.rc-open { display: inline-block; margin-top: var(--s2); }
+
+/* PDF: la stampa del sistema mostra solo lo scontrino */
+@media print {
+  body.printing-receipt * { visibility: hidden !important; }
+  body.printing-receipt .rc-paper, body.printing-receipt .rc-paper * { visibility: visible !important; color: #000 !important; }
+  body.printing-receipt .rc-paper { position: fixed; left: 50%; top: 0; transform: translateX(-50%); background: #fff !important;
+    -webkit-backdrop-filter: none; backdrop-filter: none; border: 0; -webkit-mask: none; mask: none; }
+  body.printing-receipt .rc-paper > p { animation: none; }
+}

@@ -4,6 +4,16 @@ Una voce per versione, dalla più recente. Il numero tra parentesi nell'app (es.
 cresce a ogni modifica pubblicata, così ogni segnalazione dei tester indica esattamente quale codice stavano usando.
 Come si pubblica una nuova versione: docs/RELEASE.md.
 
+## 0.19.0 — 17 ottobre 2026 · ricevuta del mese
+
+- Analisi → Mese → «Ricevuta del mese»: il mese come uno scontrino. Categorie dalla più cara (con quante volte),
+  entrate, uscite, risparmio e quanto investito, quanto resta, confronto col mese prima, la categoria più cara,
+  le spese per parte con le barre, le curiosità del mese (il giorno più caro, in quanti giorni hai segnato le spese,
+  quanto hai messo da parte, le piccole spese, la più grande) e un codice a barre.
+- Condividi (immagine dal menu del telefono), Salva immagine, PDF (stampa del sistema). L'immagine si crea sul
+  telefono: identica alla pagina, nessun server.
+- Nei primi cinque giorni del mese, «Adesso» avvisa che la ricevuta del mese finito è pronta.
+
 ## 0.18.0 — 17 ottobre 2026 · Adesso
 
 - Home → «Adesso», sotto il numero del giorno: risponde a "cosa devo fare oggi?". Un titolo (quante cose chiedono

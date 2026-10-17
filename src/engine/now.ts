@@ -6,6 +6,7 @@ import { addDays, daysBetween } from './dates'
 import { agenda, docStatus, KIND_SIDE, type CalEvent } from './calendar'
 import { goalStatus, type Goal } from './goals'
 import type { CategoryChange } from './reports'
+import type { YearMonth } from './types'
 
 export type NowItem =
   | { type: 'late'; event: CalEvent; date: string; days: number }               // da seguire "finché non è fatto", già scaduto
@@ -19,6 +20,7 @@ export type NowItem =
   | { type: 'nextIn'; event: CalEvent; date: string; days: number }
   | { type: 'log' }                                                             // la sera, se oggi non hai segnato niente
   | { type: 'goal'; goal: Goal; days: number; left: number }                    // obiettivo in scadenza e indietro
+  | { type: 'receipt'; ym: YearMonth }                                          // nei primi giorni: la ricevuta del mese finito
 
 /**
  * Quelli che chiedono di fare qualcosa oggi (per il titolo: "Oggi hai N cose da fare"). I pagamenti di oggi solo se
@@ -35,6 +37,7 @@ export interface NowInput {
   loggedToday: boolean
   leftOver: number | null          // previsione di fine mese (null se non c'è un piano)
   changes?: CategoryChange[]       // categorie rispetto alla media (reports.categoryChanges)
+  receipt?: YearMonth | null       // il mese appena finito, se ha movimenti e siamo nei primi giorni del nuovo
 }
 
 export function nowItems(i: NowInput): NowItem[] {
@@ -82,7 +85,9 @@ export function nowItems(i: NowInput): NowItem[] {
     if (!s.done && s.onTrack === false && days >= 0 && days <= 45) out.push({ type: 'goal', goal: g, days, left: s.left })
   }
 
-  const rank: Record<NowItem['type'], number> = { late: 0, today: 1, docExpired: 2, pace: 3, doc: 4, nextOut: 5, price: 6, category: 7, nextIn: 8, log: 9, goal: 10 }
+  if (i.receipt) out.push({ type: 'receipt', ym: i.receipt })
+
+  const rank: Record<NowItem['type'], number> = { late: 0, today: 1, docExpired: 2, pace: 3, doc: 4, nextOut: 5, price: 6, receipt: 6.5, category: 7, nextIn: 8, log: 9, goal: 10 }
   // un documento a pochi giorni conta più della prossima uscita
   const score = (x: NowItem) => x.type === 'doc' && x.days > 14 ? 7.5 : rank[x.type]
   return out.sort((a, b) => score(a) - score(b))

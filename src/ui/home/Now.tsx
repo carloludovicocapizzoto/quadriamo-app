@@ -2,7 +2,7 @@
 // del giorno (una delle poche: Costituzione, 17/10), un titolo che dice quante cose chiedono un'azione, le prime tre voci
 // (engine/now, solo regole) e le altre a richiesta, che si aprono con un'espansione naturale. Ogni voce porta dove serve.
 import { useMemo, useState, type ReactNode } from 'react'
-import { categoryChanges, isActionable, forecastMonth, nowItems, type MonthResult, type NowItem } from '../../engine'
+import { categoryChanges, daysBetween, isActionable, periodOf, prevMonth, type YearMonth, forecastMonth, nowItems, type MonthResult, type NowItem } from '../../engine'
 import { navigate } from '../../app/router'
 import { useI18n } from '../../i18n/core'
 import type { AppData } from '../../store/state'
@@ -12,6 +12,8 @@ import { Monogram } from '../kit/Monogram'
 import { Money } from '../kit/Money'
 import { tap } from '../kit/motion'
 import { useEvents } from '../calendar/useEvents'
+import { Sheet } from '../kit/Sheet'
+import { Receipt } from '../receipt/Receipt'
 
 const SHOWN = 3
 
@@ -19,6 +21,7 @@ export function Now({ data, r, today, hasPlan, onLog }: { data: AppData; r: Mont
   const { t, money } = useI18n()
   const { toggleDone } = useEvents()
   const [open, setOpen] = useState(false)
+  const [receipt, setReceipt] = useState<YearMonth | null>(null)
   // l'ora conta solo per il promemoria serale: si legge all'apertura della Home
   const [hour] = useState(() => new Date().getHours())
   const s = data.settings, cur = s.currency
@@ -27,7 +30,9 @@ export function Now({ data, r, today, hasPlan, onLog }: { data: AppData; r: Mont
     events: s.events, goals: data.goals, today, hour, changes,
     loggedToday: data.transactions.some(x => x.date === today),
     leftOver: hasPlan ? forecastMonth(r, today)?.projectedLeftOver ?? null : null,
-  }), [s.events, data.goals, data.transactions, today, hour, changes, hasPlan, r])
+    // nei primi 5 giorni del mese: la ricevuta di quello appena finito, se ha movimenti
+    receipt: daysBetween(r.period.start, today) < 5 && data.transactions.some(x => x.date && x.date < r.period.start && x.date >= periodOf(prevMonth(r.ym), s.monthStartDay).start) ? prevMonth(r.ym) : null,
+  }), [s.events, s.monthStartDay, data.goals, data.transactions, today, hour, changes, hasPlan, r])
   const todo = items.filter(isActionable).length
   const when = (days: number) => days === 0 ? t('now.today') : days === 1 ? t('now.tomorrow') : t('now.inDays', { n: days })
 
@@ -78,6 +83,9 @@ export function Now({ data, r, today, hasPlan, onLog }: { data: AppData; r: Mont
       case 'log':
         lead = ico('plus'); title = t('now.log'); detail = t('now.logD'); go = onLog
         break
+      case 'receipt':
+        lead = ico('list'); title = t('now.receipt'); detail = t('now.receiptD'); go = () => setReceipt(x.ym)
+        break
       case 'goal':
         lead = ico('target'); title = t('now.goal', { name: x.goal.name, amount: money(x.left, cur) }); detail = when(x.days)
         go = () => navigate({ tab: 'profile', page: 'goals' })
@@ -104,6 +112,7 @@ export function Now({ data, r, today, hasPlan, onLog }: { data: AppData; r: Mont
         <button className="link-btn now-toggle" aria-expanded={open} onClick={() => { tap(); setOpen(o => !o) }}>
           {open ? t('now.less') : t('now.more', { n: items.length - SHOWN })}</button>
       </>}
+      <Sheet open={!!receipt} onClose={() => setReceipt(null)} title={t('rc.title')}>{receipt && <Receipt ym={receipt} />}</Sheet>
     </section>
   )
 }

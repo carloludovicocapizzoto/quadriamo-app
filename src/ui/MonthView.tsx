@@ -12,6 +12,9 @@ import { DailyChart } from './DailyChart'
 import { Money } from './kit/Money'
 import { BUCKET_COLORS, bucketName, categoryName } from './names'
 import { TxRow } from './TxRow'
+import { Sheet } from './kit/Sheet'
+import { Receipt } from './receipt/Receipt'
+import { tap } from './kit/motion'
 
 /**
  * Il mese, in un ordine solo: come finisce (il protagonista), le quattro parti, giorno per giorno, per categoria.
@@ -19,6 +22,7 @@ import { TxRow } from './TxRow'
  */
 export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; settings: Settings; onOpen: (tx: ClassifiedTx) => void; today: string }) {
   const { t } = useI18n()
+  const [receipt, setReceipt] = useState(false)
   // mese senza movimenti: niente zeri grandi, ma cosa comparirà qui e come cominciare
   if (r.transactions.length === 0) {
     const now = today >= r.period.start && today <= r.period.end
@@ -34,7 +38,9 @@ export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; sett
   // a blocchi: in una colonna sul telefono, affiancati quando lo spazio lo permette (tablet orizzontale, computer)
   return (
     <div className="ana-grid">
-      <div className="ana-wide"><MonthOutcome r={r} settings={settings} today={today} /></div>
+      <div className="ana-wide"><MonthOutcome r={r} settings={settings} today={today} />
+        <button className="link-btn rc-open" onClick={() => { tap(); setReceipt(true) }}>{t('rc.open')} →</button></div>
+      <Sheet open={receipt} onClose={() => setReceipt(false)} title={t('rc.title')}>{receipt && <Receipt ym={r.ym} />}</Sheet>
       <section><h2 className="sec-title">{t('ana.parts')}</h2><Parts r={r} settings={settings} onOpen={onOpen} /></section>
       <section><h2 className="sec-title">{t('ana.daily')}</h2><DailyChart r={r} settings={settings} today={today} /></section>
       {r.byCategory.some(c => c.amount !== 0) && <section>
