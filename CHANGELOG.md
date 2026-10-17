@@ -4,6 +4,16 @@ Una voce per versione, dalla più recente. Il numero tra parentesi nell'app (es.
 cresce a ogni modifica pubblicata, così ogni segnalazione dei tester indica esattamente quale codice stavano usando.
 Come si pubblica una nuova versione: docs/RELEASE.md.
 
+## 0.14.0 — 17 ottobre 2026 · calendario 2.0
+
+- In cima al mese, su una superficie in vetro: quanto resta a fine mese (previsione), la linea di quanto è già pagato,
+  entrate, uscite, già pagato, da pagare, e cosa è in ritardo tra le scadenze che segui "finché non è fatto".
+- Un colore per tipo nei giorni (pagamenti, entrate, risparmi e investimenti, promemoria) con la legenda; i giorni più
+  pesanti del mese in rosso.
+- Sotto il mese, la settimana del giorno scelto come timeline; la stessa timeline per le viste Giorno, Settimana e Agenda,
+  con le voci che entrano una dopo l'altra.
+- Come nel budget, un pagamento ricorrente conta come pagato dal suo giorno: non serve segnarlo.
+
 ## 0.13.0 — 17 ottobre 2026 · proposte dai movimenti
 
 - Calendario → «Sembrano ricorrenti»: Quadriamo trova nei tuoi movimenti quello che torna ogni mese (bollette, abbonamenti,

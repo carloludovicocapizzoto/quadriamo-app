@@ -133,3 +133,40 @@ export function goalEvents(goals: Goal[] | undefined, today: string, title: (nam
 
 /** L'id del versamento segnato in un obiettivo da un evento del calendario: uno per ogni volta, così si può anche togliere. */
 export const goalContributionId = (eventId: string, date: string) => `ev-${eventId}-${date}`
+
+/** Il colore di un evento nel calendario: uscite, entrate, risparmi e investimenti, promemoria. */
+export type Tone = 'out' | 'in' | 'save' | 'note'
+export const toneOf = (k: EventKind): Tone =>
+  k === 'saving' || k === 'pac' ? 'save' : KIND_SIDE[k] === 'in' ? 'in' : KIND_SIDE[k] === 'out' ? 'out' : 'note'
+
+export interface PeriodSummary {
+  income: number          // entrate previste
+  out: number             // uscite previste (pagamenti, risparmi e investimenti)
+  paid: number            // uscite fatte: segnate, o con la data passata (come le conta il budget)
+  toPay: number           // uscite ancora da fare
+  overdue: number         // di cui scadute e da seguire "finché non è fatto" (nag) ma non ancora segnate
+  load: Record<string, number>   // uscite per giorno
+  heavy: string[]         // i giorni più pesanti (al massimo 3, ognuno almeno il 15% delle uscite)
+}
+
+/** I conti di un intervallo del calendario (di solito un mese) a partire dalle voci di agenda(). */
+export function periodSummary(items: { date: string; event: CalEvent; done: boolean }[], today: string): PeriodSummary {
+  const r2 = (n: number) => Math.round(n * 100) / 100
+  const s: PeriodSummary = { income: 0, out: 0, paid: 0, toPay: 0, overdue: 0, load: {}, heavy: [] }
+  for (const x of items) {
+    const a = x.event.amount ?? 0
+    if (!a) continue
+    const side = KIND_SIDE[x.event.kind]
+    if (side === 'in') { s.income += a; continue }
+    if (side !== 'out') continue
+    s.out += a
+    s.load[x.date] = (s.load[x.date] ?? 0) + a
+    // come nel budget, un pagamento è fatto dal suo giorno; solo quelli da seguire "finché non è fatto" aspettano la conferma
+    const late = !x.done && x.date < today && !!x.event.nag
+    if (x.done || (x.date <= today && !late)) s.paid += a
+    else { s.toPay += a; if (late) s.overdue += a }
+  }
+  s.heavy = Object.entries(s.load).filter(([, v]) => v >= s.out * 0.15).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([d]) => d)
+  for (const k of ['income', 'out', 'paid', 'toPay', 'overdue'] as const) s[k] = r2(s[k])
+  return s
+}

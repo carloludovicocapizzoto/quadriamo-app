@@ -1,7 +1,9 @@
-// Analisi → Calendario: quello che succederà ai tuoi soldi. Quattro viste (giorno, settimana, mese, agenda), un punto per
-// ogni scadenza nel mese (scuro le uscite, verde le entrate, grigio i promemoria), e il dettaglio di ogni voce.
+// Analisi → Calendario: quello che succederà ai tuoi soldi, da capire in pochi secondi. Nel mese: il riepilogo (quanto resta
+// a fine mese, entrate, uscite, già pagato, da pagare), la griglia con un punto per tipo (uscite, entrate, risparmi,
+// promemoria) e i giorni più pesanti in evidenza, poi la settimana del giorno scelto come timeline. Le altre viste
+// (giorno, settimana, agenda) usano la stessa timeline.
 import { useMemo, useState } from 'react'
-import { GOAL_EVENT, KIND_SIDE, addDays, agenda, goalEvents, goalStatus, daysBetween, makeDate, parseDate, presetOf, type CalEvent, type Settings } from '../../engine'
+import { GOAL_EVENT, addDays, agenda, daysBetween, forecastMonth, goalEvents, goalStatus, makeDate, monthOf, parseDate, periodSummary, toneOf, type CalEvent, type MonthResult, type Settings } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import { navigate } from '../../app/router'
@@ -14,7 +16,9 @@ import { tap } from '../kit/motion'
 import { Sheet } from '../kit/Sheet'
 import { EventDetail } from './EventDetail'
 import { EventForm } from './EventForm'
+import { MonthSummary } from './MonthSummary'
 import { Suggestions } from './Suggestions'
+import { Timeline, type Item } from './Timeline'
 import { blankEvent, useEvents } from './useEvents'
 
 type Mode = 'day' | 'week' | 'month' | 'agenda'
@@ -26,7 +30,7 @@ const AGENDA_DAYS = 60
 /** Il lunedì della settimana di `iso`. */
 const monday = (iso: string) => addDays(iso, -((new Date(iso + 'T00:00:00Z').getUTCDay() + 6) % 7))
 
-export function CalendarView({ settings, today }: { settings: Settings; today: string }) {
+export function CalendarView({ settings, today, current }: { settings: Settings; today: string; current: MonthResult }) {
   const { t, date, lang, money } = useI18n()
   const { events: own, save, remove, toggleDone } = useEvents()
   // con le scadenze degli obiettivi (si toccano per aprire l'obiettivo)
@@ -65,34 +69,14 @@ export function CalendarView({ settings, today }: { settings: Settings; today: s
   const weekdays = useMemo(() => Array.from({ length: 7 }, (_, i) =>
     new Intl.DateTimeFormat(lang, { weekday: 'narrow', timeZone: 'UTC' }).format(new Date(Date.UTC(2026, 9, 5 + i)))), [lang])
 
-  const totals = (list: typeof items) => list.filter(x => !x.done && x.event.amount).reduce((a, x) => {
-    const side = KIND_SIDE[x.event.kind]
-    if (side === 'out') a.out += x.event.amount!; else if (side === 'in') a.in += x.event.amount!
-    return a
-  }, { out: 0, in: 0 })
-
   const kindLabel = (e: CalEvent) => {
     if (!e.id.startsWith(GOAL_EVENT)) return t(k(`ev.kind.${e.kind}`))
     const g = goals?.find(x => GOAL_EVENT + x.id === e.id)
     return g ? t('cal.goalLeft', { amount: money(goalStatus(g, today).left, cur) }) : ''
   }
-  const repeatLabel = (e: CalEvent) => {
-    const p = presetOf(e.repeat)
-    return p === 'once' ? null : p === 'custom' && e.repeat ? t('rp.customLine', { n: e.repeat.every, unit: t(k(`unit.${e.repeat.unit}`)) }) : t(k(`rp.${p}`)).toLowerCase()
-  }
-  const row = (x: (typeof items)[number], showDate = false) => {
-    const side = KIND_SIDE[x.event.kind]
-    return (
-      <li key={x.event.id + x.date}><button className={`row cal-row side-${side}${x.done ? ' done' : ''}`} onClick={() => { tap(); if (x.event.id.startsWith(GOAL_EVENT)) navigate({ tab: 'profile', page: 'goals' }); else setOpen({ event: x.event, date: x.date }) }}>
-        <span className="cal-dot" aria-hidden="true" />
-        <span className="row-main"><span>{x.event.title}</span>
-          <small>{[showDate ? date(x.date, { weekday: 'short', day: 'numeric', month: 'short' }) : null,
-            kindLabel(x.event) === x.event.title ? null : kindLabel(x.event), repeatLabel(x.event), x.done ? t('ev.done') : null].filter(Boolean).join(' · ')}</small></span>
-        {x.event.amount != null && <span className="row-value"><Money value={side === 'in' ? x.event.amount : -x.event.amount} currency={cur} /></span>}
-        {x.done && <Icon name="check" size={16} className="cal-done" />}
-      </button></li>
-    )
-  }
+  const openItem = (x: Item) => { if (x.event.id.startsWith(GOAL_EVENT)) navigate({ tab: 'profile', page: 'goals' }); else setOpen({ event: x.event, date: x.date }) }
+  const timeline = (days: string[], compactEmpty = false) =>
+    <Timeline days={days} byDay={byDay} today={today} selected={mode === 'month' ? day : undefined} currency={cur} compactEmpty={compactEmpty} label={kindLabel} onOpen={openItem} />
 
   if (!events.length) return <>
     <Empty title={t('cal.emptyTitle')} text={t('cal.emptyText')} action={{ label: t('cal.add'), onClick: () => setEdit(blankEvent(today)) }} />
@@ -102,8 +86,12 @@ export function CalendarView({ settings, today }: { settings: Settings; today: s
     </Sheet>
   </>
 
-  const dayList = byDay.get(day) ?? []
-  const sum = totals(mode === 'month' ? items.filter(x => x.date.slice(0, 7) === day.slice(0, 7)) : items)
+  // il mese di calendario mostrato: i suoi conti; quanto resta a fine mese solo se è il periodo di budget in corso
+  const monthItems = items.filter(x => x.date.slice(0, 7) === day.slice(0, 7))
+  const sum = periodSummary(mode === 'month' ? monthItems : items, today)
+  const viewed = monthOf(day, settings.monthStartDay)
+  const leftOver = viewed.year === current.ym.year && viewed.month === current.ym.month ? forecastMonth(current, today)?.projectedLeftOver ?? null : null
+  const heavy = new Set(sum.heavy)
   return (
     <div className="calendar">
       {/* le viste come pillole leggere: sopra ci sono già le schede di Analisi */}
@@ -119,34 +107,37 @@ export function CalendarView({ settings, today }: { settings: Settings; today: s
       </div>}
       {mode !== 'agenda' && day !== today && <button className="link-btn cal-today" onClick={() => { tap(); setDay(today) }}>{t('cal.today')}</button>}
 
-      {(sum.out > 0 || sum.in > 0) && <dl className="cal-sum">
-        {sum.out > 0 && <div><dt>{t('cal.out')}</dt><dd><Money value={sum.out} currency={cur} /></dd></div>}
-        {sum.in > 0 && <div><dt>{t('cal.in')}</dt><dd><Money value={sum.in} currency={cur} /></dd></div>}
-      </dl>}
+      {mode === 'month' ? <MonthSummary s={sum} leftOver={leftOver} currency={cur} />
+        : (sum.toPay > 0 || sum.income > 0) && <dl className="cal-sum">
+          {sum.toPay > 0 && <div><dt>{t('cal.out')}</dt><dd><Money value={sum.toPay} currency={cur} /></dd></div>}
+          {sum.income > 0 && <div><dt>{t('cal.in')}</dt><dd><Money value={sum.income} currency={cur} /></dd></div>}
+        </dl>}
 
       {mode === 'month' && <div className="cal-month" role="grid" aria-label={title}>
         {weekdays.map((w, i) => <span key={i} className="cal-wd" aria-hidden="true">{w}</span>)}
         {Array.from({ length: daysBetween(from, to) + 1 }, (_, i) => addDays(from, i)).map(d => {
           const list = byDay.get(d) ?? []
-          const sides = [...new Set(list.map(x => KIND_SIDE[x.event.kind]))]
+          const tones = (['out', 'in', 'save', 'note'] as const).filter(tn => list.some(x => toneOf(x.event.kind) === tn))
           const outside = d.slice(0, 7) !== day.slice(0, 7)
           return <button key={d} role="gridcell" aria-selected={d === day} aria-label={`${date(d, { day: 'numeric', month: 'long' })}${list.length ? `, ${list.length}` : ''}`}
-            className={`cal-day${d === day ? ' on' : ''}${d === today ? ' today' : ''}${outside ? ' out' : ''}`} onClick={() => { tap(); setDay(d) }}>
+            className={`cal-day${d === day ? ' on' : ''}${d === today ? ' today' : ''}${outside ? ' out' : ''}${heavy.has(d) && !outside ? ' heavy' : ''}`} onClick={() => { tap(); setDay(d) }}>
             <span>{parseDate(d).day}</span>
-            <i className="cal-dots" aria-hidden="true">{sides.map(sd => <b key={sd} className={`side-${sd}`} />)}</i>
+            <i className="cal-dots" aria-hidden="true">{tones.map(tn => <b key={tn} className={`tone-${tn}`} />)}</i>
           </button>
         })}
       </div>}
+      {mode === 'month' && <p className="cal-legend" aria-hidden="true">
+        {(['out', 'in', 'save', 'note'] as const).filter(tn => monthItems.some(x => toneOf(x.event.kind) === tn)).map(tn => <span key={tn} className={`tone-${tn}`}><b />{t(k(`cal.tone.${tn}`))}</span>)}
+        {heavy.size > 0 && <span className="heavy-key">{t('cal.heavy')}</span>}
+      </p>}
 
-      {mode === 'month' || mode === 'day' ? <>
-        {mode === 'month' && <p className="day-label">{date(day, { weekday: 'long', day: 'numeric', month: 'long' })}</p>}
-        {dayList.length ? <ul className="group-list cal-list">{dayList.map(x => row(x))}</ul> : <p className="muted small cal-none">{t('cal.nothing')}</p>}
-      </> : mode === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(from, i)).map(d => (
-        <section key={d} className="cal-group">
-          <p className={`day-label${d === today ? ' today' : ''}`}>{date(d, { weekday: 'long', day: 'numeric' })}</p>
-          {(byDay.get(d) ?? []).length ? <ul className="group-list cal-list">{byDay.get(d)!.map(x => row(x))}</ul> : <p className="muted small cal-none">—</p>}
-        </section>
-      )) : items.length ? <ul className="group-list cal-list">{items.map(x => row(x, true))}</ul> : <p className="muted small cal-none">{t('cal.nothingAgenda', { n: AGENDA_DAYS })}</p>}
+      {mode === 'month' ? <>
+        <h3 className="cal-week-title">{t('cal.week', { from: date(monday(day), { day: 'numeric', month: 'short' }), to: date(addDays(monday(day), 6), { day: 'numeric', month: 'short' }) })}</h3>
+        {/* della settimana, solo i giorni con qualcosa e quello scelto */}
+        {timeline(Array.from({ length: 7 }, (_, i) => addDays(monday(day), i)).filter(d => d === day || byDay.has(d)))}
+      </> : mode === 'day' ? timeline([day])
+        : mode === 'week' ? timeline(Array.from({ length: 7 }, (_, i) => addDays(from, i)), true)
+        : items.length ? timeline([...byDay.keys()]) : <p className="muted small cal-none">{t('cal.nothingAgenda', { n: AGENDA_DAYS })}</p>}
 
       <Suggestions today={today} onAdd={setEdit} />
       <button className="link-btn cal-add" onClick={() => { tap(); setEdit(blankEvent(mode === 'agenda' ? today : day)) }}>+ {t('cal.add')}</button>

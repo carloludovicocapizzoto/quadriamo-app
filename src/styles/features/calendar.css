@@ -1,5 +1,5 @@
-/* Analisi → Calendario e pagamenti ricorrenti. Tipografia e linee sottili, niente riquadri: un punto per tipo
-   (scuro le uscite, verde le entrate, grigio i promemoria), il giorno scelto in inchiostro, oggi sottolineato. */
+/* Analisi → Calendario e pagamenti ricorrenti. Tipografia e linee sottili: un punto per tipo, il giorno scelto in
+   inchiostro, oggi sottolineato. L'unica superficie è il riepilogo del mese, in vetro (.glass-card, components.css). */
 .calendar { display: grid; gap: var(--s3); }
 .cal-modes { margin-top: var(--s1); }
 .calendar .month-nav { margin: var(--s1) 0 0; }
@@ -18,18 +18,64 @@
 .cal-day.today > span { box-shadow: inset 0 -2px 0 var(--text); border-radius: 0; }
 .cal-day.on > span { background: var(--accent); color: var(--on-accent); border-radius: 50%; box-shadow: none; font-weight: 600; }
 .cal-dots { display: flex; gap: 3px; height: 5px; font-style: normal; }
-.cal-dots b, .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--faint); }
-.side-out .cal-dot, .cal-dots .side-out { background: var(--text); }
-.side-in .cal-dot, .cal-dots .side-in { background: var(--good); }
+.cal-dots b, .tl-dot, .cal-legend b { width: 5px; height: 5px; border-radius: 50%; background: var(--faint); }
+/* un colore per tipo: inchiostro le uscite, verde le entrate, arancio Quadriamo risparmi e investimenti, grigio i promemoria */
+.tone-out, .cal-dots .tone-out { --tone: var(--text); }
+.tone-in, .cal-dots .tone-in { --tone: var(--good); }
+.tone-save, .cal-dots .tone-save { --tone: var(--b1); }
+.tone-note, .cal-dots .tone-note { --tone: var(--faint); }
+.cal-dots b, .tone-out .tl-dot, .tone-in .tl-dot, .tone-save .tl-dot, .tone-note .tl-dot, .cal-legend b { background: var(--tone); }
+/* i giorni più pesanti: il numero in rosso e più marcato, senza riquadri */
+.cal-day.heavy > span { color: var(--bad); font-weight: 600; }
+.cal-day.heavy.on > span { color: var(--on-accent); }
 @media (hover: hover) { .cal-day:not(.on):hover > span { background: var(--fill); } }
+.cal-legend { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); margin: calc(-1 * var(--s1)) 0 0; font-size: var(--t-cap); color: var(--muted); }
+.cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cal-legend .heavy-key { color: var(--bad); font-weight: 600; }
 
-.cal-list .cal-row { gap: var(--s3); }
-.cal-row .cal-dot { flex-shrink: 0; width: 7px; height: 7px; }
-.cal-row.side-in .row-value { color: var(--good); }
-.cal-row.done .row-main > span, .cal-row.done .row-value { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+/* il riepilogo del mese: un numero protagonista, la linea del già pagato, quattro cifre */
+.cal-summary { display: grid; gap: var(--s2); }
+.cs-label { margin: 0; font-size: var(--t-sm); color: var(--muted); }
+.cs-hero { font-size: 40px; font-weight: 600; letter-spacing: -.03em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.cs-hero .cur { font-size: .55em; margin-right: 2px; color: var(--muted); }
+.cs-bar { height: 3px; border-radius: 2px; background: var(--fill-2); overflow: hidden; margin: var(--s1) 0; }
+.cs-bar i { display: block; height: 100%; width: 100%; background: var(--good); transform-origin: left; transform: scaleX(var(--w));
+  transition: transform var(--d-spring) var(--spring-gentle); animation: grow var(--d-spring) var(--spring-gentle) both; }
+.cs-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); margin: 0; }
+.cs-grid dt { font-size: var(--t-cap); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.cs-grid dd { margin: 2px 0 0; font-size: 14px; letter-spacing: -.01em; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cs-late { margin: 0; font-size: var(--t-sm); color: var(--bad); }
+@media (max-width: 359px) { .cs-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* la timeline: la data a sinistra, le voci a destra; i giorni entrano uno dopo l'altro */
+.cal-week-title { margin: var(--s3) 0 0; font-size: var(--t-sm); font-weight: 600; color: var(--muted); }
+.tl { list-style: none; margin: 0; padding: 0; }
+.tl-day { display: grid; grid-template-columns: 44px 1fr; gap: var(--s3); padding: var(--s3) 0; border-top: 1px solid var(--line);
+  animation: fade-up var(--d-spring) var(--spring-gentle) both; animation-delay: calc(var(--i, 0) * 28ms); }
+.tl-day.empty { padding: 6px 0; }
+.tl-date { display: grid; justify-items: start; align-content: start; line-height: 1.1; }
+.tl-date b { font-size: var(--t-h2); font-weight: 600; font-variant-numeric: tabular-nums; }
+.tl-date small { font-size: var(--t-cap); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.tl-day.empty:not(.on) .tl-date b { font-size: 15px; font-weight: 400; color: var(--faint); }
+.tl-day.empty:not(.on) .tl-date small { display: none; }
+.tl-day.today .tl-date b { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.tl-day.on .tl-date b { color: var(--text); }
+.tl-none { margin: 0; align-self: center; font-size: var(--t-sm); color: var(--muted); }
+.tl-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.tl-row { display: flex; align-items: center; gap: var(--s3); width: 100%; min-height: 44px; padding: 4px 0; border: 0; background: none;
+  color: var(--text); font: inherit; text-align: left; cursor: pointer; border-radius: var(--r-md); }
+.tl-row .tl-dot { flex-shrink: 0; width: 7px; height: 7px; }
+.tl-main { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.tl-main > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-main small { font-size: var(--t-sm); color: var(--muted); }
+.tl-late { color: var(--bad); font-weight: 600; margin-right: 6px; }
+.tl-amount { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tl-row.tone-in .tl-amount { color: var(--good); }
+.tl-row.done .tl-main > span, .tl-row.done .tl-amount { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+.tl-row:active { transform: scale(.985); transition: transform var(--d-fast) var(--ease); }
+@media (hover: hover) { .tl-row:hover { background: var(--fill); } }
 .cal-done { color: var(--good); flex-shrink: 0; }
 .cal-none { margin: var(--s1) 0 var(--s3); }
-.cal-group .day-label.today { color: var(--text); font-weight: 600; }
 .cal-add { justify-self: start; }
 
 .event-form { display: grid; gap: var(--s3); }

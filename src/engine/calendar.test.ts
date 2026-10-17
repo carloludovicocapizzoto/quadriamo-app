@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GOAL_EVENT, agenda, budgetEvents, goalContributionId, goalEvents, nextOccurrence, occurrences, presetOf, remainingCount, untilAfterCount, type CalEvent } from './calendar'
+import { GOAL_EVENT, agenda, periodSummary, toneOf, budgetEvents, goalContributionId, goalEvents, nextOccurrence, occurrences, presetOf, remainingCount, untilAfterCount, type CalEvent } from './calendar'
 import { defaultSettings } from './defaults'
 
 const ev = (over: Partial<CalEvent>): CalEvent => ({
@@ -60,5 +60,21 @@ describe('scadenze degli obiettivi nel calendario', () => {
     expect(list).toHaveLength(1)
     expect(list[0]).toMatchObject({ id: GOAL_EVENT + 'Viaggio', title: 'Scadenza: Viaggio', date: '2027-02-28', reminders: [{ days: 7 }] })
     expect(goalContributionId('e1', '2026-11-01')).toBe('ev-e1-2026-11-01')
+  })
+})
+
+describe('riepilogo del mese nel calendario', () => {
+  it('entrate, uscite, già pagato, da pagare (e in ritardo), giorni più pesanti', () => {
+    const rent = ev({ id: 'r', kind: 'rent', title: 'Affitto', amount: 400, date: '2026-10-01', done: ['2026-10-01'] })
+    const bill = ev({ id: 'b', kind: 'bill', title: 'Luce', amount: 60, date: '2026-10-10', nag: true })
+    const gym = ev({ id: 'g', kind: 'payment', title: 'Palestra', amount: 30, date: '2026-10-12' })
+    const pac = ev({ id: 'p', kind: 'pac', title: 'PAC', amount: 100, date: '2026-10-20' })
+    const pay = ev({ id: 's', kind: 'salary', title: 'Stipendio', amount: 1500, date: '2026-10-27' })
+    const note = ev({ id: 'n', kind: 'reminder', title: 'Disdire', amount: null, date: '2026-10-05' })
+    const s = periodSummary(agenda([rent, bill, gym, pac, pay, note], '2026-10-01', '2026-10-31'), '2026-10-15')
+    // la palestra è passata: pagata come nel budget; la luce va seguita finché non è fatta: in ritardo
+    expect(s).toMatchObject({ income: 1500, out: 590, paid: 430, toPay: 160, overdue: 60, heavy: ['2026-10-01', '2026-10-20'] })
+    expect(s.load['2026-10-10']).toBe(60)
+    expect([rent, pac, pay, note].map(e => toneOf(e.kind))).toEqual(['out', 'save', 'in', 'note'])
   })
 })
