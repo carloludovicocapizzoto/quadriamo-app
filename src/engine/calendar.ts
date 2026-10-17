@@ -107,9 +107,13 @@ export function occurrences(e: Pick<CalEvent, 'date' | 'repeat' | 'until'>, from
   if (e.date > end) return []
   if (!e.repeat) return e.date >= from ? [e.date] : []
   // si salta subito vicino a `from`, poi si va avanti una volta alla volta
-  const step = e.repeat.unit === 'day' ? e.repeat.every : e.repeat.unit === 'week' ? e.repeat.every * 7
-    : e.repeat.unit === 'month' ? e.repeat.every * 28 : e.repeat.every * 365
-  let n = Math.max(0, Math.floor(daysBetween(e.date, from) / step) - 1)
+  const { every, unit } = e.repeat
+  if (!Number.isInteger(every) || every < 1) return []
+  const a = parseDate(e.date), b = parseDate(from)
+  const distance = unit === 'month' || unit === 'year'
+    ? (b.year - a.year) * 12 + b.month - a.month : daysBetween(e.date, from)
+  const step = every * (unit === 'year' ? 12 : unit === 'week' ? 7 : 1)
+  let n = Math.max(0, Math.floor(distance / step) - 1)
   const out: string[] = []
   for (let d = nth(e, n); d <= end && out.length < 400; d = nth(e, ++n)) if (d >= from) out.push(d)
   return out

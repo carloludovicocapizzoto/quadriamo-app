@@ -23,7 +23,7 @@ export function parseBackup(text: string): AppData {
 export function toCsv(d: AppData, names: { category: (id: string | null) => string; bucket: (id: string | null) => string }): string {
   const esc = (v: unknown) => {
     const s = v == null ? '' : String(v)
-    return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+    return /[",\r\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
   const rows = [['date', 'description', 'category', 'amount', 'currency', 'paid_from'].join(',')]
   const sorted = [...d.transactions].sort((x, y) => (x.date ?? '').localeCompare(y.date ?? ''))

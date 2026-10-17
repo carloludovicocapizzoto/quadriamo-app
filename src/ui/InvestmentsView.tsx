@@ -10,6 +10,7 @@ import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
 import { newId } from '../store/state'
 import { parseAmount } from './kit/amount'
+import { decimalText, parseDecimal } from './kit/decimal'
 import { CURRENCIES } from './names'
 import { YearNav } from './YearView'
 import { AmountInput } from './kit/AmountInput'
@@ -18,12 +19,12 @@ import { Outcome } from './Outcome'
 import { Empty } from './kit/Empty'
 
 const TYPES = ['etf', 'stock', 'bond', 'fund', 'crypto', 'other'] as const
-const num = (v: number | null | undefined) => (v == null ? '' : String(v).replace('.', ','))
 
 export function InvestmentsView({ settings, transactions, today, year, onYear }: {
   settings: Settings; transactions: Transaction[]; today: string; year: number; onYear: (y: number) => void
 }) {
   const { t, money, lang } = useI18n()
+  const num = (v: number | null | undefined) => decimalText(v, lang)
   const { state, dispatch } = useStore()
   const inv: Investments = state.data?.investments ?? emptyInvestments()
   const cur = settings.currency
@@ -41,7 +42,7 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
     <>
       {/* senza titoli né conti: cosa si fa qui, al posto di un valore a zero */}
       {o.holdings.length || inv.deposits.length
-        ? <Outcome value={o.value} currency={cur} label={t('inv.valueToday')}
+        ? <Outcome value={o.value} currency={cur} label={t('inv.valueToday')} detail={o.value == null || o.invested == null ? t('inv.incomplete') : undefined}
             totals={[{ label: t('inv.invested'), value: o.invested }, { label: t('inv.gain'), value: o.gain }, { label: t('inv.return'), value: pct(o.return) }]} />
         : <Empty title={t('inv.emptyTitle')} text={t('inv.emptyText')} />}
 
@@ -54,11 +55,11 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
       {/* titoli: una riga ciascuno; i campi si aprono toccandola */}
       <h2 className="sec-title">{t('inv.holdings')}</h2>
       <ul className="group-list inv-items">
-        {o.holdings.map(({ holding: h, invested, value, gain, return: r, missingValue }, i) => (
+        {o.holdings.map(({ holding: h, invested, value, gain, return: r, missingValue, price, rate }, i) => (
           <li key={h.id}><details open={!h.name}>
             <summary className="row">
               <span className="row-main"><span>{h.name || t('inv.newHolding')}</span>
-                <small>{t(`inv.t.${h.type ?? 'etf'}` as 'inv.t.etf')}{r != null ? ` · ${pct(r)}` : ''}{missingValue ? ` · ${t('inv.noValue')}` : ''}</small></span>
+                <small>{t(`inv.t.${h.type ?? 'etf'}` as 'inv.t.etf')}{r != null ? ` · ${pct(r)}` : ''}{missingValue && price == null ? ` · ${t('inv.noValue')}` : ''}</small></span>
               <span className={`row-value${(gain ?? 0) < 0 ? ' bad-text' : ''}`}>{value != null ? money(value, cur) : '—'}</span>
             </summary>
             <div className="inv-grid">
@@ -75,15 +76,15 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
                   {[...new Set([cur, ...CURRENCIES])].map(c => <option key={c}>{c}</option>)}
                 </select></label>
               <label className="field"><span>{t('inv.units')}</span>
-                <input inputMode="decimal" defaultValue={num(h.units)} onChange={e => save(x => { x.holdings[i].units = parseAmount(e.target.value) })} /></label>
+                <input inputMode="decimal" defaultValue={num(h.units)} onChange={e => save(x => { x.holdings[i].units = parseDecimal(e.target.value) })} /></label>
               <label className="field"><span>{t('inv.avgPrice')}</span>
-                <input inputMode="decimal" defaultValue={num(h.avgPrice)} onChange={e => save(x => { x.holdings[i].avgPrice = parseAmount(e.target.value) })} /></label>
+                <input inputMode="decimal" defaultValue={num(h.avgPrice)} onChange={e => save(x => { x.holdings[i].avgPrice = parseDecimal(e.target.value) })} /></label>
               <label className="field"><span>{t('inv.price')}</span>
-                <input inputMode="decimal" defaultValue={num(h.manualPrice)} onChange={e => save(x => { x.holdings[i].manualPrice = parseAmount(e.target.value) })} /></label>
+                <input inputMode="decimal" defaultValue={num(h.manualPrice)} onChange={e => save(x => { x.holdings[i].manualPrice = parseDecimal(e.target.value) })} /></label>
             </div>
             <p className="inv-line">{t('inv.invested')} {invested != null ? money(invested, cur) : '—'} · {t('inv.gain')}{' '}
               <span className={(gain ?? 0) < 0 ? 'bad-text' : ''}>{gain != null ? money(gain, cur) : '—'}</span></p>
-            {missingValue && h.currency && <p className="bad-text small">{t('inv.missingRate', { cur: h.currency })}</p>}
+            {rate == null && h.currency && <p className="bad-text small">{t('inv.missingRate', { cur: h.currency })}</p>}
             <button className="link-btn danger-link" onClick={() => save(x => { x.holdings.splice(i, 1) })}>{t('action.delete')}</button>
           </details></li>
         ))}

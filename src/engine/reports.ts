@@ -82,8 +82,9 @@ export function forecastMonth(r: MonthResult, today: string): Forecast | null {
   const daysLeft = daysBetween(today, r.period.end)
   let spentSoFar = 0, upcoming = 0, variable = 0
   for (const t of r.transactions) {
-    if (t.type !== 'expense' || t.amountIn == null) continue
-    if (t.upcoming) { upcoming += t.amountIn; continue }
+    if (t.type !== 'expense') continue
+    if (t.upcoming) { upcoming += t.amountIn ?? t.planned ?? 0; continue }
+    if (t.amountIn == null) continue
     if (!t.date || t.date > today) continue
     spentSoFar += t.amountIn
     if (!t.recurring) variable += t.amountIn

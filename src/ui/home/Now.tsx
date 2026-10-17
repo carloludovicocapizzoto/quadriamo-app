@@ -52,7 +52,7 @@ export function Now({ data, r, today, hasPlan, onLog }: { data: AppData; r: Mont
         end = x.amount > 0 ? <Money value={-x.amount} currency={cur} /> : null
         break
       case 'docExpired':
-        lead = ico('idcard', 'bad'); title = t('now.docExpired', { name: x.event.title }); detail = t('now.docExpiredD', { n: x.days })
+        lead = ico('idcard', 'bad'); title = t('now.docExpired', { name: x.event.title }); detail = t(x.days === 1 ? 'now.docExpiredOne' : 'now.docExpiredD', { n: x.days })
         go = () => navigate({ tab: 'profile', page: 'documents' })
         break
       case 'doc':

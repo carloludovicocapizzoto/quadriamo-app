@@ -31,7 +31,7 @@ export function DocumentsPage({ today }: { today: string }) {
   const current = docs.find(d => d.id === open) ?? null
   const status = (e: CalEvent) => {
     const s = docStatus(e, today)
-    return { ...s, text: s.state === 'expired' ? t('doc.expiredAgo', { n: -s.days }) : s.days === 0 ? t('doc.today') : s.state === 'soon' ? t('doc.inDays', { n: s.days }) : t('doc.valid') }
+    return { ...s, text: s.state === 'expired' ? t(s.days === -1 ? 'doc.expiredAgoOne' : 'doc.expiredAgo', { n: -s.days }) : s.days === 0 ? t('doc.today') : s.state === 'soon' ? t(s.days === 1 ? 'doc.inDaysOne' : 'doc.inDays', { n: s.days }) : t('doc.valid') }
   }
   const next = docs.find(d => docStatus(d, today).state !== 'ok')
   const isNew = edit && !events.some(e => e.id === edit.id)
@@ -58,7 +58,7 @@ export function DocumentsPage({ today }: { today: string }) {
       {next ? <>
         <p className={`doc-hero ${docStatus(next, today).state}`}>{next.title}</p>
         <p className="muted small">{status(next).text} · {date(next.date, { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-      </> : <p className="doc-hero">{t('doc.count', { n: docs.length })}</p>}
+      </> : <p className="doc-hero">{t(docs.length === 1 ? 'doc.countOne' : 'doc.count', { n: docs.length })}</p>}
     </section>
 
     {DOC_CATEGORIES.filter(c => docs.some(d => d.doc?.category === c)).map(c => (
