@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Quadriamo — I tuoi soldi, in quattro</title>
-  <meta name="description" content="Per studenti fuori sede e chi inizia a gestire i soldi: scrivi quanto ti arriva e l'affitto, Quadriamo divide il resto e ogni mattina ti dice quanto puoi spendere oggi. Niente Excel, gratis in beta.">
+  <meta name="description" content="Ogni mattina sai quanto puoi spendere oggi e cosa conta: calendario dei pagamenti, promemoria, abbonamenti, documenti e la ricevuta del mese. Gratis in beta.">
   <meta name="theme-color" content="#D6E2E6" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1C3F52" media="(prefers-color-scheme: dark)">
   <meta property="og:title" content="Quadriamo — I tuoi soldi, in quattro">
-  <meta property="og:description" content="Il budget con la regola 55-20-15-10: semplice, europeo, rispettoso della privacy.">
+  <meta property="og:description" content="Cosa conta oggi, per i tuoi soldi: il numero del giorno, il calendario dei pagamenti, gli abbonamenti e la ricevuta del mese. Europeo, rispettoso della privacy.">
   <meta property="og:image" content="/icons/icon-512.png">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -166,37 +166,46 @@
   <section id="funzioni" class="site-wrap">
     <h2 data-i18n="feat.title"></h2>
     <div class="feat-chips">
-      <button type="button" class="feat-chip" data-feat="safe"><span class="ico">◎</span><span data-i18n="feat.safeT"></span></button>
-      <button type="button" class="feat-chip" data-feat="pay"><span class="ico">⇄</span><span data-i18n="feat.payT"></span></button>
-      <button type="button" class="feat-chip" data-feat="import"><span class="ico">⇪</span><span data-i18n="feat.importT"></span></button>
-      <button type="button" class="feat-chip" data-feat="carry"><span class="ico">↻</span><span data-i18n="feat.carryT"></span></button>
-      <button type="button" class="feat-chip" data-feat="year"><span class="ico">▥</span><span data-i18n="feat.yearT"></span></button>
-      <button type="button" class="feat-chip" data-feat="inv"><span class="ico">↗</span><span data-i18n="feat.invT"></span></button>
-      <button type="button" class="feat-chip" data-feat="fx"><span class="ico">€</span><span data-i18n="feat.fxT"></span></button>
       <button type="button" class="feat-chip" data-feat="cal"><span class="ico">▦</span><span data-i18n="feat.calT"></span></button>
       <button type="button" class="feat-chip" data-feat="subs"><span class="ico">◫</span><span data-i18n="feat.subsT"></span></button>
-      <button type="button" class="feat-chip" data-feat="docs"><span class="ico">▤</span><span data-i18n="feat.docsT"></span></button>
       <button type="button" class="feat-chip" data-feat="receipt"><span class="ico">≡</span><span data-i18n="feat.receiptT"></span></button>
+      <button type="button" class="feat-chip" data-feat="docs"><span class="ico">▤</span><span data-i18n="feat.docsT"></span></button>
+      <button type="button" class="feat-chip" data-feat="safe"><span class="ico">◎</span><span data-i18n="feat.safeT"></span></button>
+      <button type="button" class="feat-chip" data-feat="pay"><span class="ico">⇄</span><span data-i18n="feat.payT"></span></button>
+      <button type="button" class="feat-chip" data-feat="cap"><span class="ico">◧</span><span data-i18n="feat.capT"></span></button>
+      <button type="button" class="feat-chip" data-feat="import"><span class="ico">⇪</span><span data-i18n="feat.importT"></span></button>
+      <button type="button" class="feat-chip" data-feat="year"><span class="ico">▥</span><span data-i18n="feat.yearT"></span></button>
+      <button type="button" class="feat-chip" data-feat="inv"><span class="ico">↗</span><span data-i18n="feat.invT"></span></button>
+      <button type="button" class="feat-chip" data-feat="news"><span class="ico">≋</span><span data-i18n="feat.newsT"></span></button>
+      <button type="button" class="feat-chip" data-feat="fx"><span class="ico">€</span><span data-i18n="feat.fxT"></span></button>
+      <button type="button" class="feat-chip" data-feat="carry"><span class="ico">↻</span><span data-i18n="feat.carryT"></span></button>
       <button type="button" class="feat-chip" data-feat="fast"><span class="ico">⚡</span><span data-i18n="feat.fastT"></span></button>
     </div>
-    <button type="button" class="link-more" data-feat="safe" data-i18n="feat.more"></button>
+    <button type="button" class="link-more" data-feat="cal" data-i18n="feat.more"></button>
     <dialog id="feat-dialog" aria-labelledby="feat-dialog-title">
       <form method="dialog" class="dlg-head"><h2 id="feat-dialog-title" data-i18n="feat.title"></h2><button class="dlg-close" data-i18n="feat.close"></button></form>
       <div class="feat-grid">
-        <article id="feat-safe"><span class="ico">◎</span><h3 data-i18n="feat.safeT"></h3><p data-i18n="feat.safe"></p></article>
-        <article id="feat-pay"><span class="ico">⇄</span><h3 data-i18n="feat.payT"></h3><p data-i18n="feat.pay"></p></article>
-        <article id="feat-import"><span class="ico">⇪</span><h3 data-i18n="feat.importT"></h3><p data-i18n="feat.import"></p></article>
-        <article id="feat-carry"><span class="ico">↻</span><h3 data-i18n="feat.carryT"></h3><p data-i18n="feat.carry"></p></article>
-        <article id="feat-year"><span class="ico">▥</span><h3 data-i18n="feat.yearT"></h3><p data-i18n="feat.year"></p></article>
-        <article id="feat-inv"><span class="ico">↗</span><h3 data-i18n="feat.invT"></h3><p data-i18n="feat.inv"></p></article>
-        <article id="feat-fx"><span class="ico">€</span><h3 data-i18n="feat.fxT"></h3><p data-i18n="feat.fx"></p></article>
         <article id="feat-cal"><span class="ico">▦</span><h3 data-i18n="feat.calT"></h3><p data-i18n="feat.cal"></p></article>
         <article id="feat-subs"><span class="ico">◫</span><h3 data-i18n="feat.subsT"></h3><p data-i18n="feat.subs"></p></article>
-        <article id="feat-docs"><span class="ico">▤</span><h3 data-i18n="feat.docsT"></h3><p data-i18n="feat.docs"></p></article>
         <article id="feat-receipt"><span class="ico">≡</span><h3 data-i18n="feat.receiptT"></h3><p data-i18n="feat.receipt"></p></article>
+        <article id="feat-docs"><span class="ico">▤</span><h3 data-i18n="feat.docsT"></h3><p data-i18n="feat.docs"></p></article>
+        <article id="feat-safe"><span class="ico">◎</span><h3 data-i18n="feat.safeT"></h3><p data-i18n="feat.safe"></p></article>
+        <article id="feat-pay"><span class="ico">⇄</span><h3 data-i18n="feat.payT"></h3><p data-i18n="feat.pay"></p></article>
+        <article id="feat-cap"><span class="ico">◧</span><h3 data-i18n="feat.capT"></h3><p data-i18n="feat.cap"></p></article>
+        <article id="feat-import"><span class="ico">⇪</span><h3 data-i18n="feat.importT"></h3><p data-i18n="feat.import"></p></article>
+        <article id="feat-year"><span class="ico">▥</span><h3 data-i18n="feat.yearT"></h3><p data-i18n="feat.year"></p></article>
+        <article id="feat-inv"><span class="ico">↗</span><h3 data-i18n="feat.invT"></h3><p data-i18n="feat.inv"></p></article>
+        <article id="feat-news"><span class="ico">≋</span><h3 data-i18n="feat.newsT"></h3><p data-i18n="feat.news"></p></article>
+        <article id="feat-fx"><span class="ico">€</span><h3 data-i18n="feat.fxT"></h3><p data-i18n="feat.fx"></p></article>
+        <article id="feat-carry"><span class="ico">↻</span><h3 data-i18n="feat.carryT"></h3><p data-i18n="feat.carry"></p></article>
         <article id="feat-fast"><span class="ico">⚡</span><h3 data-i18n="feat.fastT"></h3><p data-i18n="feat.fast"></p></article>
       </div>
     </dialog>
+    <div class="proof">
+      <h3 data-i18n="proof.title"></h3>
+      <p class="muted" data-i18n="proof.text"></p>
+      <ul class="checks-list"><li data-i18n="proof.1"></li><li data-i18n="proof.2"></li><li data-i18n="proof.3"></li></ul>
+    </div>
   </section>
 
   <section class="alt">
@@ -278,6 +287,10 @@
       <details><summary data-i18n="faq.q4"></summary><p data-i18n="faq.a4"></p></details>
       <details><summary data-i18n="faq.q5"></summary><p data-i18n="faq.a5"></p></details>
       <details><summary data-i18n="faq.q6"></summary><p data-i18n="faq.a6"></p></details>
+      <details><summary data-i18n="faq.q7"></summary><p data-i18n="faq.a7"></p></details>
+      <details><summary data-i18n="faq.q8"></summary><p data-i18n="faq.a8"></p></details>
+      <details><summary data-i18n="faq.q9"></summary><p data-i18n="faq.a9"></p></details>
+      <details><summary data-i18n="faq.q10"></summary><p data-i18n="faq.a10"></p></details>
     </div>
   </section>
 </main>

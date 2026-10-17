@@ -1,6 +1,6 @@
 # Landing page — testi aggiornati (italiano; chiavi di `public/home.js`)
 
-Segue la struttura del sito di oggi (hero, calcolatore, "Una giornata", numeri, regola, come funziona, funzioni, privacy,
+**Applicata al sito il 17/10 (titolo: «Cosa conta oggi, per i tuoi soldi.»).** Segue la struttura del sito di oggi (hero, calcolatore, "Una giornata", numeri, regola, come funziona, funzioni, privacy,
 scarica, feedback, prezzi, FAQ), così i testi si applicano senza ridisegnare la pagina. Le traduzioni EN/FR/ES si fanno
 quando si applica. Già sul sito dal 17/10: le 4 funzioni nuove nella griglia e il passo 7 «Niente sorprese».
 Regole: BRIEF §12 (niente «AI», niente store, niente widget fuori dall'app, niente loghi di servizi).
