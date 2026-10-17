@@ -1,0 +1,52 @@
+1
+00:00:00,250 --> 00:00:01,582
+The day before your flight,
+
+2
+00:00:01,622 --> 00:00:03,293
+you find out your ID card…
+
+3
+00:00:03,407 --> 00:00:04,532
+has expired.
+
+4
+00:00:05,162 --> 00:00:07,330
+With Quadriamo, you know a month ahead.
+
+5
+00:00:07,370 --> 00:00:10,445
+Same for your driving licence and car insurance.
+
+6
+00:00:11,075 --> 00:00:13,353
+And the calendar shows what you’ve already paid,
+
+7
+00:00:13,393 --> 00:00:14,493
+what’s still due,
+
+8
+00:00:14,533 --> 00:00:16,447
+and what’s left at the end of the month.
+
+9
+00:00:17,076 --> 00:00:19,322
+Reminders arrive right when you need them.
+
+10
+00:00:19,412 --> 00:00:20,722
+And never too many.
+
+11
+00:00:21,172 --> 00:00:22,238
+Quadriamo.
+
+12
+00:00:22,328 --> 00:00:23,642
+No surprises.
+
+13
+00:00:23,682 --> 00:00:25,099
+Free during the beta.
+

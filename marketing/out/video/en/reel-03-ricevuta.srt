@@ -1,0 +1,40 @@
+1
+00:00:00,250 --> 00:00:01,474
+October’s over.
+
+2
+00:00:01,564 --> 00:00:02,838
+Here’s your receipt.
+
+3
+00:00:03,288 --> 00:00:04,518
+Where the money went.
+
+4
+00:00:04,558 --> 00:00:06,359
+How it compares with September.
+
+5
+00:00:06,399 --> 00:00:08,020
+Your most expensive day.
+
+6
+00:00:08,470 --> 00:00:10,316
+Save it, or share it.
+
+7
+00:00:10,406 --> 00:00:13,167
+Your phone makes it: no server involved.
+
+8
+00:00:13,617 --> 00:00:14,683
+Quadriamo.
+
+9
+00:00:14,773 --> 00:00:16,528
+Your month, on one receipt.
+
+10
+00:00:16,568 --> 00:00:17,985
+Free during the beta.
+

@@ -1,0 +1,56 @@
+1
+00:00:00,430 --> 00:00:02,850
+How much do you spend on subscriptions in a year?
+
+2
+00:00:02,950 --> 00:00:03,946
+Take a guess.
+
+3
+00:00:04,396 --> 00:00:05,861
+Adding them takes seconds:
+
+4
+00:00:05,901 --> 00:00:08,516
+find the service, tap it, type the price.
+
+5
+00:00:09,146 --> 00:00:10,943
+And when a price goes up, you’ll know.
+
+6
+00:00:11,033 --> 00:00:12,035
+Netflix?
+
+7
+00:00:12,135 --> 00:00:13,663
+Up thirty-eight percent.
+
+8
+00:00:14,293 --> 00:00:16,522
+Then every subscription becomes a block,
+
+9
+00:00:16,562 --> 00:00:18,598
+sized by what it costs you in a year.
+
+10
+00:00:19,048 --> 00:00:20,565
+Now, take one away.
+
+11
+00:00:20,655 --> 00:00:21,795
+Without DAZN,
+
+12
+00:00:21,835 --> 00:00:24,860
+you’d save almost four hundred and twenty euros a year.
+
+13
+00:00:25,310 --> 00:00:26,376
+Quadriamo.
+
+14
+00:00:26,466 --> 00:00:27,882
+Free during the beta.
+

@@ -1,6 +1,6 @@
 # La voce di Quadriamo — guida di lettura
 
-Vale per tutti i voice-over della campagna: i 6 video già montati (voce sintetica, `make_reels.py`) e quelli da registrare
+Vale per tutti i voice-over della campagna: i 6 video già montati, in italiano e in inglese (voce sintetica, `make_reels.py`) e quelli da registrare
 con una voce professionista (spot a pagamento, hero, demo). Gli script restano quelli di `01-reel.md`, `02-hero-e-demo.md`
 e `03-spot.md`: cambia **come** si leggono.
 
@@ -62,35 +62,51 @@ Dizione pulita, nessuna inflessione regionale marcata, nessuna "s" sibilante (de
   picchi a −1,5 dBTP** per i social; −16 LUFS per YouTube orizzontale.
 - La musica sotto la voce scende (ducking) di 7-8 dB mentre si parla e risale nelle pause.
 
-## 7. Copioni annotati dei video già montati
-(voce sintetica «Sara», stile reel; l'hero in stile hero. Gli stessi copioni valgono per la registrazione umana.)
+## 7. Come «legge» la voce sintetica (voice.py) — le stesse regole valgono per chi registra
+**La punteggiatura decide l'interpretazione.** Ogni frase (fino a `. ? ! ; : …`) si dice da sola, poi una pausa diversa:
+| Segno | Pausa dopo (rispetto alla pausa di frase) | Intenzione |
+|---|---|---|
+| `,` | nessuna: la voce si appoggia e prosegue | continuità |
+| `:` | 0,55 | annuncio: quello che segue è la risposta |
+| `;` | 0,75 | stacco morbido |
+| `.` | 1,0 | chiusura |
+| `!` | 0,9, un filo più di volume | energia (raro) |
+| `?` | 1,25, intonazione che sale di mezzo tono | curiosità: lascia pensare |
+| `…` | 1,3 | sospensione prima della rivelazione |
+| `\|` / `\|\|` | respiro breve / pausa lunga | dove la parola deve «atterrare» |
 
-**reel-01-adesso** — Ogni mattina, | la stessa domanda. || Cosa devo sapere, oggi? / Quadriamo te lo dice con un numero: | quanto
-puoi spendere oggi. / E sotto, | quello che conta. | Una bolletta da segnare. | Un pagamento domani. | Un abbonamento aumentato. /
-Il resto | lo trovi scorrendo. || Niente di più. / **Quadriamo.** || Gratis durante la beta. | Link nella bio.
+- **Ritmo alternato**: nel corpo le frasi alternano un passo più disteso e uno più svelto (mai la stessa velocità per 3 frasi).
+- **Intonazione variabile**: domande in salita; frasi brevi affermative (≤ 3 parole) più lente e più basse (autorevolezza);
+  il nome «Quadriamo.» deciso e basso; l'invito finale più energico e luminoso; le spiegazioni calme.
+- **Respiri**: prima di una frase lunga (6+ parole) dopo una pausa vera, un respiro appena udibile. Mai una voce che non respira.
+- **Enfasi solo su**: il beneficio, il problema, il numero, il vantaggio, la CTA. Tutto il resto è neutro.
+- **Testo parlato, non scritto**: le frasi si riscrivono per l'orecchio prima di registrarle (frasi corte, il soggetto
+  vicino al verbo, i numeri come si dicono: «più trentotto per cento», «quasi quattrocentoventi euro»).
 
-**reel-02-costo-annuale** — Quanto paghi di abbonamenti in un anno? || Indovina. / Li aggiungi in pochi secondi: | cerchi il servizio,
-lo tocchi, scrivi il prezzo. / Se un prezzo sale, lo vedi. || Netflix: | più trentotto per cento. / Poi ogni abbonamento diventa un
-blocco, | grande quanto costa in un anno. / Togline uno. || Senza DAZN, | risparmieresti quattrocentodiciannove euro l'anno. /
-**Quadriamo.** || Gratis durante la beta.
+## 8. La voce guida il video
+Ogni scena dura quanto la sua battuta (+0,25 s prima, +0,45 s dopo); lo zoom sul dettaglio e la dissolvenza prima/dopo
+partono quando la voce arriva alla frase che li nomina; il fruscio di transizione cade 0,2 s prima del taglio.
 
-**reel-03-ricevuta** — Ottobre è finito. || Ecco lo scontrino. / Dove sono andati i soldi. | Il confronto con settembre. | Il giorno più
-caro. / Lo salvi, | o lo condividi. || Lo crea il tuo telefono. | Nessun server. / **Quadriamo.** || La ricevuta del mese. | Gratis durante la beta.
+## 9. Versione inglese
+Non una traduzione: un adattamento. Tono fintech premium (Monzo, Revolut, Apple), frasi ancora più corte, verbi attivi,
+nessun idiomatismo forzato. Voce `af_heart` (Kokoro, americana neutra); schermate dell'app in inglese
+(`shots-campaign/en-dark`). Euro con il simbolo davanti (€36.97), date all'inglese («October's over»).
 
-**reel-04-niente-sorprese** — Il giorno prima del volo, | scopri che la carta d'identità | è scaduta. / Quadriamo te lo dice un mese prima. |
-Anche per patente e assicurazioni. / E nel calendario vedi cosa hai pagato, | cosa devi pagare, | e quanto resta a fine mese. /
-I promemoria arrivano al momento giusto. || Mai troppi. / **Quadriamo.** || Niente sorprese. | Gratis durante la beta.
+## 10. Sottotitoli (italiano e inglese)
+- Tempi presi dalla voce, frase per frase; un blocco = un'unità di senso (mai spezzato a caso). Una frase lunga si divide
+  a una virgola o ai due punti; un pezzo che finisce con virgola resta col seguito se ci sta («Lo salvi, o lo condividi.»).
+- Al massimo **2 righe**, ~40 caratteri per riga; Inter 600, 42 px, bianco caldo su una lastra scura arrotondata (87%),
+  a 1440 px dall'alto (sopra la zona dei pulsanti di Instagram/TikTok); comparsa e uscita in 120 ms.
+- Nei titoli cinetici il sottotitolo non si ripete se la frase è già scritta grande; nella scena finale non c'è.
+- I sottotitoli sono impressi nel video (si leggono anche senza audio). Per ogni video c'è anche il file `.srt` con gli
+  stessi blocchi: caricarlo dove è accettato (YouTube, LinkedIn, X, Facebook) per accessibilità e ricerca; su YouTube
+  scegliere i sottotitoli caricati, non quelli automatici.
 
-**reel-05-parti-da-dove-sei** — Hai dei risparmi. || Ma quanto puoi davvero toccare? / Dividili per uso: | fondo di emergenza, | liquidità, |
-da far crescere. || Ognuno con la sua regola. / Il tuo budget | parte dalla tua situazione reale. / **Quadriamo.** || Gratis durante la beta.
+## 11. Copioni dei video già montati
+I copioni (italiano e inglese, con i segni di pausa) sono in `marketing/make_reels.py` (REELS): sono la fonte unica.
+Video: `out/video/<nome>.mp4` + `.srt` (italiano), `out/video/en/<nome>.mp4` + `.srt` (inglese).
 
-**hero-01-quadriamo-adesso** (stile hero) — I tuoi soldi, || in quattro. / Ogni mattina, un numero: | quanto puoi spendere oggi. /
-E quello che conta, | prima che tu lo chieda. / Il mese, giorno per giorno. | Cosa hai pagato, | cosa arriva, | quanto resta. /
-I promemoria arrivano al momento giusto. || E non di più. / Gli abbonamenti, | grandi quanto costano davvero. / I documenti, |
-prima che scadano. / I risparmi che hai già, | ognuno con la sua regola. / E a fine mese, | il mese in uno scontrino. /
-Calcolato sul tuo telefono. || I tuoi dati, | li vedi solo tu. / **Quadriamo.** || Gratis durante la beta.
-
-## 8. Come leggere gli altri script (01-reel, 02-hero-e-demo, 03-spot)
+## 12. Come leggere gli altri script (01-reel, 02-hero-e-demo, 03-spot)
 Le battute della colonna «Voce» si leggono così:
 1. Prima battuta = **gancio**; ultima (marchio) = **finale**; tutto il resto = **corpo**.
 2. Ogni punto = pausa di frase; ogni virgola prima di un elenco o di un numero = `|`; dopo «Quadriamo.» sempre `||`.
@@ -123,6 +139,6 @@ Le battute della colonna «Voce» si leggono così:
 | S01-S10 (spot) | il claim | ritmato sul montaggio |
 | D01-D10 (demo) | il nome dell'azione | chiaro, guida |
 
-## 9. Rigenerare le voci sintetiche
-`<python con kokoro-onnx> marketing/make_reels.py` (tutti) o con il nome di un video. Voce maschile: `QUADRIAMO_VOICE=im_nicola`.
+## 13. Rigenerare video e voci
+`<python con kokoro-onnx> marketing/make_reels.py` (tutti, in italiano e in inglese) o con il nome di un video; `--lang it` o `--lang en` per una lingua sola. Voce maschile: `QUADRIAMO_VOICE=im_nicola`.
 Stili, velocità e pause: `marketing/voice.py` (STYLES). Segni di pausa nelle battute: `|` e `||`.

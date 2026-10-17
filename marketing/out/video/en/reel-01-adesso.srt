@@ -1,0 +1,56 @@
+1
+00:00:00,250 --> 00:00:02,461
+Every morning, the same question:
+
+2
+00:00:02,551 --> 00:00:04,004
+what do I need to know today?
+
+3
+00:00:04,634 --> 00:00:06,810
+Quadriamo answers with a single number:
+
+4
+00:00:06,850 --> 00:00:08,264
+what you can spend today.
+
+5
+00:00:08,715 --> 00:00:10,967
+And right below it, what matters.
+
+6
+00:00:11,007 --> 00:00:12,551
+A bill to mark as paid.
+
+7
+00:00:12,591 --> 00:00:14,058
+A payment due tomorrow.
+
+8
+00:00:14,098 --> 00:00:16,019
+A subscription that just went up.
+
+9
+00:00:16,468 --> 00:00:17,589
+Everything else?
+
+10
+00:00:17,689 --> 00:00:18,822
+Just scroll.
+
+11
+00:00:18,912 --> 00:00:20,030
+Nothing more.
+
+12
+00:00:20,480 --> 00:00:21,546
+Quadriamo.
+
+13
+00:00:21,636 --> 00:00:23,042
+Free during the beta.
+
+14
+00:00:23,082 --> 00:00:24,363
+Link in bio.
+

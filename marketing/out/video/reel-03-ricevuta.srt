@@ -1,0 +1,40 @@
+1
+00:00:00,250 --> 00:00:01,915
+Ottobre è finito.
+
+2
+00:00:02,005 --> 00:00:03,735
+Ecco il tuo scontrino.
+
+3
+00:00:04,185 --> 00:00:06,222
+Dove sono finiti i soldi.
+
+4
+00:00:06,262 --> 00:00:08,669
+Com’è andata rispetto a settembre.
+
+5
+00:00:08,709 --> 00:00:10,376
+Il giorno più caro.
+
+6
+00:00:10,826 --> 00:00:13,543
+Lo salvi, o lo condividi.
+
+7
+00:00:13,633 --> 00:00:16,938
+Lo crea il tuo telefono: nessun server.
+
+8
+00:00:17,388 --> 00:00:18,755
+Quadriamo.
+
+9
+00:00:18,845 --> 00:00:20,816
+Il mese, in uno scontrino.
+
+10
+00:00:20,856 --> 00:00:22,740
+Gratis, durante la beta.
+

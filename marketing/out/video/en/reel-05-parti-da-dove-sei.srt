@@ -1,0 +1,36 @@
+1
+00:00:00,250 --> 00:00:01,789
+You’ve put some money aside.
+
+2
+00:00:01,879 --> 00:00:03,796
+But how much can you actually touch?
+
+3
+00:00:04,246 --> 00:00:06,918
+Split it by purpose: emergency fund,
+
+4
+00:00:06,958 --> 00:00:09,232
+spending money, money to grow.
+
+5
+00:00:09,322 --> 00:00:10,714
+Each with its own rule.
+
+6
+00:00:11,164 --> 00:00:12,450
+So your budget starts
+
+7
+00:00:12,490 --> 00:00:13,950
+from where you really are.
+
+8
+00:00:14,400 --> 00:00:15,466
+Quadriamo.
+
+9
+00:00:15,556 --> 00:00:16,972
+Free during the beta.
+

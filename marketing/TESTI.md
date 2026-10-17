@@ -69,21 +69,25 @@ mettile in `marketing/meme/foto/1.jpg`…`4.jpg` e rigenera. Mai fotogrammi di f
 3. **La ricevuta del mese** — Il riepilogo del mese come uno scontrino: categorie, confronti, curiosità.
 4. **Documenti con le scadenze** — Carta d'identità, patente, assicurazioni: un promemoria prima che scadano.
 
-## Reel con la voce narrante — `out/video/`
-La voce è sintetica (Kokoro, generata sul Mac: nessun diritto da pagare), letta con la guida `campagna/11-voce.md`: pause naturali, ritmo progressivo (gancio, corpo, finale), catena da studio, −14 LUFS. Per gli spot a pagamento conviene registrarla con una voce professionista, con gli stessi copioni annotati. Sotto c'è un tappeto musicale morbido
-generato dallo script, che si abbassa mentre si parla, e un fruscio sulle transizioni: si possono sostituire con un brano della libreria di Instagram/TikTok,
-tenendolo a circa −20 dB sotto la voce.
+## Reel con la voce narrante — `out/video/` (italiano) e `out/video/en/` (inglese)
+Voce sintetica (Kokoro, generata sul Mac: nessun diritto da pagare), interpretata con la guida `campagna/11-voce.md`:
+la punteggiatura decide pause e intonazione, respiri prima delle frasi lunghe, ritmo gancio-corpo-finale, catena da studio,
+−14 LUFS. La voce guida il montaggio (zoom e dissolvenze partono quando la voce nomina il dettaglio). Sottotitoli impressi
+e file `.srt` accanto a ogni video. La versione inglese è un adattamento (voce inglese, schermate dell'app in inglese).
+Sotto c'è un tappeto musicale morbido generato dallo script, che si abbassa mentre si parla, e un fruscio sulle transizioni:
+si possono sostituire con un brano della libreria di Instagram/TikTok, a circa −20 dB sotto la voce.
+Per gli spot a pagamento conviene registrare una voce professionista con gli stessi copioni (`make_reels.py`, REELS).
 
-| File | Durata | Didascalia |
-|---|---|---|
-| reel-01-adesso | ~28 s | Cosa devo sapere oggi? Un numero, e quello che conta. Il resto, quando vuoi. |
-| reel-02-costo-annuale | ~30 s | Indovina quanto paghi di abbonamenti in un anno. Poi prova a toglierne uno. |
-| reel-03-ricevuta | ~22 s | Ottobre è finito. Ecco lo scontrino. 🧾 |
-| reel-04-niente-sorprese | ~27 s | La carta d'identità scade il giorno prima del volo? Non più. |
-| reel-05-parti-da-dove-sei | ~20 s | Hai dei risparmi. Quanto puoi davvero toccare? |
-| hero-01-quadriamo-adesso | ~51 s | Quadriamo, adesso. I tuoi soldi, in quattro. |
+| File | Durata IT / EN | Didascalia IT | Caption EN |
+|---|---|---|---|
+| reel-01-adesso | 31 / 25 s | Cosa devo sapere oggi? Un numero, e quello che conta. Il resto, quando vuoi. | What do I need to know today? One number, and what matters. The rest, when you want it. |
+| reel-02-costo-annuale | 33 / 28 s | Indovina quanto spendi di abbonamenti in un anno. Poi prova a toglierne uno. | Guess what your subscriptions cost you in a year. Then try taking one away. |
+| reel-03-ricevuta | 23 / 18 s | Ottobre è finito. Ecco il tuo scontrino. 🧾 | October's over. Here's your receipt. 🧾 |
+| reel-04-niente-sorprese | 29 / 25 s | La carta d'identità scade il giorno prima del volo? Non più. | Your ID card expiring the day before your flight? Not anymore. |
+| reel-05-parti-da-dove-sei | 21 / 17 s | Hai dei risparmi. Quanto puoi davvero toccare? | You've got savings. How much can you actually touch? |
+| hero-01-quadriamo-adesso | 53 / 44 s | Quadriamo, adesso. I tuoi soldi, in quattro. | Quadriamo. Your money, in four. |
 
 ## Rigenerare
 1. App con i dati di esempio accesa (`npm run dev`), poi `THEME=dark node marketing/shoot-campaign.mjs` e `THEME=light …`
 2. `<python con Pillow> marketing/make_campaign.py` · `marketing/make_meme.py`
-3. `<python con Pillow, numpy, kokoro-onnx, soundfile> marketing/make_reels.py` (un reel: aggiungi il nome)
+3. `<python con Pillow, numpy, kokoro-onnx, soundfile> marketing/make_reels.py` (un reel: aggiungi il nome; una lingua: `--lang it` o `--lang en`); le schermate inglesi prima: `LANG_APP=en THEME=dark node marketing/shoot-campaign.mjs`

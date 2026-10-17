@@ -1,0 +1,56 @@
+1
+00:00:00,250 --> 00:00:03,089
+Ogni mattina, la stessa domanda:
+
+2
+00:00:03,179 --> 00:00:05,057
+cosa devo sapere, oggi?
+
+3
+00:00:05,687 --> 00:00:07,947
+Quadriamo ti risponde con un numero:
+
+4
+00:00:07,987 --> 00:00:10,090
+quanto puoi spendere oggi.
+
+5
+00:00:10,540 --> 00:00:13,724
+E subito sotto, quello che conta.
+
+6
+00:00:13,764 --> 00:00:15,664
+Una bolletta da segnare.
+
+7
+00:00:15,704 --> 00:00:17,523
+Un pagamento domani.
+
+8
+00:00:17,563 --> 00:00:19,767
+Un abbonamento che è aumentato.
+
+9
+00:00:20,218 --> 00:00:21,625
+Tutto il resto?
+
+10
+00:00:21,725 --> 00:00:23,518
+Lo trovi scorrendo.
+
+11
+00:00:23,607 --> 00:00:24,962
+Niente di più.
+
+12
+00:00:25,411 --> 00:00:26,778
+Quadriamo.
+
+13
+00:00:26,868 --> 00:00:28,743
+Gratis, durante la beta.
+
+14
+00:00:28,783 --> 00:00:30,487
+Il link è nella bio.
+
