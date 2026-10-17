@@ -4,6 +4,14 @@ Una voce per versione, dalla più recente. Il numero tra parentesi nell'app (es.
 cresce a ogni modifica pubblicata, così ogni segnalazione dei tester indica esattamente quale codice stavano usando.
 Come si pubblica una nuova versione: docs/RELEASE.md.
 
+## 0.17.0 — 17 ottobre 2026 · documenti
+
+- Profilo → Documenti: carta d'identità, patente, assicurazioni, contratti… divisi per categoria (personali, auto, casa,
+  salute, lavoro, altro), con lo stato a colpo d'occhio (valido, tra N giorni, scaduto) e in cima la prossima scadenza.
+- Nomi già pronti per ogni categoria, promemoria (di partenza 30 e 7 giorni prima), «Rinnovato» con la nuova scadenza e la
+  cronologia dei rinnovi. I documenti compaiono nel calendario e i promemoria arrivano come le altre notifiche.
+- Solo nome e date: nessuna scansione e nessun numero di documento.
+
 ## 0.16.0 — 17 ottobre 2026 · costo annuale
 
 - Profilo → Abbonamenti → Costo annuale: ogni abbonamento è un blocco grande quanto costa in un anno (treemap squarified,

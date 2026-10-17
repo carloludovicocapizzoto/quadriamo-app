@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GOAL_EVENT, agenda, recentIncrease, timesPerYear, withPriceChange, yearlyCost, periodSummary, toneOf, budgetEvents, goalContributionId, goalEvents, nextOccurrence, occurrences, presetOf, remainingCount, untilAfterCount, type CalEvent } from './calendar'
+import { GOAL_EVENT, agenda, docStatus, renewDoc, recentIncrease, timesPerYear, withPriceChange, yearlyCost, periodSummary, toneOf, budgetEvents, goalContributionId, goalEvents, nextOccurrence, occurrences, presetOf, remainingCount, untilAfterCount, type CalEvent } from './calendar'
 import { defaultSettings } from './defaults'
 
 const ev = (over: Partial<CalEvent>): CalEvent => ({
@@ -93,5 +93,19 @@ describe('abbonamenti: costo annuale e storico dei prezzi', () => {
     expect(withPriceChange(b, { ...b, title: 'Netflix Standard' }, '2026-10-12').prices).toHaveLength(1)
     expect(recentIncrease(b, '2026-10-17')).toBe(38)
     expect(recentIncrease(b, '2027-11-01')).toBeNull()
+  })
+})
+
+describe('documenti con scadenza', () => {
+  it('stato: valido, in scadenza entro 60 giorni, scaduto', () => {
+    expect(docStatus({ date: '2027-03-01' }, '2026-10-17')).toEqual({ state: 'ok', days: 135 })
+    expect(docStatus({ date: '2026-11-08' }, '2026-10-17')).toEqual({ state: 'soon', days: 22 })
+    expect(docStatus({ date: '2026-10-01' }, '2026-10-17').state).toBe('expired')
+  })
+  it('rinnovo: la vecchia scadenza va nella cronologia', () => {
+    const id = ev({ id: 'ci', kind: 'document', title: "Carta d'identità", amount: null, category: null, date: '2026-11-08', repeat: null, done: ['2026-11-08'],
+      doc: { category: 'personal' } })
+    const r = renewDoc(id, '2036-11-08')
+    expect(r).toMatchObject({ date: '2036-11-08', done: [], doc: { category: 'personal', renewals: ['2026-11-08'] } })
   })
 })

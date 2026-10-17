@@ -3,7 +3,7 @@
 export const PROFILE_PAGES = [
   'progress',
   'personal', 'security', 'plan',
-  'budget', 'capital', 'recurring', 'yearCost', 'goals', 'rules', 'shared',
+  'budget', 'capital', 'recurring', 'yearCost', 'goals', 'documents', 'rules', 'shared',
   'appearance', 'language', 'inbox', 'notifications', 'motion', 'accessibility',
   'data', 'delete',
   'help', 'feedback', 'licenses',

@@ -186,3 +186,15 @@
 .yc-tile.mid .yc-in b { display: none; }
 .yc-detail-head { display: flex; align-items: center; gap: var(--s3); }
 .yc-sim { margin: 0 0 var(--s2); font-weight: 600; color: var(--good); }
+
+/* Documenti: lo stato a destra (in ambra quelli in scadenza, in rosso gli scaduti), le categorie con la loro icona */
+.doc-hero { margin: 2px 0 0; font-size: var(--t-title); font-weight: 600; letter-spacing: -.02em; line-height: 1.15; }
+.doc-hero.soon { color: var(--warn); }
+.doc-hero.expired { color: var(--bad); }
+.doc-cat { display: flex; align-items: center; gap: var(--s2); }
+.doc-state { font-size: 14px; color: var(--muted); }
+.doc-state.soon, .doc-status.soon { color: var(--warn); font-weight: 600; }
+.doc-state.expired, .doc-status.expired { color: var(--bad); font-weight: 600; }
+.doc-status { margin: var(--s1) 0 0; font-size: var(--t-h2); font-weight: 600; }
+.doc-ico { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--fill); flex-shrink: 0; }
+.doc-preset { padding-left: 12px; }

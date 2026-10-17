@@ -8,14 +8,15 @@ import type { Reminder } from './reminders'
 import type { Recurring, Settings, YearMonth } from './types'
 
 export type EventKind = 'rent' | 'bill' | 'loan' | 'mortgage' | 'subscription' | 'payment' | 'saving' | 'pac'
-  | 'salary' | 'income' | 'dividend' | 'coupon' | 'tax' | 'reminder'
+  | 'salary' | 'income' | 'dividend' | 'coupon' | 'tax' | 'reminder' | 'document'
 
 /** In uscita (pagamenti) o in entrata: decide colore, segno e se può entrare nel budget come spesa. */
 export const KIND_SIDE: Record<EventKind, 'out' | 'in' | 'none'> = {
   rent: 'out', bill: 'out', loan: 'out', mortgage: 'out', subscription: 'out', payment: 'out', saving: 'out', pac: 'out', tax: 'out',
-  salary: 'in', income: 'in', dividend: 'in', coupon: 'in', reminder: 'none',
+  salary: 'in', income: 'in', dividend: 'in', coupon: 'in', reminder: 'none', document: 'none',
 }
-export const EVENT_KINDS = Object.keys(KIND_SIDE) as EventKind[]
+/** I tipi che si scelgono nel modulo dell'evento (i documenti hanno la loro pagina e il loro modulo). */
+export const EVENT_KINDS = (Object.keys(KIND_SIDE) as EventKind[]).filter(k => k !== 'document')
 
 export interface Repeat { every: number; unit: 'day' | 'week' | 'month' | 'year' }
 /** Le ripetizioni più comuni, con un nome; le altre sono "personalizzate". */
@@ -43,6 +44,25 @@ export interface CalEvent {
   service?: string | null            // abbonamento dal catalogo (content/services): monogramma e categoria
   method?: string | null             // come si paga (solo un'etichetta: carta, conto, PayPal…)
   prices?: PriceChange[]             // storico dei prezzi: ogni volta che l'importo cambia
+  doc?: DocInfo | null               // documento (kind 'document'): la data dell'evento è la scadenza
+}
+
+/** Documenti con scadenza: carta d'identità, patente, assicurazioni… Nessuna scansione e nessun numero (scelta di Carlo, 17/10). */
+export type DocCategory = 'personal' | 'car' | 'home' | 'health' | 'work' | 'other'
+export const DOC_CATEGORIES: DocCategory[] = ['personal', 'car', 'home', 'health', 'work', 'other']
+export interface DocInfo { category: DocCategory; renewals?: string[] }   // renewals: le scadenze di prima, dalla più vecchia
+/** Entro quanti giorni un documento è "in scadenza". */
+export const DOC_SOON = 60
+
+export interface DocStatus { state: 'ok' | 'soon' | 'expired'; days: number }
+export function docStatus(e: Pick<CalEvent, 'date'>, today: string): DocStatus {
+  const days = daysBetween(today, e.date)
+  return { state: days < 0 ? 'expired' : days <= DOC_SOON ? 'soon' : 'ok', days }
+}
+/** Rinnovato: la vecchia scadenza va nella cronologia, la nuova diventa la data; si riparte da zero con i promemoria. */
+export function renewDoc(e: CalEvent, newExpiry: string): CalEvent {
+  const renewals = [...(e.doc?.renewals ?? []), e.date].slice(-20)
+  return { ...e, date: newExpiry, done: [], doc: { category: e.doc?.category ?? 'other', renewals } }
 }
 
 /** Come si paga: solo un'etichetta per ricordarselo (nessun collegamento alla banca). */

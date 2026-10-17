@@ -74,7 +74,7 @@ export function CalendarView({ settings, today, current }: { settings: Settings;
     const g = goals?.find(x => GOAL_EVENT + x.id === e.id)
     return g ? t('cal.goalLeft', { amount: money(goalStatus(g, today).left, cur) }) : ''
   }
-  const openItem = (x: Item) => { if (x.event.id.startsWith(GOAL_EVENT)) navigate({ tab: 'profile', page: 'goals' }); else setOpen({ event: x.event, date: x.date }) }
+  const openItem = (x: Item) => { if (x.event.id.startsWith(GOAL_EVENT)) navigate({ tab: 'profile', page: 'goals' }); else if (x.event.kind === 'document') navigate({ tab: 'profile', page: 'documents' }); else setOpen({ event: x.event, date: x.date }) }
   const timeline = (days: string[], compactEmpty = false) =>
     <Timeline days={days} byDay={byDay} today={today} selected={mode === 'month' ? day : undefined} currency={cur} compactEmpty={compactEmpty} label={kindLabel} onOpen={openItem} />
 
