@@ -1,9 +1,9 @@
 // La ricevuta del mese: il riassunto di un mese in forma di scontrino. Totali (entrate, uscite, risparmio, investimenti,
 // quanto resta), le categorie dalla più cara, il confronto col mese prima e qualche curiosità. Solo regole e dati
 // del telefono (nessuna IA): ogni riga si può verificare nei movimenti.
-import { computeMonth } from './month'
+import { computeMonth, monthCache } from './month'
 import { daysBetween, prevMonth } from './dates'
-import type { Category, MonthResult, Settings, Transaction, YearMonth } from './types'
+import type { Category, Settings, Transaction, YearMonth } from './types'
 
 export interface ReceiptLine { category: Category; amount: number; count: number }
 export type Curiosity =
@@ -29,7 +29,7 @@ export interface Receipt {
 const r2 = (n: number) => Math.round(n * 100) / 100
 
 export function monthReceipt(ym: YearMonth, txs: Transaction[], s: Settings, today: string): Receipt {
-  const cache = new Map<string, MonthResult>()
+  const cache = monthCache(txs, s, today)
   const r = computeMonth(ym, txs, s, today, undefined, cache)
   const real = r.transactions.filter(t => !t.upcoming && t.date && t.amountIn != null)
   const exp = real.filter(t => t.type === 'expense')

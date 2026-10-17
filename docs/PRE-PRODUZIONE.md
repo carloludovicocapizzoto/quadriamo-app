@@ -49,8 +49,7 @@ Stato al 17 ottobre 2026, versione 0.20.0. ✅ pronto · 🟡 pronto, manca un p
 - ✅ Ricevuta del mese: immagine e PDF creati sul telefono, condivisione con il menu del sistema.
 - ✅ Widget nuovi (mese in miniatura, abbonamenti, documenti) e preferiti in cima.
 - ✅ Centro assistenza aggiornato nelle 4 lingue (11 domande nuove; risposta sulle rate corretta).
-- ⚠️ Prestazioni della Home con «Adesso» (calcola il confronto con i mesi precedenti) non ancora rimisurate sul telefono medio:
-  da rifare con lo stesso metodo della sezione 9 prima dei tester.
+- ✅ Prestazioni della Home con «Adesso» rimisurate il 17/10 (telefono medio, CPU 4 volte più lenta): vedi sezione 9.
 - ⚠️ Widget sulla schermata Home del telefono e del computer: non disponibili (servono le app native). La comunicazione non li promette.
 
 ## 3. Errori e diagnostica
@@ -120,6 +119,12 @@ Stato al 17 ottobre 2026, versione 0.20.0. ✅ pronto · 🟡 pronto, manca un p
 - ✅ Nessuna perdita: dopo 90 cambi di schermata nodi e gestori di eventi stabili.
 - ✅ Rete e batteria: una richiesta di statistiche per sessione, notizie in memoria 20 minuti, sincronizzazione solo quando cambiano i dati.
 - ✅ Solo la lingua in uso si scarica (le altre se la si cambia): alla prima apertura 218 KB invece di 343, stessa velocità; provato nei test che usano l'app (cambio lingua e apertura senza rete).
+- ✅ 17/10, con 2 anni di movimenti (1.809) e 16 eventi: la Home si apre in 0,34 s (completa 0,52 s), il ritorno alla Home
+  dura 0,08 s senza blocchi, una spesa aggiunta aggiorna la Home in 0,25 s. Prima della correzione: 0,70 s, 0,30 s e 0,43 s.
+  La causa: ogni schermata ricalcolava tutti i mesi dall'inizio; ora i mesi stanno in una cache condivisa (`monthCache`)
+  che vale finché movimenti e impostazioni non cambiano. Con pochi dati: apertura 0,16 s, ritorno 0,05 s.
+- ⚠️ Una spesa aggiunta ricalcola comunque tutti i mesi (i saldi si riportano di mese in mese): con molti anni di dati
+  potrebbe servire un calcolo incrementale. Oggi non necessario.
 - ✅ Valutato e scartato: caricare Supabase solo quando serve. Dal 13/10 l'account è obbligatorio (tranne i dati di esempio), quindi a quasi
   tutti serve all'avvio per riprendere la sessione: per loro aggiungerebbe solo un'attesa.
 

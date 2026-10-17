@@ -4,6 +4,12 @@ Una voce per versione, dalla più recente. Il numero tra parentesi nell'app (es.
 cresce a ogni modifica pubblicata, così ogni segnalazione dei tester indica esattamente quale codice stavano usando.
 Come si pubblica una nuova versione: docs/RELEASE.md.
 
+## 0.20.1 — 17 ottobre 2026 · più veloce con tanti dati
+
+- Con molti mesi di movimenti la Home si apre in metà tempo e tornarci da un'altra sezione è immediato: i mesi già calcolati
+  non si ricalcolano più a ogni cambio di schermata (con 2 anni di dati, su un telefono medio: ritorno alla Home da 0,30 a 0,08 s).
+- Centro assistenza con le funzioni nuove, nelle 4 lingue.
+
 ## 0.20.0 — 17 ottobre 2026 · widget
 
 - Tre widget nuovi per la Home: «Questo mese» (il calendario in miniatura con un punto per tipo, i giorni più pesanti

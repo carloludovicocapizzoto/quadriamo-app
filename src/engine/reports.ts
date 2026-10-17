@@ -1,7 +1,7 @@
 // Report: andamento degli ultimi mesi, categorie che crescono, previsione di fine mese.
 // Tutto calcolato sul dispositivo a partire dai movimenti, come il resto dell'app.
 import { daysBetween, prevMonth } from './dates'
-import { computeMonth } from './month'
+import { computeMonth, monthCache } from './month'
 import type { Category, MonthResult, Settings, Transaction, YearMonth } from './types'
 
 export interface TrendPoint { ym: YearMonth; income: number; spent: number; saved: number; leftOver: number }
@@ -9,7 +9,7 @@ export interface TrendPoint { ym: YearMonth; income: number; spent: number; save
 /** Gli ultimi `n` mesi fino a `ym` compreso (il più vecchio per primo); salta i mesi prima dell'inizio. */
 export function monthlyTrend(ym: YearMonth, n: number, txs: Transaction[], s: Settings, today: string): TrendPoint[] {
   const out: TrendPoint[] = []
-  const cache = new Map<string, MonthResult>()
+  const cache = monthCache(txs, s, today)
   let cur = ym
   for (let i = 0; i < n; i++) {
     if (cur.year * 12 + cur.month < s.firstMonth.year * 12 + s.firstMonth.month) break
@@ -41,7 +41,7 @@ function byCategoryUpTo(r: MonthResult, cutoff: number | null, variableOnly = fa
  * `variableOnly`: senza i pagamenti ricorrenti (per le anomalie: un abbonamento nuovo non è una spesa "fuori dal solito").
  */
 export function categoryChanges(ym: YearMonth, txs: Transaction[], s: Settings, today: string, back = 3, variableOnly = false): CategoryChange[] {
-  const cache = new Map<string, MonthResult>()
+  const cache = monthCache(txs, s, today)
   const now = computeMonth(ym, txs, s, today, undefined, cache)
   const cutoff = today >= now.period.start && today <= now.period.end ? daysBetween(now.period.start, today) : null
   const prev: MonthResult[] = []

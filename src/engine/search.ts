@@ -1,7 +1,7 @@
 // Ricerca e filtri dei movimenti, su uno o più mesi (ricorrenti compresi, quelli "in arrivo" esclusi).
 import { compareYm, prevMonth } from './dates'
-import { computeMonth } from './month'
-import type { ClassifiedTx, MonthResult, Settings, Transaction, TxType, YearMonth } from './types'
+import { computeMonth, monthCache } from './month'
+import type { ClassifiedTx, Settings, Transaction, TxType, YearMonth } from './types'
 
 export type Period = 'month' | '3m' | 'year' | 'all'
 export interface TxFilter {
@@ -33,7 +33,7 @@ export function periodStart(p: Period, ym: YearMonth, s: Settings): YearMonth {
 
 /** Movimenti già avvenuti dei mesi indicati, dal più recente. */
 export function transactionsInMonths(months: YearMonth[], txs: Transaction[], s: Settings, today: string): ClassifiedTx[] {
-  const cache = new Map<string, MonthResult>()
+  const cache = monthCache(txs, s, today)
   const out: ClassifiedTx[] = []
   for (const ym of [...months].reverse()) out.push(...computeMonth(ym, txs, s, today, undefined, cache).transactions.filter(t => !t.upcoming))
   return out.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))

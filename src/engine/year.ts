@@ -1,6 +1,6 @@
 // Riepilogo annuale (come il foglio Year Overview dell'Excel), senza limite di anni:
 // i saldi dei bucket continuano da un anno all'altro.
-import { computeMonth } from './month'
+import { computeMonth, monthCache } from './month'
 import { parseDate } from './dates'
 import type { Bucket, Category, MonthResult, Settings, Transaction } from './types'
 
@@ -26,7 +26,7 @@ type Totals = { income: number; spent: number; saved: number; leftOver: number; 
 const rate = (saved: number, income: number) => (income ? saved / income : null)
 
 export function computeYear(year: number, all: Transaction[], s: Settings, today: string,
-                            cache: Map<string, MonthResult> = new Map()) {
+                            cache: Map<string, MonthResult> = monthCache(all, s, today)) {
   const months = Array.from({ length: 12 }, (_, i) => computeMonth({ year, month: i + 1 }, all, s, today, undefined, cache))
   const rows: YearRow[] = months.map(m => ({
     month: m.ym.month, income: m.income, spent: m.spent, saved: m.saved, leftOver: m.leftOver,
@@ -74,7 +74,7 @@ export function yearsRange(all: Transaction[], s: Settings, today: string): numb
 
 /** Confronto tra gli anni (totali e saldo complessivo dei bucket a fine anno). */
 export function computeYears(all: Transaction[], s: Settings, today: string) {
-  const cache = new Map<string, MonthResult>()
+  const cache = monthCache(all, s, today)
   return yearsRange(all, s, today).map(year => {
     const y = computeYear(year, all, s, today, cache)
     return { year, ...y.total, endBalance: y.buckets.reduce((a, b) => a + b.endOfYear, 0), hasData: y.hasData }
