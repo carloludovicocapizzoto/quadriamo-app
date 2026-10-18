@@ -1,9 +1,7 @@
-// Centro notifiche: le notifiche arrivate su questo telefono. Le salva il service worker (public/push-sw.js, IndexedDB
-// "quadriamo.inbox", al massimo 100); qui l'app le legge e tiene a parte, nella memoria del browser, cosa hai letto,
-// segnato come importante, archiviato o eliminato. Così il service worker e l'app non scrivono mai la stessa cosa.
 import { get } from 'idb-keyval'
 import { useEffect, useSyncExternalStore } from 'react'
 import { local } from '../storage'
+import { currentScope, onScopeChange, personalKey } from '../store/scope'
 
 export type InboxKind = 'reminder' | 'morning' | 'nudge' | 'news' | 'message'
 export interface InboxEntry { id: string; at: string; kind: InboxKind; title: string; body: string; url: string; day?: string | null; opened?: boolean }
@@ -15,6 +13,11 @@ const KEY = 'quadriamo.inbox'
 const FLAGS = 'q.inboxFlags'
 const KINDS: InboxKind[] = ['reminder', 'morning', 'nudge', 'news', 'message']
 const EMPTY: InboxFlags = { read: [], important: [], archived: [], deleted: [] }
+const readFlags = (): InboxFlags => {
+  const value = local.json<Partial<InboxFlags>>(personalKey(FLAGS), {})
+  const list = (key: keyof InboxFlags) => Array.isArray(value?.[key]) ? value[key]!.filter(x => typeof x === 'string') : []
+  return { read: list('read'), important: list('important'), archived: list('archived'), deleted: list('deleted') }
+}
 
 /** Le notifiche con il loro stato, dalla più recente; le eliminate spariscono. */
 export function withFlags(entries: InboxEntry[], f: InboxFlags): InboxItem[] {
@@ -42,20 +45,33 @@ export function pruneFlags(f: InboxFlags, ids: string[]): InboxFlags {
 
 // ---- stato condiviso dall'app: le notifiche lette da IndexedDB e gli stati dalla memoria del browser ----
 let entries: InboxEntry[] = []
-let flags: InboxFlags = { ...EMPTY, ...local.json<Partial<InboxFlags>>(FLAGS, {}) }
+let flags: InboxFlags = { ...EMPTY }
 let snapshot = withFlags(entries, flags)
 const listeners = new Set<() => void>()
 const emit = () => { snapshot = withFlags(entries, flags); listeners.forEach(l => l()) }
 
-export async function reloadInbox(): Promise<void> {
-  try { entries = ((await get(KEY)) as InboxEntry[] | undefined) ?? [] } catch { entries = [] }
-  if (entries.length) flags = pruneFlags(flags, entries.map(e => e.id))
+export const inboxSnapshot = () => snapshot
+onScopeChange(() => {
+  entries = []
+  flags = readFlags()
   emit()
+})
+
+export async function reloadInbox(): Promise<void> {
+  const lease = currentScope()
+  try {
+    const saved = await get<InboxEntry[]>(personalKey(KEY, lease.scope))
+    if (!lease.current()) return
+    entries = Array.isArray(saved) ? saved.filter(e => e && ['id', 'at', 'title', 'body', 'url'].every(k => typeof e[k as keyof InboxEntry] === 'string')) : []
+    flags = readFlags()
+    if (entries.length) flags = pruneFlags(flags, entries.map(e => e.id))
+    emit()
+  } catch { if (lease.current()) { entries = []; emit() } }
 }
 
 function setFlags(change: (f: InboxFlags) => InboxFlags) {
   flags = change(flags)
-  local.setJson(FLAGS, flags)
+  local.setJson(personalKey(FLAGS), flags)
   emit()
 }
 const add = (l: string[], ids: string[]) => [...new Set([...l, ...ids])]

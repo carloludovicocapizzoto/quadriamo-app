@@ -1,6 +1,18 @@
 import type { Dict } from './en'
 
 const fr: Dict = {
+  'storage.loadError': "Impossible de lire les données locales. Vos données enregistrées n’ont pas été remplacées.",
+  'storage.saveError': "Vos modifications n’ont pas été enregistrées sur cet appareil. Réessayez ou exportez une copie de récupération avant de quitter.",
+  'storage.conflict': "Un autre onglet a modifié ces données. Votre copie non enregistrée est conservée : exportez-la avant de rouvrir les données enregistrées.",
+  'storage.retry': "Réessayer",
+  'storage.export': "Exporter une copie de récupération",
+  'storage.legacy': "Récupérer les anciennes données locales",
+  'storage.legacyHint': "Le propriétaire de ces anciennes données n’a pas été vérifié. Ouvrez une copie locale séparée ou exportez-les. Elles ne seront pas envoyées vers un compte.",
+  'storage.openLocal': "Ouvrir une copie locale",
+  'storage.preview': "Copie locale séparée. Ces données ne sont pas synchronisées avec un compte.",
+  'storage.return': "Revenir",
+  'storage.remoteWait': "Aucune donnée n’est encore enregistrée pour ce compte. Connectez-vous au réseau et réessayez avant de créer un budget.",
+  'storage.pushPaused': "Les notifications personnelles sont suspendues pour protéger les données du compte. Vos échéances restent disponibles dans l’application.",
   'app.tagline': 'Votre argent, en quatre.',
   'app.loading': 'Chargement…',
   'lang.label': 'Langue',

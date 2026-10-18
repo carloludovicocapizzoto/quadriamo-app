@@ -4,7 +4,7 @@
 import { useMemo, useState } from 'react'
 import { suggestEvents, type CalEvent, type Suggestion } from '../../engine'
 import { useI18n } from '../../i18n/core'
-import { local } from '../../storage'
+import { personal as local } from '../../storage'
 import { useStore } from '../../store/context'
 import { Money } from '../kit/Money'
 import { tap } from '../kit/motion'

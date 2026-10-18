@@ -1,6 +1,18 @@
 import type { Dict } from './en'
 
 const it: Dict = {
+  'storage.loadError': "Non è stato possibile leggere l’archivio locale. I dati salvati non sono stati sostituiti.",
+  'storage.saveError': "Le modifiche non sono state salvate sul dispositivo. Riprova o esporta una copia di recupero prima di uscire.",
+  'storage.conflict': "Un’altra scheda ha modificato questo archivio. La copia non salvata è conservata: esportala prima di riaprire i dati salvati.",
+  'storage.retry': "Riprova",
+  'storage.export': "Esporta copia di recupero",
+  'storage.legacy': "Recupera dati locali precedenti",
+  'storage.legacyHint': "Questi dati precedenti non hanno un proprietario verificato. Apri una copia locale separata o esportali. Non verranno caricati in un account.",
+  'storage.openLocal': "Apri copia locale",
+  'storage.preview': "Copia locale separata. Questi dati non si sincronizzano con un account.",
+  'storage.return': "Torna",
+  'storage.remoteWait': "Non ci sono ancora dati salvati per questo account. Collegati e riprova prima di creare un nuovo budget.",
+  'storage.pushPaused': "Le notifiche personali sono sospese per proteggere i dati dell’account. Le scadenze restano disponibili nell’app.",
   'app.tagline': 'I tuoi soldi, in quattro.',
   'app.loading': 'Caricamento…',
   'lang.label': 'Lingua',

@@ -1,6 +1,7 @@
 // Diario tecnico dell'app: gli ultimi passi (schermate, azioni, rallentamenti, rete, errori) restano in memoria
 // sul dispositivo e partono solo dentro una segnalazione d'errore o una segnalazione del tester, così un problema
 // si può ricostruire. Niente importi, testi o nomi: solo percorsi e tipi di azione.
+import { currentScope, onScopeChange, personalKey } from '../store/scope'
 import { ENV } from '../env'
 import { isStandalone, osName, platform } from '../beta/device'
 
@@ -13,13 +14,14 @@ const opened = performance.now()
 // se la pagina è stata appena ricaricata (es. "Ricarica" dopo un errore), i passi di prima continuano qui:
 // restano solo in questa scheda (sessionStorage) e si leggono una volta
 const SAVED = 'q.trail'
-const trail: TrailEntry[] = (() => {
+const trail: TrailEntry[] = []
+onScopeChange(() => {
+  trail.length = 0
   try {
-    const prev = JSON.parse(sessionStorage.getItem(SAVED) ?? '[]') as TrailEntry[]
-    sessionStorage.removeItem(SAVED)
-    return prev.length ? [...prev, { s: 0, kind: 'nav' as const, what: '— pagina ricaricata —' }].slice(-MAX) : []
-  } catch { return [] }
-})()
+    const prev = JSON.parse(sessionStorage.getItem(personalKey(SAVED)) ?? '[]') as TrailEntry[]
+    if (Array.isArray(prev)) trail.push(...prev.slice(-MAX))
+  } catch { /* diario non disponibile */ }
+})
 
 const listeners = new Set<(e: TrailEntry) => void>()
 
@@ -47,7 +49,7 @@ export function deviceInfo() {
 export function watchDiagnostics() {
   note('nav', route())
   addEventListener('hashchange', () => note('nav', route()))
-  addEventListener('pagehide', () => { try { sessionStorage.setItem(SAVED, JSON.stringify(trail)) } catch { /* niente */ } })
+  addEventListener('pagehide', () => { try { sessionStorage.setItem(personalKey(SAVED, currentScope().scope), JSON.stringify(trail)) } catch { /* niente */ } })
   addEventListener('online', () => note('net', 'online'))
   addEventListener('offline', () => note('net', 'offline'))
   try {

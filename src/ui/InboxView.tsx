@@ -10,7 +10,7 @@ import { bucketName, categoryName } from './names'
 /** Importa un estratto conto e mostra la casella "Da confermare": tutto si può cambiare prima di confermare. */
 export function InboxView({ settings }: { settings: Settings }) {
   const { t, money, date } = useI18n()
-  const { state, dispatch } = useStore()
+  const { state, dispatch, lease } = useStore()
   const inbox = state.data?.inbox ?? []
   const [msg, setMsg] = useState<{ text: string; bad?: boolean } | null>(null)
   const [suggested] = useState(() => new Map(inbox.map(i => [i.id, i.category])))   // per capire se l'utente ha corretto
@@ -19,7 +19,9 @@ export function InboxView({ settings }: { settings: Settings }) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file || !state.data) return
-    const { rows } = readStatement(await file.text())
+    const text = await file.text()
+    if (lease && !lease.current()) return
+    const { rows } = readStatement(text)
     if (!rows.length) { setMsg({ text: t('imp.none'), bad: true }); return }
     const { items, duplicates } = planImport(state.data, rows)
     items.forEach(i => suggested.set(i.id, i.category))

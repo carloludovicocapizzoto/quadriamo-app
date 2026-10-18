@@ -1,6 +1,18 @@
 // Dizionario di riferimento: le altre lingue devono avere esattamente le stesse chiavi (lo controllano TypeScript e i test).
 // {n}, {name}… sono segnaposto sostituiti da t(key, { n: 3 }).
 const en = {
+  'storage.loadError': "The local archive could not be read. Your saved data has not been replaced.",
+  'storage.saveError': "Your changes have not been saved on this device. Retry or export a recovery copy before leaving.",
+  'storage.conflict': "Another tab changed this archive. Your unsaved copy is preserved: export it before reopening the saved data.",
+  'storage.retry': "Retry",
+  'storage.export': "Export recovery copy",
+  'storage.legacy': "Recover previous local data",
+  'storage.legacyHint': "These older data have no verified owner. Open a separate local copy or export them. They will not be uploaded to an account.",
+  'storage.openLocal': "Open local copy",
+  'storage.preview': "Separate local copy. These data are not synced to an account.",
+  'storage.return': "Return",
+  'storage.remoteWait': "No saved data is available for this account yet. Connect and retry before creating a new budget.",
+  'storage.pushPaused': "Personal notifications are paused to protect your account data. Your deadlines remain available in the app.",
   'app.tagline': 'Your money, in four.',
   'app.loading': 'Loading…',
   'lang.label': 'Language',

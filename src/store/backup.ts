@@ -11,6 +11,7 @@ export function parseBackup(text: string): AppData {
     d.transactions.every((t: Transaction) => typeof t.id === 'string' && typeof t.description === 'string')
   if (!ok) throw new Error('invalid backup')
   return { version: 1, settings: { fxRates: {}, ...d.settings }, transactions: d.transactions,
+           ...(d.demo === true ? { demo: true } : {}),
            deleted: d.deleted ?? {}, settingsUpdatedAt: d.settingsUpdatedAt,
            ...(d.investments ? { investments: d.investments, investmentsUpdatedAt: d.investmentsUpdatedAt } : {}),
            inbox: d.inbox ?? [], importDone: d.importDone ?? {}, payday: d.payday ?? {},

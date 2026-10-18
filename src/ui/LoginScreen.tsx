@@ -3,9 +3,7 @@ import { Segmented } from './kit/Segmented'
 import { PAGES } from '../config'
 import { ENTRY } from '../entry'
 import { useI18n } from '../i18n/core'
-import { useStore } from '../store/context'
 import { useSync } from '../sync/context'
-import { profilePrompt, setupPending } from '../sync/profile'
 import { Icon } from './Icon'
 import { StepHeader, StepNav } from './Steps'
 
@@ -49,7 +47,6 @@ function PasswordInput({ value, onChange, autoComplete, autoFocus }: { value: st
 function SignInOrUp() {
   const { t, lang } = useI18n()
   const sync = useSync()
-  const hasData = !!useStore().state.data
   // ?signup=1 ("Crea il tuo account" sul sito) apre direttamente la registrazione
   const [tab, setTab] = useState<'in' | 'up' | 'link' | 'confirm' | 'reset'>(ENTRY.get('signup') === '1' ? 'up' : 'in')
   const [step, setStep] = useState(1)
@@ -76,8 +73,6 @@ function SignInOrUp() {
     if (!accept) return bad(t('auth.errAccept'))
     void run(async () => {
       const r = await sync.signUp({ firstName: first.trim(), lastName: last.trim(), email: em, password, lang })
-      // nuovo account: configurazione iniziale a passaggi (se su questo dispositivo non c'è già un budget) e profilo
-      if (!hasData) setupPending.set(); else profilePrompt.set()
       if (r.needsConfirm) { setTab('confirm'); setCode('') }
     }, e => (e.code === 'user_already_exists' ? t('auth.errExists') : e.code === 'weak_password' ? t('auth.errPassword') : t('auth.errGeneric')))
   }

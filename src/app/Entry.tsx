@@ -47,10 +47,10 @@ export function Entry({ children }: { children: ReactNode }) {
     if (!data) { setupPending.set(); dispatch({ type: 'replace', data: createInitial(guessCurrency(), today, 1) }) }
     refresh()
   }
-  const demo = () => { refresh(); dispatch({ type: 'replace', data: demoAppData(today, lang) }) }
+  const demo = () => sync.startDemo(demoAppData(today, lang))
   // serve l'account per usare l'app: senza, solo i dati di esempio (che non vanno mai online).
-  // Chi aveva già dati su questo telefono li ritrova nell'account appena accede.
-  if (sync.enabled && !sync.user && !data?.demo) return <Gate hasData={!!data} onLocal={startLocal} onDemo={demo} />
+  // Il vecchio archivio senza proprietario resta nel recupero locale, separato dall'account.
+  if (sync.enabled && !sync.user && !sync.isolatedPreview) return <Gate hasData={!!data} onLocal={startLocal} onDemo={demo} />
   if (!sync.enabled && !data) return <Gate hasData={false} onLocal={startLocal} onDemo={demo} />
 
   if (data && inSetup && !data.demo) return <PreApp><SetupWizard onDone={() => { setupPending.clear(); refresh(); window.scrollTo(0, 0) }} /></PreApp>

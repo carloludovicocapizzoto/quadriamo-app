@@ -134,7 +134,7 @@ export function Security() {
     </form>
     <Group>
       <Row label={t('sec.signOutOthers')} onClick={() => { void sync.signOutOthers().then(() => setMsg({ ok: true, text: t('sec.othersDone') })) }} />
-      <Row label={t('sec.signOut')} detail={t('sync.signOutHint')} onClick={() => { void sync.signOut() }} />
+      <Row label={t('sec.signOut')} detail={t('sync.signOutHint')} onClick={() => { void sync.signOut().catch(() => setMsg({ ok: false, text: t('storage.saveError') })) }} />
     </Group>
   </>
 }

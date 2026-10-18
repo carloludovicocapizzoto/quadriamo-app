@@ -1,6 +1,18 @@
 import type { Dict } from './en'
 
 const es: Dict = {
+  'storage.loadError': "No se ha podido leer el archivo local. Los datos guardados no se han sustituido.",
+  'storage.saveError': "Los cambios no se han guardado en este dispositivo. Reintenta o exporta una copia de recuperación antes de salir.",
+  'storage.conflict': "Otra pestaña ha modificado estos datos. Tu copia sin guardar se conserva: expórtala antes de volver a abrir los datos guardados.",
+  'storage.retry': "Reintentar",
+  'storage.export': "Exportar copia de recuperación",
+  'storage.legacy': "Recuperar datos locales anteriores",
+  'storage.legacyHint': "No se ha verificado a quién pertenecen estos datos anteriores. Abre una copia local separada o expórtalos. No se enviarán a ninguna cuenta.",
+  'storage.openLocal': "Abrir copia local",
+  'storage.preview': "Copia local separada. Estos datos no se sincronizan con ninguna cuenta.",
+  'storage.return': "Volver",
+  'storage.remoteWait': "Todavía no hay datos guardados para esta cuenta. Conéctate y reintenta antes de crear un presupuesto.",
+  'storage.pushPaused': "Las notificaciones personales están suspendidas para proteger los datos de la cuenta. Tus vencimientos siguen disponibles en la aplicación.",
   'app.tagline': 'Tu dinero, en cuatro.',
   'app.loading': 'Cargando…',
   'lang.label': 'Idioma',

@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import type { AppData } from '../store/types'
 
 export type SyncStatus = 'idle' | 'syncing' | 'ok' | 'error' | 'offline'
 
@@ -28,6 +29,9 @@ export interface SyncApi {
   signOut: () => Promise<void>
   deleteAccount: () => Promise<void>
   syncNow: () => Promise<void>
+  startDemo: (data: AppData) => void
+  endPreview: () => void
+  isolatedPreview: boolean
 }
 
 export const SyncContext = createContext<SyncApi | null>(null)

@@ -4,7 +4,7 @@ import { useStore } from '../store/context'
 
 /** Aggiorna i cambi BCE una volta al giorno, quando l'app è online. Non mostra nulla. */
 export function FxAutoUpdate({ today }: { today: string }) {
-  const { state, dispatch } = useStore()
+  const { state, dispatch, lease } = useStore()
   const tried = useRef('')
   const d = state.data
 
@@ -14,11 +14,11 @@ export function FxAutoUpdate({ today }: { today: string }) {
     if (d.settings.fxDate === today || tried.current === key) return
     tried.current = key
     fetchRates(d.settings.currency, neededCurrencies(d)).then(({ rates, date }) => {
-      if (!date) return
+      if (!date || (lease && !lease.current())) return
       const s = state.data?.settings ?? d.settings
       dispatch({ type: 'setSettings', settings: { ...s, fxRates: { ...s.fxRates, ...rates }, fxDate: today } })
     }).catch(() => { /* offline o servizio non raggiungibile: restano gli ultimi cambi */ })
-  }, [d, today, dispatch, state.data])
+  }, [d, today, dispatch, state.data, lease])
 
   return null
 }
