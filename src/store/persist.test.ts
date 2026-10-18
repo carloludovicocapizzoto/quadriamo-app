@@ -84,6 +84,38 @@ describe('account cache boundaries', () => {
     await expect(saveData(scope, legacy, 1)).rejects.toBeInstanceOf(StorageConflict)
     expect(await loadData(scope)).toMatchObject({ kind: 'empty', revision: 2 })
   })
+  it('adopts an identical concurrent save without rewriting the newer envelope', async () => {
+    await saveData(scope, legacy, 0)
+    const before = structuredClone(db.values.get(dataKey(scope)))
+    expect(await saveData(scope, structuredClone(legacy), 0)).toBe(1)
+    expect(db.values.get(dataKey(scope))).toEqual(before)
+    await expect(saveData(scope, { ...legacy, transactions: [] }, 0)).rejects.toBeInstanceOf(StorageConflict)
+  })
+  it('two first-load controllers can persist the same remote document and then detect different edits', async () => {
+    const first = new AccountStore(scope), second = new AccountStore(scope)
+    await Promise.all([first.ready, second.ready])
+    first.dispatch({ type: 'replace', data: legacy })
+    await first.flush()
+    second.dispatch({ type: 'replace', data: structuredClone(legacy) })
+    await second.flush()
+    expect(second.getSnapshot()).toMatchObject({ error: null, dirty: false })
+    first.dispatch({ type: 'addTx', tx: { ...legacy.transactions[0], id: 'one' } })
+    await first.flush()
+    second.dispatch({ type: 'addTx', tx: { ...legacy.transactions[0], id: 'two' } })
+    await expect(second.flush()).rejects.toThrow()
+    expect(second.getSnapshot()).toMatchObject({ error: 'conflict', dirty: true })
+    expect(second.getSnapshot().state.data!.transactions.at(-1)!.id).toBe('two')
+  })
+  it('never adopts an identical payload from an unsupported or corrupted envelope', async () => {
+    await saveData(scope, legacy, 0)
+    const key = dataKey(scope), valid = structuredClone(db.values.get(key)) as Record<string, unknown>
+    for (const patch of [{ checksum: 'corrupt' }, { payloadSchema: 99 }]) {
+      const invalid = { ...valid, ...patch }
+      db.values.set(key, invalid)
+      await expect(saveData(scope, structuredClone(legacy), 0)).rejects.toBeInstanceOf(StorageConflict)
+      expect(db.values.get(key)).toEqual(invalid)
+    }
+  })
   it('serializes edits and keeps unsaved data on quota failure', async () => {
     const store = new AccountStore(scope)
     await store.ready

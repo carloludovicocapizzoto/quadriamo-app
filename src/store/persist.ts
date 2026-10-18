@@ -97,13 +97,22 @@ export async function saveData(scope: DataScope, data: AppData | null, expectedR
   if (scope.kind === 'guest' || (data && !supportedData(data))
     || (scope.kind === 'account' && data?.demo) || (scope.kind === 'demo' && data && !data.demo)) throw Error('invalid data scope')
   const revision = expectedRevision + 1
+  let committedRevision = revision
   const envelope: Envelope = { storageFormat: 2, payloadSchema: 1, savedAt: new Date().toISOString(), scope: scopeKey(scope), revision, checksum: await checksum(data), payload: data }
   await update<Envelope>(dataKey(scope), old => {
     if (old && (old.storageFormat !== 2 || old.scope !== envelope.scope || !Number.isSafeInteger(old.revision) || old.revision < 1)) throw Error('invalid cache')
-    if ((old?.revision ?? 0) !== expectedRevision) throw new StorageConflict()
+    if ((old?.revision ?? 0) !== expectedRevision) {
+      // Due schede possono inizializzare la stessa cache dal medesimo documento remoto.
+      // Adotta soltanto una copia identica e verificata, mantenendo revisione e metadati originali.
+      if (old?.payloadSchema === 1 && old.checksum === envelope.checksum && JSON.stringify(old.payload) === JSON.stringify(data)) {
+        committedRevision = old.revision
+        return old
+      }
+      throw new StorageConflict()
+    }
     return envelope
   })
-  return revision
+  return committedRevision
 }
 
 /** Chiede al browser di non cancellare i dati quando lo spazio scarseggia (dove supportato). */
