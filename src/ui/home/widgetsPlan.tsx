@@ -59,7 +59,7 @@ export function Documents({ c, box }: { c: WidgetCtx; box: Box }) {
   const s = docStatus(next, c.today)
   return box(<>
     <p className={`w-big w-doc ${s.state}`}>{next.title}</p>
-    <p className="w-note">{s.state === 'expired' ? t('doc.expiredAgo', { n: -s.days }) : `${s.days === 0 ? t('doc.today') : t('doc.inDays', { n: s.days })} · ${date(next.date, { day: 'numeric', month: 'short', year: 'numeric' })}`}</p>
-    {docs.length > 1 && <p className="w-note">{t('hw.docsMore', { n: docs.length - 1 })}</p>}
+    <p className="w-note">{s.state === 'expired' ? t(s.days === -1 ? 'doc.expiredAgoOne' : 'doc.expiredAgo', { n: -s.days }) : `${s.days === 0 ? t('doc.today') : t(s.days === 1 ? 'doc.inDaysOne' : 'doc.inDays', { n: s.days })} · ${date(next.date, { day: 'numeric', month: 'short', year: 'numeric' })}`}</p>
+    {docs.length > 1 && <p className="w-note">{t(docs.length === 2 ? 'hw.docsMoreOne' : 'hw.docsMore', { n: docs.length - 1 })}</p>}
   </>, () => navigate({ tab: 'profile', page: 'documents' }), s.state !== 'ok')
 }
