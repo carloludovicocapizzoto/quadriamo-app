@@ -78,7 +78,7 @@ function PreApp({ children }: { children: ReactNode }) {
         {sync.user && (
           <button className="sync-pill" onClick={() => void sync.syncNow()} title={t('sync.now')}>
             <span className={`dot ${sync.status}`} aria-hidden="true" />
-            {sync.status === 'syncing' ? t('sync.syncing') : sync.status === 'error' ? '!' : sync.status === 'offline' ? 'offline' : t('sync.ok')}
+            {sync.status === 'ok' ? t('sync.ok') : sync.status === 'syncing' ? t('sync.syncing') : t(`cloud.${sync.status}`)}
           </button>
         )}
         {!state.data && (

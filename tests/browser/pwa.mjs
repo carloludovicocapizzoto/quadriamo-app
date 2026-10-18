@@ -33,7 +33,7 @@ const server=createServer(async(req,res)=>{try{
  const data=await readFile(file);res.writeHead(200,{'Content-Type':({'.js':'application/javascript','.html':'text/html','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2'})[extname(file)]||'application/octet-stream','Cache-Control':'no-store'});res.end(data)
 }catch{res.writeHead(404);res.end()}})
 await new Promise(ok=>server.listen(5198,'127.0.0.1',ok))
-const browser=await chromium.launch({executablePath:process.env.CHROME||'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true})
+const browser=await chromium.launch({executablePath:process.env.CHROME||'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true,args:JSON.parse(process.env.CHROME_ARGS||'[]')})
 const factory=await browser.newContext();const probe=await factory.newPage();await probe.goto('http://127.0.0.1:5197/app/');await probe.waitForFunction(()=>!!window.accountTest)
 const budget=await probe.evaluate(()=>window.accountTest.initial('B-only'));await factory.close();await browser.close()
 const user={id:B,email:B+'@synthetic.invalid',aud:'authenticated',role:'authenticated',email_confirmed_at:'2026-01-01',user_metadata:{first_name:'SyntheticB',last_name:'Test'},app_metadata:{},created_at:'2026-01-01'}
@@ -42,13 +42,15 @@ const session={access_token:token,refresh_token:'synthetic-refresh-B',expires_in
 const profile=resolve(OUT,'synthetic-profile-'+Date.now())
 let context,page,offline=false
 async function launch(){
- context=await chromium.launchPersistentContext(profile,{executablePath:process.env.CHROME||'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true,viewport:{width:390,height:844},reducedMotion:'reduce'})
+ context=await chromium.launchPersistentContext(profile,{executablePath:process.env.CHROME||'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true,args:JSON.parse(process.env.CHROME_ARGS||'[]'),viewport:{width:390,height:844},reducedMotion:'reduce'})
  await context.grantPermissions(['notifications'],{origin:ORIGIN})
  await context.route('**/*',async route=>{
    const req=route.request(),u=new URL(req.url())
    if(offline)return route.abort()
    if(u.origin===ORIGIN)return route.continue()
    if(u.origin!==API)return route.abort()
+   if(u.pathname.endsWith('/qsync_read'))return route.fulfill({json:{protocol:1,mode:'protected',revision:'1',document:budget}})
+   if(u.pathname.endsWith('/qsync_write'))return route.fulfill({json:{status:'applied',revision:'2',operation:req.postDataJSON().p_operation,replay:false}})
    if(u.pathname.endsWith('/user_data'))return route.fulfill({json:req.method()==='GET'?{data:budget}:null})
    if(u.pathname==='/auth/v1/user')return route.fulfill({json:user})
    if(u.pathname.includes('subscriptions')||u.pathname.includes('profiles'))return route.fulfill({json:null})
@@ -62,10 +64,10 @@ try{
  await launch()
  await context.addInitScript(session=>{if(!localStorage.getItem('sb-127-auth-token'))localStorage.setItem('sb-127-auth-token',JSON.stringify(session));localStorage.setItem('quadriamo.lang','it');localStorage.setItem('q.installSkip','1')},session)
  await page.goto(ORIGIN+'/app/');await page.locator('.tabbar').waitFor()
- await check('current production PWA installs and controls the app',async()=>{await page.evaluate(()=>navigator.serviceWorker.ready);await page.reload();await page.waitForFunction(()=>!!navigator.serviceWorker.controller);await page.locator('.tabbar').waitFor()})
+ await check('current production PWA installs and controls the app',async()=>{await page.getByText('B-only',{exact:true}).first().waitFor();await page.getByText(/Modifiche confermate alla revisione cloud/).waitFor();await page.evaluate(()=>navigator.serviceWorker.ready);await page.reload();await page.waitForFunction(()=>!!navigator.serviceWorker.controller);await page.locator('.tabbar').waitFor();await page.getByText('B-only',{exact:true}).first().waitFor()})
  await check('real browser restart without network preserves the owned cache',async()=>{
    await context.close();offline=true;await launch();await context.setOffline(true);await page.goto(ORIGIN+'/app/');await page.locator('.tabbar').waitFor()
-   assert((await page.textContent('body')).includes('B-only'));assert(!(await page.textContent('body')).includes('A-only'))
+   await page.getByText('B-only',{exact:true}).first().waitFor();assert(!(await page.textContent('body')).includes('A-only'))
    await page.screenshot({path:OUT+'/offline-restart.png',fullPage:true})
  })
  offline=false;await context.setOffline(false)
@@ -127,7 +129,7 @@ try{
    await page.waitForFunction(()=>navigator.serviceWorker.controller?.scriptURL.endsWith('/sw-account-v2.js'))
    await page.evaluate(()=>navigator.serviceWorker.ready)
    await context.close();offline=true;await launch();await context.setOffline(true);await page.goto(ORIGIN+'/app/')
-   await page.locator('.tabbar').waitFor();assert((await page.textContent('body')).includes('B-only'))
+   await page.locator('.tabbar').waitFor();await page.getByText('B-only',{exact:true}).first().waitFor()
 
  })
 }finally{

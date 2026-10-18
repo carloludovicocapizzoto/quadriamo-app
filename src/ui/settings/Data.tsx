@@ -46,9 +46,11 @@ export function DataSection({ d: { data, flash, reset }, wizard }: { d: Settings
         {!wizard && <button className="btn" onClick={exportCsv}>{t('settings.exportCsv')}</button>}
         <label className="btn">{t('settings.import')}
           <input type="file" accept="application/json,.json" hidden onChange={importBackup} /></label>
-        {!wizard && <button className="btn danger" onClick={() => { if (confirm(t('settings.resetConfirm'))) dispatch({ type: 'replace', data: null }) }}>
+        {!wizard && <button className="btn danger" disabled={lease?.scope.kind === 'account'} title={lease?.scope.kind === 'account' ? t('cloud.clearBlocked') : undefined}
+          onClick={() => { if (confirm(t('settings.resetConfirm'))) dispatch({ type: 'replace', data: null }) }}>
           {t('settings.reset')}</button>}
       </div>
+      {!wizard && lease?.scope.kind === 'account' && <p className="small">{t('cloud.clearBlocked')}</p>}
       <p className="muted small top-gap">{t('settings.install')}</p>
       <InstallButton />
       {!wizard && <LegalLinks />}

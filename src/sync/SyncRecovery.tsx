@@ -1,0 +1,128 @@
+import { useState } from 'react'
+import { useI18n } from '../i18n/core'
+import type { AccountStore } from '../store/accountStore'
+import { exportCache } from '../store/persist'
+import type { ScopeLease } from '../store/scope'
+import type { AppData } from '../store/types'
+import { downloadFile } from '../ui/kit/download'
+import { bucketName, categoryName } from '../ui/names'
+import type { SyncStatus } from './context'
+import { clone, resolveConflict, type DataConflict } from './protocol'
+import { differences } from './differences'
+import '../styles/sync.css'
+
+export function SyncRecovery({ storage, lease, status, retry, activate }: {
+  storage: AccountStore; lease: ScopeLease; status: SyncStatus; retry: () => Promise<void>; activate: () => Promise<void>
+}) {
+  const { t } = useI18n(), snapshot = storage.getSnapshot(), cloud = snapshot.cloud
+  const [failed, setFailed] = useState(false)
+  const exportAll = async () => {
+    let persisted: unknown
+    try { persisted = await exportCache(lease.scope) } catch { /* anche il buffer non salvato è esportabile */ }
+    if (lease.current()) downloadFile('quadriamo-sync-recovery', 'json', JSON.stringify({ format: 'quadriamo-sync-recovery-v1', scope: lease.scope,
+      current: storage.getSnapshot(), persisted }, null, 2), 'application/json')
+  }
+  if (!lease.current()) return null
+  return <section className="cloud-notice card" aria-label={t('cloud.title')} data-testid="cloud-status">
+    <p role="status" aria-live="polite">{status === 'ok' && cloud?.base ? t('cloud.confirmed', { revision: cloud.base.revision })
+      : status === 'syncing' ? t('sync.syncing') : status === 'ok' ? t('cloud.idle') : t(`cloud.${status}`)}</p>
+    {(status === 'upgrade' || status === 'paused') && <p>{t(cloud?.available ? 'cloud.activationHint' : 'cloud.upgradeHint')}</p>}
+    <div className="cloud-actions">
+      <button className="btn small-btn" onClick={() => void exportAll().catch(() => setFailed(true))}>{t('cloud.exportAll')}</button>
+      <button className="btn small-btn" disabled={status === 'syncing' || !!snapshot.error} onClick={() => void retry()}>{t('cloud.retry')}</button>
+      {cloud?.available && <button className="btn" disabled={status === 'syncing' || !!snapshot.error} onClick={() => void activate()}>{t('cloud.activate')}</button>}
+    </div>
+    {failed && <p role="alert">{t('cloud.actionError')}</p>}
+    {cloud?.conflict && <ConflictForm key={cloud.conflict.id} conflict={cloud.conflict} storage={storage} lease={lease} />}
+    {!!cloud?.recovery.length && <details><summary>{t('cloud.archive', { count: cloud.recovery.length })}</summary>
+      <p>{t('cloud.archiveHint')}</p>
+      {cloud.recovery.map(copy => <div className="cloud-archive" key={copy.id}>
+        <time dateTime={copy.at}>{new Date(copy.at).toLocaleString()}</time>
+        {(['local', 'remote'] as const).map(side => <button className="btn small-btn" key={side} disabled={copy[side] === null} title={copy[side] === null ? t('cloud.empty') : undefined} onClick={() => {
+          if (lease.current()) downloadFile('quadriamo-recovered-' + side, 'json', JSON.stringify(copy[side], null, 2), 'application/json')
+        }}>{t(side === 'local' ? 'cloud.exportLocal' : 'cloud.exportRemote')}</button>)}
+      </div>)}
+    </details>}
+  </section>
+}
+
+function ConflictForm({ conflict, storage, lease }: { conflict: DataConflict; storage: AccountStore; lease: ScopeLease }) {
+  const { t } = useI18n(), [choices, setChoices] = useState<Record<string, 'local' | 'remote'>>({})
+  const [error, setError] = useState(false), [saving, setSaving] = useState(false)
+  const submit = async (event: React.SubmitEvent) => {
+    event.preventDefault(); setError(false); setSaving(true)
+    try {
+      await storage.updateCloud(lease, ({ data, cloud }) => {
+        if (cloud.conflict?.id !== conflict.id) throw Error('conflict changed')
+        const selected = resolveConflict(conflict, choices)
+        // La cancellazione dell'intero archivio remoto richiede un protocollo distinto.
+        if (!selected && conflict.remote.document) throw Error('remote archive deletion unsupported')
+        cloud.recovery.push({ id: crypto.randomUUID(), at: new Date().toISOString(), reason: 'resolution',
+          local: clone(data), remote: clone(conflict.remote.document), base: clone(conflict.base?.document ?? null) })
+        cloud.base = clone(conflict.remote); cloud.pending = null; cloud.conflict = null; cloud.status = 'pending'
+        return { data: selected, cloud }
+      })
+    } catch { if (lease.current()) setError(true) }
+    finally { if (lease.current()) setSaving(false) }
+  }
+  return <details className="cloud-conflict" open>
+    <summary>{t(conflict.base ? 'cloud.conflictTitle' : 'cloud.recoveryTitle')}</summary>
+    <p>{t(conflict.base ? 'cloud.conflictHint' : 'cloud.noBase')}</p>
+    {conflict.cause === 'revision' && <p role="alert">{t('cloud.revisionConflict')}</p>}
+    {conflict.local === null && conflict.remote.document !== null && <p role="note">{t('cloud.clearBlocked')}</p>}
+    <form onSubmit={event => void submit(event)}>
+      {conflict.paths.map(path => <fieldset key={path}>
+        <legend>{t(path === '/document' ? 'cloud.wholeDocument' : 'cloud.transaction')}</legend>
+        {path === '/document' && <p>{t('cloud.wholeHint')}</p>}
+        <div className="cloud-versions">{(['local', 'remote'] as const).map(side => {
+          const document = side === 'local' ? conflict.local : conflict.remote.document
+          return <label className="cloud-version" key={side}>
+            <span><input type="radio" name={conflict.id + path} value={side} checked={choices[path] === side}
+              disabled={saving || path === '/document' && document === null && conflict.remote.document !== null}
+              onChange={() => setChoices(old => ({ ...old, [path]: side }))} /> {t(side === 'local' ? 'cloud.local' : 'cloud.remote')}</span>
+            <Version document={document} other={side === 'local' ? conflict.remote.document : conflict.local} path={path} />
+          </label>
+        })}</div>
+      </fieldset>)}
+      <p>{t('cloud.resolveHint')}</p>
+      <button className="btn primary" disabled={saving || conflict.paths.some(path => !choices[path]) || !!storage.getSnapshot().error}>{t('cloud.apply')}</button>
+      <p className="small">{t('cloud.defer')}</p>
+      {error && <p role="alert">{t('cloud.actionError')}</p>}
+    </form>
+  </details>
+}
+
+function Version({ document, other, path }: { document: AppData | null; other: AppData | null; path: string }) {
+  const { t, money, date, lang } = useI18n()
+  if (!document) return <p>{t('cloud.empty')}</p>
+  const labels: Record<string, string> = { settings: t('cloud.configuration'), currency: t('cloud.currency'), monthStartDay: t('cloud.startDay'),
+    amount: t('cloud.amount'), description: t('cloud.description'), date: t('cloud.date'), category: t('cloud.category'),
+    buckets: t('cloud.buckets'), categories: t('cloud.categories'), events: t('cloud.events'), share: t('cloud.share'),
+    startingBalance: t('cloud.startingBalance'), name: t('cloud.name'), firstMonth: t('cloud.firstMonth'), year: t('cloud.year'), month: t('cloud.month'),
+    paidFrom: t('cloud.paidFrom'), split: t('cloud.split'), fxRate: t('cloud.exchangeRate'), updatedAt: t('cloud.changedAt') }
+  const configuration = (d: AppData | null) => Object.fromEntries(Object.entries(d ?? {}).filter(([key]) => !['transactions', 'deleted', 'activity', 'version'].includes(key) && !key.endsWith('UpdatedAt')))
+  if (path === '/document') return <>
+    <p>{t('cloud.transactionCount', { count: document.transactions.length })}</p>
+    <dl><dt>{t('cloud.currency')}</dt><dd>{document.settings.currency}</dd>
+      <dt>{t('cloud.startDay')}</dt><dd>{document.settings.monthStartDay}</dd></dl>
+    <ul>{document.settings.buckets.map(bucket => <li key={bucket.id}>{bucketName(bucket, t)}: {(bucket.share * 100).toLocaleString(lang, { maximumFractionDigits: 4 })}%</li>)}</ul>
+    <dl className="cloud-differences">{differences(configuration(document), configuration(other)).map((row, index) => <div key={index}>
+      <dt>{row.path.map(key => labels[key] ?? (/^\d+$/.test(key) ? String(Number(key) + 1) : key)).join(' / ')}</dt>
+      <dd>{row.value === undefined || row.value === null ? '—' : typeof row.value === 'boolean' ? t(row.value ? 'cloud.yes' : 'cloud.no') : String(row.value)}</dd>
+    </div>)}</dl>
+    <details><summary>{t('cloud.contents')}</summary>{document.transactions.map(tx => <p key={tx.id}>{tx.date ? date(tx.date) : '—'} · {tx.description} · {tx.amount === null ? '—' : money(tx.amount, tx.currency || document.settings.currency)}</p>)}</details>
+  </>
+  const tx = document.transactions.find(item => item.id === path.slice('/transactions/'.length))
+  if (!tx) return <p>{t('cloud.deleted')}</p>
+  return <dl><dt>{t('cloud.date')}</dt><dd>{tx.date ? date(tx.date) : '—'}</dd>
+    <dt>{t('cloud.description')}</dt><dd>{tx.description}</dd>
+    <dt>{t('cloud.amount')}</dt><dd>{tx.amount === null ? '—' : money(tx.amount, tx.currency || document.settings.currency)}</dd>
+    <dt>{t('cloud.currency')}</dt><dd>{tx.currency || document.settings.currency}</dd>
+    <dt>{t('cloud.category')}</dt><dd>{categoryName(document.settings.categories.find(c => c.id === tx.category), t)}</dd>
+    {differences(tx, other?.transactions.find(item => item.id === tx.id)).filter(row => !['id', 'date', 'description', 'amount', 'currency', 'category'].includes(row.path[0])).map((row, index) => <div key={index}>
+      <dt>{row.path.map(key => { const bucket = document.settings.buckets.find(b => b.id === key); return labels[key] ?? (bucket ? bucketName(bucket, t) : key) }).join(' / ')}</dt>
+      <dd>{row.value === undefined || row.value === null ? '—' : row.path[0] === 'paidFrom' && document.settings.buckets.some(b => b.id === row.value)
+        ? bucketName(document.settings.buckets.find(b => b.id === row.value)!, t) : String(row.value)}</dd>
+    </div>)}
+  </dl>
+}

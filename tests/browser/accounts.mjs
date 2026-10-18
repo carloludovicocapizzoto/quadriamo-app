@@ -15,6 +15,7 @@ const jwt = id => [Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString
 const session = id => ({access_token:jwt(id),refresh_token:'synthetic-refresh-'+id,expires_in:3600,expires_at:Math.floor(Date.now()/1000)+3600,token_type:'bearer',user:user(id)})
 const owner = req => { try {return JSON.parse(Buffer.from((req.headers()['authorization']||'').split('.')[1],'base64url')).sub} catch {return null} }
 const remote = new Map()
+const revisions = new Map(), receipts = new Map()
 let holdFetch=null, holdAuth=null, holdAvatar=null, networkOffline=false
 async function intercept(route) {
   const req=route.request(), url=new URL(req.url())
@@ -34,14 +35,26 @@ async function intercept(route) {
   if (url.pathname==='/auth/v1/recover') return send({})
   if (url.pathname==='/auth/v1/user') return send({ ...user(uid), user_metadata:body?.data||user(uid).user_metadata })
   if (url.pathname==='/auth/v1/logout') return send({})
+  if (url.pathname==='/rest/v1/rpc/qsync_read') {
+    const revision=String(revisions.get(uid)||1), document=remote.get(uid)||null
+    if(holdFetch?.owner===uid){const h=holdFetch;holdFetch=null;h.started();await h.wait;return send({protocol:1,mode:'protected',revision,document:h.response||document})}
+    return send({protocol:1,mode:'protected',revision,document})
+  }
+  if (url.pathname==='/rest/v1/rpc/qsync_write') {
+    const operation=uid+':'+body.p_operation
+    if(receipts.has(operation))return send({...receipts.get(operation),replay:true})
+    assert(!body.p_document.demo,'demo upload');assert(!JSON.stringify(body.p_document).includes(uid===A?'B-only':'A-only'),'cross-owner upload')
+    const revision=String(revisions.get(uid)||1)
+    if(body.p_expected_revision!==revision)return send({status:'conflict',revision,operation:body.p_operation,replay:false})
+    const next=String(BigInt(revision)+1n),response={status:'applied',revision:next,operation:body.p_operation,replay:false}
+    remote.set(uid,structuredClone(body.p_document));revisions.set(uid,next);receipts.set(operation,response);return send(response)
+  }
   if (url.pathname==='/rest/v1/user_data') {
     if (req.method()==='GET') {
       if (holdFetch?.owner===uid) { const h=holdFetch;holdFetch=null;h.started();await h.wait;if(h.response)return send({data:h.response}) }
       return send(remote.has(uid)?{data:remote.get(uid)}:null)
     }
-    assert.equal(body.user_id,uid,'body owner must match token owner')
-    assert(!JSON.stringify(body.data).includes(uid===A?'B-only':'A-only'),'cross-owner upload')
-    remote.set(uid,body.data); return send(null,201)
+    assert.fail('product must never fall back to an unconditional REST writer')
   }
   if (holdAvatar && url.pathname.includes(holdAvatar.owner+'/avatar.webp') && req.method()==='GET') { const h=holdAvatar;holdAvatar=null;h.started();await h.wait;return route.fulfill({status:200,contentType:'image/png',body:h.image}) }
   if (url.pathname.startsWith('/storage/')) return req.method()==='POST' ? send({Key:'synthetic'}) : send({message:'not found'},404)
@@ -50,7 +63,7 @@ async function intercept(route) {
   if (url.pathname.includes('/rpc/')) return send(false)
   return send([])
 }
-const browser=await chromium.launch({executablePath:process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true})
+const browser=await chromium.launch({executablePath:process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true,args:JSON.parse(process.env.CHROME_ARGS||'[]')})
 const context=await browser.newContext({viewport:{width:Number(process.env.ACCOUNT_WIDTH || 1280),height:900},reducedMotion:'reduce'})
 await context.route('**/*',intercept)
 await context.addInitScript(()=>{localStorage.setItem('quadriamo.lang','it');localStorage.setItem('q.installSkip','1')})
@@ -154,12 +167,12 @@ try {
    await page.reload();await waitOwner(page,A)
    assert(!(await page.textContent('body')).includes('LEGACY-UNOWNED'))
    await page.getByRole('button',{name:'Recupera dati locali precedenti'}).click()
-   const count=requests.filter(x=>x.path==='/rest/v1/user_data').length
+   const count=requests.filter(x=>x.path==='/rest/v1/rpc/qsync_write').length
    await page.getByRole('button',{name:'Apri copia locale',exact:true}).click()
    await page.waitForFunction(()=>window.accountTest?.snapshot().scope.kind==='recovery')
    assert((await page.textContent('body')).includes('LEGACY-UNOWNED'))
    await page.evaluate(()=>window.accountTest.flush())
-   assert.equal(requests.filter(x=>x.path==='/rest/v1/user_data').length,count)
+   assert.equal(requests.filter(x=>x.path==='/rest/v1/rpc/qsync_write').length,count)
    await page.getByRole('button',{name:'Torna',exact:true}).first().click();await waitOwner(page,A)
    const original=await page.evaluate(()=>new Promise(ok=>{const r=indexedDB.open('keyval-store');r.onsuccess=()=>{const q=r.result.transaction('keyval').objectStore('keyval').get('quadriamo.data.v1');q.onsuccess=()=>ok(q.result)}}))
    assert.deepEqual(original,legacy)

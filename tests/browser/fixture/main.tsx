@@ -14,10 +14,16 @@ import { useSettingsDraft } from '@app/ui/settings/draft'
 import { DataSection } from '@app/ui/settings/Data'
 import { InboxView } from '@app/ui/InboxView'
 import { createInitial } from '@app/store/model'
+import type { AppData } from '@app/store/types'
 import { composerSnapshot, openComposer } from '@app/app/composer'
 import { useAvatar, loadAvatar, setAvatar } from '@app/profile/avatar'
 import { personalFor } from '@app/storage'
 import { supabase } from '@app/sync/client'
+
+const today = () => {
+  const d = new Date()
+  return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-')
+}
 
 export function Probe() {
   const { state, dispatch, storage, lease } = useStore()
@@ -28,14 +34,18 @@ export function Probe() {
         user: session.user?.id, status: sync.status, composer: composerSnapshot(), avatar }),
       signIn: (id: string) => session.signIn(id + '@synthetic.invalid', 'Synthetic-test-only-42'),
       signOut: () => session.signOut(),
-      add: (id: string) => dispatch({ type: 'addTx', tx: { id, description: id, date: new Date().toISOString().slice(0, 10), amount: 1, category: 'groceries' } }),
+      add: (id: string) => dispatch({ type: 'addTx', tx: { id, description: id, date: today(), amount: 1, category: 'groceries' } }),
+      edit: (id: string, amount: number, currency?: string) => { const tx = storage.getSnapshot().state.data?.transactions.find(t => t.id === id); if (tx) dispatch({ type: 'updateTx', tx: { ...tx, amount, ...(currency ? { currency } : {}) } }) },
+      remove: (id: string) => dispatch({ type: 'deleteTx', id }),
+      currency: (currency: string) => { const data = storage.getSnapshot().state.data; if (data) dispatch({ type: 'setSettings', settings: { ...data.settings, currency } }) },
+      replace: (data: AppData | null) => dispatch({ type: 'replace', data }),
       initial: (id: string) => {
-        const data = createInitial('EUR', new Date().toISOString().slice(0, 10))
-        data.transactions.push({ id, description: id, date: new Date().toISOString().slice(0, 10), amount: 10, category: 'groceries' })
+        const data = createInitial('EUR', today())
+        data.transactions.push({ id, description: id, date: today(), amount: 10, category: 'groceries' })
         return data
       },
       flush: () => storage.flush(), retry: () => storage.retry(), sync: sync.syncNow,
-      demo: () => session.startDemo({ ...createInitial('EUR', new Date().toISOString().slice(0, 10)), demo: true }),
+      demo: () => session.startDemo({ ...createInitial('EUR', today()), demo: true }),
       exit: session.endPreview,
       draft: () => openComposer({ tx: state.data?.transactions[0] }),
       preference: (value: string) => personalFor(lease.scope).set('q.sharedBudget', value),

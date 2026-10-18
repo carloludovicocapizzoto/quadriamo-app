@@ -23,7 +23,7 @@ export function scopedClient(lease = currentScope(), allowAnonymous = false): Su
     },
     global: { fetch: (url, init) => {
       lease.assert()
-      return fetch(url, { ...init, signal: lease.signal })
+      return fetch(url, { ...init, signal: init?.signal ? AbortSignal.any([lease.signal, init.signal]) : lease.signal })
     } },
   })
   clients.set(lease, client)

@@ -117,7 +117,11 @@ console.log('Abbonamenti, documenti, ricevuta')
 const setField = (sel, v) => js(`(() => { const el = document.querySelector('${sel}'); if (!el) return false
   Object.getOwnPropertyDescriptor(el.constructor.prototype, 'value').set.call(el, ${JSON.stringify(v)})
   el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); return true })()`)
-const inDays = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10)
+const inDays = n => {
+  const d = new Date()
+  d.setDate(d.getDate() + n)
+  return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-')
+}
 await step('Profilo → Abbonamenti: aggiungo Netflix dal catalogo', async () => {
   await js(`location.hash = '#/profile/recurring'`); await sleep(800)
   await click(byText('/Aggiungi abbonamento/')); await sleep(700)

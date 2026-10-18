@@ -29,6 +29,14 @@ it('never sends an A operation with B credentials', async () => {
   expect(result.error).toBeTruthy()
   expect(transport).not.toHaveBeenCalled()
 })
+it('keeps the RPC deadline as well as the session cancellation signal', async () => {
+  const lease = activateScope(scope('A')), timeout = new AbortController()
+  auth.getSession.mockResolvedValue(session('A'))
+  await scopedClient(lease)!.rpc('qsync_read').abortSignal(timeout.signal)
+  const sent = transport.mock.calls[0][1]!.signal!
+  expect(sent.aborted).toBe(false); timeout.abort()
+  expect(sent.aborted).toBe(true); expect(lease.signal.aborted).toBe(false)
+})
 it('rejects a token read completing after A→B→A, before any network request', async () => {
   const lease = activateScope(scope('A'))
   let finish!: (s: ReturnType<typeof session>) => void

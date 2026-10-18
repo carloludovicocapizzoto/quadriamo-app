@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react'
 import type { AppData } from '../store/types'
 
-export type SyncStatus = 'idle' | 'syncing' | 'ok' | 'error' | 'offline'
+export type SyncStatus = 'idle' | 'syncing' | 'ok' | 'error' | 'offline' | 'pending' | 'conflict' | 'upgrade' | 'paused'
 
 export interface SyncApi {
   enabled: boolean                       // false se l'app non è collegata a Supabase

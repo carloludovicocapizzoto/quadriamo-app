@@ -4,6 +4,7 @@ import type { AppData } from './types'
 import { archiveLegacy, LEGACY_ARCHIVE, legacyCopies, loadData, recoverLegacy, saveData, StorageConflict } from './persist'
 import { dataKey } from './scope'
 import { AccountStore } from './accountStore'
+import { emptyCloud } from '../sync/protocol'
 
 const db = vi.hoisted(() => ({ values: new Map<string, unknown>(), failRead: false, failWrite: false, crashAfterWrite: false }))
 vi.mock('idb-keyval', () => ({
@@ -22,6 +23,28 @@ const legacy: AppData = { version: 1, settings: defaultSettings({ firstMonth: { 
 beforeEach(() => { db.values.clear(); db.failRead = false; db.failWrite = false; db.crashAfterWrite = false })
 
 describe('account cache boundaries', () => {
+  it('atomically stores cloud base/outbox with financial data and retains the exact older envelope', async () => {
+    await saveData(scope, legacy, 0)
+    const original = structuredClone(db.values.get(dataKey(scope)))
+    const cloud = emptyCloud(); cloud.pending = { id: 'operation', expected: '4', document: legacy, localAtStart: legacy }; cloud.status = 'pending'
+    await saveData(scope, legacy, 1, cloud)
+    expect(await loadData(scope)).toMatchObject({ data: legacy, cloud })
+    expect(db.values.get(dataKey(scope))).toMatchObject({ storageFormat: 3, previous: original })
+    await expect(saveData(scope, legacy, 2)).rejects.toThrow()
+  })
+  it('a failed cloud metadata save preserves the last complete financial envelope', async () => {
+    await saveData(scope, legacy, 0)
+    const original = structuredClone(db.values.get(dataKey(scope)))
+    db.failWrite = true
+    await expect(saveData(scope, { ...legacy, transactions: [] }, 1, emptyCloud())).rejects.toThrow()
+    expect(db.values.get(dataKey(scope))).toEqual(original)
+  })
+  it('tampering with cloud base or outbox fails verification rather than dropping metadata', async () => {
+    await saveData(scope, legacy, 0, emptyCloud())
+    const envelope = db.values.get(dataKey(scope)) as { cloud: { status: string } }
+    envelope.cloud.status = 'ok'
+    expect(await loadData(scope)).toMatchObject({ kind: 'corrupt' })
+  })
   it('never loads the unowned legacy budget as B account data', async () => {
     db.values.set('quadriamo.data.v1', structuredClone(legacy))
     expect(await loadData(scope)).toMatchObject({ kind: 'empty', revision: 0 })
@@ -143,6 +166,9 @@ describe('account cache boundaries', () => {
     expect(second.getSnapshot().state.data!.transactions.at(-1)!.id).toBe('tab-two')
     expect(await loadData(scope)).toMatchObject({ data: { transactions: expect.arrayContaining([expect.objectContaining({ id: 'tab-one' })]) } })
     expect(second.getSnapshot().error).toBe('conflict')
+    const reopened = new AccountStore(scope); await reopened.ready
+    expect(reopened.getSnapshot().cloud?.recovery).toEqual(expect.arrayContaining([expect.objectContaining({ reason: 'local-conflict',
+      local: expect.objectContaining({ transactions: expect.arrayContaining([expect.objectContaining({ id: 'tab-two' })]) }) })]))
   })
   it('A offline → logout → B → A conserves both caches without exposing the legacy budget', async () => {
     db.values.set('quadriamo.data.v1', structuredClone(legacy))
