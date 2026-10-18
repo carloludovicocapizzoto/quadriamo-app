@@ -1,6 +1,8 @@
 import type { Dict } from './en'
 
 const fr: Dict = {
+  'storage.pushCleanupError': 'Les anciennes notifications n’ont pas pu être sécurisées. Fermez les autres onglets et rouvrez l’application en ligne, puis réessayez. Les archives locales sont conservées.',
+  'storage.pushRetired': 'Pour terminer la sécurisation des anciennes notifications, fermez complètement le navigateur et toutes les fenêtres de l’application. Rouvrez ensuite Quadriamo en ligne. Les données locales sont conservées.',
   'storage.loadError': "Impossible de lire les données locales. Vos données enregistrées n’ont pas été remplacées.",
   'storage.saveError': "Vos modifications n’ont pas été enregistrées sur cet appareil. Réessayez ou exportez une copie de récupération avant de quitter.",
   'storage.conflict': "Un autre onglet a modifié ces données. Votre copie non enregistrée est conservée : exportez-la avant de rouvrir les données enregistrées.",

@@ -1,6 +1,8 @@
 import type { Dict } from './en'
 
 const it: Dict = {
+  'storage.pushCleanupError': 'Non è stato possibile mettere in sicurezza le vecchie notifiche. Chiudi le altre schede e riapri l’app online, poi riprova. Gli archivi locali sono conservati.',
+  'storage.pushRetired': 'Per completare la protezione delle vecchie notifiche, chiudi completamente il browser e tutte le finestre dell’app. Riapri poi Quadriamo online. I dati locali sono conservati.',
   'storage.loadError': "Non è stato possibile leggere l’archivio locale. I dati salvati non sono stati sostituiti.",
   'storage.saveError': "Le modifiche non sono state salvate sul dispositivo. Riprova o esporta una copia di recupero prima di uscire.",
   'storage.conflict': "Un’altra scheda ha modificato questo archivio. La copia non salvata è conservata: esportala prima di riaprire i dati salvati.",

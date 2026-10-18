@@ -1,6 +1,8 @@
 // Dizionario di riferimento: le altre lingue devono avere esattamente le stesse chiavi (lo controllano TypeScript e i test).
 // {n}, {name}… sono segnaposto sostituiti da t(key, { n: 3 }).
 const en = {
+  'storage.pushCleanupError': 'The previous notifications could not be secured. Close other tabs and reopen the app online, then retry. Local archives are preserved.',
+  'storage.pushRetired': 'To finish securing previous notifications, fully close the browser and all app windows. Then reopen Quadriamo online. Local data is preserved.',
   'storage.loadError': "The local archive could not be read. Your saved data has not been replaced.",
   'storage.saveError': "Your changes have not been saved on this device. Retry or export a recovery copy before leaving.",
   'storage.conflict': "Another tab changed this archive. Your unsaved copy is preserved: export it before reopening the saved data.",

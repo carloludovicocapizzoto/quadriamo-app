@@ -68,7 +68,7 @@ export function StoreProvider({ children, lease, seed, onRecovery, onExit, previ
   </>
   if (!lease.current()) return null
   return <StoreContext.Provider value={{ state: snapshot.state, dispatch, storage, lease }}>
-    {notice}
+    <div className="storage-notices">{notice}</div>
     {snapshot.state.loaded ? children : !snapshot.error ? <div className="gate" aria-busy="true">{t('app.loading')}</div> : null}
   </StoreContext.Provider>
 }

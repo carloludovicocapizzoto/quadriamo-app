@@ -83,8 +83,9 @@ export class AccountStore {
       if (result.kind !== 'found' && result.kind !== 'empty') { this.emit({ error: 'load' }); return }
       if (result.revision <= this.revision) return
       if (this.snapshot.dirty || before !== this.changes) { this.emit({ error: 'conflict' }); return }
+      const state = reducer(this.snapshot.state, { type: 'load', data: result.kind === 'found' ? result.data : null })
       this.revision = result.revision
-      this.emit({ state: reducer(this.snapshot.state, { type: 'load', data: result.kind === 'found' ? result.data : null }) })
+      this.emit({ state, error: null })
     } catch { this.emit({ error: 'load' }) }
   }
   watch() {
@@ -102,6 +103,7 @@ export class AccountStore {
 }
 
 const stores = new Map<string, AccountStore>()
+export const cachedAccountStore = (scope: DataScope) => stores.get(scopeKey(scope))
 export function accountStore(scope: DataScope, seed?: AppData) {
   const key = scopeKey(scope)
   let store = stores.get(key)

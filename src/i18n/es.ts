@@ -1,6 +1,8 @@
 import type { Dict } from './en'
 
 const es: Dict = {
+  'storage.pushCleanupError': 'No se han podido proteger las notificaciones anteriores. Cierra las otras pestañas y vuelve a abrir la aplicación con conexión; después, inténtalo de nuevo. Los archivos locales se conservan.',
+  'storage.pushRetired': 'Para terminar de proteger las notificaciones anteriores, cierra completamente el navegador y todas las ventanas de la aplicación. Después, vuelve a abrir Quadriamo con conexión. Los datos locales se conservan.',
   'storage.loadError': "No se ha podido leer el archivo local. Los datos guardados no se han sustituido.",
   'storage.saveError': "Los cambios no se han guardado en este dispositivo. Reintenta o exporta una copia de recuperación antes de salir.",
   'storage.conflict': "Otra pestaña ha modificado estos datos. Tu copia sin guardar se conserva: expórtala antes de volver a abrir los datos guardados.",

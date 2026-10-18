@@ -13,6 +13,7 @@ import { removeAvatar } from '../profile/avatar'
 import { saveNames } from './profile'
 import { scopeFor } from './scopeFor'
 import { leaveScope } from './leaveScope'
+import { authCommand } from './authCommand'
 import { observeSession } from './observeSession'
 
 type User = SyncApi['user']
@@ -69,14 +70,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     endPreview: () => { void depart(async () => { setSeed(undefined); setLease(activateScope(scopeFor(user?.id ?? null))); setTransitioning(false) }).catch(() => undefined) },
     signIn: async (email, password) => {
       await flushScope(lease)
-      const { error } = await supabase!.auth.signInWithPassword({ email, password })
+      const { error } = await authCommand(lease, auth => auth.signInWithPassword({ email, password }), true)
       if (error) throw error
     },
     signUp: async ({ firstName, lastName, email, password, lang }) => {
       // lang: la lingua delle email (i modelli in supabase/templates la usano)
       await flushScope(lease)
-      const { data, error } = await supabase!.auth.signUp({ email, password,
-        options: { data: { first_name: firstName, last_name: lastName, lang }, emailRedirectTo: confirmUrl } })
+      const { data, error } = await authCommand(lease, auth => auth.signUp({ email, password,
+        options: { data: { first_name: firstName, last_name: lastName, lang }, emailRedirectTo: confirmUrl } }), true)
       if (error) throw error
       // con la conferma email attiva, un'email già registrata torna come utente senza identità
       if (data.user && !data.user.identities?.length) throw Object.assign(new Error('exists'), { code: 'user_already_exists' })
@@ -85,28 +86,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     },
     verifySignup: async (email, code) => {
       lease.assert()
-      const { error } = await supabase!.auth.verifyOtp({ email, token: code, type: 'signup' })
+      const { error } = await authCommand(lease, auth => auth.verifyOtp({ email, token: code, type: 'signup' }), true)
       if (error) throw error
     },
     verifyRecovery: async (email, code) => {
       lease.assert()
-      const { data, error } = await supabase!.auth.verifyOtp({ email, token: code, type: 'recovery' })
+      const { data, error } = await authCommand(lease, auth => auth.verifyOtp({ email, token: code, type: 'recovery' }), true)
       if (error) throw error
       if (data.user?.id === currentScope().scope.owner) setRecovery(true)
     },
     resendSignup: async email => {
       lease.assert()
-      const { error } = await supabase!.auth.resend({ type: 'signup', email, options: { emailRedirectTo: confirmUrl } })
+      const { error } = await authCommand(lease, auth => auth.resend({ type: 'signup', email, options: { emailRedirectTo: confirmUrl } }))
       if (error) throw error
     },
     resetPassword: async email => {
       lease.assert()
-      const { error } = await supabase!.auth.resetPasswordForEmail(email, { redirectTo: appUrl })
+      const { error } = await authCommand(lease, auth => auth.resetPasswordForEmail(email, { redirectTo: appUrl }))
       if (error) throw error
     },
     updatePassword: async password => {
       lease.assert()
-      const { error } = await supabase!.auth.updateUser({ password })
+      const { error } = await authCommand(lease, auth => auth.updateUser({ password }))
       if (error) throw error
       lease.assert()
       setRecovery(false)
@@ -115,16 +116,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       lease.assert()
       const email = user?.email
       if (!email) throw new Error('no user')
-      const check = await supabase!.auth.signInWithPassword({ email, password: current })
+      const check = await authCommand(lease, auth => auth.signInWithPassword({ email, password: current }))
       if (check.error) throw Object.assign(new Error('bad current'), { code: 'bad_current' })
       lease.assert()
-      const { error } = await supabase!.auth.updateUser({ password: next })
+      const { error } = await authCommand(lease, auth => auth.updateUser({ password: next }))
       if (error) throw error
     },
     updateNames: async (firstName, lastName) => {
       lease.assert()
       if (!user) return
-      const { data, error } = await supabase!.auth.updateUser({ data: { first_name: firstName, last_name: lastName } })
+      const { data, error } = await authCommand(lease, auth => auth.updateUser({ data: { first_name: firstName, last_name: lastName } }))
       if (error) throw error
       lease.assert()
       await saveNames(user.id, { first_name: firstName || null, last_name: lastName || null }, lease)
@@ -133,21 +134,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     },
     signOutOthers: async () => {
       lease.assert()
-      const { error } = await supabase!.auth.signOut({ scope: 'others' })
+      const { error } = await authCommand(lease, auth => auth.signOut({ scope: 'others' }))
       if (error) throw error
     },
     sendCode: async email => {
       lease.assert()
-      const { error } = await supabase!.auth.signInWithOtp({ email, options: { emailRedirectTo: appUrl } })
+      const { error } = await authCommand(lease, auth => auth.signInWithOtp({ email, options: { emailRedirectTo: appUrl } }))
       if (error) throw error
     },
     verifyCode: async (email, code) => {
       lease.assert()
-      const { error } = await supabase!.auth.verifyOtp({ email, token: code, type: 'email' })
+      const { error } = await authCommand(lease, auth => auth.verifyOtp({ email, token: code, type: 'email' }), true)
       if (error) throw error
     },
-    signOut: () => depart(async () => {
-      const { error } = await supabase!.auth.signOut()
+    signOut: () => depart(async guard => {
+      const { error } = await authCommand(guard, auth => auth.signOut())
       if (error) throw error
     }),
     deleteAccount: () => depart(async guard => {
@@ -162,7 +163,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       store.dispatch({ type: 'replace', data: null })
       await store.flush()
       guard.assert()
-      await supabase!.auth.signOut()
+      await authCommand(guard, auth => auth.signOut())
     }),
   }), [ready, user, recovery, lease, seed, appUrl, confirmUrl, transitioning, depart])
   return <SessionContext.Provider value={api}>{children}</SessionContext.Provider>

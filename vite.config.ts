@@ -1,3 +1,4 @@
+import { ISOLATION_WORKER } from './src/pushProtocol.ts'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { execSync } from 'node:child_process'
@@ -52,7 +53,7 @@ export default defineConfig(({ mode }) => ({
     contentSecurityPolicy(mode),
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'autoUpdate', filename: ISOLATION_WORKER,
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png', 'fonts/DMSerifDisplay-Regular.ttf', 'fonts/*.woff2'],
       manifest: {
         id: `${base}app/`,

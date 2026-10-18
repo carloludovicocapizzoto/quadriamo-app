@@ -162,4 +162,15 @@ describe('account cache boundaries', () => {
     expect(db.values.get('quadriamo.morning')).toEqual(morning)
     expect(db.values.get('quadriamo.inbox')).toEqual(notifications)
   })
+  it('retry cannot overwrite an unreadable newer document received from another tab', async () => {
+    await saveData(scope, legacy, 0)
+    const store = new AccountStore(scope)
+    await store.ready
+    const malformed = { ...legacy, settings: { ...legacy.settings, schema: 0, categories: [null] } } as unknown as AppData
+    await saveData(scope, malformed, 1)
+    await store.refresh()
+    expect(store.getSnapshot().error).toBe('load')
+    await store.retry().catch(() => undefined)
+    expect((db.values.get(dataKey(scope)) as { payload: unknown }).payload).toEqual(malformed)
+  })
 })
