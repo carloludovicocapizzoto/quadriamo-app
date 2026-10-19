@@ -63,9 +63,9 @@ Dizione pulita, nessuna inflessione regionale marcata, nessuna "s" sibilante (de
 ## 6. Tecnica (registrazione e consegna)
 - Microfono a condensatore, stanza trattata (o un armadio pieno di vestiti), distanza 15-20 cm, filtro anti-pop.
 - WAV 48 kHz / 24 bit, una battuta per file, **2-3 versioni** per battuta (una più calda, una più asciutta).
-- Post (la stessa catena di `voice.py`, STUDIO): taglio sotto 70 Hz → riduzione del rumore → controllo dei respiri
-  (espansore, −14 dB tra le parole) → corpo e calore (+2 dB a 140 Hz, −2 dB a 380 Hz) → presenza (+1,5 dB a 2,6 kHz) →
-  meno aria (−3 dB a 7 kHz, passa-basso a 12,5 kHz) → de-esser → compressione leggera (2:1) → limitatore →
+- Post (la stessa catena di `voice.py`, STUDIO): taglio sotto 85 Hz → riduzione del rumore → controllo dei respiri
+  (espansore, −14 dB tra le parole) → niente rimbombo (−2 dB a 250 Hz) → presenza e dizione (+2,5 dB a 3 kHz) →
+  meno fiato (−2 dB a 7,5 kHz, passa-basso a 14 kHz) → de-esser → compressione leggera (2,5:1) → limitatore →
   **−14 LUFS integrati, picchi a −1,5 dBTP** per i social; −16 LUFS per YouTube orizzontale.
 - La musica sotto la voce scende (ducking) di 7-8 dB mentre si parla e risale nelle pause.
 
@@ -100,7 +100,7 @@ partono quando la voce arriva alla frase che li nomina; il fruscio di transizion
 
 ## 9. Versione inglese
 Non una traduzione: un adattamento. Tono fintech premium (Monzo, Revolut, Apple), frasi ancora più corte, verbi attivi,
-nessun idiomatismo forzato. Voce maschile `am_michael` (Kokoro, americana neutra), coerente con l'italiano; schermate dell'app in inglese
+nessun idiomatismo forzato. Voce maschile (miscela Kokoro `am_echo` + `am_puck`, americana neutra, chiara e senza fiato), coerente con l'italiano; schermate dell'app in inglese
 (`shots-campaign/en-dark`). Euro con il simbolo davanti (€36.97), date all'inglese («October's over»).
 
 ## 10. Sottotitoli (italiano e inglese)
@@ -151,5 +151,5 @@ Le battute della colonna «Voce» si leggono così:
 | D01-D10 (demo) | il nome dell'azione | chiaro, guida |
 
 ## 13. Rigenerare video e voci
-`<python con kokoro-onnx> marketing/make_reels.py` (tutti, in italiano e in inglese) o con il nome di un video; `--lang it` o `--lang en` per una lingua sola. Voce predefinita: maschile (`im_nicola`, inglese `am_michael`); per tornare alle femminili: `QUADRIAMO_VOICE=if_sara`, `QUADRIAMO_VOICE_EN=af_heart`. Pronunce speciali (sigle, nomi): `LEXICON` in `voice.py`.
+`<python con kokoro-onnx> marketing/make_reels.py` (tutti, in italiano e in inglese) o con il nome di un video; `--lang it` o `--lang en` per una lingua sola. Voce predefinita: miscela maschile originale (`im_nicola:0.35,em_alex:0.65`, tono medio ~115 Hz: chiara, non cupa; inglese `am_echo:0.6,am_puck:0.4`), finali asciutti (`QUADRIAMO_CLOSE=1` per la discesa lunga sul punto); per tornare alle femminili: `QUADRIAMO_VOICE=if_sara`, `QUADRIAMO_VOICE_EN=af_heart`. Pronunce speciali (sigle, nomi): `LEXICON` in `voice.py`.
 Stili, velocità e pause: `marketing/voice.py` (STYLES). Segni di pausa nelle battute: `|` e `||`.

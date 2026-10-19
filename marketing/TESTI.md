@@ -80,12 +80,12 @@ Per gli spot a pagamento conviene registrare una voce professionista con gli ste
 
 | File | Durata IT / EN | Didascalia IT | Caption EN |
 |---|---|---|---|
-| reel-01-adesso | 34 / 28 s | Cosa devo sapere oggi? Un numero, e quello che conta. Il resto, quando vuoi. | What do I need to know today? One number, and what matters. The rest, when you want it. |
-| reel-02-costo-annuale | 36 / 31 s | Indovina quanto spendi di abbonamenti in un anno. Poi prova a toglierne uno. | Guess what your subscriptions cost you in a year. Then try taking one away. |
-| reel-03-ricevuta | 25 / 20 s | Ottobre è finito. Ecco il tuo scontrino. 🧾 | October's over. Here's your receipt. 🧾 |
-| reel-04-niente-sorprese | 31 / 28 s | La carta d'identità scade il giorno prima del volo? Non più. | Your ID card expiring the day before your flight? Not anymore. |
-| reel-05-parti-da-dove-sei | 23 / 20 s | Hai dei risparmi. Quanto puoi davvero toccare? | You've got savings. How much can you actually touch? |
-| hero-01-quadriamo-adesso | 57 / 49 s | Quadriamo, adesso. I tuoi soldi, in quattro. | Quadriamo. Your money, in four. |
+| reel-01-adesso | 28 / 26 s | Cosa devo sapere oggi? Un numero, e quello che conta. Il resto, quando vuoi. | What do I need to know today? One number, and what matters. The rest, when you want it. |
+| reel-02-costo-annuale | 31 / 28 s | Indovina quanto spendi di abbonamenti in un anno. Poi prova a toglierne uno. | Guess what your subscriptions cost you in a year. Then try taking one away. |
+| reel-03-ricevuta | 21 / 19 s | Ottobre è finito. Ecco il tuo scontrino. 🧾 | October's over. Here's your receipt. 🧾 |
+| reel-04-niente-sorprese | 27 / 26 s | La carta d'identità scade il giorno prima del volo? Non più. | Your ID card expiring the day before your flight? Not anymore. |
+| reel-05-parti-da-dove-sei | 20 / 18 s | Hai dei risparmi. Quanto puoi davvero toccare? | You've got savings. How much can you actually touch? |
+| hero-01-quadriamo-adesso | 48 / 45 s | Quadriamo, adesso. I tuoi soldi, in quattro. | Quadriamo. Your money, in four. |
 
 ## Rigenerare
 1. App con i dati di esempio accesa (`npm run dev`), poi `THEME=dark node marketing/shoot-campaign.mjs` e `THEME=light …`

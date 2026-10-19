@@ -14,7 +14,7 @@ Interpretazione "da doppiatore" (guida: marketing/campagna/11-voce.md):
 - catena da studio: riduzione del rumore, controllo dei respiri (espansore: il fiato tra le parole scende di ~14 dB),
   calore e corpo, meno aria sopra i 6 kHz, presenza, de-esser, compressione leggera, limitatore, -14 LUFS.
 perform() restituisce l'audio e i tempi di ogni frase: servono ai sottotitoli e al montaggio (la voce guida il video).
-Voci: QUADRIAMO_VOICE (italiano, predefinita im_nicola, maschile; femminile if_sara), QUADRIAMO_VOICE_EN (predefinita am_michael; femminile af_heart).
+Voci: QUADRIAMO_VOICE (italiano: miscela maschile im_nicola + em_alex; femminile if_sara), QUADRIAMO_VOICE_EN (miscela am_echo + am_puck; femminile af_heart).
 Modelli: cartella .models di budget-planner, oppure QUADRIAMO_MODELS. Serve espeak-ng di Homebrew e ffmpeg con rubberband.
 """
 import os
@@ -24,7 +24,9 @@ import subprocess
 import numpy as np
 import soundfile as sf
 
-VOICES = {'it': os.environ.get('QUADRIAMO_VOICE', 'im_nicola'), 'en': os.environ.get('QUADRIAMO_VOICE_EN', 'am_michael')}
+# una voce o una miscela di timbri («im_nicola:0.35,em_alex:0.65»): la firma maschile è una miscela originale, non la copia di nessuno
+VOICES = {'it': os.environ.get('QUADRIAMO_VOICE', 'im_nicola:0.35,em_alex:0.65'), 'en': os.environ.get('QUADRIAMO_VOICE_EN', 'am_echo:0.6,am_puck:0.4')}
+CLOSE_FALL = os.environ.get('QUADRIAMO_CLOSE', '0') == '1'   # 1: punto finale nella fonetica (discesa più lunga sulle code)
 KOKORO_LANG = {'it': 'it', 'en': 'en-us'}
 MODELS = os.environ.get('QUADRIAMO_MODELS', os.path.expanduser('~/GitHub/budget-planner/.models'))
 ESPEAK_LIB = '/usr/local/opt/espeak-ng/lib/libespeak-ng.dylib'
@@ -33,22 +35,22 @@ SR = 24000
 
 # velocità (1 = normale) di gancio, corpo e finale; pause in secondi dopo una frase, «|» e «||»
 STYLES = {
-    'reel':  dict(hook=1.05, body=1.0, end=0.97, sentence=0.28, short=0.12, long=0.34),
-    'hero':  dict(hook=0.96, body=0.93, end=0.91, sentence=0.48, short=0.22, long=0.6),
-    'spot':  dict(hook=1.04, body=0.99, end=0.96, sentence=0.28, short=0.13, long=0.36),
-    'demo':  dict(hook=0.98, body=0.96, end=0.95, sentence=0.4, short=0.18, long=0.45),
-    'edu':   dict(hook=0.99, body=0.95, end=0.94, sentence=0.42, short=0.2, long=0.5),
+    'reel':  dict(hook=1.1, body=1.06, end=1.02, sentence=0.26, short=0.1, long=0.3),
+    'hero':  dict(hook=1.0, body=0.98, end=0.96, sentence=0.42, short=0.18, long=0.5),
+    'spot':  dict(hook=1.09, body=1.05, end=1.01, sentence=0.26, short=0.11, long=0.32),
+    'demo':  dict(hook=1.03, body=1.01, end=0.99, sentence=0.36, short=0.15, long=0.4),
+    'edu':   dict(hook=1.03, body=1.0, end=0.98, sentence=0.38, short=0.17, long=0.45),
 }
 # pausa dopo ogni segno, rispetto alla pausa di frase
 AFTER = {'.': 1.0, '?': 1.25, '!': 0.9, ';': 0.75, ':': 0.55, '…': 1.3}
 RHYTHM = [1.0, 0.965, 1.03, 0.985]   # nel corpo le frasi alternano un passo più disteso e uno più svelto
 
-STUDIO = ('highpass=f=70,afftdn=nr=8:nf=-48,'
-          'agate=threshold=0.012:ratio=2:range=0.2:attack=4:release=160:knee=4,'      # il fiato tra le parole si abbassa
-          'equalizer=f=140:t=q:w=0.9:g=2.2,equalizer=f=380:t=q:w=1.1:g=-2.2,'            # corpo e calore, niente "scatola"
-          'equalizer=f=2600:t=q:w=1.2:g=1.6,equalizer=f=7000:t=q:w=1.2:g=-2.8,'           # presenza, meno aria e fruscio
-          'lowpass=f=12500,deesser=i=0.55:m=0.5:f=0.5,'
-          'acompressor=threshold=-20dB:ratio=2:attack=8:release=160:makeup=2,'
+STUDIO = ('highpass=f=85,afftdn=nr=10:nf=-48,'
+          'agate=threshold=0.012:ratio=2:range=0.2:attack=4:release=140:knee=4,'        # il fiato tra le parole si abbassa
+          'equalizer=f=250:t=q:w=1:g=-2,'                                                 # niente rimbombo: voce chiara, non cupa
+          'equalizer=f=3000:t=q:w=1.1:g=2.5,equalizer=f=7500:t=q:w=1.4:g=-2,'             # presenza e dizione; meno fiato
+          'lowpass=f=14000,deesser=i=0.5:m=0.5:f=0.5,'
+          'acompressor=threshold=-22dB:ratio=2.5:attack=6:release=140:makeup=2.5,'
           'alimiter=limit=0.84:attack=5:release=60,loudnorm=I=-14:TP=-1.5:LRA=7')
 # pronunce da correggere prima della fonetica (parola → come si scrive per dirla bene)
 LEXICON = {'it': {'DAZN': 'Dazòn', 'PAC': 'Pac', 'iCloud': 'aiclaud'}, 'en': {'DAZN': 'Da Zone'}}
@@ -64,7 +66,7 @@ def _engine():
     return _k
 
 
-def _trim(a, thr=0.004, pad=0.03, tail=0.09):
+def _trim(a, thr=0.004, pad=0.03, tail=0.045):
     """Toglie il silenzio ai lati senza mai tagliare la coda dell'ultima sillaba."""
     idx = np.where(np.abs(a) > thr)[0]
     if not len(idx):
@@ -72,7 +74,7 @@ def _trim(a, thr=0.004, pad=0.03, tail=0.09):
     return a[max(0, idx[0] - int(pad * SR)): idx[-1] + int(tail * SR)]
 
 
-def _fade(a, ms_in=6, ms_out=40):
+def _fade(a, ms_in=6, ms_out=25):
     """Attacco netto (consonanti definite), uscita morbida (nessun clic, nessuna finale troncata)."""
     a = a.copy()
     n, m = min(len(a) // 2, int(SR * ms_in / 1000)), min(len(a) // 2, int(SR * ms_out / 1000))
@@ -88,11 +90,20 @@ def phonemes(text, lang='it'):
     ph = _engine().tokenizer.phonemize(text, KOKORO_LANG[lang])
     if lang == 'it':
         ph = ph.replace('ɪ', 'i').replace('ʊ', 'u')
+    if not CLOSE_FALL:
+        ph = ph.rstrip(' .;:')
     return ph
 
 
+def _voice(spec):
+    if ':' not in spec:
+        return spec
+    k = _engine()
+    return sum(k.voices[n] * float(w) for n, w in (x.split(':') for x in spec.split(',')))
+
+
 def say(text, speed=1.0, lang='it'):
-    audio, sr = _engine().create(phonemes(text, lang), voice=VOICES[lang], speed=speed, is_phonemes=True)
+    audio, sr = _engine().create(phonemes(text, lang), voice=_voice(VOICES[lang]), speed=speed, is_phonemes=True)
     assert sr == SR
     return audio.astype(np.float32)
 
@@ -130,10 +141,10 @@ def perform(text, style='reel', part='body', lang='it'):
         if last == '?':
             speed *= 1.02; gain = 1.04                        # curiosità: un filo più viva (la domanda sale da sé)
         elif words <= 3 and part != 'hook':
-            speed *= 0.93; gain = 0.96                        # frase breve: più lenta e posata, autorevole
+            speed *= 0.97                                     # frase breve: un filo più posata, autorevole
         if part == 'end':
             if k == 0:
-                speed *= 0.94                                 # il nome, deciso
+                speed *= 0.97                                 # il nome, deciso
             else:
                 speed *= 1.02; gain = 1.1                     # l'invito, più energico
         elif part == 'body' and words >= 7:
