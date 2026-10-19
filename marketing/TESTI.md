@@ -71,7 +71,7 @@ mettile in `marketing/meme/foto/1.jpg`…`4.jpg` e rigenera. Mai fotogrammi di f
 
 ## Reel con la voce narrante — `out/video/` (italiano) e `out/video/en/` (inglese)
 Voce sintetica (Kokoro, generata sul Mac: nessun diritto da pagare), interpretata con la guida `campagna/11-voce.md`:
-la punteggiatura decide pause e intonazione, respiri prima delle frasi lunghe, ritmo gancio-corpo-finale, catena da studio,
+voce maschile calda e pulita (niente fiato udibile), dizione corretta, la punteggiatura decide pause e intenzione, ritmo gancio-corpo-finale, catena da studio,
 −14 LUFS. La voce guida il montaggio (zoom e dissolvenze partono quando la voce nomina il dettaglio). Sottotitoli impressi
 e file `.srt` accanto a ogni video. La versione inglese è un adattamento (voce inglese, schermate dell'app in inglese).
 Sotto c'è un tappeto musicale morbido generato dallo script, che si abbassa mentre si parla, e un fruscio sulle transizioni:
@@ -80,12 +80,12 @@ Per gli spot a pagamento conviene registrare una voce professionista con gli ste
 
 | File | Durata IT / EN | Didascalia IT | Caption EN |
 |---|---|---|---|
-| reel-01-adesso | 31 / 25 s | Cosa devo sapere oggi? Un numero, e quello che conta. Il resto, quando vuoi. | What do I need to know today? One number, and what matters. The rest, when you want it. |
-| reel-02-costo-annuale | 33 / 28 s | Indovina quanto spendi di abbonamenti in un anno. Poi prova a toglierne uno. | Guess what your subscriptions cost you in a year. Then try taking one away. |
-| reel-03-ricevuta | 23 / 18 s | Ottobre è finito. Ecco il tuo scontrino. 🧾 | October's over. Here's your receipt. 🧾 |
-| reel-04-niente-sorprese | 29 / 25 s | La carta d'identità scade il giorno prima del volo? Non più. | Your ID card expiring the day before your flight? Not anymore. |
-| reel-05-parti-da-dove-sei | 21 / 17 s | Hai dei risparmi. Quanto puoi davvero toccare? | You've got savings. How much can you actually touch? |
-| hero-01-quadriamo-adesso | 53 / 44 s | Quadriamo, adesso. I tuoi soldi, in quattro. | Quadriamo. Your money, in four. |
+| reel-01-adesso | 34 / 28 s | Cosa devo sapere oggi? Un numero, e quello che conta. Il resto, quando vuoi. | What do I need to know today? One number, and what matters. The rest, when you want it. |
+| reel-02-costo-annuale | 36 / 31 s | Indovina quanto spendi di abbonamenti in un anno. Poi prova a toglierne uno. | Guess what your subscriptions cost you in a year. Then try taking one away. |
+| reel-03-ricevuta | 25 / 20 s | Ottobre è finito. Ecco il tuo scontrino. 🧾 | October's over. Here's your receipt. 🧾 |
+| reel-04-niente-sorprese | 31 / 28 s | La carta d'identità scade il giorno prima del volo? Non più. | Your ID card expiring the day before your flight? Not anymore. |
+| reel-05-parti-da-dove-sei | 23 / 20 s | Hai dei risparmi. Quanto puoi davvero toccare? | You've got savings. How much can you actually touch? |
+| hero-01-quadriamo-adesso | 57 / 49 s | Quadriamo, adesso. I tuoi soldi, in quattro. | Quadriamo. Your money, in four. |
 
 ## Rigenerare
 1. App con i dati di esempio accesa (`npm run dev`), poi `THEME=dark node marketing/shoot-campaign.mjs` e `THEME=light …`

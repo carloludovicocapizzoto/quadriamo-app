@@ -71,9 +71,9 @@ Tutto il resto qui è pronto per la produzione: si gira/si monta seguendo storyb
 | blocchi | i blocchi della treemap si ridispongono | scivolamento di legno morbido, 300 ms |
 
 ### 6. Voce
-- Italiano neutro, calmo, sorridente; **frasi corte**, pause vere; nessun tono da televendita.
+- **Firma vocale maschile**: calda, piena, leggermente profonda, pulita (niente fiato udibile); **frasi corte**, pause vere; nessun tono da televendita. Guida completa: `11-voce.md`.
 - Voce sintetica per le bozze (Kokoro, `voice.py`); per le versioni finali e gli spot pagati, una voce umana
-  (giovane, 25-35 anni, femminile o maschile) registrata in studio o da casa con microfono a condensatore.
+  (maschile, timbro caldo e pieno, dizione impeccabile; mai l'imitazione di una persona reale) registrata in studio o da casa con microfono a condensatore.
 - Sottotitoli sempre (il 70% guarda senza audio): Inter 600, bianco con contorno leggero, al centro in basso
   sopra la zona dei pulsanti dell'app social.
 

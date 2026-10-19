@@ -4,16 +4,21 @@ Vale per tutti i voice-over della campagna: i 6 video già montati, in italiano 
 con una voce professionista (spot a pagamento, hero, demo). Gli script restano quelli di `01-reel.md`, `02-hero-e-demo.md`
 e `03-spot.md`: cambia **come** si leggono.
 
-## 1. Il carattere
+## 1. Il carattere e il timbro
 Una persona competente, appassionata di tecnologia e di soldi, che spiega cose complesse con semplicità.
-**Premium, moderna, sicura. Calda, mai fredda. Professionale, mai istituzionale.** Entusiasmo misurato.
+**Elegante, autorevole, naturale, calda, sicura, professionale, coinvolgente.** Entusiasmo misurato.
 Non vende un'app: racconta un'esperienza che migliora la giornata.
+
+**La firma vocale della campagna è maschile**: timbro caldo, pieno, leggermente profondo, morbido, ben controllato, con
+molta presenza. Il livello è quello di un grande doppiatore italiano, ma la voce è originale: **mai imitare o
+clonare la voce di una persona reale**. Stessa voce (o, per l'inglese, lo stesso carattere) in reel, TikTok, spot,
+hero e demo.
 
 Riferimenti di tono: le voci dei video di presentazione di Apple, Google Pixel e Nothing; i film di lancio di Linear,
 Arc, Notion e Stripe; la calma degli spot di Revolut e Airbnb. Ogni parola scelta, nessuna in più.
 
-**Evitare**: tono robotico, monotono, da televendita, teatrale, troppo entusiasta; frasi incollate; accelerare negli elenchi;
-il "sorriso finto" a fine frase; enfasi su ogni parola.
+**Evitare**: voce aspirata, fiato udibile tra le parole, aria sulle consonanti, attacchi molli, finali di parola mangiati;
+tono robotico, monotono, da televendita, teatrale; frasi incollate; accelerare negli elenchi; enfasi su ogni parola.
 
 ## 2. Il ritmo: progressivo
 | Parte | Come | Velocità indicativa |
@@ -58,8 +63,10 @@ Dizione pulita, nessuna inflessione regionale marcata, nessuna "s" sibilante (de
 ## 6. Tecnica (registrazione e consegna)
 - Microfono a condensatore, stanza trattata (o un armadio pieno di vestiti), distanza 15-20 cm, filtro anti-pop.
 - WAV 48 kHz / 24 bit, una battuta per file, **2-3 versioni** per battuta (una più calda, una più asciutta).
-- Post: taglio sotto 80 Hz, un filo di calore, presenza leggera, de-esser, compressione morbida, **−14 LUFS integrati,
-  picchi a −1,5 dBTP** per i social; −16 LUFS per YouTube orizzontale.
+- Post (la stessa catena di `voice.py`, STUDIO): taglio sotto 70 Hz → riduzione del rumore → controllo dei respiri
+  (espansore, −14 dB tra le parole) → corpo e calore (+2 dB a 140 Hz, −2 dB a 380 Hz) → presenza (+1,5 dB a 2,6 kHz) →
+  meno aria (−3 dB a 7 kHz, passa-basso a 12,5 kHz) → de-esser → compressione leggera (2:1) → limitatore →
+  **−14 LUFS integrati, picchi a −1,5 dBTP** per i social; −16 LUFS per YouTube orizzontale.
 - La musica sotto la voce scende (ducking) di 7-8 dB mentre si parla e risale nelle pause.
 
 ## 7. Come «legge» la voce sintetica (voice.py) — le stesse regole valgono per chi registra
@@ -76,9 +83,13 @@ Dizione pulita, nessuna inflessione regionale marcata, nessuna "s" sibilante (de
 | `\|` / `\|\|` | respiro breve / pausa lunga | dove la parola deve «atterrare» |
 
 - **Ritmo alternato**: nel corpo le frasi alternano un passo più disteso e uno più svelto (mai la stessa velocità per 3 frasi).
-- **Intonazione variabile**: domande in salita; frasi brevi affermative (≤ 3 parole) più lente e più basse (autorevolezza);
-  il nome «Quadriamo.» deciso e basso; l'invito finale più energico e luminoso; le spiegazioni calme.
-- **Respiri**: prima di una frase lunga (6+ parole) dopo una pausa vera, un respiro appena udibile. Mai una voce che non respira.
+- **Intenzione**: una novità o una domanda → curiosità (un filo più viva); una funzione → entusiasmo controllato; le frasi
+  brevi (≤ 3 parole) → più lente e posate (autorevolezza); le spiegazioni → calme; la chiusura → sicurezza e fiducia,
+  con «Quadriamo.» deciso e l'invito più energico.
+- **Respiri**: mai udibili. Le pause sono silenzio pulito; in registrazione i respiri si tagliano o si abbassano di 15-20 dB.
+- **Dizione**: ogni vocale finale piena e chiusa («ogni», «più», «euro» — non «ognɪ», «pjʊ»); consonanti definite,
+  attacchi netti, code di parola mai troncate. Le intonazioni si ottengono con velocità, volume e pause, non spostando
+  artificialmente il tono (aggiunge "aria").
 - **Enfasi solo su**: il beneficio, il problema, il numero, il vantaggio, la CTA. Tutto il resto è neutro.
 - **Testo parlato, non scritto**: le frasi si riscrivono per l'orecchio prima di registrarle (frasi corte, il soggetto
   vicino al verbo, i numeri come si dicono: «più trentotto per cento», «quasi quattrocentoventi euro»).
@@ -89,7 +100,7 @@ partono quando la voce arriva alla frase che li nomina; il fruscio di transizion
 
 ## 9. Versione inglese
 Non una traduzione: un adattamento. Tono fintech premium (Monzo, Revolut, Apple), frasi ancora più corte, verbi attivi,
-nessun idiomatismo forzato. Voce `af_heart` (Kokoro, americana neutra); schermate dell'app in inglese
+nessun idiomatismo forzato. Voce maschile `am_michael` (Kokoro, americana neutra), coerente con l'italiano; schermate dell'app in inglese
 (`shots-campaign/en-dark`). Euro con il simbolo davanti (€36.97), date all'inglese («October's over»).
 
 ## 10. Sottotitoli (italiano e inglese)
@@ -140,5 +151,5 @@ Le battute della colonna «Voce» si leggono così:
 | D01-D10 (demo) | il nome dell'azione | chiaro, guida |
 
 ## 13. Rigenerare video e voci
-`<python con kokoro-onnx> marketing/make_reels.py` (tutti, in italiano e in inglese) o con il nome di un video; `--lang it` o `--lang en` per una lingua sola. Voce maschile: `QUADRIAMO_VOICE=im_nicola`.
+`<python con kokoro-onnx> marketing/make_reels.py` (tutti, in italiano e in inglese) o con il nome di un video; `--lang it` o `--lang en` per una lingua sola. Voce predefinita: maschile (`im_nicola`, inglese `am_michael`); per tornare alle femminili: `QUADRIAMO_VOICE=if_sara`, `QUADRIAMO_VOICE_EN=af_heart`. Pronunce speciali (sigle, nomi): `LEXICON` in `voice.py`.
 Stili, velocità e pause: `marketing/voice.py` (STYLES). Segni di pausa nelle battute: `|` e `||`.
