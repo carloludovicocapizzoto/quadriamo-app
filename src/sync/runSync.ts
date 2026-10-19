@@ -1,7 +1,7 @@
 import type { AccountStore } from '../store/accountStore'
 import type { ScopeLease } from '../store/scope'
 import type { PendingWrite, RemoteDocument, CloudStatus } from './protocol'
-import { clone, equal, reconcile } from './protocol'
+import { clone, createOperationId, equal, reconcile } from './protocol'
 import type { WriteReceipt } from './remote'
 
 export interface SyncJob {
@@ -15,6 +15,13 @@ const retryable = (e: unknown) => {
 }
 export async function runSync({ lease, storage, read, write, sleep }: SyncJob): Promise<CloudStatus> {
   if (lease.scope.kind !== 'account') throw Error('account required')
+  lease.assert()
+  const savedCooldown = storage.getSnapshot().cloud?.cooldownUntil
+  if (savedCooldown && Date.parse(savedCooldown) > Date.now()) return 'pending'
+  if (savedCooldown) await storage.updateCloud(lease, ({ data, cloud }) => {
+    delete cloud.cooldownUntil
+    return { data, cloud }
+  })
   const wait = sleep ?? (ms => new Promise<void>((ok, bad) => {
     const aborted = () => { clearTimeout(timer); bad(new DOMException('session changed', 'AbortError')) }
     const timer = setTimeout(() => { lease.signal.removeEventListener('abort', aborted); ok() }, ms)
@@ -55,7 +62,7 @@ export async function runSync({ lease, storage, read, write, sleep }: SyncJob): 
             cloud.base = clone(remote); cloud.status = 'ok'; return { data: clone(remote.document), cloud }
           }
           if (!result.document) throw Error('empty document cannot be uploaded')
-          cloud.pending = { id: crypto.randomUUID(), expected: remote.revision, document: clone(result.document), localAtStart: clone(data) }
+          cloud.pending = { id: createOperationId(), expected: remote.revision, document: clone(result.document), localAtStart: clone(data) }
           cloud.status = 'pending'; return { data, cloud }
         })
         const current = storage.getSnapshot().cloud!
@@ -69,10 +76,12 @@ export async function runSync({ lease, storage, read, write, sleep }: SyncJob): 
         if (cloud.pending?.id !== operation.id) throw Error('outbox changed')
         cloud.pending = null
         if (receipt.status === 'conflict') {
+          delete cloud.cooldownUntil
           cloud.recovery.push({ id: operation.id, at: new Date().toISOString(), reason: 'retry', local: clone(operation.document), remote: null, base: clone(cloud.base?.document ?? null) })
           cloud.status = 'pending'; return { data, cloud }
         }
-        const base: RemoteDocument = { protocol: 1, mode: 'protected', revision: receipt.revision, document: clone(operation.document) }
+        delete cloud.cooldownUntil
+        const base: RemoteDocument = { protocol: 2, mode: 'protected', revision: receipt.revision, document: clone(operation.document) }
         cloud.base = base; cloud.lastAck = { operation: receipt.operation, revision: receipt.revision }
         const merged = reconcile(operation.localAtStart, data, operation.document)
         if (merged.paths.length) {
@@ -87,7 +96,60 @@ export async function runSync({ lease, storage, read, write, sleep }: SyncJob): 
     } catch (e) {
       lease.assert()
       if (storage.getSnapshot().error) throw e
-      const error = e as { code?: string; message?: string }
+      const error = e as { code?: string; message?: string; retryAfterSeconds?: number }
+      if (error.code === 'PT429' || /QSYNC_RATE_LIMITED/.test(error.message ?? '')) {
+        const seconds = Math.max(1, Math.min(86_400, error.retryAfterSeconds ?? 60))
+        await storage.updateCloud(lease, ({ data, cloud }) => {
+          cloud.cooldownUntil = new Date(Date.now() + seconds * 1000).toISOString()
+          cloud.status = 'pending'
+          return { data, cloud }
+        })
+        return 'pending'
+      }
+      if (error.code === 'QSYNC_RECEIPT_EXPIRED' || error.code === 'PT409' && /QSYNC_RECEIPT_EXPIRED/.test(error.message ?? '')) {
+        const operation = storage.getSnapshot().cloud?.pending
+        if (!operation) throw e
+        const remote = await read(); lease.assert()
+        await storage.updateCloud(lease, ({ data, cloud }) => {
+          if (cloud.pending?.id !== operation.id) throw Error('outbox changed during expired receipt recovery')
+          if (remote.mode !== 'protected') {
+            cloud.status = remote.mode === 'paused' ? 'paused' : 'upgrade'
+            return { data, cloud }
+          }
+          const base = cloud.base ? clone(cloud.base) : null
+          cloud.recovery.push({ id: operation.id, at: new Date().toISOString(), reason: 'expired-receipt',
+            local: clone(operation.document), remote: clone(remote.document), base: clone(base?.document ?? null) })
+          if (!equal(data, operation.document)) cloud.recovery.push({ id: crypto.randomUUID(), at: new Date().toISOString(), reason: 'expired-receipt',
+            local: clone(data), remote: clone(remote.document), base: clone(operation.localAtStart) })
+          // Reconcile the immutable candidate first, then edits made since it was created.
+          // Using the current draft only as localAtStart would discard those newer edits on ACK.
+          const candidate = reconcile(base?.document ?? null, operation.document, remote.document)
+          const merged = candidate.paths.length ? candidate : reconcile(operation.localAtStart, data, candidate.document)
+          const rolledBack = BigInt(remote.revision) < BigInt(operation.expected)
+            || base && remote.revision === base.revision && !equal(remote.document, base.document)
+          cloud.pending = null; delete cloud.cooldownUntil
+          if (rolledBack || merged.paths.length || merged.document === null && (data !== null || operation.document !== null || remote.document !== null)) {
+            // An uncertain expired operation requires a whole-document choice. Both the pending
+            // candidate and the newer local draft remain exportable in the recovery archive.
+            cloud.conflict = { id: operation.id, paths: ['/document'], base,
+              local: clone(data), remote: clone(remote), cause: 'expired-receipt' }
+            cloud.status = 'conflict'
+          } else {
+            cloud.base = clone(remote)
+            cloud.conflict = null
+            if (equal(merged.document, remote.document)) {
+              cloud.status = 'reconciled'
+              return { data: clone(merged.document), cloud }
+            }
+            else {
+              cloud.pending = { id: createOperationId(), expected: remote.revision, document: clone(merged.document!), localAtStart: clone(data) }
+              cloud.status = 'pending'
+            }
+          }
+          return { data, cloud }
+        })
+        return storage.getSnapshot().cloud?.status ?? 'pending'
+      }
       if (error.code === 'PGRST202' || /UPGRADE|UNSUPPORTED|NOT_ACTIVATED|PAUSED/.test(error.code + ' ' + error.message)) {
         const status = /PAUSED/.test(error.message ?? '') ? 'paused' : 'upgrade'
         await storage.updateCloud(lease, ({ data, cloud }) => ({ data, cloud: { ...cloud, status, available: false } })); return status

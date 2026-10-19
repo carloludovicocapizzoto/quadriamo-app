@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react'
 import type { AppData } from '../store/types'
 
-export type SyncStatus = 'idle' | 'syncing' | 'ok' | 'error' | 'offline' | 'pending' | 'conflict' | 'upgrade' | 'paused'
+export type SyncStatus = 'idle' | 'syncing' | 'ok' | 'reconciled' | 'error' | 'offline' | 'pending' | 'conflict' | 'upgrade' | 'paused'
 
 export interface SyncApi {
   localSession: boolean

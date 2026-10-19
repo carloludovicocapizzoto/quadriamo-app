@@ -30,7 +30,8 @@ function supportedCloud(c: CloudState): boolean {
   const doc = (d: unknown) => d === null || supportedData(d) && !d.demo
   const remote = (r: RemoteDocument | null) => r === null || r && Number.isInteger(r.protocol) && r.protocol >= 1
     && typeof r.revision === 'string' && /^(0|[1-9]\d*)$/.test(r.revision) && ['legacy', 'protected', 'paused'].includes(r.mode) && doc(r.document)
-  return !!c && c.format === 1 && !!remote(c.base) && ['idle', 'pending', 'ok', 'conflict', 'upgrade', 'paused'].includes(c.status)
+  return !!c && c.format === 1 && !!remote(c.base) && ['idle', 'pending', 'ok', 'reconciled', 'conflict', 'upgrade', 'paused'].includes(c.status)
+    && (c.cooldownUntil === undefined || typeof c.cooldownUntil === 'string' && Number.isFinite(Date.parse(c.cooldownUntil)))
     && (c.pending === null || !!c.pending && typeof c.pending.id === 'string' && typeof c.pending.expected === 'string' && /^\d+$/.test(c.pending.expected)
       && supportedData(c.pending.document) && !c.pending.document.demo && doc(c.pending.localAtStart))
     && (c.conflict === null || !!c.conflict && typeof c.conflict.id === 'string' && Array.isArray(c.conflict.paths)

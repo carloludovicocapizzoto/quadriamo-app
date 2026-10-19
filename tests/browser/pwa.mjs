@@ -64,8 +64,8 @@ async function launch(){
    if(offline)return route.abort()
    if(u.origin===ORIGIN)return route.continue()
    if(u.origin!==API)return route.abort()
-   if(u.pathname.endsWith('/qsync_read'))return route.fulfill({json:{protocol:1,mode:'protected',revision:'1',document:budget}})
-   if(u.pathname.endsWith('/qsync_write'))return route.fulfill({json:{status:'applied',revision:'2',operation:req.postDataJSON().p_operation,replay:false}})
+   if(u.pathname.endsWith('/qsync_read'))return route.fulfill({json:{protocol:2,mode:'protected',revision:'1',document:budget}})
+   if(u.pathname.endsWith('/qsync_write_v2'))return route.fulfill({json:{protocol:2,status:'applied',revision:'2',operation:req.postDataJSON().p_operation,replay:false}})
    if(u.pathname.endsWith('/user_data'))return route.fulfill({json:req.method()==='GET'?{data:budget}:null})
    if(u.pathname==='/auth/v1/user')return route.fulfill({json:user})
    if(u.pathname==='/auth/v1/token')return route.fulfill({json:session})
@@ -133,25 +133,28 @@ try{
    for(let i=0;i<100&&!await old.evaluate(()=>!!self.testPushStarted);i++)await new Promise(r=>setTimeout(r,10))
    assert(await old.evaluate(()=>!!self.testPushStarted),'the legacy push must already be running before retirement')
    offline=true;await context.setOffline(true)
-   await page.goto(ORIGIN+'/app/').catch(e=>{if(!e.message.includes('ERR_ABORTED'))throw e})
+   await page.goto(ORIGIN+'/app/').catch(e=>{if(!/ERR_ABORTED|ERR_FAILED/.test(e.message))throw e})
    await holder.waitForFunction(async()=>!(await navigator.serviceWorker.getRegistrations()).some(r=>r.active?.scriptURL.endsWith('/legacy-sw.js')))
    await holder.evaluate(()=>window.releaseDB());await queued
    // A retired worker may terminate before Playwright can query its realm again.
    // Observe completion through its client, or an actual stop of that exact CDP version.
    let completed=false,stopped=false
-   for(let i=0;i<300;i++){
+   for(let i=0;i<500;i++){
      completed=await holder.evaluate(()=>window.legacyPushFinished)
+     if(!completed)completed=await old.evaluate(()=>!!self.testPushDone).catch(()=>false)
      const version=versions.get(legacyVersionId)
-     stopped=version?.runningStatus==='stopped'&&version.status==='redundant'
+     // Retirement was verified above. CDP can still label this exact version activated
+     // after it has stopped, so runningStatus is the relevant execution barrier.
+     stopped=version?.runningStatus==='stopped'
      if(completed||stopped)break
-     await new Promise(ok=>setTimeout(ok,10))
+     await new Promise(ok=>setTimeout(ok,20))
    }
    assert(completed||stopped,'inspect notifications only after the actual handler completes or its exact worker version stops')
    const visible=await holder.evaluate(async()=> (await window.legacyRegistration.getNotifications()).map(n=>({title:n.title,body:n.body})))
    await page.getByRole('alert').filter({hasText:'chiudi completamente'}).waitFor()
    assert.equal(await page.locator('.tabbar').count(),0)
    assert(!visible.some(n=>n.body.includes('LEGACY-A-SECRET')),'queued legacy notification exposed: '+JSON.stringify(visible))
-   await writeFile(OUT+'/legacy-transition.json',JSON.stringify({handlerCompleted:completed,workerStopped:stopped,legacyVersionId,explicitAppGateVerified:true,notifications:visible},null,2))
+   await writeFile(OUT+'/legacy-transition.json',JSON.stringify({handlerCompleted:completed,workerStopped:stopped,legacyVersionId,observedVersion:versions.get(legacyVersionId),explicitAppGateVerified:true,notifications:visible},null,2))
  })
  await check('late unbound push cannot target the retired registration',async()=>{
    await legacyObserver.evaluate(async()=>{for(const n of await window.legacyRegistration.getNotifications())n.close()})

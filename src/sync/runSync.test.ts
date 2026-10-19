@@ -24,16 +24,16 @@ beforeEach(() => { db.values.clear(); db.fail = false; db.crash = false })
 async function fixture(initialize = true) {
   const storage = new AccountStore(scope), lease = activateScope(scope)
   await storage.ready
-  let server: RemoteDocument = { protocol: 1, revision: '1', mode: 'protected', document: make() }
+  let server: RemoteDocument = { protocol: 2, revision: '1', mode: 'protected', document: make() }
   const receipts = new Map<string, { revision: string; document: AppData }>()
   const read = vi.fn(async () => clone(server))
   const write = vi.fn(async (pending: Parameters<SyncJob['write']>[0]) => {
     const previous = receipts.get(pending.id)
-    if (previous) { if (!equal(previous.document, pending.document)) throw Error('idempotency mismatch'); return { operation: pending.id, status: 'applied' as const, revision: previous.revision, replay: true } }
-    if (pending.expected !== server.revision) return { operation: pending.id, status: 'conflict' as const, revision: server.revision, replay: false }
+    if (previous) { if (!equal(previous.document, pending.document)) throw Error('idempotency mismatch'); return { protocol: 2 as const, operation: pending.id, status: 'applied' as const, revision: previous.revision, replay: true } }
+    if (pending.expected !== server.revision) return { protocol: 2 as const, operation: pending.id, status: 'conflict' as const, revision: server.revision, replay: false }
     server = { ...server, document: clone(pending.document), revision: String(BigInt(server.revision) + 1n) }
     receipts.set(pending.id, { revision: server.revision, document: clone(pending.document) })
-    return { operation: pending.id, status: 'applied' as const, revision: server.revision, replay: false }
+    return { protocol: 2 as const, operation: pending.id, status: 'applied' as const, revision: server.revision, replay: false }
   })
   const job: SyncJob = { lease, storage, read, write, sleep: async () => {} }
   if (initialize) await runSync(job)
@@ -82,6 +82,98 @@ describe('durable conditional synchronization in the product', () => {
     expect(await runSync(f.job)).toBe('ok'); expect(f.remote().revision).toBe('2')
     expect(f.write.mock.calls[0][0]).toEqual(f.write.mock.calls[1][0])
   })
+  it('keeps the same outbox during rate limiting and waits for retry-after before sending again', async () => {
+    const f = await fixture(); await add(f.storage, 'rate-limited')
+    const original = vi.fn(async () => { throw new ProtocolError('QSYNC_RATE_LIMITED', 'QSYNC_RATE_LIMITED', 429, { retry_after_seconds: 3600 }) })
+    f.job.write = original
+    expect(await runSync(f.job)).toBe('pending')
+    const before = f.storage.getSnapshot().cloud!.pending!
+    expect(f.storage.getSnapshot().cloud?.cooldownUntil).toBeTruthy()
+    expect(original).toHaveBeenCalledTimes(1)
+    f.job.write = f.write
+    expect(await runSync(f.job)).toBe('pending')
+    expect(f.write).not.toHaveBeenCalled()
+    await f.storage.updateCloud(f.job.lease, ({ data, cloud }) => { cloud.cooldownUntil = new Date(Date.now() - 1000).toISOString(); return { data, cloud } })
+    expect(await runSync(f.job)).toBe('ok')
+    expect(f.write.mock.calls[0][0].id).toBe(before.id)
+  })
+  it('re-reads and conservatively reconciles after a receipt expires instead of resending its UUID', async () => {
+    const f = await fixture(); await add(f.storage, 'after-expiry')
+    f.job.write = async () => { throw new ProtocolError('QSYNC_RECEIPT_EXPIRED', 'QSYNC_RECEIPT_EXPIRED', 409) }
+    expect(await runSync(f.job)).toBe('pending')
+    const cloud = f.storage.getSnapshot().cloud!
+    expect(cloud.recovery.at(-1)).toMatchObject({ reason: 'expired-receipt', local: { transactions: [{ id: 'after-expiry' }] } })
+    expect(cloud.pending?.id).not.toBe(cloud.recovery.at(-1)?.id)
+    expect(cloud.pending?.expected).toBe('1')
+  })
+  it('reports converged state separately when the remote already has an expired pending document', async () => {
+    const f = await fixture(); await add(f.storage, 'already-present')
+    f.job.write = async p => { f.change(p.document); throw new ProtocolError('QSYNC_RECEIPT_EXPIRED', 'QSYNC_RECEIPT_EXPIRED', 409) }
+    expect(await runSync(f.job)).toBe('reconciled')
+    expect(f.storage.getSnapshot().cloud?.pending).toBeNull()
+    expect(f.storage.getSnapshot().cloud?.lastAck).toBeUndefined()
+    expect(f.storage.getSnapshot().cloud?.recovery.at(-1)?.reason).toBe('expired-receipt')
+  })
+  it('includes edits made after outbox creation when reconciling an expired receipt', async () => {
+    const f = await fixture(); await add(f.storage, 'first'); f.change(make('remote-before'))
+    f.job.write = async () => {
+      await add(f.storage, 'second'); f.change(make('remote-before', 'remote-after'))
+      throw new ProtocolError('QSYNC_RECEIPT_EXPIRED', 'QSYNC_RECEIPT_EXPIRED', 409)
+    }
+    expect(await runSync(f.job)).toBe('pending')
+    expect(f.storage.getSnapshot().cloud?.pending?.document.transactions.map(t => t.id).sort())
+      .toEqual(['first', 'remote-after', 'remote-before', 'second'])
+    f.job.write = f.write
+    expect(await runSync(f.job)).toBe('ok')
+    expect(f.remote().document?.transactions.map(t => t.id).sort()).toEqual(['first', 'remote-after', 'remote-before', 'second'])
+    expect(f.storage.getSnapshot().state.data?.transactions.map(t => t.id).sort()).toEqual(['first', 'remote-after', 'remote-before', 'second'])
+  })
+  it('preserves current and pending versions when expiry recovery finds conflicting edits', async () => {
+    const f = await fixture(); await add(f.storage, 'one'); await runSync(f.job)
+    f.storage.dispatch({ type: 'updateTx', tx: { ...make('one').transactions[0], amount: 20 }, at: '2100-01-01' }); await f.storage.flush()
+    f.job.write = async () => {
+      f.storage.dispatch({ type: 'updateTx', tx: { ...make('one').transactions[0], amount: 40 }, at: '2100-01-02' }); await f.storage.flush()
+      const other = make('one'); other.transactions[0].amount = 30; f.change(other)
+      throw new ProtocolError('QSYNC_RECEIPT_EXPIRED', 'QSYNC_RECEIPT_EXPIRED', 409)
+    }
+    expect(await runSync(f.job)).toBe('conflict')
+    expect(f.storage.getSnapshot().cloud?.conflict).toMatchObject({ cause: 'expired-receipt', paths: ['/document'], local: { transactions: [{ amount: 40 }] } })
+    expect(f.storage.getSnapshot().cloud?.recovery.some(copy => copy.local?.transactions[0].amount === 20)).toBe(true)
+    expect(f.storage.getSnapshot().cloud?.recovery.some(copy => copy.local?.transactions[0].amount === 40)).toBe(true)
+    expect(f.storage.getSnapshot().state.data?.transactions[0].amount).toBe(40)
+  })
+  it('does not replace an expired outbox while the reread reports a paused backend', async () => {
+    const f = await fixture(); await add(f.storage, 'paused-expiry')
+    let expired = false
+    f.job.read = async () => ({ ...clone(f.remote()), mode: expired ? 'paused' : 'protected' })
+    f.job.write = async () => {
+      expired = true
+      throw new ProtocolError('QSYNC_RECEIPT_EXPIRED', 'QSYNC_RECEIPT_EXPIRED', 409)
+    }
+    expect(await runSync(f.job)).toBe('paused')
+    expect(f.storage.getSnapshot().cloud?.pending?.document.transactions[0].id).toBe('paused-expiry')
+    expect(f.storage.getSnapshot().cloud?.recovery).toHaveLength(0)
+  })
+  it('keeps later edits pending when the expired candidate already exists remotely', async () => {
+    const f = await fixture(); await add(f.storage, 'accepted')
+    f.job.write = async p => {
+      f.change(p.document); await add(f.storage, 'newer')
+      throw new ProtocolError('QSYNC_RECEIPT_EXPIRED', 'QSYNC_RECEIPT_EXPIRED', 409)
+    }
+    expect(await runSync(f.job)).toBe('pending')
+    expect(f.storage.getSnapshot().cloud?.lastAck).toBeUndefined()
+    expect(f.storage.getSnapshot().cloud?.pending?.document.transactions.map(t => t.id)).toEqual(['accepted', 'newer'])
+    f.job.write = f.write
+    expect(await runSync(f.job)).toBe('ok')
+    expect(f.remote().document?.transactions.map(t => t.id)).toEqual(['accepted', 'newer'])
+  })
+  it('keeps a rejected oversized document and outbox exportable on this device', async () => {
+    const f = await fixture(); await add(f.storage, 'too-large')
+    f.job.write = async () => { throw new ProtocolError('QSYNC_DOCUMENT_TOO_LARGE', 'QSYNC_DOCUMENT_TOO_LARGE', 413) }
+    await expect(runSync(f.job)).rejects.toMatchObject({ code: 'QSYNC_DOCUMENT_TOO_LARGE', status: 413 })
+    expect(f.storage.getSnapshot().cloud?.pending?.document.transactions[0].id).toBe('too-large')
+    expect((await loadData(scope)).kind).toBe('found')
+  })
   it('transport failures stop after three attempts and survive reopening', async () => {
     const f = await fixture(); await add(f.storage, 'offline'); const fail = vi.fn(async () => { throw new TypeError('network') }); f.job.write = fail
     expect(await runSync(f.job)).toBe('pending'); expect(fail).toHaveBeenCalledTimes(3)
@@ -93,7 +185,7 @@ describe('durable conditional synchronization in the product', () => {
     const f = await fixture(); await add(f.storage, 'A-only'); const held = deferred<Awaited<ReturnType<SyncJob['write']>>>()
     f.job.write = async p => { const ack = await f.write(p); return held.promise.then(() => ack) }
     const work = runSync(f.job); await vi.waitFor(() => expect(f.write).toHaveBeenCalled())
-    activateScope({ ...scope, owner: 'B' }); activateScope(scope); held.resolve({ status: 'applied', operation: '', revision: '0', replay: false })
+    activateScope({ ...scope, owner: 'B' }); activateScope(scope); held.resolve({ protocol: 2, status: 'applied', operation: '', revision: '0', replay: false })
     await expect(work).rejects.toThrow('session'); expect(f.storage.getSnapshot().cloud?.pending).toBeTruthy()
     expect(await runSync({ ...f.job, lease: activateScope(scope), write: f.write })).toBe('ok')
   })
@@ -143,7 +235,7 @@ describe('durable conditional synchronization in the product', () => {
     const f = await fixture(); await add(f.storage, 'local'); const remote = make('remote-known-before-rollback'); f.change(remote)
     let rolledBack = false
     f.job.read = async () => rolledBack ? { ...f.remote(), revision: '0', document: make() } : clone(f.remote())
-    f.job.write = async p => { rolledBack = true; return { status: 'conflict', operation: p.id, revision: '0', replay: false } }
+    f.job.write = async p => { rolledBack = true; return { protocol: 2, status: 'conflict', operation: p.id, revision: '0', replay: false } }
     expect(await runSync(f.job)).toBe('conflict')
     expect(f.storage.getSnapshot().cloud?.recovery.some(copy => copy.local?.transactions.some(t => t.id === 'remote-known-before-rollback'))).toBe(true)
   })

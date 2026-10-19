@@ -16,7 +16,7 @@ const session = id => ({access_token:jwt(id),refresh_token:'synthetic-refresh-'+
 const owner = req => { try {return JSON.parse(Buffer.from((req.headers()['authorization']||'').split('.')[1],'base64url')).sub} catch {return null} }
 const remote = new Map()
 const revisions = new Map(), receipts = new Map()
-let holdFetch=null, holdAuth=null, holdAvatar=null, networkOffline=false
+let holdFetch=null, holdAuth=null, holdAvatar=null, networkOffline=false, rejectWrite=null
 async function intercept(route) {
   const req=route.request(), url=new URL(req.url())
   if(networkOffline) return route.abort()
@@ -37,17 +37,24 @@ async function intercept(route) {
   if (url.pathname==='/auth/v1/logout') return send({})
   if (url.pathname==='/rest/v1/rpc/qsync_read') {
     const revision=String(revisions.get(uid)||1), document=remote.get(uid)||null
-    if(holdFetch?.owner===uid){const h=holdFetch;holdFetch=null;h.started();await h.wait;return send({protocol:1,mode:'protected',revision,document:h.response||document})}
-    return send({protocol:1,mode:'protected',revision,document})
+    if(holdFetch?.owner===uid){const h=holdFetch;holdFetch=null;h.started();await h.wait;return send({protocol:2,mode:'protected',revision,document:h.response||document})}
+    return send({protocol:2,mode:'protected',revision,document})
   }
-  if (url.pathname==='/rest/v1/rpc/qsync_write') {
+  if (url.pathname==='/rest/v1/rpc/qsync_write_v2') {
     const operation=uid+':'+body.p_operation
     if(receipts.has(operation))return send({...receipts.get(operation),replay:true})
-    assert(!body.p_document.demo,'demo upload');assert(!JSON.stringify(body.p_document).includes(uid===A?'B-only':'A-only'),'cross-owner upload')
+    assert.equal(typeof body.p_document_json,'string')
+    const document=JSON.parse(body.p_document_json)
+    assert(!document.demo,'demo upload');assert(!JSON.stringify(document).includes(uid===A?'B-only':'A-only'),'cross-owner upload')
+    if(rejectWrite?.owner===uid){
+      const rejection=rejectWrite;if(rejection.once)rejectWrite=null
+      return send({protocol:2,status:'rejected',operation:body.p_operation,code:rejection.code,
+        httpStatus:rejection.httpStatus,details:rejection.details,replay:false})
+    }
     const revision=String(revisions.get(uid)||1)
-    if(body.p_expected_revision!==revision)return send({status:'conflict',revision,operation:body.p_operation,replay:false})
-    const next=String(BigInt(revision)+1n),response={status:'applied',revision:next,operation:body.p_operation,replay:false}
-    remote.set(uid,structuredClone(body.p_document));revisions.set(uid,next);receipts.set(operation,response);return send(response)
+    if(body.p_expected_revision!==revision)return send({protocol:2,status:'conflict',revision,operation:body.p_operation,replay:false})
+    const next=String(BigInt(revision)+1n),response={protocol:2,status:'applied',revision:next,operation:body.p_operation,replay:false}
+    remote.set(uid,structuredClone(document));revisions.set(uid,next);receipts.set(operation,response);return send(response)
   }
   if (url.pathname==='/rest/v1/user_data') {
     if (req.method()==='GET') {
@@ -85,6 +92,44 @@ try {
  await check('logout offline',async()=>{await page.evaluate(()=>window.accountTest.signOut().catch(e=>e.message));await waitOwner(page,null,'guest')})
  networkOffline=false;await context.setOffline(false)
  await check('B cannot load A, return A retains edit',async()=>{await page.evaluate(id=>window.accountTest.signIn(id),B);await waitOwner(page,B);await page.waitForFunction(()=>window.accountTest.snapshot().state.state.data?.transactions.some(x=>x.id==='B-only'));assert(!(await page.textContent('body')).includes('A-only'));await page.evaluate(()=>window.accountTest.signOut());await waitOwner(page,null,'guest');await page.evaluate(id=>window.accountTest.signIn(id),A);await waitOwner(page,A);assert((await snap(page)).state.state.data.transactions.some(x=>x.id==='A-offline'))})
+
+ await check('server rejection stays exportable and rate-limit cooldown preserves the same operation',async()=>{
+   await page.evaluate(()=>window.accountTest.sync());await page.waitForFunction(()=>window.accountTest.snapshot().state.cloud?.status==='ok')
+   rejectWrite={owner:A,code:'QSYNC_DOCUMENT_TOO_LARGE',httpStatus:413}
+   await page.evaluate(async()=>{window.accountTest.add('A-server-rejected');await window.accountTest.flush();await window.accountTest.sync()})
+   await page.getByRole('alert').filter({hasText:'1 MiB'}).waitFor()
+   const pending=(await snap(page)).state.cloud.pending
+   assert(pending.document.transactions.some(t=>t.id==='A-server-rejected'))
+   assert(!remote.get(A).transactions.some(t=>t.id==='A-server-rejected'))
+   const download=page.waitForEvent('download');await page.getByRole('button',{name:'Esporta tutte le copie di recupero'}).click()
+   await(await download).saveAs(OUT+'/server-rejection-recovery.json')
+   assert((await(await import('node:fs/promises')).readFile(OUT+'/server-rejection-recovery.json','utf8')).includes('A-server-rejected'))
+   rejectWrite={owner:A,code:'QSYNC_RATE_LIMITED',httpStatus:429,details:{retry_after_seconds:2}}
+   await page.evaluate(()=>window.accountTest.sync())
+   await page.getByRole('note').filter({hasText:'limite temporaneo'}).waitFor()
+   assert(await page.getByRole('button',{name:'Riprova la sincronizzazione',exact:true}).isDisabled())
+   const count=requests.filter(x=>x.path==='/rest/v1/rpc/qsync_write_v2').length
+   await page.evaluate(()=>window.accountTest.sync())
+   assert.equal(requests.filter(x=>x.path==='/rest/v1/rpc/qsync_write_v2').length,count)
+   assert.equal((await snap(page)).state.cloud.pending.id,pending.id)
+   rejectWrite=null
+   await page.waitForFunction(()=>window.accountTest.snapshot().state.cloud?.status==='ok',undefined,{timeout:10000})
+   assert.equal(remote.get(A).transactions.filter(t=>t.id==='A-server-rejected').length,1)
+ })
+ await check('expired-receipt response rereads and reconciles before using a fresh operation UUID',async()=>{
+   const from=requests.length
+   rejectWrite={owner:A,code:'QSYNC_RECEIPT_EXPIRED',httpStatus:409,once:true}
+   await page.evaluate(async()=>{window.accountTest.add('A-expired-server');await window.accountTest.flush();await window.accountTest.sync()})
+   await page.waitForFunction(()=>window.accountTest.snapshot().state.cloud?.recovery.some(copy=>copy.reason==='expired-receipt'))
+   await page.evaluate(()=>window.accountTest.sync())
+   await page.waitForFunction(()=>window.accountTest.snapshot().state.cloud?.status==='ok')
+   const writes=requests.slice(from).filter(x=>x.path==='/rest/v1/rpc/qsync_write_v2')
+   assert(writes.length>=2)
+   assert.equal(writes.filter(x=>x.body.p_operation===writes[0].body.p_operation).length,1)
+   assert.notEqual(writes[0].body.p_operation,writes.at(-1).body.p_operation)
+   assert(requests.slice(from).some(x=>x.path==='/rest/v1/rpc/qsync_read'))
+   assert.equal(remote.get(A).transactions.filter(t=>t.id==='A-expired-server').length,1)
+ })
 
  await check('demo isolated from account, return preserves A',async()=>{
    await page.evaluate(()=>window.accountTest.demo());await waitOwner(page,A,'demo')
@@ -167,12 +212,12 @@ try {
    await page.reload();await waitOwner(page,A)
    assert(!(await page.textContent('body')).includes('LEGACY-UNOWNED'))
    await page.getByRole('button',{name:'Recupera dati locali precedenti'}).click()
-   const count=requests.filter(x=>x.path==='/rest/v1/rpc/qsync_write').length
+    const count=requests.filter(x=>x.path==='/rest/v1/rpc/qsync_write_v2').length
    await page.getByRole('button',{name:'Apri copia locale',exact:true}).click()
    await page.waitForFunction(()=>window.accountTest?.snapshot().scope.kind==='recovery')
    assert((await page.textContent('body')).includes('LEGACY-UNOWNED'))
    await page.evaluate(()=>window.accountTest.flush())
-   assert.equal(requests.filter(x=>x.path==='/rest/v1/rpc/qsync_write').length,count)
+    assert.equal(requests.filter(x=>x.path==='/rest/v1/rpc/qsync_write_v2').length,count)
    await page.getByRole('button',{name:'Torna',exact:true}).first().click();await waitOwner(page,A)
    const original=await page.evaluate(()=>new Promise(ok=>{const r=indexedDB.open('keyval-store');r.onsuccess=()=>{const q=r.result.transaction('keyval').objectStore('keyval').get('quadriamo.data.v1');q.onsuccess=()=>ok(q.result)}}))
    assert.deepEqual(original,legacy)

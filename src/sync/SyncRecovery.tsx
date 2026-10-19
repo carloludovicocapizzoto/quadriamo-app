@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useI18n } from '../i18n/core'
 import type { AccountStore } from '../store/accountStore'
 import { exportCache } from '../store/persist'
@@ -12,12 +12,25 @@ import { differences } from './differences'
 import '../styles/sync.css'
 import { useSession } from './sessionContext'
 
-export function SyncRecovery({ storage, lease, status, retry, activate }: {
-  storage: AccountStore; lease: ScopeLease; status: SyncStatus; retry: () => Promise<void>; activate: () => Promise<void>
+type SyncFailureKey = 'cloud.documentTooLarge' | 'cloud.documentInvalid' | 'cloud.operationRejected'
+
+export function SyncRecovery({ storage, lease, status, retry, activate, failureCode }: {
+  storage: AccountStore; lease: ScopeLease; status: SyncStatus; retry: () => Promise<void>; activate: () => Promise<void>; failureCode?: SyncFailureKey | null
 }) {
   const { t } = useI18n(), snapshot = storage.getSnapshot(), cloud = snapshot.cloud
   const { localSession } = useSession()
   const [failed, setFailed] = useState(false)
+  const cooldownAt = cloud?.cooldownUntil ? Date.parse(cloud.cooldownUntil) : 0
+  const [now, setNow] = useState(0)
+  useEffect(() => {
+    if (!cooldownAt) return
+    const timer = window.setInterval(() => {
+      const current = Date.now()
+      setNow(current)
+      if (current >= cooldownAt) window.clearInterval(timer)
+    }, 250)
+    return () => window.clearInterval(timer)
+  }, [cooldownAt])
   const exportAll = async () => {
     let persisted: unknown
     try { persisted = await exportCache(lease.scope) } catch { /* anche il buffer non salvato è esportabile */ }
@@ -25,17 +38,21 @@ export function SyncRecovery({ storage, lease, status, retry, activate }: {
       current: storage.getSnapshot(), persisted }, null, 2), 'application/json')
   }
   if (!lease.current()) return null
+  const coolingDown = cooldownAt > now
   return <section className="cloud-notice card" aria-label={t('cloud.title')} data-testid="cloud-status">
     {localSession && <p>{t('auth.localSession')}</p>}
     <p role="status" aria-live="polite">{status === 'ok' && cloud?.base ? t('cloud.confirmed', { revision: cloud.base.revision })
       : status === 'syncing' ? t('sync.syncing') : status === 'ok' ? t('cloud.idle') : t(`cloud.${status}`)}</p>
+    {coolingDown && <p role="note">{t('cloud.rateLimited', { time: new Date(cooldownAt).toLocaleTimeString() })}</p>}
+    {status === 'error' && failureCode && <p role="alert">{t(failureCode)}</p>}
     {(status === 'upgrade' || status === 'paused') && <p>{t(cloud?.activationBlocked ? 'cloud.pilotWait' : cloud?.available ? 'cloud.activationHint' : 'cloud.upgradeHint')}</p>}
     <div className="cloud-actions">
       <button className="btn small-btn" onClick={() => void exportAll().catch(() => setFailed(true))}>{t('cloud.exportAll')}</button>
-      <button className="btn small-btn" disabled={status === 'syncing' || !!snapshot.error} onClick={() => void retry()}>{t('cloud.retry')}</button>
+      <button className="btn small-btn" disabled={status === 'syncing' || !!snapshot.error || coolingDown} onClick={() => void retry()}>{t('cloud.retry')}</button>
       {cloud?.available && <button className="btn" disabled={status === 'syncing' || !!snapshot.error} onClick={() => void activate()}>{t('cloud.activate')}</button>}
     </div>
     {failed && <p role="alert">{t('cloud.actionError')}</p>}
+    {cloud?.conflict?.cause === 'expired-receipt' && <p role="alert">{t('cloud.expiredReceiptConflict')}</p>}
     {cloud?.conflict && <ConflictForm key={cloud.conflict.id} conflict={cloud.conflict} storage={storage} lease={lease} />}
     {!!cloud?.recovery.length && <details><summary>{t('cloud.archive', { count: cloud.recovery.length })}</summary>
       <p>{t('cloud.archiveHint')}</p>

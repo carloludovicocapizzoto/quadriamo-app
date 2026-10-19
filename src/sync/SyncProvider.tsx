@@ -10,6 +10,8 @@ import { runSync } from './runSync'
 import { useI18n } from '../i18n/core'
 import { SyncRecovery } from './SyncRecovery'
 
+type SyncFailureKey = 'cloud.documentTooLarge' | 'cloud.documentInvalid' | 'cloud.operationRejected'
+
 export function SyncProvider({ children }: { children: ReactNode }) {
   const session = useSession()
   const { lease } = session
@@ -17,8 +19,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const { t } = useI18n()
   const [status, setStatus] = useState<SyncStatus>('idle')
   const [lastSync, setLastSync] = useState<string | null>(null)
+  const [failureCode, setFailureCode] = useState<SyncFailureKey | null>(null)
   const [remoteReady, setRemoteReady] = useState(lease.scope.kind !== 'account' || !!state.data)
   const running = useRef(false), again = useRef(false)
+  const snapshot = storage?.getSnapshot()
 
   useEffect(() => { if (session.user) void loadAvatar(session.user.id).catch(() => undefined) }, [session.user])
 
@@ -27,6 +31,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     if (!navigator.onLine) { setStatus('offline'); return }
     if (running.current) { again.current = true; return }
     running.current = true
+    setFailureCode(null)
     setStatus('syncing')
     try {
       const sb = scopedClient(lease)
@@ -38,8 +43,14 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         setRemoteReady(true); setStatus(completed)
         if (completed === 'ok') setLastSync(new Date().toISOString())
       }
-    } catch {
-      if (lease.current()) setStatus(navigator.onLine ? 'error' : 'offline')
+    } catch (error) {
+      if (lease.current()) {
+        const message = (error as { code?: string; message?: string }).message ?? ''
+        setFailureCode(/QSYNC_DOCUMENT_TOO_LARGE/.test(message) ? 'cloud.documentTooLarge'
+          : /QSYNC_DOCUMENT_INVALID|QSYNC_UNSUPPORTED_DOCUMENT/.test(message) ? 'cloud.documentInvalid'
+            : /QSYNC_OPERATION_REUSED|QSYNC_OPERATION_ID_INVALID/.test(message) ? 'cloud.operationRejected' : null)
+        setStatus(navigator.onLine ? 'error' : 'offline')
+      }
     } finally {
       running.current = false
       if (again.current && lease.current()) { again.current = false; window.setTimeout(() => { if (lease.current()) void syncNow() }, 0) }
@@ -59,7 +70,14 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     return () => { window.removeEventListener('online', online); document.removeEventListener('visibilitychange', visible) }
   }, [syncNow])
 
-  const snapshot = storage?.getSnapshot()
+  useEffect(() => {
+    const cooldownUntil = snapshot?.cloud?.cooldownUntil
+    if (!cooldownUntil) return
+    const delay = Math.max(0, Date.parse(cooldownUntil) - Date.now() + 50)
+    const timer = window.setTimeout(() => { if (lease.current()) void syncNow() }, delay)
+    return () => clearTimeout(timer)
+  }, [lease, snapshot?.cloud?.cooldownUntil, syncNow])
+
   const visibleStatus: SyncStatus = snapshot?.error ? 'error' : snapshot?.dirty ? 'pending'
     : snapshot?.cloud?.conflict ? 'conflict' : status === 'syncing' || status === 'error' || status === 'offline' ? status : snapshot?.cloud?.status === 'pending' ? 'pending' : status
   const activate = async () => {
@@ -72,7 +90,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const api = useMemo<SyncApi>(() => ({ ...session, ready: session.ready && remoteReady, status: visibleStatus, lastSync, syncNow }),
     [session, remoteReady, visibleStatus, lastSync, syncNow])
   return <SyncContext.Provider value={api}>
-    {lease.scope.kind === 'account' && storage && <SyncRecovery storage={storage} lease={lease} status={visibleStatus} retry={syncNow} activate={activate} />}
+    {lease.scope.kind === 'account' && storage && <SyncRecovery storage={storage} lease={lease} status={visibleStatus} retry={syncNow} activate={activate} failureCode={failureCode} />}
     {!remoteReady && (status === 'error' || status === 'offline')
       ? <div className="gate"><section className="card"><p role="alert">{t('storage.remoteWait')}</p>
           <button className="btn" onClick={() => void syncNow()}>{t('storage.retry')}</button>

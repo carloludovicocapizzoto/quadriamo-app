@@ -2,17 +2,27 @@ import type { AppData } from '../store/types'
 
 export interface RemoteDocument { protocol: number; revision: string; mode: 'legacy' | 'protected' | 'paused'; document: AppData | null; activationAllowed?: boolean }
 export interface PendingWrite { id: string; expected: string; document: AppData; localAtStart: AppData | null }
-export interface DataConflict { id: string; paths: string[]; base: RemoteDocument | null; local: AppData | null; remote: RemoteDocument; cause?: 'revision' }
-export interface RecoveryCopy { id: string; at: string; reason: 'resolution' | 'local-conflict' | 'retry'; local: AppData | null; remote: AppData | null; base: AppData | null }
-export type CloudStatus = 'idle' | 'pending' | 'ok' | 'conflict' | 'upgrade' | 'paused'
+export interface DataConflict { id: string; paths: string[]; base: RemoteDocument | null; local: AppData | null; remote: RemoteDocument; cause?: 'revision' | 'expired-receipt' }
+export interface RecoveryCopy { id: string; at: string; reason: 'resolution' | 'local-conflict' | 'retry' | 'expired-receipt'; local: AppData | null; remote: AppData | null; base: AppData | null }
+export type CloudStatus = 'idle' | 'pending' | 'ok' | 'reconciled' | 'conflict' | 'upgrade' | 'paused'
 export interface CloudState {
   format: 1; base: RemoteDocument | null; pending: PendingWrite | null; conflict: DataConflict | null
   recovery: RecoveryCopy[]; status: CloudStatus; lastAck?: { operation: string; revision: string }
-  available?: boolean
+  available?: boolean; cooldownUntil?: string
   activationBlocked?: boolean
 }
 export const emptyCloud = (): CloudState => ({ format: 1, base: null, pending: null, conflict: null, recovery: [], status: 'idle' })
 export const clone = <T,>(v: T): T => structuredClone(v)
+/** UUIDv7 embeds the creation time so the server can reject an unreceipted replay after retention. */
+export function createOperationId(now = Date.now()): string {
+  if (!Number.isSafeInteger(now) || now < 0 || BigInt(now) >= (1n << 48n)) throw Error('invalid operation time')
+  const bytes = crypto.getRandomValues(new Uint8Array(16)), timestamp = BigInt(now)
+  for (let i = 5; i >= 0; i--) bytes[i] = Number((timestamp >> BigInt((5 - i) * 8)) & 255n)
+  bytes[6] = (bytes[6] & 0x0f) | 0x70
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+}
 const canonical = (v: unknown): unknown => Array.isArray(v) ? v.map(canonical) : v && typeof v === 'object'
   ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b)).map(([k, x]) => [k, canonical(x)])) : v
 export const equal = (a: unknown, b: unknown) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b))
