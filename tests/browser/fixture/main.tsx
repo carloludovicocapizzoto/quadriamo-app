@@ -18,7 +18,7 @@ import type { AppData } from '@app/store/types'
 import { composerSnapshot, openComposer } from '@app/app/composer'
 import { useAvatar, loadAvatar, setAvatar } from '@app/profile/avatar'
 import { personalFor } from '@app/storage'
-import { supabase } from '@app/sync/client'
+import { supabase, getAuthClient } from '@app/sync/client'
 
 const today = () => {
   const d = new Date()
@@ -31,7 +31,7 @@ export function Probe() {
   useEffect(() => {
     const api = {
       snapshot: () => ({ state: storage.getSnapshot(), scope: lease.scope, epoch: lease.id,
-        user: session.user?.id, status: sync.status, composer: composerSnapshot(), avatar }),
+        user: session.user?.id, status: sync.status, localSession: session.localSession, recovery: session.recovery, composer: composerSnapshot(), avatar }),
       signIn: (id: string) => session.signIn(id + '@synthetic.invalid', 'Synthetic-test-only-42'),
       signOut: () => session.signOut(),
       add: (id: string) => dispatch({ type: 'addTx', tx: { id, description: id, date: today(), amount: 1, category: 'groceries' } }),
@@ -53,6 +53,8 @@ export function Probe() {
       uploadAvatar: (data: string) => setAvatar(new File([Uint8Array.from(atob(data), c => c.charCodeAt(0))], 'test.png', {type:'image/png'}), session.user?.id ?? null),
       preload: () => Promise.all([import('@app/ui/screens/AnalysisScreen.tsx'), import('@app/ui/screens/NewsScreen.tsx'), import('@app/ui/profile/ProfileScreen.tsx')]),
       verifyRecovery: session.verifyRecovery, resetPassword: session.resetPassword,
+      sendCode: session.sendCode, verifyCode: session.verifyCode,
+      renew: async () => { const client = await getAuthClient(); if (!client) throw Error('auth unavailable'); return client.auth.refreshSession() },
       getPreference: () => personalFor(lease.scope).get('q.sharedBudget'),
       auth: supabase.auth, avatar: (id: string) => loadAvatar(id),
     }

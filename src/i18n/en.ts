@@ -1,6 +1,10 @@
 // Dizionario di riferimento: le altre lingue devono avere esattamente le stesse chiavi (lo controllano TypeScript e i test).
 // {n}, {name}… sono segnaposto sostituiti da t(key, { n: 3 }).
 const en = {
+  'auth.localSession': 'Your session has expired. You are using only this device’s copy. Renew your session before synchronizing.',
+  'auth.localLogout': 'You have signed out on this device. Your offline archives are preserved. Remote sessions have not been revoked.',
+  'auth.localLogoutHint': 'While offline or awaiting session renewal, signing out closes only this device and preserves your archives. Revoking other sessions requires valid server access.',
+  'auth.localError': 'The local session could not be read or updated. Your financial archives are preserved. Please retry.',
   'cloud.revisionConflict': "The cloud revision is inconsistent with your previously confirmed copy. The server may have been restored. Export both copies and review recovery before choosing. No copy is replaced automatically.",
   'cloud.paidFrom': "Paid from",
   'cloud.split': "Allocation",

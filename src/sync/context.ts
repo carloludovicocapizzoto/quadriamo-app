@@ -4,6 +4,7 @@ import type { AppData } from '../store/types'
 export type SyncStatus = 'idle' | 'syncing' | 'ok' | 'error' | 'offline' | 'pending' | 'conflict' | 'upgrade' | 'paused'
 
 export interface SyncApi {
+  localSession: boolean
   enabled: boolean                       // false se l'app non è collegata a Supabase
   ready: boolean                         // la sessione salvata è stata letta (si sa se hai fatto l'accesso)
   user: { id: string; email: string; firstName: string; lastName: string; emailConfirmed: boolean } | null

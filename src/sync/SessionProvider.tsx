@@ -2,10 +2,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { AppData } from '../store/types'
 import { activateScope, currentScope, personalKey, scopeKey } from '../store/scope'
-import { accountStore, flushScope } from '../store/accountStore'
+import { accountStore, cachedAccountStore, flushScope } from '../store/accountStore'
 import { local } from '../storage'
 import { ENV } from '../env'
-import { supabase } from './client'
+import { supabase, AUTH_KEY, AUTH_NAMESPACE, authRuntimeError, authRuntimeCurrent, isCurrentAuthSession, retryAuthRuntime, watchAuthRuntime } from './client'
 import { scopedClient } from './scopedClient'
 import { SessionContext, type SessionApi } from './sessionContext'
 import type { SyncApi } from './context'
@@ -13,8 +13,12 @@ import { removeAvatar } from '../profile/avatar'
 import { saveNames } from './profile'
 import { scopeFor } from './scopeFor'
 import { leaveScope } from './leaveScope'
-import { authCommand } from './authCommand'
+import { authCommand, closeLocalSession } from './authCommand'
 import { observeSession } from './observeSession'
+import { cachedOfflineSession, storedAuthSession } from './offlineSession'
+import { useI18n } from '../i18n/core'
+import { isAuthRetryableFetchError } from '@supabase/supabase-js'
+import { downloadFile } from '../ui/kit/download'
 
 type User = SyncApi['user']
 type AuthUser = { id: string; email?: string; email_confirmed_at?: string; user_metadata?: { first_name?: string; last_name?: string } }
@@ -24,37 +28,64 @@ const toUser = (u: AuthUser | null | undefined): User => u ? {
 } : null
 
 export function SessionProvider({ children }: { children: ReactNode }) {
+  const { t } = useI18n()
   const [user, setUser] = useState<User>(null)
   const [lease, setLease] = useState(currentScope)
   const [ready, setReady] = useState(false)
   const [transitioning, setTransitioning] = useState(false)
   const [recovery, setRecovery] = useState(false)
   const [seed, setSeed] = useState<AppData>()
+  const [localSession, setLocalSession] = useState(false), [localLogout, setLocalLogout] = useState(false)
+  const [authFailed, setAuthFailed] = useState(false)
+  const recoveryOwner = useRef<string | null>(null)
   const authUser = useRef<User>(null)
   const installUser = useCallback((next: User) => {
     authUser.current = next
     const scope = scopeFor(next?.id ?? null)
     const current = currentScope()
     const lease = current.current() && scopeKey(current.scope) === scopeKey(scope) ? current : activateScope(scope)
-    setUser(next); setSeed(undefined); setLease(lease); setReady(true); setRecovery(false); setTransitioning(false)
+    if (!next) recoveryOwner.current = null
+    if (next) setLocalLogout(false)
+    setUser(next); setSeed(undefined); setLease(lease); setReady(true); setRecovery(!!next && recoveryOwner.current === next.id); setTransitioning(false)
   }, [])
 
   useEffect(() => {
     let alive = true
-    if (!supabase) {
+    if (!ENV.supabase) {
       void Promise.resolve().then(() => { if (alive) installUser(null) })
       return () => { alive = false }
     }
-    return observeSession(supabase.auth, (event, session) => {
+    let stop = () => {}, observed: typeof supabase | undefined
+    const changed = () => {
+      if (!alive) return
+      let stored: ReturnType<typeof storedAuthSession>
+      try { stored = storedAuthSession(AUTH_KEY, AUTH_NAMESPACE, ENV.supabase!.url) }
+      catch { stop(); observed = undefined; setLocalSession(false); installUser(null); setAuthFailed(true); return }
+      // Una mutazione dello storage precede l'evento SDK: revoca subito il vecchio scope.
+      if (stored?.user.id !== authUser.current?.id) {
+        stop(); observed = undefined
+        if (!stored) { setLocalSession(false); installUser(null) }
+        else { setLease(activateScope(scopeFor(null))); setUser(null); setReady(false); setTransitioning(true) }
+      }
+      if (authRuntimeError) { stop(); observed = undefined; setAuthFailed(true); return }
+      if (!authRuntimeCurrent() || !supabase || observed === supabase) return
+      stop(); observed = supabase; setAuthFailed(false)
+      stop = observeSession(observed.auth, (event, session) => {
       const next = toUser(session?.user)
-      if ((event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && next?.id === authUser.current?.id) {
+      setLocalSession(!!session && session.expires_at! * 1000 <= Date.now())
+      if (event === 'PASSWORD_RECOVERY' && next) { recoveryOwner.current = next.id; setRecovery(true) }
+      if ((event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && next && next.id === authUser.current?.id) {
         authUser.current = next
         setUser(next)
         return
       }
       installUser(next)
       if (event === 'PASSWORD_RECOVERY') setRecovery(true)
-    })
+      }, { offline: error => cachedOfflineSession(AUTH_KEY, AUTH_NAMESPACE, ENV.supabase!.url, isAuthRetryableFetchError(error)), current: isCurrentAuthSession })
+    }
+    const unwatch = watchAuthRuntime(changed)
+    changed()
+    return () => { alive = false; stop(); unwatch() }
   }, [installUser])
 
   const depart = useCallback((action: (guard: typeof lease) => Promise<void>) => leaveScope(lease,
@@ -63,7 +94,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const appUrl = window.location.origin + ENV.base + 'app/?login=1'
   const confirmUrl = window.location.origin + ENV.base + 'app/?confirmed=1'
   const api = useMemo<SessionApi>(() => ({
-    enabled: !!supabase, ready, transitioning, user: lease.scope.kind === 'account' ? user : null, recovery, lease, seed,
+    enabled: !!ENV.supabase, ready, transitioning, user: lease.scope.kind === 'account' ? user : null, recovery, lease, seed, localSession,
     isolatedPreview: lease.scope.kind === 'demo' || lease.scope.kind === 'recovery',
     startDemo: data => { void depart(async () => { setSeed(data); setLease(activateScope(scopeFor(user?.id ?? null, 'demo'))); setTransitioning(false) }).catch(() => undefined) },
     openRecovery: (id, data) => { void depart(async () => { setSeed(data); setLease(activateScope(scopeFor(id, 'recovery'))); setTransitioning(false) }).catch(() => undefined) },
@@ -93,7 +124,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       lease.assert()
       const { data, error } = await authCommand(lease, auth => auth.verifyOtp({ email, token: code, type: 'recovery' }), true)
       if (error) throw error
-      if (data.user?.id === currentScope().scope.owner) setRecovery(true)
+      if (data.user && storedAuthSession(AUTH_KEY, AUTH_NAMESPACE, ENV.supabase!.url)?.user.id === data.user.id) {
+        recoveryOwner.current = data.user.id; setRecovery(true)
+      }
     },
     resendSignup: async email => {
       lease.assert()
@@ -111,6 +144,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (error) throw error
       lease.assert()
       setRecovery(false)
+      recoveryOwner.current = null
     },
     changePassword: async (current, next) => {
       lease.assert()
@@ -148,6 +182,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (error) throw error
     },
     signOut: () => depart(async guard => {
+      if (!navigator.onLine || localSession) { await closeLocalSession(guard); setLocalLogout(true); return }
       const { error } = await authCommand(guard, auth => auth.signOut())
       if (error) throw error
     }),
@@ -165,6 +200,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       guard.assert()
       await authCommand(guard, auth => auth.signOut())
     }),
-  }), [ready, user, recovery, lease, seed, appUrl, confirmUrl, transitioning, depart])
-  return <SessionContext.Provider value={api}>{children}</SessionContext.Provider>
+  }), [ready, user, recovery, lease, seed, appUrl, confirmUrl, transitioning, depart, localSession])
+  return <SessionContext.Provider value={api}>
+    {authFailed ? <section className="card" role="alert"><p>{t('auth.localError')}</p>
+      <button className="btn" onClick={() => void retryAuthRuntime().catch(() => setAuthFailed(true))}>{t('storage.retry')}</button>
+      {lease.scope.kind === 'account' && cachedAccountStore(lease.scope)?.getSnapshot().state.data && <button className="btn" onClick={() => {
+        const data = cachedAccountStore(lease.scope)?.getSnapshot().state.data
+        if (lease.current() && data) downloadFile('quadriamo-recovery', 'json', JSON.stringify(data, null, 2), 'application/json')
+      }}>{t('storage.export')}</button>}
+      </section>
+      : <>{localLogout && <p className="card" role="status">{t('auth.localLogout')}</p>}{children}</>}
+  </SessionContext.Provider>
 }

@@ -11,7 +11,7 @@ const A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', B = 'bbbbbbbb-bbbb-4bbb-8bbb-b
 const requests=[], results=[], errors=[]
 const user = id => ({ id, aud:'authenticated', role:'authenticated', email:id+'@synthetic.invalid', email_confirmed_at:'2026-01-01T00:00:00Z',
   app_metadata:{provider:'email',providers:['email']}, user_metadata:{first_name:id===A?'SyntheticA':'SyntheticB',last_name:'Test'}, identities:[], created_at:'2026-01-01T00:00:00Z' })
-const jwt = id => [Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),Buffer.from(JSON.stringify({sub:id,exp:Math.floor(Date.now()/1000)+3600,aud:'authenticated',role:'authenticated'})).toString('base64url'),'synthetic-signature'].join('.')
+const jwt = id => [Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),Buffer.from(JSON.stringify({sub:id,exp:Math.floor(Date.now()/1000)+3600,aud:'authenticated',role:'authenticated',iss:API+'/auth/v1'})).toString('base64url'),'synthetic-signature'].join('.')
 const session = id => ({access_token:jwt(id),refresh_token:'synthetic-refresh-'+id,expires_in:3600,expires_at:Math.floor(Date.now()/1000)+3600,token_type:'bearer',user:user(id)})
 const owner = req => { try {return JSON.parse(Buffer.from((req.headers()['authorization']||'').split('.')[1],'base64url')).sub} catch {return null} }
 const remote = new Map()
@@ -249,14 +249,14 @@ try {
    await page.evaluate(id=>window.accountTest.resetPassword(id+'@synthetic.invalid'),A)
    await page.evaluate(id=>window.accountTest.verifyRecovery(id+'@synthetic.invalid','123456'),A);await waitOwner(page,A)
    await page.evaluate(()=>window.accountTest.updatePassword('Synthetic-new-password-42'))
-   await page.evaluate(()=>window.accountTest.updateNames('SyntheticUpdated','Test'))
+   await page.evaluate(async()=>{try{await window.accountTest.updateNames('SyntheticUpdated','Test')}catch(e){throw Error([e?.name,e?.message,e?.code,e?.status].filter(Boolean).join(': '))}})
    assert.equal((await snap(page)).scope.owner,A)
    assert(requests.some(r=>r.path==='/auth/v1/user'&&r.method==='PUT'&&r.owner===A&&r.body?.data?.first_name==='SyntheticUpdated'))
  })
  await check('auth mutation cannot adopt a different stored session before its auth event',async()=>{
    await page.evaluate(()=>window.accountTest.signOut());await waitOwner(page,null,'guest');await page.evaluate(id=>window.accountTest.signIn(id),A);await waitOwner(page,A)
    const from=requests.length
-   await page.evaluate(async s=>{const api=window.accountTest;const key=Object.keys(localStorage).find(k=>k.endsWith('-auth-token'));localStorage.setItem(key,JSON.stringify(s));try{await api.updateNames('A-only-private-name','Test')}catch{}},session(B))
+   await page.evaluate(async s=>{const api=window.accountTest;const key=Object.keys(localStorage).find(k=>k.startsWith('q.auth.v1/'));const record=JSON.parse(localStorage.getItem(key));record.generation=crypto.randomUUID();record.session=JSON.stringify(s);localStorage.setItem(key,JSON.stringify(record));try{await api.updateNames('A-only-private-name','Test')}catch{}},session(B))
    assert(!requests.slice(from).some(r=>r.path==='/auth/v1/user'&&r.method==='PUT'&&r.owner===B),'A name was sent with B token')
  })
 } finally {

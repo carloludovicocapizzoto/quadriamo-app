@@ -3,12 +3,14 @@ import { activateScope } from '../store/scope'
 import { scopedClient } from './scopedClient'
 
 const auth = vi.hoisted(() => ({ getSession: vi.fn() }))
-vi.mock('./client', () => ({ supabase: { auth } }))
+const runtime = vi.hoisted(() => ({ current: null as { auth: { getSession: ReturnType<typeof vi.fn> } } | null }))
+const accepted = vi.hoisted(() => vi.fn(() => true))
+vi.mock('./client', () => ({ get supabase() { return runtime.current }, getAuthClient: async () => runtime.current, isCurrentAuthSession: accepted }))
 vi.mock('../env', () => ({ ENV: { supabase: { url: 'http://127.0.0.1:54321', key: 'synthetic-public-key' } } }))
 const scope = (owner: string) => ({ environment: 'test', backend: 'http://127.0.0.1:54321', kind: 'account' as const, owner })
 const session = (owner: string) => ({ data: { session: { user: { id: owner }, access_token: 'synthetic-' + owner } }, error: null })
 const transport = vi.fn(async (_url: unknown, _init: RequestInit | undefined) => new Response('[]', { headers: { 'Content-Type': 'application/json' } }))
-beforeEach(() => { auth.getSession.mockReset(); transport.mockClear(); vi.stubGlobal('fetch', transport) })
+beforeEach(() => { accepted.mockReturnValue(true); runtime.current = { auth }; auth.getSession.mockReset(); transport.mockClear(); vi.stubGlobal('fetch', transport) })
 afterEach(() => vi.unstubAllGlobals())
 
 it('the actual Supabase SDK uses the captured owner token and abort signal', async () => {
@@ -52,4 +54,19 @@ it('demo, recovery and guest cannot obtain a personal data client', () => {
   for (const kind of ['demo', 'recovery', 'guest'] as const) {
     expect(scopedClient(activateScope({ ...scope('A'), kind }))).toBeNull()
   }
+})
+it('uses the current SDK after a token rotation replaces the auth runtime for the same owner', async () => {
+  const lease = activateScope(scope('A')), client = scopedClient(lease)!
+  auth.getSession.mockResolvedValue(session('A'))
+  await client.rpc('qsync_read')
+  const replacement = { getSession: vi.fn(async () => ({ data: { session: { user: { id: 'A' }, access_token: 'rotated-A' } }, error: null })) }
+  runtime.current = { auth: replacement }
+  await client.rpc('qsync_read')
+  expect(replacement.getSession).toHaveBeenCalledOnce()
+  expect(new Headers(transport.mock.calls.at(-1)![1]!.headers).get('authorization')).toBe('Bearer rotated-A')
+})
+it('cannot use a token returned by an obsolete SDK save that was not accepted by storage', async () => {
+  const lease = activateScope(scope('A')); auth.getSession.mockResolvedValue(session('A')); accepted.mockReturnValue(false)
+  expect((await scopedClient(lease)!.rpc('qsync_read')).error).toBeTruthy()
+  expect(transport).not.toHaveBeenCalled()
 })

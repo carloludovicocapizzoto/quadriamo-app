@@ -1,6 +1,10 @@
 import type { Dict } from './en'
 
 const fr: Dict = {
+  'auth.localSession': 'Votre session a expiré. Vous utilisez uniquement la copie de cet appareil. Renouvelez votre session avant de synchroniser.',
+  'auth.localLogout': 'Vous êtes déconnecté sur cet appareil. Vos archives hors ligne sont conservées. Les sessions distantes n’ont pas été révoquées.',
+  'auth.localLogoutHint': 'Hors ligne ou pendant le renouvellement de la session, la déconnexion concerne uniquement cet appareil et conserve vos archives. La révocation des autres sessions exige un accès valide au serveur.',
+  'auth.localError': 'Impossible de lire ou de mettre à jour la session locale. Vos archives financières sont conservées. Réessayez.',
   'cloud.revisionConflict': "La révision cloud est incohérente avec votre copie déjà confirmée. Le serveur a peut-être été restauré. Exportez les deux copies et vérifiez la récupération avant de choisir. Aucune copie n’est remplacée automatiquement.",
   'cloud.paidFrom': "Payé depuis",
   'cloud.split': "Répartition",

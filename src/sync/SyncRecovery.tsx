@@ -10,11 +10,13 @@ import type { SyncStatus } from './context'
 import { clone, resolveConflict, type DataConflict } from './protocol'
 import { differences } from './differences'
 import '../styles/sync.css'
+import { useSession } from './sessionContext'
 
 export function SyncRecovery({ storage, lease, status, retry, activate }: {
   storage: AccountStore; lease: ScopeLease; status: SyncStatus; retry: () => Promise<void>; activate: () => Promise<void>
 }) {
   const { t } = useI18n(), snapshot = storage.getSnapshot(), cloud = snapshot.cloud
+  const { localSession } = useSession()
   const [failed, setFailed] = useState(false)
   const exportAll = async () => {
     let persisted: unknown
@@ -24,6 +26,7 @@ export function SyncRecovery({ storage, lease, status, retry, activate }: {
   }
   if (!lease.current()) return null
   return <section className="cloud-notice card" aria-label={t('cloud.title')} data-testid="cloud-status">
+    {localSession && <p>{t('auth.localSession')}</p>}
     <p role="status" aria-live="polite">{status === 'ok' && cloud?.base ? t('cloud.confirmed', { revision: cloud.base.revision })
       : status === 'syncing' ? t('sync.syncing') : status === 'ok' ? t('cloud.idle') : t(`cloud.${status}`)}</p>
     {(status === 'upgrade' || status === 'paused') && <p>{t(cloud?.available ? 'cloud.activationHint' : 'cloud.upgradeHint')}</p>}

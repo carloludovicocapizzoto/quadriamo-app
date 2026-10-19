@@ -37,7 +37,7 @@ const browser=await chromium.launch({executablePath:process.env.CHROME||'C:/Prog
 const factory=await browser.newContext();const probe=await factory.newPage();await probe.goto('http://127.0.0.1:5197/app/');await probe.waitForFunction(()=>!!window.accountTest)
 const budget=await probe.evaluate(()=>window.accountTest.initial('B-only'));await factory.close();await browser.close()
 const user={id:B,email:B+'@synthetic.invalid',aud:'authenticated',role:'authenticated',email_confirmed_at:'2026-01-01',user_metadata:{first_name:'SyntheticB',last_name:'Test'},app_metadata:{},created_at:'2026-01-01'}
-const token=[Buffer.from('{"alg":"HS256","typ":"JWT"}').toString('base64url'),Buffer.from(JSON.stringify({sub:B,exp:Math.floor(Date.now()/1000)+3600,aud:'authenticated'})).toString('base64url'),'synthetic'].join('.')
+const token=[Buffer.from('{"alg":"HS256","typ":"JWT"}').toString('base64url'),Buffer.from(JSON.stringify({sub:B,exp:Math.floor(Date.now()/1000)+3600,aud:'authenticated',iss:API+'/auth/v1'})).toString('base64url'),'synthetic'].join('.')
 const session={access_token:token,refresh_token:'synthetic-refresh-B',expires_in:3600,expires_at:Math.floor(Date.now()/1000)+3600,token_type:'bearer',user}
 const profile=resolve(OUT,'synthetic-profile-'+Date.now())
 let context,page,offline=false
@@ -53,6 +53,7 @@ async function launch(){
    if(u.pathname.endsWith('/qsync_write'))return route.fulfill({json:{status:'applied',revision:'2',operation:req.postDataJSON().p_operation,replay:false}})
    if(u.pathname.endsWith('/user_data'))return route.fulfill({json:req.method()==='GET'?{data:budget}:null})
    if(u.pathname==='/auth/v1/user')return route.fulfill({json:user})
+   if(u.pathname==='/auth/v1/token')return route.fulfill({json:session})
    if(u.pathname.includes('subscriptions')||u.pathname.includes('profiles'))return route.fulfill({json:null})
    if(u.pathname.includes('/storage/'))return route.fulfill({status:404,json:{message:'not found'}})
    return route.fulfill({json:[]})
@@ -62,7 +63,7 @@ async function launch(){
 async function check(name,fn){try{await fn();results.push({name,pass:true});console.log('PASS '+name)}catch(e){results.push({name,pass:false,error:e.stack});console.error('FAIL '+name+': '+e.message)}}
 try{
  await launch()
- await context.addInitScript(session=>{if(!localStorage.getItem('sb-127-auth-token'))localStorage.setItem('sb-127-auth-token',JSON.stringify(session));localStorage.setItem('quadriamo.lang','it');localStorage.setItem('q.installSkip','1')},session)
+ await context.addInitScript(session=>{if(!Object.keys(localStorage).some(key=>key.startsWith('q.auth.v1/'))&&!localStorage.getItem('sb-127-auth-token'))localStorage.setItem('sb-127-auth-token',JSON.stringify(session));localStorage.setItem('quadriamo.lang','it');localStorage.setItem('q.installSkip','1')},session)
  await page.goto(ORIGIN+'/app/');await page.locator('.tabbar').waitFor()
  await check('current production PWA installs and controls the app',async()=>{await page.getByText('B-only',{exact:true}).first().waitFor();await page.getByText(/Modifiche confermate alla revisione cloud/).waitFor();await page.evaluate(()=>navigator.serviceWorker.ready);await page.reload();await page.waitForFunction(()=>!!navigator.serviceWorker.controller);await page.locator('.tabbar').waitFor();await page.getByText('B-only',{exact:true}).first().waitFor()})
  await check('real browser restart without network preserves the owned cache',async()=>{
@@ -81,8 +82,10 @@ try{
    assert(!(await page.textContent('body')).includes('B-only'))
    await page.evaluate(()=>PushManager.prototype.getSubscription=window.originalSubscription)
    await page.getByRole('button',{name:'Riprova',exact:true}).click();await page.locator('.gate-cta').waitFor()
-   await page.evaluate(session=>localStorage.setItem('sb-127-auth-token',JSON.stringify(session)),session)
-   await page.reload();await page.locator('.tabbar').waitFor()
+   await page.locator('.gate-cta').click();await page.locator('input[type=email]').fill(user.email)
+   await page.locator('.auth-form button[type=submit], .auth-form .step-nav .btn.primary').click()
+   await page.locator('input[type=password]').fill('Synthetic-test-only-42');await page.locator('.auth-form .step-nav .btn.primary').click()
+   await page.locator('.tabbar').waitFor()
    await page.evaluate(()=>location.hash='#/profile/security');await page.getByText('Esci',{exact:true}).waitFor()
  })
  await page.close();page=await context.newPage();await page.goto(ORIGIN+'/test-blank');page.on('pageerror',e=>errors.push(e.message))

@@ -1,6 +1,10 @@
 import type { Dict } from './en'
 
 const es: Dict = {
+  'auth.localSession': 'Tu sesión ha caducado. Estás usando solo la copia de este dispositivo. Renueva la sesión antes de sincronizar.',
+  'auth.localLogout': 'Has cerrado la sesión en este dispositivo. Tus archivos sin conexión se conservan. Las sesiones remotas no se han revocado.',
+  'auth.localLogoutHint': 'Sin conexión o mientras se renueva la sesión, cerrar sesión solo afecta a este dispositivo y conserva tus archivos. Revocar las otras sesiones requiere un acceso válido al servidor.',
+  'auth.localError': 'No se ha podido leer o actualizar la sesión local. Tus archivos financieros se conservan. Inténtalo de nuevo.',
   'cloud.revisionConflict': "La revisión de la nube no coincide con tu copia ya confirmada. Puede que se haya restaurado el servidor. Exporta ambas copias y revisa la recuperación antes de elegir. Ninguna copia se sustituye automáticamente.",
   'cloud.paidFrom': "Pagado desde",
   'cloud.split': "Distribución",
