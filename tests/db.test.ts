@@ -24,6 +24,8 @@ beforeAll(async () => {
   db = new PGlite({ extensions: { pgcrypto } })
   await db.exec(readFileSync('tests/db/supabase.sql', 'utf8'))
   for (const f of readdirSync(DIR).filter(f => f.endsWith('.sql')).sort()) {
+    // Il protocollo deve revocare anche grant ereditati dai default ACL del progetto ospitante.
+    if (f.startsWith('0030_')) await db.exec('alter default privileges for role postgres in schema public grant execute on functions to service_role')
     try { await db.exec(readFileSync(`${DIR}/${f}`, 'utf8')) } catch (e) { throw new Error(`${f}: ${(e as Error).message}`) }
   }
   await db.exec(`
@@ -45,6 +47,44 @@ describe('database: migrazioni e regole di accesso', () => {
     const r = await db.query<{ relname: string }>(`select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity`)
     expect(r.rows.map(x => x.relname)).toEqual([])
+  })
+
+  it('0030: il pilota richiede ammissione dell’operatore e consenso dell’utente', async () => {
+    const user = '30000000-0000-4000-8000-00000000000d'
+    await db.exec(`insert into auth.users(id,email) values ('${user}','pilot@synthetic.invalid')`)
+    expect(await as('authenticated', user, 'select public.qsync_activate()')).toMatch(/QSYNC_ACTIVATION_NOT_ENABLED/)
+    await db.exec(`set test.uid='${user}'`)
+    const read = await db.query<{ value: { activationAllowed: boolean; mode: string } }>('select public.qsync_read() as value')
+    expect(read.rows[0].value).toMatchObject({ activationAllowed: false, mode: 'legacy' })
+    await db.exec(`set test.uid=''; insert into qsync_private.heads(user_id,activation_allowed) values ('${user}',true)`)
+    expect(await as('authenticated', user, 'select public.qsync_activate()')).toBe(1)
+    expect((await db.query<{ protected: boolean }>(`select protected from qsync_private.heads where user_id='${user}'`)).rows[0].protected).toBe(true)
+  })
+
+  it('0030: creazione CAS, risposta persa e vecchio writer non duplicano o sostituiscono il documento', async () => {
+    const user = '30000000-0000-4000-8000-00000000000e'
+    const document = { version: 1, settings: { schema: 5, buckets: [], categories: [], events: [] }, transactions: [] }
+    const operation = '50000000-0000-4000-8000-000000000001'
+    await db.exec(`insert into auth.users(id,email) values ('${user}','cas@synthetic.invalid');
+      insert into qsync_private.heads(user_id,activation_allowed) values ('${user}',true)`)
+    expect(await as('authenticated', user, 'select public.qsync_activate()')).toBe(1)
+    const write = `select public.qsync_write('0','${operation}','${JSON.stringify(document)}'::jsonb)`
+    expect(await as('authenticated', user, write)).toBe(1)
+    expect(await as('authenticated', user, write)).toBe(1)
+    expect((await db.query<{ n: number }>(`select count(*)::int n from qsync_private.history where user_id='${user}'`)).rows[0].n).toBe(1)
+    expect(await as('authenticated', user, `update public.user_data set data='{}' where user_id='${user}'`)).toMatch(/QSYNC_UPGRADE_REQUIRED/)
+    expect(await as('authenticated', user, write.replace('"transactions":[]', '"transactions":[{}]'))).toMatch(/QSYNC_OPERATION_REUSED/)
+    expect(await count('authenticated', A, 'qsync_private.receipts')).toMatch(/permission denied/)
+    expect((await db.query<{ data: unknown }>(`select data from public.user_data where user_id='${user}'`)).rows[0].data).toEqual(document)
+  })
+
+  it('0030: anon non può chiamare RPC e i metadati privati hanno RLS senza privilegi client', async () => {
+    expect(await as('anon', null, 'select public.qsync_read()')).toMatch(/permission denied/)
+    const r = await db.query<{ n: number }>(`select count(*)::int n from pg_class c join pg_namespace n on n.oid=c.relnamespace
+      where n.nspname='qsync_private' and c.relkind='r' and c.relrowsecurity`)
+    expect(r.rows[0].n).toBe(3)
+    expect(await count('authenticated', B, 'qsync_private.heads')).toMatch(/permission denied/)
+    expect((await db.query<{ allowed: boolean }>(`select has_function_privilege('service_role','public.qsync_write(text,uuid,jsonb)','execute') as allowed`)).rows[0].allowed).toBe(false)
   })
 
   it('i dati di un utente li legge solo lui', async () => {

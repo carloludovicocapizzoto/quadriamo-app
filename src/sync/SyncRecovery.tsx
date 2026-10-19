@@ -29,7 +29,7 @@ export function SyncRecovery({ storage, lease, status, retry, activate }: {
     {localSession && <p>{t('auth.localSession')}</p>}
     <p role="status" aria-live="polite">{status === 'ok' && cloud?.base ? t('cloud.confirmed', { revision: cloud.base.revision })
       : status === 'syncing' ? t('sync.syncing') : status === 'ok' ? t('cloud.idle') : t(`cloud.${status}`)}</p>
-    {(status === 'upgrade' || status === 'paused') && <p>{t(cloud?.available ? 'cloud.activationHint' : 'cloud.upgradeHint')}</p>}
+    {(status === 'upgrade' || status === 'paused') && <p>{t(cloud?.activationBlocked ? 'cloud.pilotWait' : cloud?.available ? 'cloud.activationHint' : 'cloud.upgradeHint')}</p>}
     <div className="cloud-actions">
       <button className="btn small-btn" onClick={() => void exportAll().catch(() => setFailed(true))}>{t('cloud.exportAll')}</button>
       <button className="btn small-btn" disabled={status === 'syncing' || !!snapshot.error} onClick={() => void retry()}>{t('cloud.retry')}</button>

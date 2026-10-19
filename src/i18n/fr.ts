@@ -1,6 +1,7 @@
 import type { Dict } from './en'
 
 const fr: Dict = {
+  'cloud.pilotWait': 'La synchronisation sécurisée n’est pas encore activée pour ce compte. Vos modifications restent sur cet appareil et peuvent être exportées. Contactez l’assistance pour participer au pilote.',
   'auth.localSession': 'Votre session a expiré. Vous utilisez uniquement la copie de cet appareil. Renouvelez votre session avant de synchroniser.',
   'auth.localLogout': 'Vous êtes déconnecté sur cet appareil. Vos archives hors ligne sont conservées. Les sessions distantes n’ont pas été révoquées.',
   'auth.localLogoutHint': 'Hors ligne ou pendant le renouvellement de la session, la déconnexion concerne uniquement cet appareil et conserve vos archives. La révocation des autres sessions exige un accès valide au serveur.',

@@ -19,6 +19,7 @@ it('bounds the complete SDK operation even when token acquisition never finishes
   await vi.advanceTimersByTimeAsync(15_000); await rejected; expect(signal.aborted).toBe(true)
 })
 it.each([{ protocol: 2, revision: '1', mode: 'protected', document }, { protocol: 1, revision: Number('9007199254740993'), mode: 'protected', document },
+  { protocol: 1, revision: '1', mode: 'legacy', document, activationAllowed: 'yes' },
   { protocol: 1, revision: '1', mode: 'protected', document: { ...document, version: 99 } }])('rejects incompatible remote responses without inventing a revision', async data => {
   const sb = { rpc: () => ({ abortSignal: () => Promise.resolve({ data, error: null, status: 200 }) }) } as unknown as SupabaseClient
   await expect(readRemote(sb)).rejects.toMatchObject({ code: 'QSYNC_UPGRADE_REQUIRED' })

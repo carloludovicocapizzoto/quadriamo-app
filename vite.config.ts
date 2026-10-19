@@ -1,4 +1,4 @@
-import { ISOLATION_WORKER } from './src/pushProtocol.ts'
+import { ISOLATION_WORKER, ISOLATION_PUSH_SCRIPT } from './src/pushProtocol.ts'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { execSync } from 'node:child_process'
@@ -80,7 +80,7 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ttf,woff2,json}'], globIgnores: ['fonts/DMSans.ttf'], importScripts: ['push-sw.js'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ttf,woff2,json}'], globIgnores: ['fonts/DMSans.ttf'], importScripts: [ISOLATION_PUSH_SCRIPT],
         // aprire l'app = la pagina salvata con la stessa versione del codice: un aggiornamento arriva tutto insieme
         // (non la pagina vecchia dalla cache del browser per 10 minuti) e l'app si apre sempre, anche senza rete.
         // Solo gli indirizzi dell'app: il resto del sito resta com'è.

@@ -21,6 +21,7 @@ export async function readRemote(sb: SupabaseClient, activate = false): Promise<
   const { data, error, status } = await deadline(signal => sb.rpc(activate ? 'qsync_activate' : 'qsync_read').abortSignal(signal))
   if (error) throw new ProtocolError(error.message, error.code, status)
   if (!data || data.protocol !== 1 || typeof data.revision !== 'string' || !/^(0|[1-9]\d*)$/.test(data.revision)
+    || data.activationAllowed !== undefined && typeof data.activationAllowed !== 'boolean'
     || !['legacy', 'protected', 'paused'].includes(data.mode) || data.document !== null && (!supportedData(data.document) || data.document.demo)) {
     throw new ProtocolError('unsupported synchronization protocol', 'QSYNC_UPGRADE_REQUIRED')
   }

@@ -41,6 +41,14 @@ async function fixture(initialize = true) {
 }
 const add = async (storage: AccountStore, id: string) => { storage.dispatch({ type: 'addTx', tx: make(id).transactions[0] }); await storage.flush() }
 describe('durable conditional synchronization in the product', () => {
+  it('preserves local edits without offering activation when the server has not admitted this account to the pilot', async () => {
+    const f = await fixture(); await add(f.storage, 'not-yet-admitted')
+    f.job.read = async () => ({ ...clone(f.remote()), mode: 'legacy', activationAllowed: false })
+    expect(await runSync(f.job)).toBe('upgrade')
+    expect(f.storage.getSnapshot().cloud?.available).toBe(false)
+    expect(f.storage.getSnapshot().state.data?.transactions.some(t => t.id === 'not-yet-admitted')).toBe(true)
+    expect(f.write).not.toHaveBeenCalled()
+  })
   it('persists the immutable outbox and payload atomically BEFORE upload', async () => {
     const f = await fixture(); await add(f.storage, 'local')
     f.job.write = async p => { expect(await loadData(scope)).toMatchObject({ cloud: { pending: p, status: 'pending' }, data: { transactions: [expect.objectContaining({ id: 'local' })] } }); return f.write(p) }

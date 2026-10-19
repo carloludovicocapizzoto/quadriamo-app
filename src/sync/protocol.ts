@@ -1,6 +1,6 @@
 import type { AppData } from '../store/types'
 
-export interface RemoteDocument { protocol: number; revision: string; mode: 'legacy' | 'protected' | 'paused'; document: AppData | null }
+export interface RemoteDocument { protocol: number; revision: string; mode: 'legacy' | 'protected' | 'paused'; document: AppData | null; activationAllowed?: boolean }
 export interface PendingWrite { id: string; expected: string; document: AppData; localAtStart: AppData | null }
 export interface DataConflict { id: string; paths: string[]; base: RemoteDocument | null; local: AppData | null; remote: RemoteDocument; cause?: 'revision' }
 export interface RecoveryCopy { id: string; at: string; reason: 'resolution' | 'local-conflict' | 'retry'; local: AppData | null; remote: AppData | null; base: AppData | null }
@@ -9,6 +9,7 @@ export interface CloudState {
   format: 1; base: RemoteDocument | null; pending: PendingWrite | null; conflict: DataConflict | null
   recovery: RecoveryCopy[]; status: CloudStatus; lastAck?: { operation: string; revision: string }
   available?: boolean
+  activationBlocked?: boolean
 }
 export const emptyCloud = (): CloudState => ({ format: 1, base: null, pending: null, conflict: null, recovery: [], status: 'idle' })
 export const clone = <T,>(v: T): T => structuredClone(v)

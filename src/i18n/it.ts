@@ -1,6 +1,7 @@
 import type { Dict } from './en'
 
 const it: Dict = {
+  'cloud.pilotWait': 'La sincronizzazione sicura non è ancora abilitata per questo account. Le modifiche restano su questo dispositivo e puoi esportarle. Contatta l’assistenza per partecipare al pilota.',
   'auth.localSession': 'La sessione è scaduta. Stai usando soltanto la copia di questo dispositivo. Prima di sincronizzare occorre rinnovare l’accesso.',
   'auth.localLogout': 'Sei uscito da questo dispositivo. Gli archivi offline sono conservati. Le sessioni remote non sono state revocate.',
   'auth.localLogoutHint': 'Senza connessione o con la sessione da rinnovare, Esci chiude solo questo dispositivo e conserva gli archivi. La revoca delle altre sessioni richiede un accesso valido al server.',

@@ -29,7 +29,8 @@ export async function runSync({ lease, storage, read, write, sleep }: SyncJob): 
         const remote = await read(); lease.assert()
         await storage.updateCloud(lease, ({ data, cloud }) => {
           if (cloud.conflict || cloud.pending) return { data, cloud }
-          cloud.available = remote.mode === 'legacy'
+          cloud.activationBlocked = remote.mode === 'legacy' && remote.activationAllowed === false
+          cloud.available = remote.mode === 'legacy' && !cloud.activationBlocked
           if (cloud.base && (BigInt(remote.revision) < BigInt(cloud.base.revision)
             || remote.revision === cloud.base.revision && !equal(remote.document, cloud.base.document))) {
             cloud.conflict = { id: crypto.randomUUID(), cause: 'revision', paths: ['/document'], base: clone(cloud.base), local: clone(data), remote: clone(remote) }
