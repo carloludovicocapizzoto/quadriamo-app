@@ -5,12 +5,14 @@ import { scopedClient } from './scopedClient'
 const auth = vi.hoisted(() => ({ getSession: vi.fn() }))
 const runtime = vi.hoisted(() => ({ current: null as { auth: { getSession: ReturnType<typeof vi.fn> } } | null }))
 const accepted = vi.hoisted(() => vi.fn(() => true))
-vi.mock('./client', () => ({ get supabase() { return runtime.current }, getAuthClient: async () => runtime.current, isCurrentAuthSession: accepted }))
+const routed = vi.hoisted(() => vi.fn())
+vi.mock('./client', () => ({ get supabase() { return runtime.current }, getAuthClient: async () => runtime.current,
+  isCurrentAuthSession: accepted, alphaFetch: (url: RequestInfo | URL, init?: RequestInit) => { routed(url, init); return fetch(url, init) } }))
 vi.mock('../env', () => ({ ENV: { supabase: { url: 'http://127.0.0.1:54321', key: 'synthetic-public-key' } } }))
 const scope = (owner: string) => ({ environment: 'test', backend: 'http://127.0.0.1:54321', kind: 'account' as const, owner })
 const session = (owner: string) => ({ data: { session: { user: { id: owner }, access_token: 'synthetic-' + owner } }, error: null })
 const transport = vi.fn(async (_url: unknown, _init: RequestInit | undefined) => new Response('[]', { headers: { 'Content-Type': 'application/json' } }))
-beforeEach(() => { accepted.mockReturnValue(true); runtime.current = { auth }; auth.getSession.mockReset(); transport.mockClear(); vi.stubGlobal('fetch', transport) })
+beforeEach(() => { accepted.mockReturnValue(true); runtime.current = { auth }; auth.getSession.mockReset(); transport.mockClear(); routed.mockClear(); vi.stubGlobal('fetch', transport) })
 afterEach(() => vi.unstubAllGlobals())
 
 it('the actual Supabase SDK uses the captured owner token and abort signal', async () => {
@@ -18,6 +20,7 @@ it('the actual Supabase SDK uses the captured owner token and abort signal', asy
   auth.getSession.mockResolvedValue(session('A'))
   const result = await scopedClient(lease)!.from('user_data').select('data')
   expect(result.error).toBeNull()
+  expect(routed).toHaveBeenCalledOnce()
   const init = transport.mock.calls[0][1]!
   expect(new Headers(init.headers).get('authorization')).toBe('Bearer synthetic-A')
   expect(init.signal).toBe(lease.signal)

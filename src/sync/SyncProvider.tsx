@@ -10,7 +10,7 @@ import { runSync } from './runSync'
 import { useI18n } from '../i18n/core'
 import { SyncRecovery } from './SyncRecovery'
 
-type SyncFailureKey = 'cloud.documentTooLarge' | 'cloud.documentInvalid' | 'cloud.operationRejected'
+type SyncFailureKey = 'cloud.documentTooLarge' | 'cloud.requestTooLarge' | 'cloud.documentInvalid' | 'cloud.operationRejected'
 
 export function SyncProvider({ children }: { children: ReactNode }) {
   const session = useSession()
@@ -46,7 +46,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       if (lease.current()) {
         const message = (error as { code?: string; message?: string }).message ?? ''
-        setFailureCode(/QSYNC_DOCUMENT_TOO_LARGE/.test(message) ? 'cloud.documentTooLarge'
+        setFailureCode(/ALPHA_HTTP_BODY_TOO_LARGE/.test(message) ? 'cloud.requestTooLarge'
+          : /QSYNC_DOCUMENT_TOO_LARGE/.test(message) ? 'cloud.documentTooLarge'
           : /QSYNC_DOCUMENT_INVALID|QSYNC_UNSUPPORTED_DOCUMENT/.test(message) ? 'cloud.documentInvalid'
             : /QSYNC_OPERATION_REUSED|QSYNC_OPERATION_ID_INVALID/.test(message) ? 'cloud.operationRejected' : null)
         setStatus(navigator.onLine ? 'error' : 'offline')

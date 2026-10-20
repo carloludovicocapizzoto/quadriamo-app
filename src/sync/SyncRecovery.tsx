@@ -12,7 +12,7 @@ import { differences } from './differences'
 import '../styles/sync.css'
 import { useSession } from './sessionContext'
 
-type SyncFailureKey = 'cloud.documentTooLarge' | 'cloud.documentInvalid' | 'cloud.operationRejected'
+type SyncFailureKey = 'cloud.documentTooLarge' | 'cloud.requestTooLarge' | 'cloud.documentInvalid' | 'cloud.operationRejected'
 
 export function SyncRecovery({ storage, lease, status, retry, activate, failureCode }: {
   storage: AccountStore; lease: ScopeLease; status: SyncStatus; retry: () => Promise<void>; activate: () => Promise<void>; failureCode?: SyncFailureKey | null

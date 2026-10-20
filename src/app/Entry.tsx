@@ -34,12 +34,12 @@ export function Entry({ children }: { children: ReactNode }) {
   const inSetup = setupPending.get()
   // nuovo account senza dati su questo dispositivo: si crea il budget e parte la configurazione
   const newAccount = !data && state.loaded && !!sync.user && inSetup
-  useEffect(() => { if (newAccount) dispatch({ type: 'replace', data: createInitial(guessCurrency(), todayIso(), 1) }) }, [newAccount, dispatch])
+  useEffect(() => { if (newAccount && !sync.inviteSetup) dispatch({ type: 'replace', data: createInitial(guessCurrency(), todayIso(), 1) }) }, [newAccount, sync.inviteSetup, dispatch])
 
   if (!state.loaded || !sync.ready) return <Splash />
   if (confirmed) return <ConfirmedScreen onContinue={() => setConfirmed(false)} />
   // "password dimenticata": prima la nuova password, poi l'app
-  if (sync.recovery) return <div className="gate gate-login"><div className="gate-panel"><LoginScreen /></div></div>
+  if (sync.recovery || sync.inviteSetup) return <div className="gate gate-login"><div className="gate-panel"><LoginScreen /></div></div>
 
   // senza il server (copia locale di sviluppo): solo su questo dispositivo; se non c'è ancora un budget parte la configurazione
   const startLocal = () => {

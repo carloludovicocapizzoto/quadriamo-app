@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { ENV } from '../env'
 import { currentScope, type ScopeLease } from '../store/scope'
-import { supabase, getAuthClient, isCurrentAuthSession } from './client'
+import { supabase, getAuthClient, isCurrentAuthSession, alphaFetch } from './client'
 
 const clients = new WeakMap<ScopeLease, SupabaseClient>()
 
@@ -24,7 +24,7 @@ export function scopedClient(lease = currentScope(), allowAnonymous = false): Su
     },
     global: { fetch: (url, init) => {
       lease.assert()
-      return fetch(url, { ...init, signal: init?.signal ? AbortSignal.any([lease.signal, init.signal]) : lease.signal })
+      return alphaFetch(url, { ...init, signal: init?.signal ? AbortSignal.any([lease.signal, init.signal]) : lease.signal })
     } },
   })
   clients.set(lease, client)

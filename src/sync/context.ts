@@ -9,6 +9,7 @@ export interface SyncApi {
   ready: boolean                         // la sessione salvata è stata letta (si sa se hai fatto l'accesso)
   user: { id: string; email: string; firstName: string; lastName: string; emailConfirmed: boolean } | null
   recovery: boolean                      // aperto dal link "password dimenticata": va scelta una nuova password
+  inviteSetup: boolean                   // invito Alpha: scegliere una password prima di entrare
   status: SyncStatus
   lastSync: string | null                // ISO
   sendCode: (email: string) => Promise<void>

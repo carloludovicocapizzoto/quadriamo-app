@@ -4,8 +4,21 @@ import type { Session } from '@supabase/supabase-js'
 import { authStorage, authStorageKey, authVersion, watchAuthStorage, authCleanupFailed, authWriteFailed, retryAuthCleanup } from './authStorage'
 import { ENV } from '../env'
 import { storedAuthSession } from './offlineSession'
+import { INVITE_LINK } from '../entry'
+
+// La nuova Alpha manda solo la Data API alla funzione della propria origine.
+// Auth e Storage usano il progetto Supabase Alpha; il suo endpoint REST diretto
+// richiede comunque la firma privata della funzione Pages.
+export const alphaFetch: typeof fetch = (input, init) => {
+  const request = new Request(input, init)
+  const direct = ENV.supabase?.url.replace(/\/$/, '') + '/rest/v1/'
+  if (ENV.name !== 'alpha' || !ENV.supabase || !request.url.startsWith(direct)) return fetch(request)
+  const path = request.url.slice(direct.length)
+  return fetch(new Request(`${location.origin}${ENV.base}api/rest/${path}`, request))
+}
 
 export const AUTH_KEY = ENV.supabase ? authStorageKey(ENV.supabase.url) : ''
+export const ALPHA_INVITE_LINK = ENV.name === 'alpha' && INVITE_LINK
 export const AUTH_NAMESPACE = ENV.supabase ? JSON.stringify([ENV.name, ENV.supabase.url.replace(/\/$/, '')]) : ''
 export let supabase: SupabaseClient | null = null
 export let authRuntimeError = false
@@ -39,7 +52,7 @@ export function refreshAuthRuntime() {
     storedAuthSession(AUTH_KEY, AUTH_NAMESPACE, ENV.supabase.url)
     if (current === version && supabase && !authRuntimeError) return
     version = current
-    const client = createClient(ENV.supabase.url, ENV.supabase.key, { auth: {
+    const client = createClient(ENV.supabase.url, ENV.supabase.key, { global: { fetch: alphaFetch }, auth: {
       storageKey: AUTH_KEY, storage: authStorage(AUTH_KEY, undefined, false, AUTH_NAMESPACE, () => {
         if (supabase === client) version = authVersion(AUTH_KEY, AUTH_NAMESPACE)
       }, true),

@@ -5,7 +5,7 @@ import { activateScope, currentScope, personalKey, scopeKey } from '../store/sco
 import { accountStore, cachedAccountStore, flushScope } from '../store/accountStore'
 import { local } from '../storage'
 import { ENV } from '../env'
-import { supabase, AUTH_KEY, AUTH_NAMESPACE, authRuntimeError, authRuntimeCurrent, isCurrentAuthSession, retryAuthRuntime, watchAuthRuntime } from './client'
+import { supabase, AUTH_KEY, AUTH_NAMESPACE, ALPHA_INVITE_LINK, authRuntimeError, authRuntimeCurrent, isCurrentAuthSession, retryAuthRuntime, watchAuthRuntime } from './client'
 import { scopedClient } from './scopedClient'
 import { SessionContext, type SessionApi } from './sessionContext'
 import type { SyncApi } from './context'
@@ -34,10 +34,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
   const [transitioning, setTransitioning] = useState(false)
   const [recovery, setRecovery] = useState(false)
+  const [inviteSetup, setInviteSetup] = useState(false)
   const [seed, setSeed] = useState<AppData>()
   const [localSession, setLocalSession] = useState(false), [localLogout, setLocalLogout] = useState(false)
   const [authFailed, setAuthFailed] = useState(false)
   const recoveryOwner = useRef<string | null>(null)
+  const inviteArrival = useRef(ALPHA_INVITE_LINK)
   const authUser = useRef<User>(null)
   const installUser = useCallback((next: User) => {
     authUser.current = next
@@ -46,6 +48,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const lease = current.current() && scopeKey(current.scope) === scopeKey(scope) ? current : activateScope(scope)
     if (!next) recoveryOwner.current = null
     if (next) setLocalLogout(false)
+    if (inviteArrival.current && next) {
+      local.set(personalKey('q.alphaInvitePending', scope), '1')
+      inviteArrival.current = false
+    }
+    setInviteSetup(!!next && ENV.name === 'alpha' && local.get(personalKey('q.alphaInvitePending', scope)) === '1')
     setUser(next); setSeed(undefined); setLease(lease); setReady(true); setRecovery(!!next && recoveryOwner.current === next.id); setTransitioning(false)
   }, [])
 
@@ -94,7 +101,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const appUrl = window.location.origin + ENV.base + 'app/?login=1'
   const confirmUrl = window.location.origin + ENV.base + 'app/?confirmed=1'
   const api = useMemo<SessionApi>(() => ({
-    enabled: !!ENV.supabase, ready, transitioning, user: lease.scope.kind === 'account' ? user : null, recovery, lease, seed, localSession,
+    enabled: !!ENV.supabase, ready, transitioning, user: lease.scope.kind === 'account' ? user : null, recovery, inviteSetup, lease, seed, localSession,
     isolatedPreview: lease.scope.kind === 'demo' || lease.scope.kind === 'recovery',
     startDemo: data => { void depart(async () => { setSeed(data); setLease(activateScope(scopeFor(user?.id ?? null, 'demo'))); setTransitioning(false) }).catch(() => undefined) },
     openRecovery: (id, data) => { void depart(async () => { setSeed(data); setLease(activateScope(scopeFor(id, 'recovery'))); setTransitioning(false) }).catch(() => undefined) },
@@ -105,6 +112,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (error) throw error
     },
     signUp: async ({ firstName, lastName, email, password, lang }) => {
+      if (ENV.name === 'alpha') throw new Error('invite required')
       // lang: la lingua delle email (i modelli in supabase/templates la usano)
       await flushScope(lease)
       const { data, error } = await authCommand(lease, auth => auth.signUp({ email, password,
@@ -145,6 +153,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       lease.assert()
       setRecovery(false)
       recoveryOwner.current = null
+      if (ENV.name === 'alpha' && user) {
+        local.set(personalKey('q.alphaInvitePending', scopeFor(user.id)), null)
+        setInviteSetup(false)
+      }
     },
     changePassword: async (current, next) => {
       lease.assert()
@@ -173,7 +185,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     },
     sendCode: async email => {
       lease.assert()
-      const { error } = await authCommand(lease, auth => auth.signInWithOtp({ email, options: { emailRedirectTo: appUrl } }))
+      const { error } = await authCommand(lease, auth => auth.signInWithOtp({ email, options: { emailRedirectTo: appUrl, shouldCreateUser: ENV.name !== 'alpha' } }))
       if (error) throw error
     },
     verifyCode: async (email, code) => {
@@ -187,6 +199,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (error) throw error
     }),
     deleteAccount: () => depart(async guard => {
+      if (ENV.name === 'alpha') throw new Error('alpha account deletion requires assisted recovery review')
       const sb = scopedClient(guard)
       if (!sb) throw Error('no account')
       if (user) await removeAvatar(user.id)
@@ -200,7 +213,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       guard.assert()
       await authCommand(guard, auth => auth.signOut())
     }),
-  }), [ready, user, recovery, lease, seed, appUrl, confirmUrl, transitioning, depart, localSession])
+  }), [ready, user, recovery, inviteSetup, lease, seed, appUrl, confirmUrl, transitioning, depart, localSession])
   return <SessionContext.Provider value={api}>
     {authFailed ? <section className="card" role="alert"><p>{t('auth.localError')}</p>
       <button className="btn" onClick={() => void retryAuthRuntime().catch(() => setAuthFailed(true))}>{t('storage.retry')}</button>

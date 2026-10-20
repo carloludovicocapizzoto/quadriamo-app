@@ -91,7 +91,9 @@ export default defineConfig(({ mode }) => ({
   ],
   build: {
     rollupOptions: {
-      input: { home: 'index.html', app: 'app/index.html', admin: 'admin/index.html', news: 'notizie/index.html' },
+      input: (mode === 'alpha'
+        ? { home: 'index.html', app: 'app/index.html', news: 'notizie/index.html' }
+        : { home: 'index.html', app: 'app/index.html', admin: 'admin/index.html', news: 'notizie/index.html' }) as Record<string, string>,
       // le librerie in pezzi a parte: cambiano di rado, restano in memoria sul telefono e a ogni aggiornamento si scarica solo l'app
       output: { manualChunks: (id: string) => id.includes('node_modules/@supabase/') ? 'supabase' : /node_modules\/(react|react-dom|scheduler)\//.test(id) ? 'react' : undefined },
     },

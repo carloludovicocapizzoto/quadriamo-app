@@ -18,6 +18,7 @@ import { Group, Row } from '../kit/List'
 import { Avatar } from './Avatar'
 import { StreakCalendar } from '../shell/StreakCalendar'
 import { Flame } from '../Streak'
+import { ENV } from '../../env'
 
 export function Progress({ data, streak, today, badges }: { data: AppData; streak: Streak | null; today: string; badges: Badge[] }) {
   const { t } = useI18n()
@@ -184,6 +185,7 @@ export function Delete({ onDone }: { onDone: () => void }) {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const word = t('del.word')
+  if (ENV.name === 'alpha') return <p className="muted">{t('auth.alphaDeleteHold')}</p>
   const go = async () => {
     setBusy(true); setErr('')
     try {

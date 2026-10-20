@@ -6,6 +6,7 @@ import { useI18n } from '../i18n/core'
 import { useSync } from '../sync/context'
 import { Icon } from './Icon'
 import { StepHeader, StepNav } from './Steps'
+import { ENV } from '../env'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 type Msg = { text: string; bad?: boolean } | null
@@ -17,7 +18,7 @@ export function LoginScreen({ footer }: { footer?: ReactNode }) {
   return (
     <section className="card login-screen">
       <h1>{t('onb.accountTitle')}</h1>
-      {sync.recovery ? <NewPassword /> : <SignInOrUp />}
+      {sync.recovery || sync.inviteSetup ? <NewPassword /> : <SignInOrUp />}
       {footer && <div className="login-foot">{footer}</div>}
     </section>
   )
@@ -48,7 +49,7 @@ function SignInOrUp() {
   const { t, lang } = useI18n()
   const sync = useSync()
   // ?signup=1 ("Crea il tuo account" sul sito) apre direttamente la registrazione
-  const [tab, setTab] = useState<'in' | 'up' | 'link' | 'confirm' | 'reset'>(ENTRY.get('signup') === '1' ? 'up' : 'in')
+  const [tab, setTab] = useState<'in' | 'up' | 'link' | 'confirm' | 'reset'>(ENV.name !== 'alpha' && ENTRY.get('signup') === '1' ? 'up' : 'in')
   const [step, setStep] = useState(1)
   const [first, setFirst] = useState('')
   const [last, setLast] = useState('')
@@ -100,8 +101,9 @@ function SignInOrUp() {
   return (
     <>
       <p className="muted small">{t('auth.intro')}</p>
-      <Segmented value={tab === 'up' || tab === 'confirm' ? 'up' : 'in'} onChange={v => go(v)}
-        options={[{ id: 'in' as const, label: t('auth.tabSignIn') }, { id: 'up' as const, label: t('auth.tabSignUp') }]} />
+      {ENV.name === 'alpha' ? <p className="muted small">{t('auth.alphaInviteOnly')}</p> :
+        <Segmented value={tab === 'up' || tab === 'confirm' ? 'up' : 'in'} onChange={v => go(v)}
+          options={[{ id: 'in' as const, label: t('auth.tabSignIn') }, { id: 'up' as const, label: t('auth.tabSignUp') }]} />}
 
       {tab === 'up' && (
         <form onSubmit={signUp} className="auth-form" noValidate>
