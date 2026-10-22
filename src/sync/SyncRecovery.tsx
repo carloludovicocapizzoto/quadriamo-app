@@ -7,7 +7,7 @@ import type { AppData } from '../store/types'
 import { downloadFile } from '../ui/kit/download'
 import { bucketName, categoryName } from '../ui/names'
 import type { SyncStatus } from './context'
-import { clone, resolveConflict, type DataConflict } from './protocol'
+import { clone, EVENT, resolveConflict, type DataConflict } from './protocol'
 import { differences } from './differences'
 import '../styles/sync.css'
 import { useSession } from './sessionContext'
@@ -92,7 +92,7 @@ function ConflictForm({ conflict, storage, lease }: { conflict: DataConflict; st
     {conflict.local === null && conflict.remote.document !== null && <p role="note">{t('cloud.clearBlocked')}</p>}
     <form onSubmit={event => void submit(event)}>
       {conflict.paths.map(path => <fieldset key={path}>
-        <legend>{t(path === '/document' ? 'cloud.wholeDocument' : 'cloud.transaction')}</legend>
+        <legend>{t(path === '/document' ? 'cloud.wholeDocument' : path.startsWith(EVENT) ? 'cloud.events' : 'cloud.transaction')}</legend>
         {path === '/document' && <p>{t('cloud.wholeHint')}</p>}
         <div className="cloud-versions">{(['local', 'remote'] as const).map(side => {
           const document = side === 'local' ? conflict.local : conflict.remote.document
@@ -132,6 +132,17 @@ function Version({ document, other, path }: { document: AppData | null; other: A
     </div>)}</dl>
     <details><summary>{t('cloud.contents')}</summary>{document.transactions.map(tx => <p key={tx.id}>{tx.date ? date(tx.date) : '—'} · {tx.description} · {tx.amount === null ? '—' : money(tx.amount, tx.currency || document.settings.currency)}</p>)}</details>
   </>
+  if (path.startsWith(EVENT)) {
+    const event = document.settings.events.find(item => item.id === path.slice(EVENT.length))
+    if (!event) return <p>{t('cloud.deleted')}</p>
+    return <dl><dt>{t('cloud.name')}</dt><dd>{event.title}</dd>
+      <dt>{t('cloud.amount')}</dt><dd>{event.amount === null ? '—' : money(event.amount, document.settings.currency)}</dd>
+      <dt>{t('cloud.date')}</dt><dd>{date(event.date)}</dd>
+      {differences(event, other?.settings.events.find(item => item.id === event.id)).filter(row => !['id', 'title', 'amount', 'date'].includes(row.path[0])).map((row, index) => <div key={index}>
+        <dt>{row.path.map(key => labels[key] ?? key).join(' / ')}</dt><dd>{row.value === undefined || row.value === null ? '—' : String(row.value)}</dd>
+      </div>)}
+    </dl>
+  }
   const tx = document.transactions.find(item => item.id === path.slice('/transactions/'.length))
   if (!tx) return <p>{t('cloud.deleted')}</p>
   return <dl><dt>{t('cloud.date')}</dt><dd>{tx.date ? date(tx.date) : '—'}</dd>

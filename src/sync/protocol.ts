@@ -27,6 +27,92 @@ const canonical = (v: unknown): unknown => Array.isArray(v) ? v.map(canonical) :
   ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b)).map(([k, x]) => [k, canonical(x)])) : v
 export const equal = (a: unknown, b: unknown) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b))
 
+export const EVENT = '/settings/events/'
+type Fields = Record<string, unknown>
+const isFields = (v: unknown): v is Fields => !!v && typeof v === 'object' && !Array.isArray(v)
+/** One field as seen by one copy: [] when absent, [value] when present, so a removal counts as a change. */
+const slot = (o: Fields, key: string): unknown[] => Object.hasOwn(o, key) ? [o[key]] : []
+/** Three-way choice: the side that changed wins; null when both changed it differently. */
+const pick = (b: unknown[], l: unknown[], r: unknown[]): unknown[] | null => equal(l, r) || equal(r, b) ? l : equal(l, b) ? r : null
+const put = (out: Fields, key: string, value: unknown[]) => { if (value.length) out[key] = clone(value[0]); else delete out[key] }
+const keys = (...objects: Fields[]) => new Set(objects.flatMap(o => Object.keys(o)))
+
+/**
+ * Field-level three-way merge of everything except `skip` (handled by the caller). Bookkeeping timestamps
+ * (`…UpdatedAt`) never conflict; settings and calendar events merge deeper. Null = the same field was
+ * changed differently on both copies: only then a whole-document choice is needed.
+ */
+function mergeFields(base: Fields, local: Fields, remote: Fields, skip: string[], paths: string[]): Fields | null {
+  const out = clone(local)
+  for (const key of keys(base, local, remote)) {
+    if (skip.includes(key)) continue
+    const b = slot(base, key), l = slot(local, key), r = slot(remote, key)
+    if (key.endsWith('UpdatedAt')) { put(out, key, [...l, ...r].map(String).sort().slice(-1)); continue }
+    if (key === 'settings' && [b, l, r].every(s => isFields(s[0]))) {
+      const settings = mergeSettings(b[0] as Fields, l[0] as Fields, r[0] as Fields, paths)
+      if (!settings) return null
+      out[key] = settings; continue
+    }
+    const value = pick(b, l, r)
+    if (!value) return null
+    put(out, key, value)
+  }
+  return out
+}
+
+function mergeSettings(base: Fields, local: Fields, remote: Fields, paths: string[]): Fields | null {
+  const out = mergeFields(base, local, remote, ['events', 'fxRates', 'fxDate'], paths)
+  if (!out) return null
+  if ([base, local, remote].every(s => Array.isArray(s.events))) {
+    const events = mergeEvents(base.events as Fields[], local.events as Fields[], remote.events as Fields[], paths)
+    if (!events) return null
+    out.events = events
+  } else {
+    const value = pick(slot(base, 'events'), slot(local, 'events'), slot(remote, 'events'))
+    if (!value) return null
+    put(out, 'events', value)
+  }
+  // Automatic exchange rates are a cache of public data, not a choice of the user: they follow the merged
+  // currency and the latest download wins (remote on a tie), so a daily refresh on two devices never conflicts.
+  const sides = [remote, local].filter(s => s.currency === out.currency)
+  if (!sides.length) return out
+  const latest = sides.reduce((a, s) => String(s.fxDate ?? '') > String(a.fxDate ?? '') ? s : a), other = sides.find(s => s !== latest)
+  if (sides.some(s => isFields(s.fxRates))) out.fxRates = { ...(isFields(other?.fxRates) ? other.fxRates : {}), ...(isFields(latest.fxRates) ? latest.fxRates : {}) }
+  put(out, 'fxDate', slot(latest, 'fxDate'))
+  return out
+}
+
+/** Calendar events (subscriptions, bills, documents…) merge one by one, like transactions: an addition or a removal on one copy survives. */
+function mergeEvents(base: Fields[], local: Fields[], remote: Fields[], paths: string[]): Fields[] | null {
+  const lists = [base, local, remote]
+  if (lists.some(list => list.some(e => !isFields(e) || typeof e.id !== 'string' || !e.id) || new Set(list.map(e => e.id)).size !== list.length)) return null
+  const [b, l, r] = lists.map(list => new Map(list.map(e => [e.id as string, e]))), out: Fields[] = []
+  for (const id of new Set([...l.keys(), ...r.keys(), ...b.keys()])) {
+    const before = b.get(id), left = l.get(id), right = r.get(id)
+    const value = pick(before ? [before] : [], left ? [left] : [], right ? [right] : []) ?? (before && left && right ? mergeEvent(before, left, right) : null)
+    if (!value) { paths.push(EVENT + id); continue }
+    if (value.length) out.push(clone(value[0] as Fields))
+  }
+  return out
+}
+
+/** Two edits of the same event combine when they touch different fields; the paid dates (`done`) merge as a set. */
+function mergeEvent(base: Fields, local: Fields, remote: Fields): unknown[] | null {
+  const out = clone(local)
+  for (const key of keys(base, local, remote)) {
+    const b = slot(base, key), l = slot(local, key), r = slot(remote, key)
+    if (key === 'done' && [b, l, r].every(s => Array.isArray(s[0]))) {
+      const [before, left, right] = [b, l, r].map(s => s[0] as unknown[])
+      out.done = [...new Set([...left, ...right])].filter(day => left.includes(day) && right.includes(day) || !before.includes(day)).map(String).sort()
+      continue
+    }
+    const value = pick(b, l, r)
+    if (!value) return null
+    put(out, key, value)
+  }
+  return [out]
+}
+
 export function reconcile(base: AppData | null, local: AppData | null, remote: AppData | null): { document: AppData | null; paths: string[] } {
   if (equal(local, remote) || equal(remote, base)) return { document: clone(local), paths: [] }
   if (equal(local, base)) return { document: clone(remote), paths: [] }
@@ -35,11 +121,11 @@ export function reconcile(base: AppData | null, local: AppData | null, remote: A
     const ids = d.transactions.map(t => t.id)
     if (ids.some(id => typeof id !== 'string' || !id) || new Set(ids).size !== ids.length) return { document: null, paths: ['/document'] }
   }
-  const rest = (d: AppData) => Object.fromEntries(Object.entries(d).filter(([k]) => !['transactions', 'deleted', 'activity'].includes(k)))
-  if (!equal(rest(base), rest(local)) || !equal(rest(base), rest(remote))) return { document: null, paths: ['/document'] }
+  const paths: string[] = []
+  const document = mergeFields(base as unknown as Fields, local as unknown as Fields, remote as unknown as Fields, ['transactions', 'deleted', 'activity'], paths) as unknown as AppData | null
+  if (!document) return { document: null, paths: ['/document'] }
   const entity = (d: AppData, id: string) => ({ tx: d.transactions.find(t => t.id === id), deleted: d.deleted && Object.hasOwn(d.deleted, id) ? d.deleted[id] : undefined })
   const ids = new Set([base, local, remote].flatMap(d => [...d.transactions.map(t => t.id), ...Object.keys(d.deleted ?? {})]))
-  const document = clone(local), paths: string[] = []
   document.transactions = []; document.deleted = Object.create(null)
   for (const id of ids) {
     const b = entity(base, id), l = entity(local, id), r = entity(remote, id)
@@ -64,7 +150,13 @@ export function resolveConflict(conflict: DataConflict, choices: Record<string, 
   const merged = reconcile(conflict.base?.document ?? null, conflict.local, conflict.remote.document).document
   if (!merged) throw Error('invalid conflict')
   for (const path of conflict.paths) {
-    const id = path.slice('/transactions/'.length), source = choices[path] === 'local' ? conflict.local : conflict.remote.document
+    const source = choices[path] === 'local' ? conflict.local : conflict.remote.document
+    if (path.startsWith(EVENT)) {
+      const event = source?.settings.events.find(e => e.id === path.slice(EVENT.length))
+      if (event) merged.settings.events.push(clone(event))
+      continue
+    }
+    const id = path.slice('/transactions/'.length)
     const tx = source?.transactions.find(t => t.id === id)
     if (tx) merged.transactions.push(clone(tx))
     const deleted = source?.deleted && Object.hasOwn(source.deleted, id) ? source.deleted[id] : undefined
