@@ -95,11 +95,80 @@ describe('REG: calendar events merge one by one', () => {
     expect(r.paths).toEqual([]); expect(r.document?.settings).toMatchObject({ currency: 'USD', fxRates: { EUR: 0.92 }, fxDate: '2026-10-21' })
     expect(r.document?.settings.fxRates.USD).toBeUndefined()
   })
-  it('other settings still use a three-way choice per field, and a real clash is still a whole-document question', () => {
+  it('other settings merge field by field; a real clash is asked only for that field', () => {
     const phone = act(base, { type: 'setSettings', at: '2026-10-21T09:00:00.000Z', settings: { ...base.settings, monthStartDay: 27 } })
     const pc = act(base, { type: 'setSettings', at: '2026-10-21T09:05:00.000Z', settings: { ...base.settings, homeFavs: ['spend'] } })
     expect(reconcile(base, pc, phone).document?.settings).toMatchObject({ monthStartDay: 27, homeFavs: ['spend'] })
-    const clash = act(base, { type: 'setSettings', at: '2026-10-21T09:05:00.000Z', settings: { ...base.settings, monthStartDay: 10 } })
-    expect(reconcile(base, clash, phone)).toEqual({ document: null, paths: ['/document'] })
+  })
+})
+
+describe('REG: a conflict on another setting never costs the subscriptions', () => {
+  const base = start()
+  // the phone adds two subscriptions and sets the month start to the 27th; the old PC sets it to the 10th
+  const phone = act(addSubs(base), { type: 'setSettings', at: '2026-10-21T09:00:00.000Z', settings: { ...addSubs(base).settings, monthStartDay: 27 } })
+  const pc = act(fx(clone(base), '2026-10-21'), { type: 'setSettings', at: '2026-10-21T09:05:00.000Z', settings: { ...fx(clone(base), '2026-10-21').settings, monthStartDay: 10 } })
+  const conflict = (r: ReturnType<typeof reconcile>): DataConflict => ({ id: 'c', paths: r.paths, base: { protocol: 2, mode: 'protected', revision: '1', document: base },
+    local: pc, remote: { protocol: 2, mode: 'protected', revision: '2', document: phone } })
+  it('only the conflicting field is asked, everything else is already merged', () => {
+    const r = reconcile(base, pc, phone)
+    expect(r.paths).toEqual(['/settings/monthStartDay'])
+    expect(titles(r.document)).toEqual(['Affitto', 'Netflix', 'Spotify']); expect(r.document?.settings.fxDate).toBe('2026-10-21')
+  })
+  it.each(['local', 'remote'] as const)('choosing %s for that field keeps the subscriptions that exist only in the cloud', side => {
+    const chosen = resolveConflict(conflict(reconcile(base, pc, phone)), { '/settings/monthStartDay': side })!
+    expect(chosen.settings.monthStartDay).toBe(side === 'local' ? 10 : 27)
+    expect(titles(chosen)).toEqual(['Affitto', 'Netflix', 'Spotify']); expect(chosen.settings.fxDate).toBe('2026-10-21')
+  })
+  it('a currency clash: the chosen currency brings its own rates', () => {
+    const p = act(phone, { type: 'setSettings', at: '2026-10-21T09:10:00.000Z', settings: { ...phone.settings, currency: 'USD', fxRates: { EUR: 0.92 }, fxDate: '2026-10-21' } })
+    const c = act(pc, { type: 'setSettings', at: '2026-10-21T09:11:00.000Z', settings: { ...pc.settings, currency: 'GBP', fxRates: { EUR: 1.15 }, fxDate: '2026-10-20' } })
+    const r = reconcile(base, c, p)
+    expect(r.paths.sort()).toEqual(['/settings/currency', '/settings/monthStartDay'])
+    const chosen = resolveConflict({ ...conflict(r), local: c, remote: { protocol: 2, mode: 'protected', revision: '2', document: p } },
+      { '/settings/monthStartDay': 'local', '/settings/currency': 'remote' })!
+    expect(chosen.settings).toMatchObject({ currency: 'USD', fxRates: { EUR: 0.92 }, fxDate: '2026-10-21', monthStartDay: 10 })
+    expect(titles(chosen)).toEqual(['Affitto', 'Netflix', 'Spotify'])
+  })
+  it('the active days and the goals merge without a whole-document question', () => {
+    const goal = (id: string) => ({ id, name: id, target: 100, contributions: [] }) as never
+    const b = { ...base, activity: ['2026-10-01', '2026-10-02'] }
+    const l = { ...b, activity: ['2026-10-01', '2026-10-02', '2026-10-21'], goals: [goal('bike')] }
+    const r = { ...b, activity: ['2026-10-02', '2026-10-22'], goals: [goal('trip')] }       // the other copy trimmed an old day
+    const merged = reconcile(b, l, r)
+    expect(merged.paths).toEqual([]); expect(merged.document?.activity).toEqual(['2026-10-02', '2026-10-21', '2026-10-22'])
+    expect(merged.document?.goals?.map(g => g.id)).toEqual(['bike', 'trip'])
+  })
+})
+
+describe('REG: a category removed on one device while the other uses it', () => {
+  const base = start()
+  const pet = { id: 'pets', name: 'Animali', type: 'expense' as const, defaultBucket: base.settings.buckets[0].id }
+  const withPets = act(base, { type: 'setSettings', at: '2026-10-02T08:00:00.000Z', settings: { ...base.settings, categories: [...base.settings.categories, pet],
+    events: [...base.settings.events, { ...event('vet', 'Assicurazione cane', 'payment'), category: 'pets' }] } })
+  // what Categories.tsx does today: removes the category and its events
+  const removed = act(withPets, { type: 'setSettings', at: '2026-10-21T09:00:00.000Z', settings: { ...withPets.settings,
+    categories: withPets.settings.categories.filter(c => c.id !== 'pets'), events: withPets.settings.events.filter(e => e.category !== 'pets') } })
+  it('a new event in that category brings the category back instead of pointing to nothing', () => {
+    const added = events(withPets, '2026-10-21T09:05:00.000Z', list => [...list, { ...event('food', 'Crocchette'), category: 'pets' }])
+    const r = reconcile(withPets, removed, added)
+    expect(r.paths).toEqual([]); expect(titles(r.document)).toEqual(['Affitto', 'Crocchette'])
+    expect(r.document?.settings.categories.some(c => c.id === 'pets')).toBe(true)
+  })
+  it('a new transaction in that category also keeps it', () => {
+    const added = act(withPets, { type: 'addTx', at: '2026-10-21T09:05:00.000Z', tx: { id: 't1', date: '2026-10-21', description: 'Veterinario', category: 'pets', amount: -40 } })
+    expect(reconcile(withPets, removed, added).document?.settings.categories.some(c => c.id === 'pets')).toBe(true)
+  })
+  it('untouched old items do not revive a removed category', () => {
+    const other = fx(clone(withPets), '2026-10-21')
+    const r = reconcile(withPets, removed, other)
+    expect(r.paths).toEqual([]); expect(r.document?.settings.categories.some(c => c.id === 'pets')).toBe(false); expect(titles(r.document)).toEqual(['Affitto'])
+  })
+  it('an edit of an event whose category was removed is asked; keeping it keeps its category', () => {
+    const edited = events(withPets, '2026-10-21T09:05:00.000Z', list => list.map(e => e.id === 'vet' ? { ...e, amount: 30 } : e))
+    const r = reconcile(withPets, removed, edited)
+    expect(r.paths).toEqual([EVENT + 'vet'])
+    const chosen = resolveConflict({ id: 'c', paths: r.paths, base: { protocol: 2, mode: 'protected', revision: '1', document: withPets }, local: removed,
+      remote: { protocol: 2, mode: 'protected', revision: '2', document: edited } }, { [EVENT + 'vet']: 'remote' })!
+    expect(titles(chosen)).toEqual(['Affitto', 'Assicurazione cane']); expect(chosen.settings.categories.some(c => c.id === 'pets')).toBe(true)
   })
 })

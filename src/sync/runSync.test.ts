@@ -317,6 +317,22 @@ describe('REG: old PC copy + automatic exchange rates + CAS', () => {
     await phoneWrites(f, d => { d.settings.events = d.settings.events.filter(e => e.id !== 's1') }); await refreshRates(f.storage)
     expect(await runSync(f.job)).toBe('ok'); expect(titles(f.remote().document)).toEqual(['Spotify'])
   })
+  it('a clash on another setting: only that field is asked, and the cloud-only subscriptions survive choosing this device', async () => {
+    const f = await fixture()
+    const local = f.storage.getSnapshot().state.data!
+    f.storage.dispatch({ type: 'setSettings', settings: { ...local.settings, monthStartDay: 10 } }); await f.storage.flush(); await refreshRates(f.storage)
+    await phoneWrites(f, d => { addSubs(d); d.settings.monthStartDay = 27 })
+    expect(await runSync(f.job)).toBe('conflict')
+    const conflict = f.storage.getSnapshot().cloud!.conflict!
+    expect(conflict.paths).toEqual(['/settings/monthStartDay'])
+    await f.storage.updateCloud(f.job.lease, ({ cloud }) => {
+      cloud.base = clone(conflict.remote); cloud.conflict = null; cloud.status = 'pending'
+      return { data: resolveConflict(conflict, { '/settings/monthStartDay': 'local' }), cloud }
+    })
+    expect(await runSync(f.job)).toBe('ok')
+    expect(f.remote().document?.settings).toMatchObject({ monthStartDay: 10, fxDate: '2026-10-21' })
+    expect(titles(f.remote().document)).toEqual(['Netflix', 'Spotify']); expect(titles(f.storage.getSnapshot().state.data)).toEqual(['Netflix', 'Spotify'])
+  })
   it('edit on the PC vs removal on the phone: a question about that event only, then both devices converge', async () => {
     const f = await fixture(); await phoneWrites(f, addSubs); expect(await runSync(f.job)).toBe('ok')
     const local = f.storage.getSnapshot().state.data!

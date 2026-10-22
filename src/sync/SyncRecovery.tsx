@@ -7,7 +7,7 @@ import type { AppData } from '../store/types'
 import { downloadFile } from '../ui/kit/download'
 import { bucketName, categoryName } from '../ui/names'
 import type { SyncStatus } from './context'
-import { clone, EVENT, resolveConflict, type DataConflict } from './protocol'
+import { clone, EVENT, resolveConflict, valueAt, type DataConflict } from './protocol'
 import { differences } from './differences'
 import '../styles/sync.css'
 import { useSession } from './sessionContext'
@@ -85,6 +85,17 @@ function ConflictForm({ conflict, storage, lease }: { conflict: DataConflict; st
     } catch { if (lease.current()) setError(true) }
     finally { if (lease.current()) setSaving(false) }
   }
+  // la domanda riguarda tutto l'archivio, un movimento, una scadenza o un solo campo (es. "Configurazione / Giorno di inizio del mese")
+  const title = (path: string) => {
+    if (path === '/document') return t('cloud.wholeDocument')
+    if (path.startsWith(EVENT)) return t('cloud.events')
+    if (path.startsWith('/transactions/')) return t('cloud.transaction')
+    const names: Record<string, Parameters<typeof t>[0]> = { settings: 'cloud.configuration', currency: 'cloud.currency', monthStartDay: 'cloud.startDay',
+      buckets: 'cloud.buckets', categories: 'cloud.categories', firstMonth: 'cloud.firstMonth', goals: 'cloud.goals', rules: 'cloud.rules' }
+    const parts = path.split('/').slice(1), item = ['categories', 'rules', 'goals'].includes(parts.at(-2)!)
+    const words = parts.filter(part => Object.hasOwn(names, part)).map(part => t(names[part]))
+    return (item || Object.hasOwn(names, parts.at(-1)!) ? words : [...words, t('cloud.setting')]).join(' / ')
+  }
   return <details className="cloud-conflict" open>
     <summary>{t(conflict.base ? 'cloud.conflictTitle' : 'cloud.recoveryTitle')}</summary>
     <p>{t(conflict.base ? 'cloud.conflictHint' : 'cloud.noBase')}</p>
@@ -92,7 +103,7 @@ function ConflictForm({ conflict, storage, lease }: { conflict: DataConflict; st
     {conflict.local === null && conflict.remote.document !== null && <p role="note">{t('cloud.clearBlocked')}</p>}
     <form onSubmit={event => void submit(event)}>
       {conflict.paths.map(path => <fieldset key={path}>
-        <legend>{t(path === '/document' ? 'cloud.wholeDocument' : path.startsWith(EVENT) ? 'cloud.events' : 'cloud.transaction')}</legend>
+        <legend>{title(path)}</legend>
         {path === '/document' && <p>{t('cloud.wholeHint')}</p>}
         <div className="cloud-versions">{(['local', 'remote'] as const).map(side => {
           const document = side === 'local' ? conflict.local : conflict.remote.document
@@ -142,6 +153,15 @@ function Version({ document, other, path }: { document: AppData | null; other: A
         <dt>{row.path.map(key => labels[key] ?? key).join(' / ')}</dt><dd>{row.value === undefined || row.value === null ? '—' : String(row.value)}</dd>
       </div>)}
     </dl>
+  }
+  if (!path.startsWith('/transactions/')) {
+    // un solo campo, una categoria, una regola o un obiettivo: il valore di questa versione e cosa cambia rispetto all'altra
+    const value = valueAt(document, path)
+    if (value === undefined) return <p>{t('cloud.deleted')}</p>
+    if (value === null || typeof value !== 'object') return <p>{value === null ? '—' : typeof value === 'boolean' ? t(value ? 'cloud.yes' : 'cloud.no') : String(value)}</p>
+    return <dl className="cloud-differences">{differences(value, valueAt(other, path)).map((row, index) => <div key={index}>
+      <dt>{row.path.map(key => labels[key] ?? key).join(' / ')}</dt><dd>{row.value === undefined || row.value === null ? '—' : String(row.value)}</dd>
+    </div>)}</dl>
   }
   const tx = document.transactions.find(item => item.id === path.slice('/transactions/'.length))
   if (!tx) return <p>{t('cloud.deleted')}</p>
