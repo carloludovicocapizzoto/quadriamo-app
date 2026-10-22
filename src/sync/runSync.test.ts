@@ -274,3 +274,81 @@ describe('durable conditional synchronization in the product', () => {
     await expect(runSync(f.job)).rejects.toThrow('account'); expect(f.write).not.toHaveBeenCalled()
   })
 })
+
+// REG (2026-10-21): the phone adds subscriptions, the PC still holds the previous revision and refreshes the
+// exchange rates on start. The phone is simulated through the same CAS server (expected revision + receipts).
+describe('REG: old PC copy + automatic exchange rates + CAS', () => {
+  const sub = (id: string, title: string) => ({ id, kind: 'subscription' as const, title, amount: 9.99, category: 'fixedCosts', date: '2026-10-05',
+    repeat: { every: 1, unit: 'month' as const }, until: null, done: [], active: true })
+  const phoneWrites = async (f: Awaited<ReturnType<typeof fixture>>, change: (d: AppData) => void) => {
+    const next = clone(f.remote().document!); change(next)
+    const receipt = await f.write({ id: crypto.randomUUID(), expected: f.remote().revision, document: next, localAtStart: null })
+    expect(receipt).toMatchObject({ status: 'applied', replay: false })
+  }
+  const addSubs = (d: AppData) => { d.settings.events.push(sub('s1', 'Netflix'), sub('s2', 'Spotify')); d.settingsUpdatedAt = '2026-10-20T10:00:00.000Z' }
+  const titles = (d: AppData | null | undefined) => (d?.settings.events ?? []).map(e => e.title).sort()
+  const refreshRates = async (storage: AccountStore) => {
+    storage.dispatch({ type: 'setFx', currency: storage.getSnapshot().state.data!.settings.currency, rates: { USD: 1.08 }, date: '2026-10-21' }); await storage.flush()
+  }
+
+  it('rates refreshed before the read: the cloud keeps the subscriptions and gets the rates, without a conflict', async () => {
+    const f = await fixture(); await phoneWrites(f, addSubs); await refreshRates(f.storage)
+    expect(await runSync(f.job)).toBe('ok')
+    expect(titles(f.remote().document)).toEqual(['Netflix', 'Spotify']); expect(f.remote().document?.settings.fxDate).toBe('2026-10-21')
+    expect(titles(f.storage.getSnapshot().state.data)).toEqual(['Netflix', 'Spotify'])
+  })
+  it('the phone writes while the PC upload is in flight: stale revision → re-read → merge, nothing lost', async () => {
+    const f = await fixture(); await refreshRates(f.storage); let first = true
+    f.job.write = async p => { if (first) { first = false; await phoneWrites(f, addSubs) } return f.write(p) }
+    expect(await runSync(f.job)).toBe('ok')
+    expect(await f.write.mock.results[1].value).toMatchObject({ status: 'conflict' })   // [0] = the phone, [1] = the stale PC write
+    expect(titles(f.remote().document)).toEqual(['Netflix', 'Spotify']); expect(f.remote().document?.settings.fxDate).toBe('2026-10-21')
+  })
+  it('lost response after commit: the same operation is replayed once, no duplicate revision or event', async () => {
+    const f = await fixture(); await phoneWrites(f, addSubs); await refreshRates(f.storage); let first = true
+    f.job.write = async p => { const r = await f.write(p); if (first) { first = false; throw new TypeError('lost response after commit') } return r }
+    expect(await runSync(f.job)).toBe('ok'); expect(f.remote().revision).toBe('3')
+    expect(f.write.mock.calls.at(-1)![0]).toEqual(f.write.mock.calls.at(-2)![0])
+    expect(await f.write.mock.results.at(-1)!.value).toMatchObject({ replay: true })
+    expect(f.remote().document?.settings.events.map(e => e.id).sort()).toEqual(['s1', 's2'])
+  })
+  it('a subscription removed on the phone is not resurrected by the PC', async () => {
+    const f = await fixture(); await phoneWrites(f, addSubs); expect(await runSync(f.job)).toBe('ok')
+    await phoneWrites(f, d => { d.settings.events = d.settings.events.filter(e => e.id !== 's1') }); await refreshRates(f.storage)
+    expect(await runSync(f.job)).toBe('ok'); expect(titles(f.remote().document)).toEqual(['Spotify'])
+  })
+  it('a clash on another setting: only that field is asked, and the cloud-only subscriptions survive choosing this device', async () => {
+    const f = await fixture()
+    const local = f.storage.getSnapshot().state.data!
+    f.storage.dispatch({ type: 'setSettings', settings: { ...local.settings, monthStartDay: 10 } }); await f.storage.flush(); await refreshRates(f.storage)
+    await phoneWrites(f, d => { addSubs(d); d.settings.monthStartDay = 27 })
+    expect(await runSync(f.job)).toBe('conflict')
+    const conflict = f.storage.getSnapshot().cloud!.conflict!
+    expect(conflict.paths).toEqual(['/settings/monthStartDay'])
+    await f.storage.updateCloud(f.job.lease, ({ cloud }) => {
+      cloud.base = clone(conflict.remote); cloud.conflict = null; cloud.status = 'pending'
+      return { data: resolveConflict(conflict, { '/settings/monthStartDay': 'local' }), cloud }
+    })
+    expect(await runSync(f.job)).toBe('ok')
+    expect(f.remote().document?.settings).toMatchObject({ monthStartDay: 10, fxDate: '2026-10-21' })
+    expect(titles(f.remote().document)).toEqual(['Netflix', 'Spotify']); expect(titles(f.storage.getSnapshot().state.data)).toEqual(['Netflix', 'Spotify'])
+  })
+  it('edit on the PC vs removal on the phone: a question about that event only, then both devices converge', async () => {
+    const f = await fixture(); await phoneWrites(f, addSubs); expect(await runSync(f.job)).toBe('ok')
+    const local = f.storage.getSnapshot().state.data!
+    f.storage.dispatch({ type: 'setSettings', settings: { ...local.settings, events: local.settings.events.map(e => e.id === 's1' ? { ...e, amount: 12.99 } : e) } })
+    await f.storage.flush(); await refreshRates(f.storage)
+    await phoneWrites(f, d => { d.settings.events = d.settings.events.filter(e => e.id !== 's1') })
+    expect(await runSync(f.job)).toBe('conflict')
+    const conflict = f.storage.getSnapshot().cloud!.conflict!
+    expect(conflict.paths).toEqual(['/settings/events/s1'])
+    await f.storage.updateCloud(f.job.lease, ({ cloud }) => {
+      cloud.base = clone(conflict.remote); cloud.conflict = null; cloud.status = 'pending'
+      return { data: resolveConflict(conflict, { '/settings/events/s1': 'local' }), cloud }
+    })
+    expect(await runSync(f.job)).toBe('ok')
+    expect(f.remote().document?.settings.events.find(e => e.id === 's1')?.amount).toBe(12.99)
+    expect(titles(f.remote().document)).toEqual(['Netflix', 'Spotify']); expect(f.remote().document?.settings.fxDate).toBe('2026-10-21')
+  })
+})
+

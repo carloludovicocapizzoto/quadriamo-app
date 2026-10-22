@@ -23,9 +23,9 @@ describe('three-way synchronization', () => {
     a.transactions[0].amount = 20; b.deleted = { one: '2100-01-01' }
     expect(reconcile(base, a, b).paths).toEqual(['/transactions/one'])
   })
-  it('blocks incompatible settings and preserves both documents', () => {
+  it('asks only about incompatible settings and preserves both documents', () => {
     const base = make(), a = clone(base), b = clone(base); a.settings.currency = 'USD'; b.settings.currency = 'GBP'
-    expect(reconcile(base, a, b).paths).toEqual(['/document']); expect(a.settings.currency).toBe('USD')
+    expect(reconcile(base, a, b).paths).toEqual(['/settings/currency']); expect(a.settings.currency).toBe('USD')
   })
   it('does not silently collapse duplicate transaction IDs', () => {
     expect(reconcile(make(), make('duplicate', 'duplicate'), make('other')).paths).toEqual(['/document'])
