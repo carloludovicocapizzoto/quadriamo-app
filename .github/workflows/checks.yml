@@ -1,0 +1,39 @@
+name: Pull request checks
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BASE_PATH: /
+      VITE_SUPABASE_URL: ''
+      VITE_SUPABASE_PUBLISHABLE_KEY: ''
+      VITE_SUPABASE_ANON_KEY: ''
+      VITE_VAPID_PUBLIC_KEY: ''
+      VITE_FLAGS: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint -- --deny-warnings
+      - run: npm test
+      - run: node node_modules/typescript/bin/tsc -b
+      - run: npm run e2e
+      - run: npm run build

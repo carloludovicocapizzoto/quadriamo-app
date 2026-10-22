@@ -19,7 +19,7 @@ import { PAGES } from './registry'
 import { SECTIONS, pageLabel, type Ctx } from './sections'
 import { ENV } from '../../env'
 
-const SITE = 'https://carloludovicocapizzoto.github.io/quadriamo-app/'
+const SITE = new URL(ENV.base, window.location.origin).href
 
 /**
  * Profilo: chi sei (testata), i tuoi progressi in una riga, poi cinque sezioni disegnate dalla mappa (sections.ts).
@@ -37,7 +37,7 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
   const [stats, setStats] = useState(statsConsent() === 'yes')
   const [isAdmin, setIsAdmin] = useState(false)
   useEffect(() => {
-    if (!supabase || !sync.user) return
+    if (!supabase || !sync.user || ENV.name === 'alpha') return
     void supabase.rpc('is_admin').then(({ data: ok }) => setIsAdmin(ok === true))
   }, [sync.user])
   const unread = useInbox().filter(x => !x.read && !x.archived).length

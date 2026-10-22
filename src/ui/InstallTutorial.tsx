@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useI18n } from '../i18n/core'
+import { ENV } from '../env'
 import type { Dict } from '../i18n/en'
 import { LogoMark } from './Gate'
 import { StepHeader } from './Steps'
@@ -104,7 +105,7 @@ function MockScreen({ mock }: { mock: Mock }) {
     case 'andList': return <div className="mock phone"><div className="m-bar and"><span className="m-url">quadriamo…</span><span>⋮</span></div><div className="m-menu"><div className="m-row">↻</div><div className="m-row">☆</div>{hl(<div className="m-row">⤓ {t('inst.lblInstallApp')}</div>)}<div className="m-row">⚙</div></div></div>
     case 'andDialog': case 'deskDialog':
       return <div className={`mock ${mock === 'deskDialog' ? 'desk' : 'phone'}`}><div className="m-dialog"><LogoMark size={36} /><b>Quadriamo</b><div className="m-btns"><span>✕</span>{hl(t('inst.lblInstall'))}</div></div></div>
-    case 'deskBar': return <div className="mock desk"><div className="m-bar desk"><span className="m-url">carloludovicocapizzoto.github.io/quadriamo-app/app/</span>{hl('⊕')}<span>☆</span><span>⋮</span></div><div className="m-page" /></div>
+    case 'deskBar': return <div className="mock desk"><div className="m-bar desk"><span className="m-url">{location.host}{ENV.base}app/</span>{hl('⊕')}<span>☆</span><span>⋮</span></div><div className="m-page" /></div>
     case 'macMenu': return <div className="mock desk"><div className="m-bar mac"><span></span><b>Safari</b>{hl('File')}<span>…</span></div><div className="m-page" /></div>
     case 'macList': return <div className="mock desk"><div className="m-bar mac"><span></span><b>Safari</b><span className="hl">File</span><span>…</span></div><div className="m-menu left"><div className="m-row">⌘N</div><div className="m-row">⌘T</div>{hl(<div className="m-row">⊞ {t('inst.lblAddDock')}</div>)}<div className="m-row">⌘W</div></div></div>
     case 'dock': return <div className="mock desk"><div className="m-page" /><div className="m-dock">{icons.slice(0, 5).map((c, k) => <span key={k} className="m-app" style={{ background: c }} />)}<span className="m-app q"><LogoMark size={34} /></span></div></div>

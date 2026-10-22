@@ -1,12 +1,15 @@
 import { createContext, useContext } from 'react'
+import type { AppData } from '../store/types'
 
-export type SyncStatus = 'idle' | 'syncing' | 'ok' | 'error' | 'offline'
+export type SyncStatus = 'idle' | 'syncing' | 'ok' | 'reconciled' | 'error' | 'offline' | 'pending' | 'conflict' | 'upgrade' | 'paused'
 
 export interface SyncApi {
+  localSession: boolean
   enabled: boolean                       // false se l'app non è collegata a Supabase
   ready: boolean                         // la sessione salvata è stata letta (si sa se hai fatto l'accesso)
   user: { id: string; email: string; firstName: string; lastName: string; emailConfirmed: boolean } | null
   recovery: boolean                      // aperto dal link "password dimenticata": va scelta una nuova password
+  inviteSetup: boolean                   // invito Alpha: scegliere una password prima di entrare
   status: SyncStatus
   lastSync: string | null                // ISO
   sendCode: (email: string) => Promise<void>
@@ -28,6 +31,9 @@ export interface SyncApi {
   signOut: () => Promise<void>
   deleteAccount: () => Promise<void>
   syncNow: () => Promise<void>
+  startDemo: (data: AppData) => void
+  endPreview: () => void
+  isolatedPreview: boolean
 }
 
 export const SyncContext = createContext<SyncApi | null>(null)

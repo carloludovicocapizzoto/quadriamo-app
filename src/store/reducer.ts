@@ -41,6 +41,12 @@ function reduce(state: State, a: Action): State {
                                  deleted: { ...d.deleted, [a.id]: at } } }
     case 'setSettings':
       return { ...state, data: { ...d, settings: a.settings, settingsUpdatedAt: at } }
+    case 'setFx':
+      // sulle impostazioni attuali e senza toccare settingsUpdatedAt: un download di dati pubblici non deve far
+      // sembrare "più nuova" una copia vecchia (era la causa degli abbonamenti persi tra due dispositivi)
+      // e solo se non sono più vecchi di quelli che ci sono già (risposte arrivate fuori ordine, weekend e festivi)
+      if (d.settings.currency !== a.currency || !a.date || d.settings.fxDate && a.date < d.settings.fxDate) return state
+      return { ...state, data: { ...d, settings: { ...d.settings, fxRates: { ...d.settings.fxRates, ...a.rates }, fxDate: a.date } } }
     case 'saveGoal': {
       const g = { ...a.goal, updatedAt: at }
       const goals = (d.goals ?? []).some(x => x.id === g.id) ? (d.goals ?? []).map(x => x.id === g.id ? g : x) : [...(d.goals ?? []), g]

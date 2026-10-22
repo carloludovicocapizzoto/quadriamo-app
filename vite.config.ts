@@ -1,3 +1,4 @@
+import { ISOLATION_WORKER, ISOLATION_PUSH_SCRIPT } from './src/pushProtocol.ts'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { execSync } from 'node:child_process'
@@ -52,7 +53,7 @@ export default defineConfig(({ mode }) => ({
     contentSecurityPolicy(mode),
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'autoUpdate', filename: ISOLATION_WORKER,
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png', 'fonts/DMSerifDisplay-Regular.ttf', 'fonts/*.woff2'],
       manifest: {
         id: `${base}app/`,
@@ -79,7 +80,7 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ttf,woff2,json}'], globIgnores: ['fonts/DMSans.ttf'], importScripts: ['push-sw.js'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ttf,woff2,json}'], globIgnores: ['fonts/DMSans.ttf'], importScripts: [ISOLATION_PUSH_SCRIPT],
         // aprire l'app = la pagina salvata con la stessa versione del codice: un aggiornamento arriva tutto insieme
         // (non la pagina vecchia dalla cache del browser per 10 minuti) e l'app si apre sempre, anche senza rete.
         // Solo gli indirizzi dell'app: il resto del sito resta com'è.
@@ -90,7 +91,9 @@ export default defineConfig(({ mode }) => ({
   ],
   build: {
     rollupOptions: {
-      input: { home: 'index.html', app: 'app/index.html', admin: 'admin/index.html', news: 'notizie/index.html' },
+      input: (mode === 'alpha'
+        ? { home: 'index.html', app: 'app/index.html', news: 'notizie/index.html' }
+        : { home: 'index.html', app: 'app/index.html', admin: 'admin/index.html', news: 'notizie/index.html' }) as Record<string, string>,
       // le librerie in pezzi a parte: cambiano di rado, restano in memoria sul telefono e a ogni aggiornamento si scarica solo l'app
       output: { manualChunks: (id: string) => id.includes('node_modules/@supabase/') ? 'supabase' : /node_modules\/(react|react-dom|scheduler)\//.test(id) ? 'react' : undefined },
     },

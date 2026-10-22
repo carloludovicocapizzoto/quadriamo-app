@@ -25,7 +25,7 @@ const emptyPrivate = (): PrivateProfile => ({ monthlyIncome: null, goals: [], ca
 export function ProfileForm({ onDone, withShares = true }: { onDone: () => void; withShares?: boolean }) {
   const { t, lang } = useI18n()
   const sync = useSync()
-  const { state, dispatch } = useStore()
+  const { state, dispatch, lease } = useStore()
   const settings = state.data!.settings
   const [names, setNames] = useState<Names | null>(null)
   const [pp, setPp] = useState<PrivateProfile>(() => ({ ...emptyPrivate(), ...state.data!.profile }))
@@ -58,7 +58,8 @@ export function ProfileForm({ onDone, withShares = true }: { onDone: () => void;
     const profile: PrivateProfile = { ...pp, monthlyIncome: inc != null && Number.isFinite(inc) ? inc : null, investWhere: pp.invested === 'yes' ? pp.investWhere : [] }
     setBusy(true); setMsg(null)
     try {
-      await saveNames(sync.user!.id, names!)
+      await saveNames(sync.user!.id, names!, lease)
+      lease?.assert()
       dispatch({ type: 'setProfile', profile })
       let rule = settings.buckets.map(b => Math.round(b.share * 1000) / 10)
       if (apply && withShares) {
@@ -66,17 +67,18 @@ export function ProfileForm({ onDone, withShares = true }: { onDone: () => void;
         if (buckets.some((b, i) => b.share !== settings.buckets[i].share)) dispatch({ type: 'setSettings', settings: { ...settings, buckets } })
         rule = values
       }
-      await syncResearch(profile, rule)
+      await syncResearch(profile, rule, lease)
+      lease?.assert()
       profilePrompt.clear()
       setMsg({ text: t('prof.saved') })
-      setTimeout(onDone, 900)
+      setTimeout(() => { if (lease?.current()) onDone() }, 900)
     } catch { setMsg({ text: t('prof.errSave'), bad: true }) } finally { setBusy(false) }
   }
   async function clear() {
     if (!confirm(t('prof.clearConfirm'))) return
     dispatch({ type: 'setProfile', profile: null })
     setPp(emptyPrivate()); setIncome('')
-    try { await syncResearch(null, []) } catch { /* la scheda si ritira al prossimo salvataggio */ }
+    try { await syncResearch(null, [], lease) } catch { /* la scheda si ritira al prossimo salvataggio */ }
     setMsg({ text: t('prof.saved') })
   }
 

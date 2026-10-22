@@ -1,0 +1,26 @@
+# Alpha Clean Start: isolated bootstrap
+
+This directory is a **separate Supabase CLI project**. Run the CLI from here only after the new empty project is authorized. It is not a reset path for the existing Quadriamo project. No historic users, rows, credentials, jobs, or subscriptions are imported.
+
+The first five ordered migrations are the immutable Alpha bootstrap already applied to the cloud project. Migration 006 is a separate incremental hardening step for the avatar object path; it must remain distinct in the history and must not be folded into or used to rewrite the five deployed migrations. The migrations require Supabase-managed `auth` and `storage` schemas, PostgreSQL 17, `pgcrypto`, and `pg_cron`. The base migration refuses an occupied project. Later migrations refuse missing prerequisites and, where relevant, existing Alpha objects. A failed preflight calls for investigation; never clear an occupied project to make a migration pass.
+
+| Migration | Purpose | Source |
+| --- | --- | --- |
+| `20261020000100_alpha_base.sql` | Read-only current document, personal profile trigger and read-only Free subscription view | New Alpha source |
+| `20261020000200_revisioned_sync.sql` | Revisioned CAS core | Byte-identical copy of `../migrations/0030_revisioned_sync.sql` |
+| `20261020000300_alpha_clean_start_sync_limits.sql` | Protected-from-birth accounts, document/quota checks, compact receipts and retention | Byte-identical copy of `../migrations/0031_alpha_clean_start_sync_limits.sql` |
+| `20261020000400_avatars.sql` | Private `avatars` bucket and per-account policies | Byte-identical copy of `../migrations/0017_avatars.sql` |
+| `20261020000500_alpha_data_api_gate.sql` | Signed direct-API admission, HTTP counters, hourly maintenance | New Alpha source |
+| `20261020000600_alpha_avatar_canonical_path.sql` | Incremental hardening: allow only `<authenticated-uid>/avatar.webp` in the existing private bucket; JPEG fallback remains supported by MIME type | Applied to Alpha on 2026-10-20 after explicit authorization |
+
+`MIGRATION_SHA256.txt` covers all six files. Its first five hashes remain the deployed bootstrap baseline; the sixth covers the applied incremental migration. `.gitattributes` preserves the original CRLF bytes of migration 004 and LF for the other migrations, so a fresh checkout reproduces those hashes. The private Fase 2B.1 runbook records the exact six-version cloud history and successful post-application checks. Do not reapply migration 006 or rewrite migration history.
+
+The historical `0001`–`0029` sequence is deliberately excluded: it contains legacy onboarding, admin, push, telemetry, shared-budget, billing and external-service behavior. No Edge Function is required by this Alpha slice. The public profile and subscription interfaces remain available to the current client; subscriptions start empty, and Alpha does not grant Pro.
+
+The initial five-migration bootstrap deliberately left the gateway key table empty so the Data API failed closed. The key has since been installed on the new Alpha through the private operator procedure; never put it in this repository. It belongs only in the Supabase secret table and the server-side Pages Function setting; the frontend receives only the new project's publishable key. `auth.enable_signup=false` and `auth.email.enable_signup=false` are part of this profile; new accounts are created by a trusted administrator invite, followed by email confirmation and password choice. Cloud Auth settings, SMTP, allowed redirects, RLS/ACLs, the pre-request hook and the scheduled job require target verification before traffic.
+
+After private key installation and all six migrations, `verify_ready.sql` is a read-only fail-closed check of schema, RLS, grants, protected accounts, key presence, Data API hook, maintenance job, canonical avatar path policies and absence of Pro grants. On 2026-10-20 the six-migration cloud checks returned `ALPHA_READY_SQL` and `ALPHA_STORAGE_HARDENING_PASS`; `verify_storage_hardening.sql` inventories the effective Storage policies and ACLs and is also read-only. Auth service settings and actual authenticated ingress behavior need separate end-to-end tests; SQL checks cannot prove them.
+
+Build the frontend with `npm run build:alpha` using the reviewed variables in `.env.alpha.example`; this produces `dist-alpha/` with root `BASE_PATH` and a service worker scoped only to the separate origin. The build refuses a production-looking/local mismatch or a private Supabase key. The existing GitHub Pages build and `main` deployment pipeline are independent. The Pages Function under `functions/api/rest/` mediates the approved Data API routes; direct Supabase REST writes are rejected by the database hook without its short-lived signature.
+
+Database document, operation and growth limits are distinct from HTTP ingress limits. The gateway charges each admitted request before parsing or forwarding. Malformed unauthenticated traffic can still reach Supabase's public endpoint before PostgreSQL runs; this cannot be claimed as blocked by the frontend gateway. Auth and Storage have separate controls. Cloud provider policies, billing limits, alerting, email deliverability, and a restore rehearsal on the authorized target are release gates.

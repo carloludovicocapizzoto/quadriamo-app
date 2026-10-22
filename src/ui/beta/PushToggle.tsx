@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { isStandalone, platform } from '../../beta/device'
-import { disablePush, enablePush, pushEnabled, pushSupported } from '../../beta/push'
+import { disablePush, enablePush, pushEnabled, pushSupported, PERSONAL_PUSH_PAUSED } from '../../beta/push'
+import { ENV } from '../../env'
 import { Icon } from '../Icon'
 import { useI18n } from '../../i18n/core'
 
@@ -12,6 +13,7 @@ export function PushToggle({ compact = false }: { compact?: boolean }) {
   const [note, setNote] = useState('')
   useEffect(() => { void pushEnabled().then(setOn) }, [])
 
+  if (PERSONAL_PUSH_PAUSED && ENV.supabase) return compact ? null : <p className="small muted">{t('storage.pushPaused')}</p>
   const iosNotInstalled = platform() === 'ios' && !isStandalone()
   if (!pushSupported() && !iosNotInstalled) return null
   if (iosNotInstalled) return <p className="small muted">{t('push.iosHint')}</p>

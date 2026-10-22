@@ -5,8 +5,9 @@ import { supabase } from '../sync/client'
 import { useSync } from '../sync/context'
 import { navigate } from '../app/router'
 import { local } from '../storage'
+import { ENV } from '../env'
 
-export const BETA_ALL_PRO = true
+export const BETA_ALL_PRO = ENV.name !== 'alpha'
 export const PRICE = { month: 2.99, year: 24.99, currency: 'EUR' }
 export type ProFeature = 'reports' | 'investments' | 'shared'
 
@@ -45,6 +46,7 @@ export function usePlan(): Plan {
 export const askUpgrade = () => navigate({ tab: 'profile', page: 'plan' })
 
 async function billing(body: Record<string, unknown>): Promise<{ url?: string; error?: string; configured?: boolean; test?: boolean }> {
+  if (ENV.name === 'alpha') throw new Error('not configured')
   if (!supabase) throw new Error('offline')
   const { data, error } = await supabase.functions.invoke('billing', { body })
   if (error) {

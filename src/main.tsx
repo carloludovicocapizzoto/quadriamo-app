@@ -10,8 +10,8 @@ import { SectionBoundary } from './app/SectionBoundary'
 import App from './App.tsx'
 import { I18nProvider } from './i18n'
 import { prepareI18n } from './i18n/core'
-import { StoreProvider } from './store/StoreProvider'
-import { SyncProvider } from './sync/SyncProvider'
+import { SessionProvider } from './sync/SessionProvider'
+import { AccountBoundary } from './sync/AccountBoundary'
 
 applyPrefs()   // tema, movimento e testo prima del primo disegno: niente lampo di colore
 watchDiagnostics()  // diario tecnico in memoria: schermate, azioni, rallentamenti
@@ -22,12 +22,12 @@ watchUpdates()      // versioni nuove appena l'app torna in primo piano
 void prepareI18n().then(start => createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <I18nProvider start={start}>
-      <StoreProvider>
-        <SyncProvider>
+      <SessionProvider>
+        <AccountBoundary>
           {/* l'ultima rete: se si rompe qualcosa fuori dalle sezioni, un messaggio invece della pagina bianca */}
           <SectionBoundary><App /></SectionBoundary>
-        </SyncProvider>
-      </StoreProvider>
+        </AccountBoundary>
+      </SessionProvider>
     </I18nProvider>
   </StrictMode>,
 ))

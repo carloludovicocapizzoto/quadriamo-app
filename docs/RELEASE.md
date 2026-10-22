@@ -37,6 +37,8 @@ L'app mostra `0.9.0 (146)` nel Profilo; statistiche, errori e feedback salvano `
 
 ## Pubblicare una nuova versione
 
+Per il protocollo di sincronizzazione revisionata, seguire prima [SYNC_RELEASE.md](SYNC_RELEASE.md): il merge avvia il deploy del frontend, ma non installa le RPC nel database. Sono necessari migrazione approvata, backup verificato e rilascio coordinato.
+
 1. Aggiorna `version` in `package.json` e aggiungi la voce in `CHANGELOG.md`.
 2. Commit e push su `main`: la GitHub Action controlla, testa e pubblica.
 3. Le app installate si aggiornano da sole alla prossima apertura (service worker in `autoUpdate`).

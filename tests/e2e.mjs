@@ -98,10 +98,16 @@ await step('Analisi → Calendario: creo una bolletta mensile', async () => {
 await step('l\'agenda la mostra anche il mese prossimo', () => click(byText('/^Agenda$/')),
   `(document.querySelector('.calendar')?.innerText.match(/Luce e gas/g) ?? []).length >= 2`)
 await step('Profilo → Centro notifiche: una notifica arrivata si archivia', async () => {
-  // come la salverebbe il service worker (public/push-sw.js)
+  // Fixture nel namespace locale corrente; una vecchia notifica globale rimane esclusa.
   await js(`new Promise(ok => { const r = indexedDB.open('keyval-store'); r.onsuccess = () => { const tx = r.result.transaction('keyval', 'readwrite');
-    tx.objectStore('keyval').put([{ id: 'e2e', at: new Date().toISOString(), kind: 'reminder', title: 'Domani: Luce e gas', body: '62,00 €', url: './app/' }], 'quadriamo.inbox'); tx.oncomplete = ok } })`)
+    const store = tx.objectStore('keyval'); const keys = store.getAllKeys(); keys.onsuccess = () => {
+      const key = keys.result.find(k => typeof k === 'string' && k.startsWith('quadriamo.data.v2/') && JSON.parse(decodeURIComponent(k.slice('quadriamo.data.v2/'.length)))[2] === 'local');
+      if (!key) throw Error('missing local cache');
+      const inboxKey = 'q.v2/' + key.slice('quadriamo.data.v2/'.length) + '/quadriamo.inbox';
+      store.put([{ id: 'legacy-A', at: new Date().toISOString(), kind: 'message', title: 'PRIVATE-LEGACY-A', body: '', url: './app/' }], 'quadriamo.inbox');
+      store.put([{ id: 'e2e', at: new Date().toISOString(), kind: 'reminder', title: 'Domani: Luce e gas', body: '62,00 €', url: './app/' }], inboxKey) }; tx.oncomplete = ok } })`)
   await js(`location.hash = '#/profile/inbox'`); await sleep(800)
+  if (await js(`document.body.innerText.includes('PRIVATE-LEGACY-A')`)) throw Error('legacy inbox exposed')
   await click(`document.querySelector('.nc-more')`); await sleep(500)
   await click(byText('/^Archivia$/', '.bs-body button'))
 }, `!document.querySelector('.nc-list') && ${has('/Nessuna notifica/')}`)
@@ -111,7 +117,11 @@ console.log('Abbonamenti, documenti, ricevuta')
 const setField = (sel, v) => js(`(() => { const el = document.querySelector('${sel}'); if (!el) return false
   Object.getOwnPropertyDescriptor(el.constructor.prototype, 'value').set.call(el, ${JSON.stringify(v)})
   el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); return true })()`)
-const inDays = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10)
+const inDays = n => {
+  const d = new Date()
+  d.setDate(d.getDate() + n)
+  return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-')
+}
 await step('Profilo → Abbonamenti: aggiungo Netflix dal catalogo', async () => {
   await js(`location.hash = '#/profile/recurring'`); await sleep(800)
   await click(byText('/Aggiungi abbonamento/')); await sleep(700)

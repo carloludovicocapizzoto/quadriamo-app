@@ -1,0 +1,7 @@
+supabase/migrations/*.sql text eol=lf
+# Preserve the byte-exact deployed avatar bootstrap covered by MIGRATION_SHA256.txt.
+supabase/migrations/20261020000400_avatars.sql text eol=crlf
+supabase/templates/*.html text eol=lf
+supabase/config.toml text eol=lf
+MIGRATION_SHA256.txt text eol=lf
+verify_ready.sql text eol=lf

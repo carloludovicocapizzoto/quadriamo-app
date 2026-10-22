@@ -89,6 +89,9 @@
 
 /* ---------- tablet verticale: più spazio alla Home, le altre pagine restano in colonna di lettura ---------- */
 .nav-brand { display: none; }
+.storage-notices { position: relative; z-index: 31; padding-inline: var(--gutter); }
+.storage-notices:empty { display: none; }
+@media (min-width: 1024px) { .storage-notices { margin-left: 248px; } }
 @media (min-width: 768px) {
   .app2:has(.home) { max-width: 960px; }
 }

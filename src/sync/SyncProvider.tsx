@@ -1,179 +1,102 @@
-// Sincronizzazione con Supabase: all'accesso, poco dopo ogni modifica, al ritorno della connessione e
-// quando l'app torna in primo piano. I dati locali e quelli online si uniscono con mergeData.
+// Ogni montaggio appartiene a un solo scope; la sessione viene risolta dal provider esterno.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useStore } from '../store/context'
-import { mergeData, type AppData } from '../store/state'
-import { supabase } from './client'
 import { SyncContext, type SyncApi, type SyncStatus } from './context'
-import { forgetAvatar, loadAvatar, removeAvatar } from '../profile/avatar'
-import { saveNames } from './profile'
-import { fetchRemote, pushRemote } from './remote'
-import { ENV } from '../env'
+import { useSession } from './sessionContext'
+import { loadAvatar } from '../profile/avatar'
+import { readRemote, writeRemote } from './remote'
+import { scopedClient } from './scopedClient'
+import { runSync } from './runSync'
+import { useI18n } from '../i18n/core'
+import { SyncRecovery } from './SyncRecovery'
 
-const DEBOUNCE_MS = 1500
+type SyncFailureKey = 'cloud.documentTooLarge' | 'cloud.requestTooLarge' | 'cloud.documentInvalid' | 'cloud.operationRejected'
 
 export function SyncProvider({ children }: { children: ReactNode }) {
-  const { state, dispatch } = useStore()
-  const [user, setUser] = useState<SyncApi['user']>(null)
+  const session = useSession()
+  const { lease } = session
+  const { state, storage } = useStore()
+  const { t } = useI18n()
   const [status, setStatus] = useState<SyncStatus>('idle')
   const [lastSync, setLastSync] = useState<string | null>(null)
-  const [recovery, setRecovery] = useState(false)
-  const [ready, setReady] = useState(!supabase)
-  const dataRef = useRef<AppData | null>(state.data)
-  const running = useRef(false)
-  const again = useRef(false)
-  const lastPushed = useRef('')
-  const timer = useRef<number | undefined>(undefined)
+  const [failureCode, setFailureCode] = useState<SyncFailureKey | null>(null)
+  const [remoteReady, setRemoteReady] = useState(lease.scope.kind !== 'account' || !!state.data)
+  const running = useRef(false), again = useRef(false)
+  const snapshot = storage?.getSnapshot()
 
-  useEffect(() => { dataRef.current = state.data }, [state.data])
-
-  // sessione
-  useEffect(() => {
-    if (!supabase) return
-    const toUser = (u: { id: string; email?: string; email_confirmed_at?: string; user_metadata?: { first_name?: string; last_name?: string } } | null | undefined) =>
-      (u ? { id: u.id, email: u.email ?? '', firstName: u.user_metadata?.first_name ?? '', lastName: u.user_metadata?.last_name ?? '',
-             emailConfirmed: !!u.email_confirmed_at } : null)
-    supabase.auth.getSession().then(({ data }) => { setUser(toUser(data.session?.user)); setReady(true) }, () => setReady(true))
-    const { data: sub } = supabase.auth.onAuthStateChange((e, session) => {
-      setUser(toUser(session?.user))
-      if (e === 'PASSWORD_RECOVERY') setRecovery(true)
-    })
-    return () => sub.subscription.unsubscribe()
-  }, [])
-
-  // la propria foto profilo arriva su questo dispositivo all'accesso
-  useEffect(() => { if (user?.id) void loadAvatar(user.id) }, [user?.id])
+  useEffect(() => { if (session.user) void loadAvatar(session.user.id).catch(() => undefined) }, [session.user])
 
   const syncNow = useCallback(async () => {
-    const sb = supabase
-    if (!sb || !user || !state.loaded) return
+    if (!lease.current() || lease.scope.kind !== 'account' || !state.loaded || !storage) return
     if (!navigator.onLine) { setStatus('offline'); return }
     if (running.current) { again.current = true; return }
     running.current = true
+    setFailureCode(null)
     setStatus('syncing')
     try {
-      const remote = await fetchRemote(sb, user.id)
-      const local = dataRef.current                         // letto dopo il download: include le ultime modifiche
-      let merged: AppData | null
-      if (!local || local.demo) merged = remote             // i dati di esempio non si caricano mai online
-      else merged = remote ? mergeData(local, remote) : local
-      if (merged) {
-        if (JSON.stringify(merged) !== JSON.stringify(local)) dispatch({ type: 'replace', data: merged })
-        const json = JSON.stringify(merged)
-        if (json !== lastPushed.current && !(local?.demo && !remote)) {
-          await pushRemote(sb, user.id, merged)
-          lastPushed.current = json
-        }
+      const sb = scopedClient(lease)
+      if (!sb) return
+      const completed = await runSync({
+        lease, storage, read: () => readRemote(sb), write: pending => writeRemote(sb, pending),
+      })
+      if (lease.current()) {
+        setRemoteReady(true); setStatus(completed)
+        if (completed === 'ok') setLastSync(new Date().toISOString())
       }
-      setLastSync(new Date().toISOString())
-      setStatus('ok')
-    } catch {
-      setStatus(navigator.onLine ? 'error' : 'offline')
+    } catch (error) {
+      if (lease.current()) {
+        const message = (error as { code?: string; message?: string }).message ?? ''
+        setFailureCode(/ALPHA_HTTP_BODY_TOO_LARGE/.test(message) ? 'cloud.requestTooLarge'
+          : /QSYNC_DOCUMENT_TOO_LARGE/.test(message) ? 'cloud.documentTooLarge'
+          : /QSYNC_DOCUMENT_INVALID|QSYNC_UNSUPPORTED_DOCUMENT/.test(message) ? 'cloud.documentInvalid'
+            : /QSYNC_OPERATION_REUSED|QSYNC_OPERATION_ID_INVALID/.test(message) ? 'cloud.operationRejected' : null)
+        setStatus(navigator.onLine ? 'error' : 'offline')
+      }
     } finally {
       running.current = false
-      if (again.current) { again.current = false; window.setTimeout(() => { void syncNow() }, 0) }
+      if (again.current && lease.current()) { again.current = false; window.setTimeout(() => { if (lease.current()) void syncNow() }, 0) }
     }
-  }, [user, state.loaded, dispatch])
+  }, [lease, state.loaded, storage])
 
-  // all'accesso e poco dopo ogni modifica dei dati
+  useEffect(() => { void syncNow() }, [syncNow])
   useEffect(() => {
-    if (!user || !state.loaded) return
-    clearTimeout(timer.current)
-    timer.current = window.setTimeout(() => { void syncNow() }, DEBOUNCE_MS)
-    return () => clearTimeout(timer.current)
-  }, [user, state.loaded, state.data, syncNow])
-
-  // connessione tornata, app di nuovo in primo piano
+    const timer = window.setTimeout(() => { void syncNow() }, 1500)
+    return () => clearTimeout(timer)
+  }, [state.data, syncNow])
   useEffect(() => {
-    const onOnline = () => { void syncNow() }
-    const onVisible = () => { if (document.visibilityState === 'visible') void syncNow() }
-    window.addEventListener('online', onOnline)
-    document.addEventListener('visibilitychange', onVisible)
-    return () => { window.removeEventListener('online', onOnline); document.removeEventListener('visibilitychange', onVisible) }
+    const online = () => { void syncNow() }
+    const visible = () => { if (document.visibilityState === 'visible') void syncNow() }
+    window.addEventListener('online', online)
+    document.addEventListener('visibilitychange', visible)
+    return () => { window.removeEventListener('online', online); document.removeEventListener('visibilitychange', visible) }
   }, [syncNow])
 
-  const appUrl = `${window.location.origin}${ENV.base}app/?login=1`
-  // il pulsante dell'email apre il browser (non l'app installata): lì compare "Email confermata, torna sull'app"
-  const confirmUrl = `${window.location.origin}${ENV.base}app/?confirmed=1`
-  const api = useMemo<SyncApi>(() => ({
-    enabled: !!supabase, ready, user, status, lastSync, syncNow, recovery,
-    signIn: async (email, password) => {
-      const { error } = await supabase!.auth.signInWithPassword({ email, password })
-      if (error) throw error
-    },
-    signUp: async ({ firstName, lastName, email, password, lang }) => {
-      // lang: la lingua delle email (i modelli in supabase/templates la usano)
-      const { data, error } = await supabase!.auth.signUp({ email, password,
-        options: { data: { first_name: firstName, last_name: lastName, lang }, emailRedirectTo: confirmUrl } })
-      if (error) throw error
-      // con la conferma email attiva, un'email già registrata torna come utente senza identità
-      if (data.user && !data.user.identities?.length) throw Object.assign(new Error('exists'), { code: 'user_already_exists' })
-      return { needsConfirm: !data.session }
-    },
-    verifySignup: async (email, code) => {
-      const { error } = await supabase!.auth.verifyOtp({ email, token: code, type: 'signup' })
-      if (error) throw error
-    },
-    verifyRecovery: async (email, code) => {
-      const { error } = await supabase!.auth.verifyOtp({ email, token: code, type: 'recovery' })
-      if (error) throw error
-      setRecovery(true)
-    },
-    resendSignup: async email => {
-      const { error } = await supabase!.auth.resend({ type: 'signup', email, options: { emailRedirectTo: confirmUrl } })
-      if (error) throw error
-    },
-    resetPassword: async email => {
-      const { error } = await supabase!.auth.resetPasswordForEmail(email, { redirectTo: appUrl })
-      if (error) throw error
-    },
-    updatePassword: async password => {
-      const { error } = await supabase!.auth.updateUser({ password })
-      if (error) throw error
-      setRecovery(false)
-    },
-    changePassword: async (current, next) => {
-      const email = user?.email
-      if (!email) throw new Error('no user')
-      const check = await supabase!.auth.signInWithPassword({ email, password: current })
-      if (check.error) throw Object.assign(new Error('bad current'), { code: 'bad_current' })
-      const { error } = await supabase!.auth.updateUser({ password: next })
-      if (error) throw error
-    },
-    updateNames: async (firstName, lastName) => {
-      if (!user) return
-      const { data, error } = await supabase!.auth.updateUser({ data: { first_name: firstName, last_name: lastName } })
-      if (error) throw error
-      await saveNames(user.id, { first_name: firstName || null, last_name: lastName || null })
-      if (data.user) setUser(u => u && { ...u, firstName, lastName })
-    },
-    signOutOthers: async () => {
-      const { error } = await supabase!.auth.signOut({ scope: 'others' })
-      if (error) throw error
-    },
-    sendCode: async email => {
-      const { error } = await supabase!.auth.signInWithOtp({ email, options: { emailRedirectTo: appUrl } })
-      if (error) throw error
-    },
-    verifyCode: async (email, code) => {
-      const { error } = await supabase!.auth.verifyOtp({ email, token: code, type: 'email' })
-      if (error) throw error
-    },
-    signOut: async () => {
-      await supabase!.auth.signOut()
-      forgetAvatar()
-      lastPushed.current = ''
-      setStatus('idle'); setLastSync(null)
-    },
-    deleteAccount: async () => {
-      if (user) await removeAvatar(user.id).catch(() => { /* senza foto: niente da togliere */ })
-      const { error } = await supabase!.rpc('delete_my_account')
-      if (error) throw error
-      await supabase!.auth.signOut()
-      lastPushed.current = ''
-      setStatus('idle'); setLastSync(null)
-    },
-  }), [ready, user, status, lastSync, syncNow, recovery, appUrl, confirmUrl])
+  useEffect(() => {
+    const cooldownUntil = snapshot?.cloud?.cooldownUntil
+    if (!cooldownUntil) return
+    const delay = Math.max(0, Date.parse(cooldownUntil) - Date.now() + 50)
+    const timer = window.setTimeout(() => { if (lease.current()) void syncNow() }, delay)
+    return () => clearTimeout(timer)
+  }, [lease, snapshot?.cloud?.cooldownUntil, syncNow])
 
-  return <SyncContext.Provider value={api}>{children}</SyncContext.Provider>
+  const visibleStatus: SyncStatus = snapshot?.error ? 'error' : snapshot?.dirty ? 'pending'
+    : snapshot?.cloud?.conflict ? 'conflict' : status === 'syncing' || status === 'error' || status === 'offline' ? status : snapshot?.cloud?.status === 'pending' ? 'pending' : status
+  const activate = async () => {
+    if (running.current || !lease.current()) return
+    const sb = scopedClient(lease)
+    if (!sb) return
+    setStatus('syncing')
+    try { await readRemote(sb, true); lease.assert(); await syncNow() } catch { if (lease.current()) setStatus('error') }
+  }
+  const api = useMemo<SyncApi>(() => ({ ...session, ready: session.ready && remoteReady, status: visibleStatus, lastSync, syncNow }),
+    [session, remoteReady, visibleStatus, lastSync, syncNow])
+  return <SyncContext.Provider value={api}>
+    {lease.scope.kind === 'account' && storage && <SyncRecovery storage={storage} lease={lease} status={visibleStatus} retry={syncNow} activate={activate} failureCode={failureCode} />}
+    {!remoteReady && (status === 'error' || status === 'offline')
+      ? <div className="gate"><section className="card"><p role="alert">{t('storage.remoteWait')}</p>
+          <button className="btn" onClick={() => void syncNow()}>{t('storage.retry')}</button>
+          <button className="link-btn" onClick={() => void session.signOut().catch(() => undefined)}>{t('sec.signOut')}</button>
+        </section></div>
+      : children}
+  </SyncContext.Provider>
 }

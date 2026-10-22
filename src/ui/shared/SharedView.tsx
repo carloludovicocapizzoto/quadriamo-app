@@ -7,20 +7,24 @@ import { useStore } from '../../store/context'
 import { newId } from '../../store/state'
 import { parseAmount } from '../kit/amount'
 import { useSync } from '../../sync/context'
-import { createBudget, createInvite, deleteExpense, joinBudget, leaveBudget, loadBudget, myBudgets, saveExpense, settle,
-  updateBudget, updateMember, type SBudget, type SFull } from '../../shared/api'
+import { sharedApi, type SBudget, type SFull } from '../../shared/api'
 import { Icon } from '../Icon'
 import { categoryName } from '../names'
 import { AmountInput } from '../kit/AmountInput'
 import { amountText } from '../kit/amount'
-import { local } from '../../storage'
+import { personalFor } from '../../storage'
 import { ENV } from '../../env'
+
+const useSharedApi = () => { const { lease } = useStore(); return useMemo(() => sharedApi(lease), [lease]) }
 
 const LAST = 'q.sharedBudget'
 
 /** Budget comune (di coppia o tra coinquilini): spese condivise, divisione scelta dagli utenti, chi deve quanto a chi. */
 /** Dentro la pagina del Profilo, che ha già Indietro e titolo. */
 export function SharedView({ onLogin }: { onLogin: () => void }) {
+  const { lease } = useStore()
+  const local = useMemo(() => personalFor(lease?.scope), [lease])
+  const { myBudgets } = useSharedApi()
   const { t } = useI18n()
   const sync = useSync()
   const [list, setList] = useState<SBudget[] | null>(null)
@@ -30,7 +34,7 @@ export function SharedView({ onLogin }: { onLogin: () => void }) {
   const refreshList = useCallback(async () => {
     try { const l = await myBudgets(); setList(l); if (!l.some(b => b.id === current)) setCurrent(l[0]?.id ?? null) }
     catch { setError(t('sh.errLoad')); setList([]) }
-  }, [current, t])
+  }, [current, t, myBudgets])
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- caricamento dal server
     if (sync.user) void refreshList()
@@ -56,6 +60,7 @@ export function SharedView({ onLogin }: { onLogin: () => void }) {
 
 /** Crea un budget comune o entra con il codice d'invito. */
 function StartCard({ first, onReady }: { first: boolean; onReady: (id: string) => void }) {
+  const { createBudget, joinBudget } = useSharedApi()
   const { t } = useI18n()
   const sync = useSync()
   const { state } = useStore()
@@ -97,12 +102,13 @@ function StartCard({ first, onReady }: { first: boolean; onReady: (id: string) =
 }
 
 function BudgetDetail({ id, onLeft }: { id: string; onLeft: () => void }) {
+  const { loadBudget, settle } = useSharedApi()
   const { t, money, date } = useI18n()
   const sync = useSync()
   const [d, setD] = useState<SFull | null>(null)
   const [form, setForm] = useState<SExpense | 'new' | null>(null)
   const [settings, setSettings] = useState(false)
-  const reload = useCallback(async () => { try { setD(await loadBudget(id)) } catch { /* resta l'ultimo caricato */ } }, [id])
+  const reload = useCallback(async () => { try { setD(await loadBudget(id)) } catch { /* resta l'ultimo caricato */ } }, [id, loadBudget])
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- caricamento dal server
     void reload()
@@ -170,6 +176,7 @@ function BudgetDetail({ id, onLeft }: { id: string; onLeft: () => void }) {
 }
 
 function ExpenseForm({ d, me, initial, onClose, onSaved }: { d: SFull; me: string; initial: SExpense | null; onClose: () => void; onSaved: () => void }) {
+  const { saveExpense, deleteExpense } = useSharedApi()
   const { t, money, lang } = useI18n()
   const { state, dispatch } = useStore()
   const settings = state.data?.settings
@@ -247,6 +254,7 @@ function ExpenseForm({ d, me, initial, onClose, onSaved }: { d: SFull; me: strin
 }
 
 function BudgetSettings({ d, me, onChange, onLeft }: { d: SFull; me: string; onChange: () => void; onLeft: () => void }) {
+  const { updateBudget, updateMember, createInvite, leaveBudget } = useSharedApi()
   const { t } = useI18n()
   const [code, setCode] = useState('')
   const [copied, setCopied] = useState(false)

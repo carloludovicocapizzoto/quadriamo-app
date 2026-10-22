@@ -30,6 +30,9 @@ desktop-admin/node_modules
 desktop-admin/dist
 tools/news/sample.json
 dist-e2e
+dist-alpha
+.env.alpha
+.env.alpha.local
 public/ds/
 
 # app per Android

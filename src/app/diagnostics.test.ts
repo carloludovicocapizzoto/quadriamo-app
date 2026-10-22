@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { note, trailNow } from './diagnostics'
+import { activateScope } from '../store/scope'
 
 describe('diario tecnico', () => {
   it('tiene solo gli ultimi 40 passi, i più vecchi escono', () => {
@@ -12,5 +13,11 @@ describe('diario tecnico', () => {
   it('taglia i testi lunghi', () => {
     note('nav', 'x'.repeat(500))
     expect(trailNow().at(-1)?.what).toHaveLength(120)
+  })
+  it('does not attach the previous account trail to a new account report', () => {
+    activateScope({ environment: 'test', backend: 'synthetic', kind: 'account', owner: 'A' })
+    note('action', 'A-only')
+    activateScope({ environment: 'test', backend: 'synthetic', kind: 'account', owner: 'B' })
+    expect(trailNow()).toEqual([])
   })
 })

@@ -4,6 +4,7 @@
 create role anon; create role authenticated; create role service_role;
 create schema auth;
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
+create function auth.role() returns text language sql stable as $$ select nullif(current_setting('test.role', true), '') $$;
 create table auth.users (id uuid primary key, email text, raw_user_meta_data jsonb default '{}', created_at timestamptz default now(),
   last_sign_in_at timestamptz, email_confirmed_at timestamptz);
 create schema storage;

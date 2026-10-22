@@ -4,7 +4,8 @@
 import { deviceInfo, route, trailNow } from '../app/diagnostics'
 import { ENV } from '../env'
 import { shrinkImage } from '../image'
-import { supabase } from '../sync/client'
+import { scopedClient } from '../sync/scopedClient'
+import { currentScope } from '../store/scope'
 import { deviceId, uuid } from './device'
 
 export type ReportKind = 'bug' | 'idea'
@@ -39,14 +40,18 @@ export function acceptFiles(current: File[], added: File[]): { files: File[]; re
 const EXT: Record<string, string> = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/heic': 'heic', 'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm' }
 
 export async function sendReport(d: ReportDraft, userId: string | null): Promise<void> {
+  const lease = currentScope(), supabase = scopedClient(lease, true)
   if (!supabase) throw new Error('offline')
+  if (userId && (lease.scope.kind !== 'account' || lease.scope.owner !== userId)) throw Error('report owner mismatch')
   const id = uuid()
   const attachments: string[] = []
   if (userId) for (const [i, f] of d.files.entries()) {
     // le foto si riducono (lato lungo 1600 px); se il browser non sa leggerle (HEIC su Chrome) partono come sono
     const blob = isVideo(f) ? f : await shrinkImage(f, { size: 1600 }).catch(() => f)
+    lease.assert()
     const path = `${userId}/${id}/${i + 1}.${EXT[blob.type] ?? 'bin'}`
     const { error } = await supabase.storage.from('reports').upload(path, blob, { contentType: blob.type })
+    lease.assert()
     if (error) throw error
     attachments.push(path)
   }
@@ -54,5 +59,6 @@ export async function sendReport(d: ReportDraft, userId: string | null): Promise
     id, kind: d.kind, priority: d.priority, message: d.message.trim(), attachments, device_id: deviceId(),
     diagnostics: d.withDiagnostics ? diagnostics() : null, env: ENV.name, version: ENV.release,
   })
+  lease.assert()
   if (error) throw error
 }

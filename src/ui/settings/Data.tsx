@@ -13,7 +13,7 @@ import type { SettingsDraft } from './draft'
 
 export function DataSection({ d: { data, flash, reset }, wizard }: { d: SettingsDraft; wizard: boolean }) {
   const { t } = useI18n()
-  const { dispatch } = useStore()
+  const { dispatch, lease } = useStore()
   const exportBackup = () => downloadFile('quadriamo-backup', 'json', JSON.stringify(data, null, 2), 'application/json')
   const exportCsv = () => downloadFile('quadriamo-transactions', 'csv', '\ufeff' + toCsv(data, {
     category: id => categoryName(data.settings.categories.find(c => c.id === id), t),
@@ -28,7 +28,8 @@ export function DataSection({ d: { data, flash, reset }, wizard }: { d: Settings
     e.target.value = ''
     if (!file) return
     let parsed: AppData
-    try { parsed = parseBackup(await file.text()) } catch { flash(t('settings.importBad'), true); return }
+    try { const text = await file.text(); if (lease && !lease.current()) return; parsed = parseBackup(text) } catch { flash(t('settings.importBad'), true); return }
+    if ((lease?.scope.kind === 'account' && parsed.demo) || (lease?.scope.kind === 'demo' && !parsed.demo)) { flash(t('settings.importBad'), true); return }
     if (!confirm(t('settings.importConfirm'))) return
     dispatch({ type: 'replace', data: parsed })
     reset(parsed.settings)
@@ -45,9 +46,11 @@ export function DataSection({ d: { data, flash, reset }, wizard }: { d: Settings
         {!wizard && <button className="btn" onClick={exportCsv}>{t('settings.exportCsv')}</button>}
         <label className="btn">{t('settings.import')}
           <input type="file" accept="application/json,.json" hidden onChange={importBackup} /></label>
-        {!wizard && <button className="btn danger" onClick={() => { if (confirm(t('settings.resetConfirm'))) dispatch({ type: 'replace', data: null }) }}>
+        {!wizard && <button className="btn danger" disabled={lease?.scope.kind === 'account'} title={lease?.scope.kind === 'account' ? t('cloud.clearBlocked') : undefined}
+          onClick={() => { if (confirm(t('settings.resetConfirm'))) dispatch({ type: 'replace', data: null }) }}>
           {t('settings.reset')}</button>}
       </div>
+      {!wizard && lease?.scope.kind === 'account' && <p className="small">{t('cloud.clearBlocked')}</p>}
       <p className="muted small top-gap">{t('settings.install')}</p>
       <InstallButton />
       {!wizard && <LegalLinks />}
