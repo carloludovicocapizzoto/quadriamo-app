@@ -53,7 +53,7 @@ export function SyncRecovery({ storage, lease, status, retry, activate, failureC
     </div>
     {failed && <p role="alert">{t('cloud.actionError')}</p>}
     {cloud?.conflict?.cause === 'expired-receipt' && <p role="alert">{t('cloud.expiredReceiptConflict')}</p>}
-    {cloud?.conflict && <ConflictForm key={cloud.conflict.id} conflict={cloud.conflict} storage={storage} lease={lease} />}
+    {cloud?.conflict && <ConflictForm key={cloud.conflict.id} conflict={cloud.conflict} storage={storage} lease={lease} onResolved={retry} />}
     {!!cloud?.recovery.length && <details><summary>{t('cloud.archive', { count: cloud.recovery.length })}</summary>
       <p>{t('cloud.archiveHint')}</p>
       {cloud.recovery.map(copy => <div className="cloud-archive" key={copy.id}>
@@ -66,7 +66,7 @@ export function SyncRecovery({ storage, lease, status, retry, activate, failureC
   </section>
 }
 
-function ConflictForm({ conflict, storage, lease }: { conflict: DataConflict; storage: AccountStore; lease: ScopeLease }) {
+function ConflictForm({ conflict, storage, lease, onResolved }: { conflict: DataConflict; storage: AccountStore; lease: ScopeLease; onResolved: () => Promise<void> }) {
   const { t } = useI18n(), [choices, setChoices] = useState<Record<string, 'local' | 'remote'>>({})
   const [error, setError] = useState(false), [saving, setSaving] = useState(false)
   const submit = async (event: React.SubmitEvent) => {
@@ -82,6 +82,8 @@ function ConflictForm({ conflict, storage, lease }: { conflict: DataConflict; st
         cloud.base = clone(conflict.remote); cloud.pending = null; cloud.conflict = null; cloud.status = 'pending'
         return { data: selected, cloud }
       })
+      // la scelta va subito sul cloud: se si tiene questa versione i dati locali non cambiano e niente altro farebbe ripartire l'invio
+      if (lease.current()) void onResolved()
     } catch { if (lease.current()) setError(true) }
     finally { if (lease.current()) setSaving(false) }
   }

@@ -104,18 +104,35 @@ function mergeById(base: Fields[], local: Fields[], remote: Fields[], path: stri
   return out
 }
 
+/** Fields that follow another field of the same item: the price history follows the amount it explains. */
+const FOLLOWS: Record<string, string> = { prices: 'amount' }
+
 /**
  * Two edits of the same item combine field by field; the paid dates (`done`) merge as a set. Only a field changed
  * differently on both copies is asked (`<item>/<field>`): the other copy's independent edits to the same item stay.
+ * A dependent field (FOLLOWS) is never asked: it comes from the copy whose value of its parent field was kept.
  */
 function mergeItem(base: Fields, local: Fields, remote: Fields, at: string, m: Merge): unknown[] {
-  const out = clone(local)
-  for (const key of keys(base, local, remote)) {
+  const out = clone(local), kept: Record<string, 'local' | 'remote' | 'same' | 'asked'> = {}
+  const all = [...keys(base, local, remote)]
+  for (const key of [...all.filter(k => !FOLLOWS[k]), ...all.filter(k => FOLLOWS[k])]) {
     const b = slot(base, key), l = slot(local, key), r = slot(remote, key)
     if (key === 'done' && [b, l, r].every(s => Array.isArray(s[0]))) { out.done = mergeSet(b[0] as unknown[], l[0] as unknown[], r[0] as unknown[]); continue }
     if (/^updatedAt$|UpdatedAt$/.test(key)) { put(out, key, latest(l, r)); continue }
+    const parent = FOLLOWS[key] && kept[FOLLOWS[key]]
+    if (parent && !pick(b, l, r)) {
+      if (parent === 'asked') continue                                   // resolved together with its parent field
+      if (parent !== 'same') { put(out, key, parent === 'local' ? l : r); continue }
+      const lists = [b, l, r].map(s => Array.isArray(s[0]) ? s[0] as unknown[] : [])
+      put(out, key, [[...new Map([...lists[1], ...lists[2]].map(x => [JSON.stringify(x), x])).values()]
+        .filter(x => !lists[0].some(y => equal(x, y)) || lists[1].some(y => equal(x, y)) && lists[2].some(y => equal(x, y)))
+        .sort((x, y) => String((x as Fields).date ?? '').localeCompare(String((y as Fields).date ?? '')))])
+      continue
+    }
     const value = decide(b, l, r, at + '/' + key, m)
-    if (value) put(out, key, value)
+    if (!value) { kept[key] = 'asked'; continue }
+    kept[key] = equal(l, r) ? 'same' : equal(value, l) ? 'local' : 'remote'
+    put(out, key, value)
   }
   return [out]
 }

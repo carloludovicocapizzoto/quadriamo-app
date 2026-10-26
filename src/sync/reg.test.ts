@@ -2,7 +2,7 @@
 // Three-way merge only; the full CAS cycle with two devices is in runSync.test.ts ("REG").
 import { describe, expect, it } from 'vitest'
 import { defaultSettings } from '../engine'
-import type { CalEvent } from '../engine/calendar'
+import { withPriceChange, type CalEvent } from '../engine/calendar'
 import { reducer } from '../store/reducer'
 import type { Action, AppData } from '../store/types'
 import { clone, EVENT, reconcile, resolveConflict, type DataConflict } from './protocol'
@@ -83,6 +83,17 @@ describe('REG: calendar events merge one by one', () => {
     const pc = events(marked, '2026-10-05T10:00:00.000Z', list => list.map(e => e.id === 's2' ? { ...e, done: [], title: 'Spotify Duo' } : e))
     const r = reconcile(marked, pc, phone)
     expect(r.paths).toEqual([]); expect(r.document?.settings.events.find(e => e.id === 's2')).toMatchObject({ title: 'Spotify Duo', done: ['2026-10-05'] })
+  })
+  it.each(['local', 'remote'] as const)('a price change on both devices asks only the amount; the price history follows the choice (%s)', side => {
+    const price = (amount: number, day: string) => (list: CalEvent[]) => list.map(e => e.id === 's1' ? withPriceChange(e, { ...e, amount }, day) : e)
+    const phone = events(base, '2026-10-21T09:00:00.000Z', price(13.99, '2026-10-21'))
+    const pc = events(base, '2026-10-21T09:05:00.000Z', price(14.99, '2026-10-21'))
+    const r = reconcile(base, pc, phone)
+    expect(r.paths).toEqual([EVENT + 's1/amount'])
+    const chosen = resolveConflict({ id: 'c', paths: r.paths, base: { protocol: 2, mode: 'protected', revision: '1', document: base }, local: pc,
+      remote: { protocol: 2, mode: 'protected', revision: '2', document: phone } }, { [EVENT + 's1/amount']: side })!
+    const s1 = chosen.settings.events.find(e => e.id === 's1')!
+    expect(s1.amount).toBe(side === 'local' ? 14.99 : 13.99); expect(s1.prices).toEqual([{ date: '2026-10-21', from: 9.99, to: s1.amount }])
   })
   it('the same field changed differently stays a question about that event', () => {
     const phone = events(base, '2026-10-21T09:00:00.000Z', list => list.map(e => e.id === 's2' ? { ...e, amount: 10.99 } : e))
