@@ -24,12 +24,19 @@ export function LoginScreen({ footer }: { footer?: ReactNode }) {
   )
 }
 
+/** Il server non ha risposto (rete assente, server fermo): non è un errore dei dati inseriti. */
+const isNetworkError = (e: { name?: string; status?: number; message?: string }) =>
+  e?.name === 'AuthRetryableFetchError' || e?.status === 0 || /Failed to fetch|NetworkError|Load failed|fetch failed/i.test(e?.message ?? '')
+    || (typeof navigator !== 'undefined' && navigator.onLine === false)
+
 function useRun() {
+  const { t } = useI18n()
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<Msg>(null)
+  // senza rete ogni modulo direbbe "email o password non corretti" o "codice errato": si dice invece che il server non risponde
   const run = async (fn: () => Promise<void>, onError: (e: { code?: string; message?: string }) => string) => {
     setBusy(true); setMsg(null)
-    try { await fn() } catch (e) { setMsg({ text: onError(e as { code?: string }), bad: true }) } finally { setBusy(false) }
+    try { await fn() } catch (e) { setMsg({ text: isNetworkError(e as { name?: string }) ? t('auth.errNetwork') : onError(e as { code?: string }), bad: true }) } finally { setBusy(false) }
   }
   return { busy, msg, setMsg, run }
 }
