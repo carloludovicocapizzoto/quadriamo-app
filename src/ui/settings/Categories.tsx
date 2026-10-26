@@ -1,6 +1,9 @@
 // Categorie: nome, tipo e parte in cui finiscono di solito (le entrate possono dividersi a modo proprio).
-import { CUSTOM, DEFAULT_CATEGORIES, FIRST, type CategoryType } from '../../engine'
+import { useState } from 'react'
+import { CUSTOM, DEFAULT_CATEGORIES, FIRST, type Category, type CategoryType } from '../../engine'
 import { useI18n } from '../../i18n/core'
+import { categoryUsage, deleteCategory, moveTargets, usageTotal, type CategoryUsage } from '../../store/categories'
+import { useStore } from '../../store/context'
 import { newId } from '../../store/state'
 import { SplitEditor } from '../SplitEditor'
 import { bucketName, categoryName } from '../names'
@@ -9,15 +12,19 @@ import type { SettingsDraft } from './draft'
 const TYPES: CategoryType[] = ['expense', 'income', 'saving']
 const DEFAULT_IDS = new Set(DEFAULT_CATEGORIES.map(c => c.id))
 
-export function CategoriesSection({ d: { data, draft, edit } }: { d: SettingsDraft }) {
+export function CategoriesSection({ d: { data, draft, edit, reset, flash } }: { d: SettingsDraft }) {
   const { t } = useI18n()
-  function deleteCategory(id: string) {
-    const used = data.transactions.filter(tx => tx.category === id).length
-    if (used && !confirm(t('settings.deleteCategoryUsed', { n: used }))) return
-    edit(s => {
-      s.categories = s.categories.filter(c => c.id !== id)
-      s.events = s.events.filter(e => e.category !== id)
-    })
+  const { dispatch } = useStore()
+  // la categoria che si sta eliminando (pannello di conferma nella sua riga) e dove spostare ciò che la usa
+  const [deleting, setDeleting] = useState<string | null>(null)
+  const [target, setTarget] = useState('')
+  const ask = (id: string) => { setDeleting(id); setTarget(moveTargets(data, id)[0]?.id ?? '') }
+  function confirmDelete(id: string) {
+    const used = usageTotal(categoryUsage(data, id)) > 0, at = new Date().toISOString()
+    const next = deleteCategory(data, id, used ? target : null, at)
+    if (!next) return
+    dispatch({ type: 'deleteCategory', id, moveTo: used ? target : null, at })
+    reset(next.settings); setDeleting(null); flash(t('settings.saved'))
   }
 
   return (
@@ -52,9 +59,11 @@ export function CategoriesSection({ d: { data, draft, edit } }: { d: SettingsDra
                   {draft.buckets.map(b => <option key={b.id} value={b.id}>{t('split.all', { part: bucketName(b, t) })}</option>)}
                   <option value={CUSTOM}>{t('split.custom')}</option>
                 </select>}
-            <button className="icon-btn" aria-label={t('action.delete')} onClick={() => deleteCategory(c.id)}>×</button>
+            <button className="icon-btn" aria-label={t('action.delete')} aria-expanded={deleting === c.id} onClick={() => deleting === c.id ? setDeleting(null) : ask(c.id)}>×</button>
             {c.type === 'income' && c.defaultBucket === CUSTOM &&
               <SplitEditor buckets={draft.buckets} value={c.split} onChange={v => edit(s => { s.categories[i].split = v })} />}
+            {deleting === c.id && <DeletePanel name={categoryName(c, t)} usage={categoryUsage(data, c.id)} targets={moveTargets(data, c.id)}
+              target={target} onTarget={setTarget} onConfirm={() => confirmDelete(c.id)} onCancel={() => setDeleting(null)} />}
           </li>
         ))}
       </ul>
@@ -62,5 +71,34 @@ export function CategoriesSection({ d: { data, draft, edit } }: { d: SettingsDra
         s.categories.push({ id: newId(), name: t('settings.newCategory'), type: 'expense', defaultBucket: s.buckets[0].id })
       })}>+ {t('settings.addCategory')}</button>
       </section>
+  )
+}
+
+/** Prima di eliminare: cosa usa la categoria e dove finirà. Niente si cancella in silenzio. */
+function DeletePanel({ name, usage, targets, target, onTarget, onConfirm, onCancel }: {
+  name: string; usage: CategoryUsage; targets: Category[]; target: string
+  onTarget: (id: string) => void; onConfirm: () => void; onCancel: () => void
+}) {
+  const { t } = useI18n()
+  const used = usageTotal(usage) > 0
+  const rows = ([['transactions', 'settings.usageTransactions'], ['events', 'settings.usageEvents'], ['rules', 'settings.usageRules'],
+    ['inbox', 'settings.usageInbox']] as const).filter(([k]) => usage[k] > 0)
+  return (
+    <div className="cat-delete" role="group" aria-label={t('settings.deleteAsk', { name })}>
+      <p><b>{t('settings.deleteAsk', { name })}</b></p>
+      {used ? <>
+        <p className="small cat-uses">{rows.map(([k, label]) => <span key={k}>{t(label, { n: usage[k] })}</span>)}</p>
+        <p className="small muted">{t('settings.deleteMoves')}</p>
+        {targets.length ? <label className="field"><span>{t('settings.moveTo')}</span>
+          <select value={target} onChange={e => onTarget(e.target.value)}>
+            {targets.map(c => <option key={c.id} value={c.id}>{categoryName(c, t)}</option>)}
+          </select></label>
+          : <p className="small bad-text" role="alert">{t('settings.noMoveTarget')}</p>}
+      </> : <p className="small muted">{t('settings.deleteUnused')}</p>}
+      <div className="stack-row">
+        <button className="btn danger" disabled={used && !targets.length} onClick={onConfirm}>{t(used ? 'settings.moveAndDelete' : 'action.delete')}</button>
+        <button className="btn" onClick={onCancel}>{t('action.cancel')}</button>
+      </div>
+    </div>
   )
 }

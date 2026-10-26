@@ -1,5 +1,6 @@
 // Le azioni che cambiano i dati: funzioni pure, testate in state.test.ts. Le azioni dell'utente alimentano lo slancio.
 import { seedRules, withDay } from '../engine'
+import { deleteCategory } from './categories'
 import { migrate } from './migrate'
 import { newId, widenFirstMonth } from './model'
 import type { Action, State } from './types'
@@ -41,6 +42,11 @@ function reduce(state: State, a: Action): State {
                                  deleted: { ...d.deleted, [a.id]: at } } }
     case 'setSettings':
       return { ...state, data: { ...d, settings: a.settings, settingsUpdatedAt: at } }
+    case 'deleteCategory': {
+      // mai un'eliminazione implicita: se la richiesta non è valida (destinazione mancante o di un altro tipo) non cambia niente
+      const next = deleteCategory(d, a.id, a.moveTo, at)
+      return next ? { ...state, data: next } : state
+    }
     case 'setFx':
       // sulle impostazioni attuali e senza toccare settingsUpdatedAt: un download di dati pubblici non deve far
       // sembrare "più nuova" una copia vecchia (era la causa degli abbonamenti persi tra due dispositivi)
