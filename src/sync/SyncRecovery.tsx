@@ -144,8 +144,16 @@ function Version({ document, other, path }: { document: AppData | null; other: A
     <details><summary>{t('cloud.contents')}</summary>{document.transactions.map(tx => <p key={tx.id}>{tx.date ? date(tx.date) : '—'} · {tx.description} · {tx.amount === null ? '—' : money(tx.amount, tx.currency || document.settings.currency)}</p>)}</details>
   </>
   if (path.startsWith(EVENT)) {
-    const event = document.settings.events.find(item => item.id === path.slice(EVENT.length))
+    // tutto l'evento (`…/<id>`) oppure un solo campo (`…/<id>/<campo>`), quando l'altra versione ha cambiato altri campi
+    const [id, field] = path.slice(EVENT.length).split('/')
+    const event = document.settings.events.find(item => item.id === id)
     if (!event) return <p>{t('cloud.deleted')}</p>
+    if (field) {
+      const value = (event as unknown as Record<string, unknown>)[field]
+      return <dl><dt>{t('cloud.name')}</dt><dd>{event.title}</dd>
+        <dt>{labels[field] ?? field}</dt><dd>{value === undefined || value === null ? '—' : field === 'amount' && typeof value === 'number'
+          ? money(value, document.settings.currency) : typeof value === 'object' ? JSON.stringify(value) : String(value)}</dd></dl>
+    }
     return <dl><dt>{t('cloud.name')}</dt><dd>{event.title}</dd>
       <dt>{t('cloud.amount')}</dt><dd>{event.amount === null ? '—' : money(event.amount, document.settings.currency)}</dd>
       <dt>{t('cloud.date')}</dt><dd>{date(event.date)}</dd>

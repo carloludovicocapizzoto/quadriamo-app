@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defaultSettings } from '../engine'
 import { activateScope } from '../store/scope'
 import { AccountStore } from '../store/accountStore'
+import { restoreLoss } from '../store/backup'
 import { loadData } from '../store/persist'
 import type { AppData } from '../store/types'
 import { clone, equal, resolveConflict, type RemoteDocument } from './protocol'
@@ -312,6 +313,17 @@ describe('REG: old PC copy + automatic exchange rates + CAS', () => {
     expect(await f.write.mock.results.at(-1)!.value).toMatchObject({ replay: true })
     expect(f.remote().document?.settings.events.map(e => e.id).sort()).toEqual(['s1', 's2'])
   })
+  it('lost response, then the app is closed and reopened: the same operation is replayed, one revision, nothing lost', async () => {
+    const f = await fixture(); await phoneWrites(f, addSubs); await refreshRates(f.storage)
+    f.job.write = async p => { await f.write(p); throw new TypeError('lost response after commit') }
+    expect(await runSync(f.job)).toBe('pending')                                   // three attempts, all answers lost
+    const revision = f.remote().revision, pending = f.storage.getSnapshot().cloud!.pending!
+    const reopened = new AccountStore(scope); await reopened.ready                  // app closed and opened again
+    expect(reopened.getSnapshot().cloud?.pending?.id).toBe(pending.id)
+    expect(await runSync({ ...f.job, storage: reopened, write: f.write })).toBe('ok')
+    expect(f.remote().revision).toBe(revision); expect(await f.write.mock.results.at(-1)!.value).toMatchObject({ replay: true })
+    expect(titles(f.remote().document)).toEqual(['Netflix', 'Spotify']); expect(f.remote().document?.settings.fxDate).toBe('2026-10-21')
+  })
   it('a subscription removed on the phone is not resurrected by the PC', async () => {
     const f = await fixture(); await phoneWrites(f, addSubs); expect(await runSync(f.job)).toBe('ok')
     await phoneWrites(f, d => { d.settings.events = d.settings.events.filter(e => e.id !== 's1') }); await refreshRates(f.storage)
@@ -332,6 +344,19 @@ describe('REG: old PC copy + automatic exchange rates + CAS', () => {
     expect(await runSync(f.job)).toBe('ok')
     expect(f.remote().document?.settings).toMatchObject({ monthStartDay: 10, fxDate: '2026-10-21' })
     expect(titles(f.remote().document)).toEqual(['Netflix', 'Spotify']); expect(titles(f.storage.getSnapshot().state.data)).toEqual(['Netflix', 'Spotify'])
+  })
+  it('restoring an old backup: the phone\'s new subscription survives, what the backup lacks is removed on purpose and kept for export', async () => {
+    const f = await fixture(); await phoneWrites(f, addSubs); expect(await runSync(f.job)).toBe('ok')
+    const backup = clone(f.storage.getSnapshot().state.data!); backup.settings.events = []            // an old backup, before the subscriptions
+    await phoneWrites(f, d => { d.settings.events.push(sub('s3', 'Disney+')) })                           // meanwhile the phone adds one
+    expect(restoreLoss(f.storage.getSnapshot().state.data, backup)).toEqual({ transactions: 0, events: 2 })
+    await f.storage.updateCloud(f.job.lease, ({ data, cloud }) => {
+      cloud.recovery.push({ id: 'restore', at: new Date().toISOString(), reason: 'restore', local: data, remote: null, base: cloud.base?.document ?? null })
+      return { data: backup, cloud }
+    })
+    expect(await runSync(f.job)).toBe('ok')
+    expect(titles(f.remote().document)).toEqual(['Disney+'])
+    expect(titles(f.storage.getSnapshot().cloud!.recovery.find(r => r.reason === 'restore')!.local)).toEqual(['Netflix', 'Spotify'])
   })
   it('edit on the PC vs removal on the phone: a question about that event only, then both devices converge', async () => {
     const f = await fixture(); await phoneWrites(f, addSubs); expect(await runSync(f.job)).toBe('ok')

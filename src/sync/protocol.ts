@@ -3,7 +3,7 @@ import type { AppData } from '../store/types'
 export interface RemoteDocument { protocol: number; revision: string; mode: 'legacy' | 'protected' | 'paused'; document: AppData | null; activationAllowed?: boolean }
 export interface PendingWrite { id: string; expected: string; document: AppData; localAtStart: AppData | null }
 export interface DataConflict { id: string; paths: string[]; base: RemoteDocument | null; local: AppData | null; remote: RemoteDocument; cause?: 'revision' | 'expired-receipt' }
-export interface RecoveryCopy { id: string; at: string; reason: 'resolution' | 'local-conflict' | 'retry' | 'expired-receipt'; local: AppData | null; remote: AppData | null; base: AppData | null }
+export interface RecoveryCopy { id: string; at: string; reason: 'resolution' | 'local-conflict' | 'retry' | 'expired-receipt' | 'restore'; local: AppData | null; remote: AppData | null; base: AppData | null }
 export type CloudStatus = 'idle' | 'pending' | 'ok' | 'reconciled' | 'conflict' | 'upgrade' | 'paused'
 export interface CloudState {
   format: 1; base: RemoteDocument | null; pending: PendingWrite | null; conflict: DataConflict | null
@@ -96,7 +96,7 @@ function mergeById(base: Fields[], local: Fields[], remote: Fields[], path: stri
   const [b, l, r] = lists.map(list => new Map(list.map(e => [e.id as string, e]))), out: Fields[] = []
   for (const id of new Set([...l.keys(), ...r.keys(), ...b.keys()])) {
     const before = b.get(id), left = l.get(id), right = r.get(id), at = path + '/' + id
-    let value = pick(before ? [before] : [], left ? [left] : [], right ? [right] : []) ?? (before && left && right ? mergeItem(before, left, right) : null)
+    let value = pick(before ? [before] : [], left ? [left] : [], right ? [right] : []) ?? (before && left && right ? mergeItem(before, left, right, at, m) : null)
     if (!value && m.choices[at]) { const chosen = m.choices[at] === 'local' ? left : right; value = chosen ? [chosen] : [] }
     if (!value) { m.paths.push(at); continue }
     if (value.length) out.push(clone(value[0] as Fields))
@@ -104,16 +104,18 @@ function mergeById(base: Fields[], local: Fields[], remote: Fields[], path: stri
   return out
 }
 
-/** Two edits of the same item combine when they touch different fields; the paid dates (`done`) merge as a set. */
-function mergeItem(base: Fields, local: Fields, remote: Fields): unknown[] | null {
+/**
+ * Two edits of the same item combine field by field; the paid dates (`done`) merge as a set. Only a field changed
+ * differently on both copies is asked (`<item>/<field>`): the other copy's independent edits to the same item stay.
+ */
+function mergeItem(base: Fields, local: Fields, remote: Fields, at: string, m: Merge): unknown[] {
   const out = clone(local)
   for (const key of keys(base, local, remote)) {
     const b = slot(base, key), l = slot(local, key), r = slot(remote, key)
     if (key === 'done' && [b, l, r].every(s => Array.isArray(s[0]))) { out.done = mergeSet(b[0] as unknown[], l[0] as unknown[], r[0] as unknown[]); continue }
     if (/^updatedAt$|UpdatedAt$/.test(key)) { put(out, key, latest(l, r)); continue }
-    const value = pick(b, l, r)
-    if (!value) return null
-    put(out, key, value)
+    const value = decide(b, l, r, at + '/' + key, m)
+    if (value) put(out, key, value)
   }
   return [out]
 }

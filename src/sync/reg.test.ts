@@ -87,7 +87,17 @@ describe('REG: calendar events merge one by one', () => {
   it('the same field changed differently stays a question about that event', () => {
     const phone = events(base, '2026-10-21T09:00:00.000Z', list => list.map(e => e.id === 's2' ? { ...e, amount: 10.99 } : e))
     const pc = events(base, '2026-10-21T09:05:00.000Z', list => list.map(e => e.id === 's2' ? { ...e, amount: 11.99 } : e))
-    expect(reconcile(base, pc, phone).paths).toEqual([EVENT + 's2'])
+    expect(reconcile(base, pc, phone).paths).toEqual([EVENT + 's2/amount'])
+  })
+  it.each(['local', 'remote'] as const)('same field in conflict plus independent fields: choosing %s for the field keeps both sides\' other edits', side => {
+    const phone = events(base, '2026-10-21T09:00:00.000Z', list => list.map(e => e.id === 's1' ? { ...e, amount: 13.99, title: 'Netflix Premium' } : e))
+    const pc = events(base, '2026-10-21T09:05:00.000Z', list => list.map(e => e.id === 's1' ? { ...e, amount: 12.99, reminders: [{ days: 3 }] } : e))
+    const r = reconcile(base, pc, phone)
+    expect(r.paths).toEqual([EVENT + 's1/amount'])
+    const chosen = resolveConflict({ id: 'c', paths: r.paths, base: { protocol: 2, mode: 'protected', revision: '1', document: base }, local: pc,
+      remote: { protocol: 2, mode: 'protected', revision: '2', document: phone } }, { [EVENT + 's1/amount']: side })!
+    expect(chosen.settings.events.find(e => e.id === 's1')).toMatchObject({ amount: side === 'local' ? 12.99 : 13.99, title: 'Netflix Premium', reminders: [{ days: 3 }] })
+    expect(titles(chosen)).toEqual(['Affitto', 'Netflix Premium', 'Spotify'])
   })
   it('rates follow the merged currency: a stale refresh in the old currency is not mixed in', () => {
     const phone = act(base, { type: 'setSettings', at: '2026-10-21T09:00:00.000Z', settings: { ...base.settings, currency: 'USD', fxRates: { EUR: 0.92 }, fxDate: '2026-10-21' } })
