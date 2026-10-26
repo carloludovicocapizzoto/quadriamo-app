@@ -94,3 +94,7 @@
 .photo { display: flex; align-items: center; gap: var(--s4); margin: 0 0 var(--s6); }
 .photo-actions { display: grid; justify-items: start; gap: 2px; }
 .photo-actions .link-btn { padding: 4px 0; cursor: pointer; }
+/* segnalazione dell'Alpha: i dettagli tecnici vanno a capo sul telefono, nessuno scorrimento orizzontale */
+.alpha-report ul { margin: 0; padding-left: 18px; display: grid; gap: var(--s1); }
+.alpha-details { white-space: pre-wrap; overflow-wrap: anywhere; font: var(--t-cap)/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+  background: var(--fill); border-radius: var(--r-md); padding: var(--s3); margin: 0; }

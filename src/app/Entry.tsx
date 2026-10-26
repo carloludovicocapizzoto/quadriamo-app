@@ -74,7 +74,7 @@ function PreApp({ children }: { children: ReactNode }) {
   return (
     <div className="app">
       <header className="top">
-        <a className="logo" href={ENV.base}>Quadriamo<span>.</span> <small className="beta">{t('beta.badge')}</small></a>
+        <a className="logo" href={ENV.base}>Quadriamo<span>.</span> <small className="beta">{ENV.name === 'alpha' ? 'Alpha' : t('beta.badge')}</small></a>
         {sync.user && (
           <button className="sync-pill" onClick={() => void sync.syncNow()} title={t('sync.now')}>
             <span className={`dot ${sync.status}`} aria-hidden="true" />

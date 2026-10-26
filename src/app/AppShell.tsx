@@ -5,6 +5,7 @@ import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
 import { useSync } from '../sync/context'
 import { ConsentCard } from '../ui/beta/ConsentCard'
+import { cloudFeature } from '../features'
 import { FeedbackCard } from '../ui/beta/FeedbackCard'
 import { FxAutoUpdate } from '../ui/FxAutoUpdate'
 import { HomeScreen } from '../ui/home/HomeScreen'
@@ -102,10 +103,10 @@ export function AppShell() {
         <SectionBoundary>
           <Suspense fallback={<div className="screen-loading" aria-busy="true" />}>
             {route.tab === 'home' && <>
-              <ConsentCard onAnswer={yes => ping(yes)} />
+              {cloudFeature('telemetry') && <ConsentCard onAnswer={yes => ping(yes)} />}
               {sync.user && askProfile && !data.demo && !entry.inSetup && (
                 <section className="card"><h3 className="h-plain">{t('prof.promptTitle')}</h3><ProfileForm onDone={() => setAskProfile(false)} /></section>)}
-              {feedback && <FeedbackCard onClose={closeFeedback} />}
+              {feedback && cloudFeature('feedback') && <FeedbackCard onClose={closeFeedback} />}
               <HomeScreen data={data} r={thisMonth} today={today} streak={streak}
                 onAdd={kind => openComposer(kind === 'income' ? { prefill: { category: mainIncome(data.settings) } } : {})}
                 onOpen={openTx} onAll={toTransactions} />

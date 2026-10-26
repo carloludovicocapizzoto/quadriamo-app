@@ -118,6 +118,22 @@ await step(A1, 'configurazione completata, il budget arriva sul cloud', () => fi
 await step(A1, 'una spesa di 12,50 € arriva sul cloud', () => addExpense(A1, '12,50'), async () => amounts((await remote('A')).document).includes(12.5), 10)
 await step(A1, 'dopo aver ricaricato la pagina la sessione resta e i dati ci sono', () => A1.reload(), `${appReady} && /12,50/.test(document.body.innerText)`)
 
+console.log('Funzioni non disponibili nell\'Alpha')
+await step(A1, 'quando va tutto bene nessun pannello tecnico in cima, nessuna richiesta di statistiche', async () => { await A1.js(`location.hash = '#/'`); await sleep(2500) },
+  `${appReady} && !document.querySelector('[data-testid=cloud-status]') && !/Aiutaci a migliorare la beta/.test(document.body.innerText)`)
+await step(A1, 'il pannello della sincronizzazione è in Profilo → Esporta e importa', () => A1.js(`location.hash = '#/profile/data'`),
+  `/revisione cloud \\d+/.test(document.querySelector('[data-testid=cloud-status]')?.innerText ?? '')`)
+await step(A1, 'il Profilo non mostra Budget comune, statistiche d\'uso e invito', () => A1.js(`location.hash = '#/profile'`),
+  `/Esporta e importa/.test(document.body.innerText) && !/Budget comune|Statistiche d’uso anonime|Invita un amico/.test(document.body.innerText)`)
+await step(A1, 'il Budget comune aperto da un vecchio link dice che non è ancora disponibile', () => A1.js(`location.hash = '#/profile/shared'`),
+  `/Non ancora disponibile in questa Alpha/.test(document.body.innerText) && !/Scopri Pro/.test(document.body.innerText)`)
+await step(A1, 'Notizie: spiega che non sono attive e mostra i consigli', () => A1.js(`location.hash = '#/news'`),
+  `/non sono ancora attive/.test(document.body.innerText) && /Consigli di Quadriamo/.test(document.body.innerText) && !/Serve la connessione/.test(document.body.innerText)`)
+await step(A1, 'Segnala un problema: a chi scrivere, cosa non mandare, dettagli tecnici senza dati personali', () => A1.js(`location.hash = '#/profile/feedback'`),
+  `/chi ti ha invitato/.test(document.body.innerText) && /Non mandare mai password/.test(document.body.innerText)
+   && /revisione/.test(document.querySelector('.alpha-details')?.innerText ?? '') && !/[\\w.-]+@[\\w-]+\\.[a-z]|12,50|12\\.5/.test(document.querySelector('.alpha-details')?.innerText ?? '')`)
+await A1.js(`location.hash = '#/'`)
+
 console.log('Due dispositivi dello stesso account')
 const A2 = await device('PC A', 9462)
 await step(A2, 'accedendo, il PC scarica il budget invece di proporne uno nuovo', () => signIn(A2, 'A'), `${appReady} && /12,50/.test(document.body.innerText)`, 15)
@@ -234,8 +250,11 @@ await step(A1, 'nuova versione pubblicata: l\'app si aggiorna e i dati locali re
   await api('root', { root: OUT2 }); await A1.reload(); await sleep(2500); await A1.reload(); await toList(A1)
 }, `!!document.querySelector('meta[name=e2e-build]') && ${appReady} && /12,50/.test(document.body.innerText)`, 20)
 
-const denied = [...new Set((await remote('A')).denied)]
-console.log(`\nRotte rifiutate dal gateway durante le prove (funzioni non disponibili nell'Alpha): ${denied.length ? denied.join(', ') : 'nessuna'}`)
+// nessuna chiamata dell'app deve finire su una rotta che il gateway Alpha rifiuta (le funzioni senza rotta sono spente);
+// le foto profilo usano lo Storage di Supabase, che il finto backend non imita
+const denied = [...new Set((await remote('A')).denied)].filter(r => !r.includes('/storage/v1/object/avatars/'))
+if (denied.length) { console.error(`\nChiamate rifiutate dal gateway Alpha: ${denied.join(', ')}`); failed = true }
+else console.log('\nNessuna chiamata dell\'app rifiutata dal gateway Alpha.')
 const pageErrors = devices.flatMap(d => d.errors ?? [])
 for (const d of [A1, A2, N]) if (d.errors.length) { console.error(`\nErrori nella pagina (${d.name}):\n  ${d.errors.join('\n  ')}`); failed = true }
 if (!failed && !pageErrors.length) console.log(`\nTutti i ${n} passi Alpha sono andati bene (backend simulato).`)

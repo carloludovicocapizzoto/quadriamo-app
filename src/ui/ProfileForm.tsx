@@ -6,6 +6,7 @@ import type { PrivateProfile } from '../store/state'
 import { useSync } from '../sync/context'
 import { CARDS, GOALS, WHERE, loadNames, profilePrompt, saveNames, type Names } from '../sync/profile'
 import { syncResearch } from '../sync/research'
+import { cloudFeature } from '../features'
 import { bucketName } from './names'
 import { Icon } from './Icon'
 import { StepHeader, StepNav } from './Steps'
@@ -142,10 +143,10 @@ export function ProfileForm({ onDone, withShares = true }: { onDone: () => void;
             <p><b><Icon name="lock" size={14} />{t('prof.privTitle')}</b></p>
             <p className="small">{t('prof.privText')}</p>
           </div>
-          <label className="check wrap-text research-check">
+          {cloudFeature('research') && <label className="check wrap-text research-check">
             <input type="checkbox" checked={pp.research} onChange={e => set({ research: e.target.checked })} />
             <span><b>{t('prof.research')}</b><br /><span className="small muted">{t('prof.researchHint')}</span></span>
-          </label>
+          </label>}
         </>}
       </div>
 

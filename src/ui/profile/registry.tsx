@@ -8,6 +8,8 @@ import { GoalsStrip } from '../goals/Goals'
 import { PlanCard, ProGate } from '../Pro'
 import { SettingsView } from '../settings/SettingsView'
 import { SharedView } from '../shared/SharedView'
+import { cloudFeature } from '../../features'
+import { NotInAlpha } from '../NotInAlpha'
 import { CapitalPage } from '../capital/CapitalPage'
 import { Accessibility, Appearance, Delete, HelpCenter, Language, Licenses, Motion, Personal, Progress, Security } from './pages'
 import { RecurringList } from '../calendar/RecurringList'
@@ -33,7 +35,7 @@ export const PAGES: Record<ProfilePage, (p: PageProps) => ReactNode> = {
   documents: p => <DocumentsPage today={p.today} />,
   goals: p => <GoalsStrip goals={p.data.goals} today={p.today} currency={p.data.settings.currency} titled={false} />,
   rules: () => <SettingsView only={['rules']} />,
-  shared: p => <ProGate feature="shared"><SharedView onLogin={p.onLogin} /></ProGate>,
+  shared: p => cloudFeature('shared') ? <ProGate feature="shared"><SharedView onLogin={p.onLogin} /></ProGate> : <NotInAlpha />,
   appearance: () => <Appearance />,
   language: () => <Language />,
   inbox: p => <InboxPage today={p.today} onPage={p.onPage} />,

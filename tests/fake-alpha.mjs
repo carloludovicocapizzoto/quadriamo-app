@@ -176,3 +176,11 @@ export function startFakeAlpha({ port = 4192, root }) {
 
   return new Promise(ok => server.listen(port, () => ok({ state, close: () => new Promise(r => { server.closeAllConnections?.(); server.close(r) }) })))
 }
+
+// Avviato a mano (npm run alpha:local): l'app Alpha già costruita in dist-alpha-e2e (npm run e2e:alpha la costruisce)
+// su http://localhost:4192/app/, con gli utenti di prova qui sopra. Per provare l'Alpha senza toccare il cloud.
+if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop())) {
+  const root = new URL('../dist-alpha-e2e', import.meta.url).pathname
+  await startFakeAlpha({ root })
+  console.log(`Alpha locale (backend simulato): http://localhost:4192/app/\nUtenti di prova: ${Object.values(USERS).filter(u => u.password).map(u => `${u.email} / ${u.password}`).join(' · ')}`)
+}
