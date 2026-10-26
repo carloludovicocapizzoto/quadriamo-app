@@ -10,7 +10,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "e2e": "VITE_SUPABASE_URL= VITE_SUPABASE_PUBLISHABLE_KEY= vite build --outDir dist-e2e && node tests/e2e.mjs"
+    "e2e": "VITE_SUPABASE_URL= VITE_SUPABASE_PUBLISHABLE_KEY= vite build --outDir dist-e2e && node tests/e2e.mjs",
+    "e2e:alpha": "node tests/e2e-alpha.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",

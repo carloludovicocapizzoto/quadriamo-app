@@ -1,0 +1,242 @@
+// Prove dell'Alpha in locale: l'app costruita in modalità alpha contro un finto backend (tests/fake-alpha.mjs) che imita
+// Supabase Auth, il gateway /api/rest/* e CAS v2. Due Chrome separati sono due dispositivi dello stesso account
+// (IndexedDB, service worker e sessione distinti), un terzo è l'account B.
+// Copre: accesso, errori, sessione, invito, cambio account; sincronizzazione tra dispositivi, copia vecchia,
+// conflitto e risoluzione, offline con chiusura e riapertura, 429, 413, risposta persa; service worker e aggiornamento.
+// NON sostituisce il collaudo sul cloud vero: il backend è simulato (vedi docs/CLOSED-ALPHA.md).
+// Uso: npm run e2e:alpha
+import { spawnSync } from 'node:child_process'
+import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { openChrome, sleep } from '../tools/chrome.mjs'
+import { startFakeAlpha, USERS } from './fake-alpha.mjs'
+
+const root = resolve(fileURLToPath(import.meta.url), '../..')
+const PORT = 4192, ORIGIN = `http://localhost:${PORT}`, OUT = join(root, 'dist-alpha-e2e'), OUT2 = join(root, 'dist-alpha-e2e-v2')
+
+// 1. l'app Alpha costruita per il backend locale (stessi controlli di tools/alpha/build.mjs: solo localhost)
+if (!process.env.E2E_NO_BUILD) {
+  const env = { ...process.env, BASE_PATH: '/', VITE_SUPABASE_URL: ORIGIN, VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_e2e_local',
+    VITE_SUPABASE_ANON_KEY: '', VITE_FLAGS: '', VITE_VAPID_PUBLIC_KEY: '' }
+  const run = spawnSync(process.execPath, ['node_modules/vite/bin/vite.js', 'build', '--mode', 'alpha', '--outDir', OUT, '--logLevel', 'error'], { cwd: root, env, stdio: 'inherit' })
+  if (run.status !== 0) process.exit(run.status ?? 1)
+}
+// una seconda "versione" per provare l'aggiornamento del service worker: stessa app, index e precache diversi
+rmSync(OUT2, { recursive: true, force: true }); cpSync(OUT, OUT2, { recursive: true })
+writeFileSync(join(OUT2, 'app/index.html'), readFileSync(join(OUT2, 'app/index.html'), 'utf8').replace('<head>', '<head><meta name="e2e-build" content="2">'))
+writeFileSync(join(OUT2, 'sw-account-v2.js'), readFileSync(join(OUT2, 'sw-account-v2.js'), 'utf8').replace(/(url:"app\/index\.html",revision:")[a-f0-9]+/, '$1e2e0000000000000000000000000002'))
+
+const server = await startFakeAlpha({ port: PORT, root: OUT })
+const api = async (path, body) => {
+  try { return await (await fetch(`${ORIGIN}/__e2e/${path}`, body ? { method: 'POST', body: JSON.stringify(body) } : undefined)).json() }
+  catch (e) { throw Error(`controllo del finto server (${path}): ${e.cause?.message ?? e.message}`) }
+}
+const remote = user => api(`state?user=${user}`)
+const devices = []
+let n = 0, failed = false
+const done = async code => { for (const d of devices) await d.close().catch(() => {}); await server.close(); rmSync(OUT2, { recursive: true, force: true }); process.exit(code) }
+
+async function device(name, port) {
+  const errors = []
+  const c = await openChrome({ port, args: ['--lang=it-IT'], waitMs: 45_000, onError: e => errors.push(e) })
+  devices.push(c)
+  await c.cdp('Emulation.setDeviceMetricsOverride', { width: 412, height: 919, deviceScaleFactor: 1, mobile: true })
+  await c.cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
+  await c.cdp('Network.enable')
+  const d = {
+    name, errors, ...c,
+    type: async text => { for (const ch of text) await c.cdp('Input.insertText', { text: ch }) },
+    click: sel => c.js(`(() => { const el = ${sel}; el?.click(); return !!el })()`),
+    text: () => c.js(`document.body.innerText`),
+    offline: on => c.cdp('Network.emulateNetworkConditions', { offline: on, latency: 0, downloadThroughput: -1, uploadThroughput: -1 }),
+    open: async (path = '/app/') => { await c.cdp('Page.navigate', { url: ORIGIN + path }); await sleep(1500) },
+    reload: async () => { await c.cdp('Page.reload'); await sleep(1800) },
+  }
+  await d.open(); await c.js(`localStorage.setItem('quadriamo.lang', 'it')`); await d.reload()
+  return d
+}
+const byText = (re, scope = 'button') => `[...document.querySelectorAll('${scope}')].find(b => ${re}.test(b.textContent.trim()))`
+const has = re => `${re}.test(document.body.innerText)`
+/** Un passo: azione, poi una condizione che deve diventare vera (nella pagina, o sul server se è una funzione). */
+async function step(d, name, action, check, seconds = 8) {
+  n++
+  try {
+    if (action) await action()
+    for (let i = 0; i < seconds * 5; i++) {
+      if (typeof check === 'function' ? await check() : await d.js(check)) {
+        console.log(`  ✓ ${n}. ${d.name}: ${name}`)
+        if (process.env.E2E_VERBOSE) console.log(`      ${(await d.text()).replace(/\s+/g, ' ').slice(0, 300)}`)
+        return
+      }
+      await sleep(200)
+    }
+    throw Error(`condizione non vera: ${check}`)
+  } catch (e) {
+    console.error(`  ✗ ${n}. ${d.name}: ${name}\n    ${e.message}\n    pagina: ${(await d.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 1200)}`)
+    failed = true; await done(1)
+  }
+}
+async function signIn(d, who, password = USERS[who].password) {
+  if (await d.js(`!!document.querySelector('.gate-cta')`)) { await d.click(`document.querySelector('.gate-cta')`); await sleep(700) }
+  if (await d.js(`!!document.querySelector('.inst-skip')`)) { await d.click(`document.querySelector('.inst-skip')`); await sleep(700) }
+  await d.js(`document.querySelector('input[type=email]')?.focus()`); await d.type(USERS[who].email)
+  await d.click(`document.querySelector('form .btn.primary')`); await sleep(600)
+  await d.js(`document.querySelector('input[type=password]')?.focus()`); await d.type(password)
+  await d.click(`document.querySelector('form .btn.primary')`)
+}
+const appReady = `!!document.querySelector('.tabbar')`
+async function signOut(d) {
+  await d.js(`location.hash = '#/profile/security'`); await sleep(900)
+  await d.click(`[...document.querySelectorAll('button, a, [role=button]')].find(b => /^Esci(?! dagli)/.test(b.textContent.trim()))`)
+}
+async function finishSetup(d) {
+  await d.click(`document.querySelector('.onboarding .btn.primary')`); await sleep(700)
+  await d.click(`document.querySelector('.persona-row')`); await sleep(500)
+  for (let i = 0; i < 14 && !(await d.js(appReady)); i++) { await d.click(`document.querySelector('.step-nav .btn.primary')`); await sleep(450) }
+}
+async function addExpense(d, amount) {
+  await d.click(`document.querySelector('.tab-add')`); await sleep(700)
+  await d.type(amount); await sleep(200)
+  await d.click(`document.querySelector('.cat-pick button')`)
+  await d.click(`document.querySelector('.tx-sheet button[type=submit]')`); await sleep(400)
+}
+const toList = d => d.js(`location.hash = '#/analysis/transactions'`).then(() => sleep(700))
+const amounts = doc => (doc?.transactions ?? []).map(t => t.amount).sort((a, b) => a - b)
+
+console.log('Accesso')
+const A1 = await device('telefono A', 9461)
+await step(A1, 'l\'Alpha dice che è solo su invito', async () => {
+  await A1.click(`document.querySelector('.gate-cta')`); await sleep(700); await A1.click(`document.querySelector('.inst-skip')`)
+}, has('/riservata agli invitati/'))
+await step(A1, 'password sbagliata: messaggio chiaro, si può riprovare', () => signIn(A1, 'A', 'sbagliata-123'), has('/Email o password non corretti/'))
+await step(A1, 'password giusta: account nuovo, si configura il budget', async () => {
+  await A1.click(byText('/Indietro/')); await sleep(400); await A1.js(`document.querySelector('input[type=email]').value = ''`)
+  await A1.reload(); await signIn(A1, 'A')
+}, `!!document.querySelector('.onboarding')`)
+await step(A1, 'configurazione completata, il budget arriva sul cloud', () => finishSetup(A1), async () => (await A1.js(appReady)) && (await remote('A')).revision >= 1, 15)
+await step(A1, 'una spesa di 12,50 € arriva sul cloud', () => addExpense(A1, '12,50'), async () => amounts((await remote('A')).document).includes(12.5), 10)
+await step(A1, 'dopo aver ricaricato la pagina la sessione resta e i dati ci sono', () => A1.reload(), `${appReady} && /12,50/.test(document.body.innerText)`)
+
+console.log('Due dispositivi dello stesso account')
+const A2 = await device('PC A', 9462)
+await step(A2, 'accedendo, il PC scarica il budget invece di proporne uno nuovo', () => signIn(A2, 'A'), `${appReady} && /12,50/.test(document.body.innerText)`, 15)
+await step(A2, 'modifiche offline su entrambi, poi online: si uniscono senza conflitto', async () => {
+  await A1.offline(true); await A2.offline(true)
+  await addExpense(A1, '7'); await addExpense(A2, '3'); await sleep(500)
+  await A1.offline(false); await sleep(2500); await A2.offline(false)
+}, async () => JSON.stringify(amounts((await remote('A')).document)) === JSON.stringify([3, 7, 12.5]), 15)
+await step(A1, 'il telefono riceve la spesa del PC', async () => { await A1.reload(); await toList(A1) },
+  `/3,00/.test(document.body.innerText) && !document.querySelector('.cloud-conflict')`, 12)
+
+console.log('Copia vecchia sul PC (scenario del 21/10)')
+await A2.offline(true)
+await step(A1, 'il telefono aggiunge l\'abbonamento Netflix', async () => {
+  await A1.js(`location.hash = '#/profile/recurring'`); await sleep(800)
+  await A1.click(byText('/Aggiungi abbonamento/')); await sleep(700)
+  await A1.js(`(() => { const el = document.querySelector('.sp input[type=search]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, 'net'); el.dispatchEvent(new Event('input', { bubbles: true })) })()`); await sleep(400)
+  await A1.click(`document.querySelector('.sp-list .row')`); await sleep(900)
+  await A1.js(`document.querySelector('.event-form input[inputmode=decimal]').focus()`); await A1.type('12,99')
+  await A1.click(byText('/Aggiungi al calendario/', '.event-form button'))
+}, async () => ((await remote('A')).document?.settings.events ?? []).some(e => /Netflix/.test(e.title)), 12)
+await step(A2, 'il PC con la copia vecchia cambia un\'impostazione offline e torna online: Netflix resta ovunque', async () => {
+  await A2.js(`location.hash = '#/profile/budget'`); await sleep(900)
+  await A2.js(`(() => { const el = [...document.querySelectorAll('.edit-list li input')].find(i => i.value === 'Svago e shopping'); el.focus(); el.select() })()`)
+  await A2.type('Svago'); await sleep(600)
+  await A2.offline(false)
+}, async () => { const d = (await remote('A')).document; return d?.settings.events.some(e => /Netflix/.test(e.title)) && d.settings.categories.some(c => c.name === 'Svago') }, 15)
+await step(A2, 'e il PC ora mostra Netflix', async () => { await A2.js(`location.hash = '#/profile/recurring'`); await sleep(900) }, has('/Netflix/'), 10)
+
+console.log('Conflitto vero e risoluzione')
+await step(A2, 'stesso importo cambiato offline sui due dispositivi: il PC chiede solo quel campo', async () => {
+  await A1.offline(true); await A2.offline(true)
+  for (const [d, value] of [[A1, '13,99'], [A2, '14,99']]) {
+    await d.js(`location.hash = '#/profile/recurring'`); await sleep(800)
+    await d.click(`[...document.querySelectorAll('.subs-list .row')].find(r => /Netflix/.test(r.textContent))`); await sleep(900)
+    await d.js(`(() => { const el = document.querySelector('.event-form input[inputmode=decimal]'); el.focus(); el.select() })()`); await d.type(value)
+    await d.click(byText('/^Salva$/', '.event-form button')); await sleep(500)
+  }
+  await A1.offline(false); await sleep(3000); await A2.offline(false)
+}, `!!document.querySelector('.cloud-conflict') && /Scadenze/.test(document.querySelector('.cloud-conflict')?.innerText ?? '')`, 15)
+await step(A2, 'scelgo la versione di questo dispositivo: il cloud ha 14,99 e niente si perde', async () => {
+  await A2.click(`document.querySelector('.cloud-conflict input[type=radio][value=local]')`); await sleep(300)
+  await A2.click(`document.querySelector('.cloud-conflict .btn.primary')`)
+}, async () => { const d = (await remote('A')).document; return d?.settings.events.find(e => /Netflix/.test(e.title))?.amount === 14.99 && amounts(d).length === 3 }, 15)
+
+console.log('Offline, chiusura e riapertura')
+await step(A1, 'spesa offline, app chiusa e riaperta offline: la spesa c\'è ancora', async () => {
+  await A1.offline(true); await A1.js(`location.hash = '#/'`); await sleep(500); await addExpense(A1, '4,20'); await sleep(600)
+  await A1.reload(); await toList(A1)
+}, `/4,20/.test(document.body.innerText)`, 12)
+await step(A1, 'tornata la rete, arriva sul cloud una volta sola', async () => { await A1.offline(false) },
+  async () => amounts((await remote('A')).document).filter(x => x === 4.2).length === 1, 15)
+
+console.log('Errori del server')
+await step(A1, '429: l\'app aspetta il tempo indicato, tiene la modifica, poi sincronizza', async () => {
+  await api('fault', { route: 'rpc/qsync_write_v2', kind: 'rate', retryAfter: 3 })
+  await addExpense(A1, '5,10')
+}, async () => amounts((await remote('A')).document).includes(5.1), 20)
+await step(A1, '413: documento troppo grande, messaggio chiaro e dati conservati sul telefono', async () => {
+  await api('fault', { route: 'rpc/qsync_write_v2', kind: 'tooLarge' })
+  await addExpense(A1, '6,30'); await sleep(2500)
+  await A1.js(`location.hash = '#/profile/sync'`); await sleep(600)
+}, `/supera il limite del server/.test(document.body.innerText) && /restano salvate qui/.test(document.body.innerText)`, 12)
+await step(A1, 'riprovando, la spesa da 6,30 € arriva', async () => { await A1.click(byText('/Riprova la sincronizzazione/')) },
+  async () => amounts((await remote('A')).document).includes(6.3), 15)
+await step(A1, 'risposta persa dopo il salvataggio: stessa operazione ripetuta, una revisione sola', async () => {
+  await api('fault', { route: 'rpc/qsync_write_v2', kind: 'drop' }); await A1.js(`location.hash = '#/'`); await sleep(400); await addExpense(A1, '8,40')
+}, async () => { const s = await remote('A'); return amounts(s.document).filter(x => x === 8.4).length === 1 && s.log.filter(l => l.status === 'applied').length === s.revision }, 20)
+
+console.log('Cambio di account sullo stesso dispositivo')
+await step(A2, 'esco dall\'account A: torna l\'accesso, nessun dato visibile', async () => {
+  await signOut(A2)
+}, `(!!document.querySelector('input[type=email]') || !!document.querySelector('.gate-cta')) && !/La sessione è terminata/.test(document.body.innerText)`, 10)
+await step(A2, 'entro come B: budget nuovo, niente dati di A', async () => { await signIn(A2, 'B') },
+  `!!document.querySelector('.onboarding') && !/12,50|Netflix/.test(document.body.innerText)`, 12)
+await step(A2, 'B configura il suo budget e lo sincronizza', () => finishSetup(A2), async () => (await A2.js(appReady)) && (await remote('B')).revision >= 1, 15)
+await step(A2, 'il cloud di B non contiene i dati di A', null, async () => { const b = (await remote('B')).document; return amounts(b).length === 0 && !b.settings.events.some(e => /Netflix/.test(e.title)) })
+await step(A2, 'esco da B e rientro come A: tornano i dati di A, nessuno di B', async () => {
+  await signOut(A2); await sleep(1500)
+  await signIn(A2, 'A')
+  await sleep(1500); await toList(A2)
+}, `${appReady} && /12,50/.test(document.body.innerText)`, 15)
+
+console.log('Sessione scaduta e rete assente')
+await step(A1, 'token scaduto e rinnovo revocato: dopo la riapertura l\'app chiede di nuovo l\'accesso, i dati restano', async () => {
+  await api('tokens', { seconds: 3 }); await signOut(A1); await sleep(1200); await signIn(A1, 'A'); await sleep(2500)
+  await api('revoke', { user: 'A' }); await sleep(4000); await A1.reload()
+}, `(!!document.querySelector('input[type=email]') || !!document.querySelector('.gate-cta')) && /La sessione è terminata/.test(document.body.innerText)`, 15)
+await api('tokens', { seconds: 3600 })
+await step(A1, 'server irraggiungibile durante l\'accesso: messaggio comprensibile', async () => {
+  await api('down', { down: true }); await signIn(A1, 'A')
+}, has('/Non riesco a raggiungere il server/'), 15)
+await api('down', { down: false })
+await step(A1, 'tornato il server, l\'accesso riesce e i dati ci sono', async () => { await A1.reload(); await signIn(A1, 'A'); await sleep(2500); await toList(A1) },
+  `${appReady} && /12,50/.test(document.body.innerText)`, 15)
+
+console.log('Invito')
+const N = await device('invitato', 9463)
+await step(N, 'il link d\'invito chiede di scegliere una password', async () => {
+  const s = await api('invite', { user: 'N' })
+  await N.cdp('Page.navigate', { url: 'about:blank' }); await sleep(300)                        // il link dell'email apre una pagina nuova
+  await N.open(`/app/#access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=3600&expires_at=${s.expires_at}&token_type=bearer&type=invite`)
+}, `!!document.querySelector('input[type=password]')`, 12)
+await step(N, 'scelta la password, si configura il budget', async () => {
+  await N.js(`document.querySelector('input[type=password]').focus()`); await N.type('Nuova-Password-2026')
+  await N.click(`document.querySelector('form .btn.primary')`)
+}, `!!document.querySelector('.onboarding')`, 12)
+
+console.log('App installabile e aggiornamento')
+await step(A1, 'il service worker controlla la pagina', () => A1.reload(), `!!navigator.serviceWorker.controller`, 12)
+await step(A1, 'senza rete l\'app si apre lo stesso, con i dati', async () => { await A1.offline(true); await A1.reload(); await toList(A1) }, `${appReady} && /12,50/.test(document.body.innerText)`, 12)
+await A1.offline(false)
+await step(A1, 'nuova versione pubblicata: l\'app si aggiorna e i dati locali restano', async () => {
+  await api('root', { root: OUT2 }); await A1.reload(); await sleep(2500); await A1.reload(); await toList(A1)
+}, `!!document.querySelector('meta[name=e2e-build]') && ${appReady} && /12,50/.test(document.body.innerText)`, 20)
+
+const denied = [...new Set((await remote('A')).denied)]
+console.log(`\nRotte rifiutate dal gateway durante le prove (funzioni non disponibili nell'Alpha): ${denied.length ? denied.join(', ') : 'nessuna'}`)
+const pageErrors = devices.flatMap(d => d.errors ?? [])
+for (const d of [A1, A2, N]) if (d.errors.length) { console.error(`\nErrori nella pagina (${d.name}):\n  ${d.errors.join('\n  ')}`); failed = true }
+if (!failed && !pageErrors.length) console.log(`\nTutti i ${n} passi Alpha sono andati bene (backend simulato).`)
+await done(failed ? 1 : 0)
