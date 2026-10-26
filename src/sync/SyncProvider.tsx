@@ -22,6 +22,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const [failureCode, setFailureCode] = useState<SyncFailureKey | null>(null)
   const [remoteReady, setRemoteReady] = useState(lease.scope.kind !== 'account' || !!state.data)
   const running = useRef(false), again = useRef(false)
+  const [details, setDetails] = useState(false)
   const snapshot = storage?.getSnapshot()
 
   useEffect(() => { if (session.user) void loadAvatar(session.user.id).catch(() => undefined) }, [session.user])
@@ -88,10 +89,14 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setStatus('syncing')
     try { await readRemote(sb, true); lease.assert(); await syncNow() } catch { if (lease.current()) setStatus('error') }
   }
-  const api = useMemo<SyncApi>(() => ({ ...session, ready: session.ready && remoteReady, status: visibleStatus, lastSync, syncNow }),
+  const api = useMemo<SyncApi>(() => ({ ...session, ready: session.ready && remoteReady, status: visibleStatus, lastSync, syncNow, showSyncDetails: setDetails }),
     [session, remoteReady, visibleStatus, lastSync, syncNow])
+  // in cima allo schermo solo quando serve una tua azione o un'informazione: conflitto, errore, offline, attesa, aggiornamento.
+  // Quando va tutto bene il pannello sta in Profilo → Esporta e importa (showSyncDetails), senza testo tecnico su ogni schermata.
+  const cooling = !!snapshot?.cloud?.cooldownUntil                    // tolto dalla sincronizzazione appena l'attesa finisce
+  const attention = details || cooling || !!snapshot?.error || ['conflict', 'error', 'offline', 'upgrade', 'paused'].includes(visibleStatus)
   return <SyncContext.Provider value={api}>
-    {lease.scope.kind === 'account' && storage && <SyncRecovery storage={storage} lease={lease} status={visibleStatus} retry={syncNow} activate={activate} failureCode={failureCode} />}
+    {lease.scope.kind === 'account' && storage && attention && <SyncRecovery storage={storage} lease={lease} status={visibleStatus} retry={syncNow} activate={activate} failureCode={failureCode} />}
     {!remoteReady && (status === 'error' || status === 'offline')
       ? <div className="gate"><section className="card"><p role="alert">{t('storage.remoteWait')}</p>
           <button className="btn" onClick={() => void syncNow()}>{t('storage.retry')}</button>
