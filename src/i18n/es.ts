@@ -197,6 +197,7 @@ const es: Dict = {
   'settings.importOk': 'Copia importada.',
   'settings.importBad': 'Este archivo no es una copia válida de Quadriamo.',
   'settings.importConfirm': 'Importar reemplaza todos los datos de este dispositivo. ¿Continuar?',
+  'settings.importConfirmAccount': "La copia sustituirá los datos de esta cuenta también en la nube y en tus otros dispositivos. Respecto a hoy desaparecerán {transactions} movimientos y {events} vencimientos o suscripciones. Tus datos actuales quedan en el archivo de recuperación de la sincronización, desde donde puedes exportarlos. ¿Continuar?",
   'settings.reset': 'Borrar todos los datos',
   'settings.resetConfirm': '¿Borrar todos tus datos de este dispositivo? No se puede deshacer.',
   'settings.errors': 'Corrige los campos marcados: los cambios se guardan en cuanto son válidos.',

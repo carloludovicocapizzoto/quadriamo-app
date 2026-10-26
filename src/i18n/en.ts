@@ -197,6 +197,7 @@ const en = {
   'settings.importOk': 'Backup imported.',
   'settings.importBad': 'This file is not a valid Quadriamo backup.',
   'settings.importConfirm': 'Importing replaces all the data on this device. Continue?',
+  'settings.importConfirmAccount': "The backup will replace this account's data in the cloud and on your other devices too. Compared with today, {transactions} transactions and {events} due dates or subscriptions will disappear. Your current data stays in the sync recovery archive, where you can export it. Continue?",
   'settings.reset': 'Delete all data',
   'settings.resetConfirm': 'Delete all your data on this device? This cannot be undone.',
   'settings.errors': 'Fix the highlighted fields: changes are saved as soon as they are valid.',

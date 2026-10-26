@@ -197,6 +197,7 @@ const fr: Dict = {
   'settings.importOk': 'Sauvegarde importée.',
   'settings.importBad': 'Ce fichier n’est pas une sauvegarde Quadriamo valide.',
   'settings.importConfirm': 'L’import remplace toutes les données de cet appareil. Continuer ?',
+  'settings.importConfirmAccount': "La sauvegarde remplacera les données de ce compte aussi dans le cloud et sur vos autres appareils. Par rapport à aujourd’hui, {transactions} opérations et {events} échéances ou abonnements disparaîtront. Vos données actuelles restent dans l’archive de récupération de la synchronisation, d’où vous pouvez les exporter. Continuer ?",
   'settings.reset': 'Effacer toutes les données',
   'settings.resetConfirm': 'Effacer toutes vos données sur cet appareil ? Action irréversible.',
   'settings.errors': 'Corrigez les champs signalés : les modifications sont enregistrées dès qu’elles sont valides.',

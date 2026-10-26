@@ -197,6 +197,7 @@ const it: Dict = {
   'settings.importOk': 'Backup importato.',
   'settings.importBad': 'Questo file non è un backup valido di Quadriamo.',
   'settings.importConfirm': "L'importazione sostituisce tutti i dati su questo dispositivo. Continuare?",
+  'settings.importConfirmAccount': "Il backup sostituirà i dati di questo account anche nel cloud e sugli altri dispositivi. Rispetto a oggi spariranno {transactions} movimenti e {events} scadenze o abbonamenti. I dati attuali restano nell'archivio di recupero della sincronizzazione, da dove puoi esportarli. Continuare?",
   'settings.reset': 'Cancella tutti i dati',
   'settings.resetConfirm': 'Cancellare tutti i tuoi dati su questo dispositivo? Non si può annullare.',
   'settings.errors': 'Sistema i campi evidenziati: le modifiche si salvano appena sono valide.',
