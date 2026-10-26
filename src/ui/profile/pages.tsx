@@ -98,7 +98,7 @@ export function Personal({ onLogin }: { onLogin: () => void }) {
     <div className="txs-rows">
       {pick('country', 'personal.country')}
       <label className="txs-row"><span>{t('personal.abroad')}</span>
-        <span className="row-switch"><button type="button" role="switch" aria-checked={abroad} className={`switch${abroad ? ' on' : ''}`}
+        <span className="row-switch"><button type="button" role="switch" aria-checked={abroad} aria-label={t('personal.abroad')} className={`switch${abroad ? ' on' : ''}`}
           onClick={() => { const on = !abroad; setAbroad(on); if (!on) setCountry('residence', null) }}><i /></button></span></label>
       {abroad && pick('residence', 'personal.residence')}
       <div className="txs-row"><span>{t('personal.tz')}</span><span className="row-value">{Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' ')}</span></div>
