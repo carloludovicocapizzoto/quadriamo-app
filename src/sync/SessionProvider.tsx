@@ -21,6 +21,7 @@ import { isAuthRetryableFetchError } from '@supabase/supabase-js'
 import { downloadFile } from '../ui/kit/download'
 
 type User = SyncApi['user']
+const SESSION_ENDED = 'q.sessionEnded'
 type AuthUser = { id: string; email?: string; email_confirmed_at?: string; user_metadata?: { first_name?: string; last_name?: string } }
 const toUser = (u: AuthUser | null | undefined): User => u ? {
   id: u.id, email: u.email ?? '', firstName: u.user_metadata?.first_name ?? '', lastName: u.user_metadata?.last_name ?? '',
@@ -38,12 +39,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [seed, setSeed] = useState<AppData>()
   const [localSession, setLocalSession] = useState(false), [localLogout, setLocalLogout] = useState(false)
   // la sessione è finita da sola (rinnovo rifiutato, uscita da un altro dispositivo): si dice perché si torna all'accesso
-  const [sessionEnded, setSessionEnded] = useState(false), leaving = useRef(false), expected = useRef<string | null>(null)
+  // resta anche dopo una ricarica (sul dispositivo, senza dati personali) finché non si accede di nuovo o si esce volontariamente
+  const [sessionEnded, setEnded] = useState(() => local.get(SESSION_ENDED) === '1'), leaving = useRef(false), expected = useRef<string | null>(null)
+  const setSessionEnded = useCallback((on: boolean) => { local.set(SESSION_ENDED, on ? '1' : null); setEnded(on) }, [])
   const [authFailed, setAuthFailed] = useState(false)
   const recoveryOwner = useRef<string | null>(null)
   const inviteArrival = useRef(ALPHA_INVITE_LINK)
   const authUser = useRef<User>(null)
   const installUser = useCallback((next: User) => {
+    const previous = authUser.current                                  // prima di sovrascriverlo: serve a capire se la sessione è finita
     authUser.current = next
     const scope = scopeFor(next?.id ?? null)
     const current = currentScope()
@@ -51,7 +55,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (!next) recoveryOwner.current = null
     if (next) { setLocalLogout(false); setSessionEnded(false) }
     // anche all'avvio: c'era una sessione salvata (expected) ma il server non l'ha rinnovata
-    else { if ((authUser.current || expected.current) && !leaving.current) setSessionEnded(true); leaving.current = false }
+    else if (leaving.current) { setSessionEnded(false); leaving.current = false }
+    else if (previous || expected.current) setSessionEnded(true)
     expected.current = null
     if (inviteArrival.current && next) {
       local.set(personalKey('q.alphaInvitePending', scope), '1')
@@ -59,7 +64,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     setInviteSetup(!!next && ENV.name === 'alpha' && local.get(personalKey('q.alphaInvitePending', scope)) === '1')
     setUser(next); setSeed(undefined); setLease(lease); setReady(true); setRecovery(!!next && recoveryOwner.current === next.id); setTransitioning(false)
-  }, [])
+  }, [setSessionEnded])
 
   useEffect(() => {
     let alive = true
