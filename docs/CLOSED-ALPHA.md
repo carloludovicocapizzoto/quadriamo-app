@@ -123,10 +123,13 @@ lo storico dei prezzi segue la scelta. Rimane una scelta su tutto l'archivio sol
 
 | Comando | Cosa prova |
 |---|---|
-| `npm test` | motore, store, unione CAS a tre vie (REG), categorie, inoltro al gateway, regole del database (PGlite) |
+| `npm test` | motore, store, unione CAS a tre vie (REG), categorie, inoltro al gateway, regole del database (PGlite), sicurezza del simulatore |
 | `npm run e2e` | app senza server, 35 passi da utente (anche eliminazione di una categoria) |
-| `npm run e2e:alpha` | app Alpha contro un backend simulato, due dispositivi + account B, 39 passi; fallisce se l'app chiama una rotta che il gateway rifiuta |
-| `npm run alpha:local` | apre l'Alpha locale (dopo `e2e:alpha`) su http://localhost:4192/app/ con utenti di prova inventati |
+| `npm run e2e:alpha` | app Alpha contro un backend simulato, due dispositivi + account B; fallisce se l'app chiama una rotta che il gateway rifiuta o se il simulatore finisce nella build |
+| `npm run alpha:local` | apre l'Alpha locale (dopo `e2e:alpha`) su http://127.0.0.1:4192/app/ con utenti di prova inventati |
 
 Il backend simulato (`tests/fake-alpha.mjs`) riproduce i contratti del codice (gateway, CAS v2, risposte 429/413), non
-Supabase: un passo verde qui non sostituisce il collaudo della sezione 2.
+Supabase: un passo verde qui non sostituisce il collaudo della sezione 2. È solo per le prove: ascolta su 127.0.0.1,
+serve file solo dalle cartelle dichiarate all'avvio (mai un percorso arrivato da una richiesta, niente `..` né
+collegamenti simbolici verso fuori), i comandi `/__e2e/*` chiedono un codice generato a ogni avvio, e non entra mai
+nella build dell'app (controllato da `e2e:alpha`). Funziona anche su Windows (Chrome nelle cartelle standard o `CHROME=`).

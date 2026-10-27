@@ -2,11 +2,15 @@
 // Supabase Auth, come il gateway /api/rest/* (solo le rotte consentite nell'Alpha) e come CAS v2
 // (qsync_read / qsync_write_v2: revisioni, ricevute idempotenti, conflitti, 429, 413).
 // NON è un collaudo del cloud: riproduce i contratti del codice (functions/api/rest, migrazioni Alpha)
-// per provare l'app con due dispositivi veri, offline e guasti. Solo localhost, solo dati inventati.
+// per provare l'app con due dispositivi veri, offline e guasti. Solo dati inventati.
+// Sicurezza: ascolta solo su 127.0.0.1; serve file solo dalle cartelle dichiarate all'avvio (per nome, mai un percorso
+// arrivato da una richiesta), senza uscire con `..` né con collegamenti simbolici; i comandi /__e2e/* chiedono un codice.
 import { createServer } from 'node:http'
 import { createHash, randomUUID } from 'node:crypto'
-import { readFile } from 'node:fs/promises'
-import { extname, join, normalize } from 'node:path'
+import { readFile, realpath, stat } from 'node:fs/promises'
+import { realpathSync, statSync } from 'node:fs'
+import { extname, isAbsolute, relative, resolve } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.woff2': 'font/woff2',
@@ -23,9 +27,21 @@ export const USERS = {
   N: { id: '00000000-0000-4000-8000-00000000000c', email: 'invitato@example.test', password: null },   // invitato: sceglie la password
 }
 
-export function startFakeAlpha({ port = 4192, root }) {
+export const HOST = '127.0.0.1'
+
+/**
+ * `fixtures`: le sole cartelle che il server può servire, per nome ({ v1: '…/dist-alpha-e2e', v2: … }); la prima è
+ * quella di partenza. Ognuna deve esistere ed essere una cartella: il suo percorso reale fa da confine.
+ */
+export function startFakeAlpha({ port = 4192, fixtures }) {
+  const roots = Object.fromEntries(Object.entries(fixtures ?? {}).map(([name, dir]) => {
+    if (!/^[a-z0-9-]+$/i.test(name) || !isAbsolute(dir) || !statSync(dir).isDirectory()) throw Error(`fixture non valida: ${name}`)
+    return [name, realpathSync(dir)]
+  }))
+  if (!Object.keys(roots).length) throw Error('serve almeno una cartella di fixture')
+  const origin = `http://${HOST}:${port}`, controlToken = randomUUID()
   const state = {
-    root, tokenSeconds: 3600, down: false,
+    root: Object.values(roots)[0], tokenSeconds: 3600, down: false,
     heads: new Map(), receipts: new Map(), refresh: new Map(), passwords: new Map(Object.values(USERS).map(u => [u.id, u.password])),
     faults: [], denied: [], log: [],
   }
@@ -35,7 +51,7 @@ export function startFakeAlpha({ port = 4192, root }) {
   const session = id => {
     const now = Math.floor(Date.now() / 1000), exp = now + state.tokenSeconds, refresh = randomUUID()
     state.refresh.set(refresh, id)
-    const access = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ iss: `http://localhost:${port}/auth/v1`, sub: id, role: 'authenticated', aud: 'authenticated', email: user(id).email, exp, iat: now, session_id: randomUUID() })}.e2e`
+    const access = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ iss: `${origin}/auth/v1`, sub: id, role: 'authenticated', aud: 'authenticated', email: user(id).email, exp, iat: now, session_id: randomUUID() })}.e2e`
     return { access_token: access, token_type: 'bearer', expires_in: state.tokenSeconds, expires_at: exp, refresh_token: refresh, user: user(id) }
   }
   const caller = req => {
@@ -134,22 +150,34 @@ export function startFakeAlpha({ port = 4192, root }) {
     }
   }
 
-  async function serveFile(res, pathname) {
-    let file = normalize(join(state.root, decodeURIComponent(pathname)))
-    if (!file.startsWith(normalize(state.root))) return send(res, 403, {})
-    if (pathname.endsWith('/')) file = join(file, 'index.html')
+  /** Il file richiesto, solo se il suo percorso reale sta dentro la cartella attuale (niente `..`, niente symlink verso fuori). */
+  async function inside(pathname) {
+    let path
+    try { path = decodeURIComponent(pathname) } catch { return null }
+    if (path.includes('\0') || path.includes('\\')) return null
+    const within = file => { const r = relative(state.root, file); return r === '' || (!r.startsWith('..') && !isAbsolute(r)) }
+    let file = resolve(state.root, '.' + path)
+    if (!within(file)) return null
     try {
-      const data = await readFile(file)
-      res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream', 'cache-control': /sw[^/]*\.js$|\.html$/.test(file) ? 'no-cache' : 'max-age=0' })
-      res.end(data)
-    } catch { res.writeHead(404, { 'content-type': 'text/plain' }); res.end('not found') }
+      file = await realpath(file)
+      if ((await stat(file)).isDirectory()) file = await realpath(resolve(file, 'index.html'))
+    } catch { return undefined }
+    return within(file) ? file : null
+  }
+
+  async function serveFile(res, pathname) {
+    const file = await inside(pathname)
+    if (file === null) return send(res, 403, { message: 'outside the fixture' })
+    if (file === undefined) { res.writeHead(404, { 'content-type': 'text/plain' }); res.end('not found'); return }
+    res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream', 'cache-control': /sw[^/\\]*\.js$|\.html$/.test(file) ? 'no-cache' : 'max-age=0' })
+    res.end(await readFile(file))
   }
 
   const server = createServer(async (req, res) => {
-    const url = new URL(req.url, `http://localhost:${port}`)
+    const url = new URL(req.url, origin)
     if (process.env.FAKE_DEBUG && !/\.(js|css|woff2|svg|png|json|ttf)$/.test(url.pathname)) console.log('[fake]', req.method, url.pathname + url.search)
     try {
-      if (url.pathname.startsWith('/__e2e/')) return control(req, res, url)
+      if (url.pathname.startsWith('/__e2e/')) return req.headers['x-e2e-token'] === controlToken ? await control(req, res, url) : send(res, 403, { message: 'control token required' })
       if (state.down && (url.pathname.startsWith('/auth/') || url.pathname.startsWith('/api/') || url.pathname.startsWith('/rest/'))) { req.socket.destroy(); return }
       if (url.pathname.startsWith('/auth/v1/')) return await auth(req, res, url)
       if (url.pathname.startsWith('/api/rest/')) return await rest(req, res, url.pathname.slice('/api/rest/'.length))
@@ -166,7 +194,10 @@ export function startFakeAlpha({ port = 4192, root }) {
       case '/__e2e/down': state.down = !!b.down; return send(res, 200, { ok: true })
       case '/__e2e/tokens': state.tokenSeconds = b.seconds ?? 3600; return send(res, 200, { ok: true })
       case '/__e2e/revoke': for (const [k, v] of state.refresh) if (v === USERS[b.user].id) state.refresh.delete(k); return send(res, 200, { ok: true })
-      case '/__e2e/root': state.root = b.root; return send(res, 200, { ok: true })
+      case '/__e2e/root': {                                   // solo una delle cartelle dichiarate all'avvio, per nome
+        if (typeof b.fixture !== 'string' || !Object.hasOwn(roots, b.fixture)) return send(res, 400, { message: 'unknown fixture' })
+        state.root = roots[b.fixture]; return send(res, 200, { ok: true })
+      }
       case '/__e2e/state': { const id = USERS[url.searchParams.get('user')]?.id; const h = head(id)
         return send(res, 200, { revision: h.revision, document: h.document, denied: state.denied, log: state.log.filter(x => x.user === id) }) }
       case '/__e2e/invite': { const id = USERS[b.user].id; return send(res, 200, session(id)) }
@@ -174,13 +205,15 @@ export function startFakeAlpha({ port = 4192, root }) {
     }
   }
 
-  return new Promise(ok => server.listen(port, () => ok({ state, close: () => new Promise(r => { server.closeAllConnections?.(); server.close(r) }) })))
+  return new Promise((ok, bad) => {
+    server.once('error', bad)
+    server.listen(port, HOST, () => ok({ state, origin, controlToken, address: server.address(), close: () => new Promise(r => { server.closeAllConnections?.(); server.close(r) }) }))
+  })
 }
 
 // Avviato a mano (npm run alpha:local): l'app Alpha già costruita in dist-alpha-e2e (npm run e2e:alpha la costruisce)
-// su http://localhost:4192/app/, con gli utenti di prova qui sopra. Per provare l'Alpha senza toccare il cloud.
-if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop())) {
-  const root = new URL('../dist-alpha-e2e', import.meta.url).pathname
-  await startFakeAlpha({ root })
-  console.log(`Alpha locale (backend simulato): http://localhost:4192/app/\nUtenti di prova: ${Object.values(USERS).filter(u => u.password).map(u => `${u.email} / ${u.password}`).join(' · ')}`)
+// su http://127.0.0.1:4192/app/, con gli utenti di prova qui sopra. Per provare l'Alpha senza toccare il cloud.
+if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
+  const server = await startFakeAlpha({ fixtures: { v1: fileURLToPath(new URL('../dist-alpha-e2e', import.meta.url)) } })
+  console.log(`Alpha locale (backend simulato): ${server.origin}/app/\nUtenti di prova: ${Object.values(USERS).filter(u => u.password).map(u => `${u.email} / ${u.password}`).join(' · ')}`)
 }

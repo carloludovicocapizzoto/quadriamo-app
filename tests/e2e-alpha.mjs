@@ -6,14 +6,14 @@
 // NON sostituisce il collaudo sul cloud vero: il backend è simulato (vedi docs/CLOSED-ALPHA.md).
 // Uso: npm run e2e:alpha
 import { spawnSync } from 'node:child_process'
-import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { openChrome, sleep } from '../tools/chrome.mjs'
 import { startFakeAlpha, USERS } from './fake-alpha.mjs'
 
 const root = resolve(fileURLToPath(import.meta.url), '../..')
-const PORT = 4192, ORIGIN = `http://localhost:${PORT}`, OUT = join(root, 'dist-alpha-e2e'), OUT2 = join(root, 'dist-alpha-e2e-v2')
+const PORT = 4192, ORIGIN = `http://127.0.0.1:${PORT}`, OUT = join(root, 'dist-alpha-e2e'), OUT2 = join(root, 'dist-alpha-e2e-v2')
 
 // 1. l'app Alpha costruita per il backend locale (stessi controlli di tools/alpha/build.mjs: solo localhost)
 if (!process.env.E2E_NO_BUILD) {
@@ -22,14 +22,20 @@ if (!process.env.E2E_NO_BUILD) {
   const run = spawnSync(process.execPath, ['node_modules/vite/bin/vite.js', 'build', '--mode', 'alpha', '--outDir', OUT, '--logLevel', 'error'], { cwd: root, env, stdio: 'inherit' })
   if (run.status !== 0) process.exit(run.status ?? 1)
 }
+// il simulatore resta fuori dall'app costruita: niente comandi /__e2e, niente codice del finto backend, niente utenti di prova
+const leaks = readdirSync(OUT, { recursive: true }).map(String).filter(f => /\.(js|html|json|webmanifest|map)$/.test(f))
+  .filter(f => /__e2e|fake-alpha|x-e2e-token|startFakeAlpha|Prova-[AB]-2026/.test(readFileSync(join(OUT, f), 'utf8')))
+if (leaks.length) { console.error(`Il simulatore è finito nella build: ${leaks.join(', ')}`); process.exit(1) }
+console.log('Build controllata: il simulatore non è incluso.')
 // una seconda "versione" per provare l'aggiornamento del service worker: stessa app, index e precache diversi
 rmSync(OUT2, { recursive: true, force: true }); cpSync(OUT, OUT2, { recursive: true })
 writeFileSync(join(OUT2, 'app/index.html'), readFileSync(join(OUT2, 'app/index.html'), 'utf8').replace('<head>', '<head><meta name="e2e-build" content="2">'))
 writeFileSync(join(OUT2, 'sw-account-v2.js'), readFileSync(join(OUT2, 'sw-account-v2.js'), 'utf8').replace(/(url:"app\/index\.html",revision:")[a-f0-9]+/, '$1e2e0000000000000000000000000002'))
 
-const server = await startFakeAlpha({ port: PORT, root: OUT })
+const server = await startFakeAlpha({ port: PORT, fixtures: { v1: OUT, v2: OUT2 } })
 const api = async (path, body) => {
-  try { return await (await fetch(`${ORIGIN}/__e2e/${path}`, body ? { method: 'POST', body: JSON.stringify(body) } : undefined)).json() }
+  const headers = { 'x-e2e-token': server.controlToken }
+  try { return await (await fetch(`${ORIGIN}/__e2e/${path}`, body ? { method: 'POST', headers, body: JSON.stringify(body) } : { headers })).json() }
   catch (e) { throw Error(`controllo del finto server (${path}): ${e.cause?.message ?? e.message}`) }
 }
 const remote = user => api(`state?user=${user}`)
@@ -95,13 +101,19 @@ async function finishSetup(d) {
   await d.click(`document.querySelector('.persona-row')`); await sleep(500)
   for (let i = 0; i < 14 && !(await d.js(appReady)); i++) { await d.click(`document.querySelector('.step-nav .btn.primary')`); await sleep(450) }
 }
+/** Aspetta che una condizione nella pagina diventi vera (al massimo `ms`). */
+async function until(d, expr, ms = 8000) { for (let i = 0; i < ms / 100; i++) { if (await d.js(expr)) return true; await sleep(100) } return false }
+/** Una spesa come la segna una persona: foglio aperto, importo scritto e controllato, categoria, Salva, foglio chiuso. */
 async function addExpense(d, amount) {
-  await d.click(`document.querySelector('.tab-add')`); await sleep(700)
-  await d.type(amount); await sleep(200)
+  await d.click(`document.querySelector('.tab-add')`)
+  if (!await until(d, `!!document.querySelector('.tx-sheet .amount-input')`)) throw Error(`foglio del nuovo movimento non aperto (${amount})`)
+  await d.js(`document.querySelector('.tx-sheet .amount-input').focus()`); await d.type(amount)
+  if (!await until(d, `document.querySelector('.tx-sheet .amount-input')?.value === ${JSON.stringify(amount)}`, 3000)) throw Error(`importo non scritto (${amount})`)
   await d.click(`document.querySelector('.cat-pick button')`)
-  await d.click(`document.querySelector('.tx-sheet button[type=submit]')`); await sleep(400)
+  await d.click(`document.querySelector('.tx-sheet button[type=submit]')`)
+  if (!await until(d, `!document.querySelector('.tx-sheet')`)) throw Error(`spesa non salvata: il foglio è rimasto aperto (${amount})`)
 }
-const toList = d => d.js(`location.hash = '#/analysis/transactions'`).then(() => sleep(700))
+const toList = async d => { await d.js(`location.hash = '#/analysis/transactions'`); await until(d, `!!document.querySelector('.tabbar') && location.hash === '#/analysis/transactions'`); await sleep(500) }
 const amounts = doc => (doc?.transactions ?? []).map(t => t.amount).sort((a, b) => a - b)
 
 console.log('Accesso')
@@ -218,17 +230,28 @@ await step(A2, 'esco da B e rientro come A: tornano i dati di A, nessuno di B', 
 }, `${appReady} && /12,50/.test(document.body.innerText)`, 15)
 
 console.log('Sessione scaduta e rete assente')
-await step(A1, 'token scaduto e rinnovo revocato: dopo la riapertura l\'app chiede di nuovo l\'accesso, i dati restano', async () => {
-  await api('tokens', { seconds: 3 }); await signOut(A1); await sleep(1200); await signIn(A1, 'A'); await sleep(2500)
-  await api('revoke', { user: 'A' }); await sleep(4000); await A1.reload()
-}, `(!!document.querySelector('input[type=email]') || !!document.querySelector('.gate-cta')) && /La sessione è terminata/.test(document.body.innerText)`, 15)
+const ended = `(!!document.querySelector('input[type=email]') || !!document.querySelector('.gate-cta')) && /La sessione è terminata/.test(document.body.innerText)`
+await step(A1, 'la sessione finisce con l\'app aperta: l\'avviso compare subito e la spesa appena fatta resta', async () => {
+  await A1.offline(true); await A1.js(`location.hash = '#/'`); await sleep(500); await addExpense(A1, '1,11'); await sleep(600)
+  // come quando Supabase chiude la sessione (rinnovo rifiutato) o un'altra scheda esce: la sessione salvata diventa vuota
+  await A1.js(`(() => { const k = Object.keys(localStorage).find(x => x.startsWith('q.auth.v1/'))
+    localStorage.setItem(k, JSON.stringify({ format: 1, generation: 'e2e-ended', session: null })); window.dispatchEvent(new StorageEvent('storage', { key: k })) })()`)
+}, ended, 12)
+await step(A1, 'riaprendo l\'app l\'avviso è ancora lì', async () => { await A1.offline(false); await A1.reload() }, ended, 12)
+await step(A1, 'sessione finita ad app chiusa (rinnovo revocato): l\'avviso compare alla riapertura', async () => {
+  await api('tokens', { seconds: 3 }); await signIn(A1, 'A'); await sleep(2500)
+  await api('revoke', { user: 'A' }); await A1.cdp('Page.navigate', { url: 'about:blank' }); await sleep(3500)   // app chiusa, token scaduto
+  await A1.open()
+}, ended, 15)
 await api('tokens', { seconds: 3600 })
 await step(A1, 'server irraggiungibile durante l\'accesso: messaggio comprensibile', async () => {
   await api('down', { down: true }); await signIn(A1, 'A')
 }, has('/Non riesco a raggiungere il server/'), 15)
 await api('down', { down: false })
-await step(A1, 'tornato il server, l\'accesso riesce e i dati ci sono', async () => { await A1.reload(); await signIn(A1, 'A'); await sleep(2500); await toList(A1) },
-  `${appReady} && /12,50/.test(document.body.innerText)`, 15)
+await step(A1, 'tornato il server, l\'accesso riesce e i dati ci sono, senza più l\'avviso', async () => { await A1.reload(); await signIn(A1, 'A'); await sleep(2500); await toList(A1) },
+  `${appReady} && /12,50/.test(document.body.innerText) && !/La sessione è terminata/.test(document.body.innerText)`, 15)
+await step(A1, 'la spesa fatta mentre la sessione scadeva arriva sul cloud dopo il nuovo accesso', null,
+  async () => amounts((await remote('A')).document).includes(1.11), 15)
 
 console.log('Invito')
 const N = await device('invitato', 9463)
@@ -247,7 +270,7 @@ await step(A1, 'il service worker controlla la pagina', () => A1.reload(), `!!na
 await step(A1, 'senza rete l\'app si apre lo stesso, con i dati', async () => { await A1.offline(true); await A1.reload(); await toList(A1) }, `${appReady} && /12,50/.test(document.body.innerText)`, 12)
 await A1.offline(false)
 await step(A1, 'nuova versione pubblicata: l\'app si aggiorna e i dati locali restano', async () => {
-  await api('root', { root: OUT2 }); await A1.reload(); await sleep(2500); await A1.reload(); await toList(A1)
+  await api('root', { fixture: 'v2' }); await A1.reload(); await sleep(2500); await A1.reload(); await toList(A1)
 }, `!!document.querySelector('meta[name=e2e-build]') && ${appReady} && /12,50/.test(document.body.innerText)`, 20)
 
 // nessuna chiamata dell'app deve finire su una rotta che il gateway Alpha rifiuta (le funzioni senza rotta sono spente);
