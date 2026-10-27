@@ -2,6 +2,7 @@
 // con gli ultimi passi del diario tecnico (diagnostics.ts), l'ambiente e il commit, così si può ricostruire.
 // Solo dati tecnici, le email nei messaggi vengono oscurate; al massimo 5 errori diversi per apertura dell'app.
 import { ENV } from '../env'
+import { cloudFeature } from '../features'
 import { scopedClient } from '../sync/scopedClient'
 import { currentScope } from '../store/scope'
 import { deviceInfo, note, route, trailNow } from './diagnostics'
@@ -17,7 +18,7 @@ export function reportError(e: unknown) {
   if (NOISE.test(message)) return
   note('error', message)
   const lease = currentScope(), supabase = scopedClient(lease, true)
-  if (!supabase || !navigator.onLine || sent.size >= 5 || sent.has(message)) return
+  if (!supabase || !navigator.onLine || sent.size >= 5 || sent.has(message) || !cloudFeature('errorReports')) return
   sent.add(message)
   const d = deviceInfo()
   const base = { message, stack: hideEmails(err.stack ?? '').slice(0, 2000), route: route(), version: ENV.release,

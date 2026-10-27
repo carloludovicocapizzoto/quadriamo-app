@@ -3,7 +3,7 @@ import type { AppData } from '../store/types'
 export interface RemoteDocument { protocol: number; revision: string; mode: 'legacy' | 'protected' | 'paused'; document: AppData | null; activationAllowed?: boolean }
 export interface PendingWrite { id: string; expected: string; document: AppData; localAtStart: AppData | null }
 export interface DataConflict { id: string; paths: string[]; base: RemoteDocument | null; local: AppData | null; remote: RemoteDocument; cause?: 'revision' | 'expired-receipt' }
-export interface RecoveryCopy { id: string; at: string; reason: 'resolution' | 'local-conflict' | 'retry' | 'expired-receipt'; local: AppData | null; remote: AppData | null; base: AppData | null }
+export interface RecoveryCopy { id: string; at: string; reason: 'resolution' | 'local-conflict' | 'retry' | 'expired-receipt' | 'restore'; local: AppData | null; remote: AppData | null; base: AppData | null }
 export type CloudStatus = 'idle' | 'pending' | 'ok' | 'reconciled' | 'conflict' | 'upgrade' | 'paused'
 export interface CloudState {
   format: 1; base: RemoteDocument | null; pending: PendingWrite | null; conflict: DataConflict | null
@@ -96,7 +96,7 @@ function mergeById(base: Fields[], local: Fields[], remote: Fields[], path: stri
   const [b, l, r] = lists.map(list => new Map(list.map(e => [e.id as string, e]))), out: Fields[] = []
   for (const id of new Set([...l.keys(), ...r.keys(), ...b.keys()])) {
     const before = b.get(id), left = l.get(id), right = r.get(id), at = path + '/' + id
-    let value = pick(before ? [before] : [], left ? [left] : [], right ? [right] : []) ?? (before && left && right ? mergeItem(before, left, right) : null)
+    let value = pick(before ? [before] : [], left ? [left] : [], right ? [right] : []) ?? (before && left && right ? mergeItem(before, left, right, at, m) : null)
     if (!value && m.choices[at]) { const chosen = m.choices[at] === 'local' ? left : right; value = chosen ? [chosen] : [] }
     if (!value) { m.paths.push(at); continue }
     if (value.length) out.push(clone(value[0] as Fields))
@@ -104,15 +104,36 @@ function mergeById(base: Fields[], local: Fields[], remote: Fields[], path: stri
   return out
 }
 
-/** Two edits of the same item combine when they touch different fields; the paid dates (`done`) merge as a set. */
-function mergeItem(base: Fields, local: Fields, remote: Fields): unknown[] | null {
-  const out = clone(local)
-  for (const key of keys(base, local, remote)) {
+/** Fields that follow another field of the same item: the price history follows the amount it explains. */
+const FOLLOWS: Record<string, string> = { prices: 'amount' }
+
+/**
+ * Two edits of the same item combine field by field; the paid dates (`done`) merge as a set. Only a field changed
+ * differently on both copies is asked (`<item>/<field>`): the other copy's independent edits to the same item stay.
+ * A dependent field (FOLLOWS) is never asked: it comes from the copy whose value of its parent field was kept.
+ */
+function mergeItem(base: Fields, local: Fields, remote: Fields, at: string, m: Merge): unknown[] {
+  const out = clone(local), kept: Record<string, 'local' | 'remote' | 'same' | 'asked'> = {}
+  const all = [...keys(base, local, remote)]
+  for (const key of [...all.filter(k => !FOLLOWS[k]), ...all.filter(k => FOLLOWS[k])]) {
     const b = slot(base, key), l = slot(local, key), r = slot(remote, key)
     if (key === 'done' && [b, l, r].every(s => Array.isArray(s[0]))) { out.done = mergeSet(b[0] as unknown[], l[0] as unknown[], r[0] as unknown[]); continue }
     if (/^updatedAt$|UpdatedAt$/.test(key)) { put(out, key, latest(l, r)); continue }
-    const value = pick(b, l, r)
-    if (!value) return null
+    const parent = FOLLOWS[key] && kept[FOLLOWS[key]]
+    if (parent === 'asked') continue                                     // resolved together with its parent field
+    // the copy that gave the parent field gives this one too, even if only the other copy touched it:
+    // otherwise the history could keep a price of the discarded version
+    if (parent === 'local' || parent === 'remote') { put(out, key, parent === 'local' ? l : r); continue }
+    if (parent === 'same' && !pick(b, l, r)) {
+      const lists = [b, l, r].map(s => Array.isArray(s[0]) ? s[0] as unknown[] : [])
+      put(out, key, [[...new Map([...lists[1], ...lists[2]].map(x => [JSON.stringify(x), x])).values()]
+        .filter(x => !lists[0].some(y => equal(x, y)) || lists[1].some(y => equal(x, y)) && lists[2].some(y => equal(x, y)))
+        .sort((x, y) => String((x as Fields).date ?? '').localeCompare(String((y as Fields).date ?? '')))])
+      continue
+    }
+    const value = decide(b, l, r, at + '/' + key, m)
+    if (!value) { kept[key] = 'asked'; continue }
+    kept[key] = equal(l, r) ? 'same' : equal(value, l) ? 'local' : 'remote'
     put(out, key, value)
   }
   return [out]
@@ -128,7 +149,8 @@ function keepUsedCategories(base: AppData, local: AppData, remote: AppData, docu
   const have = new Set(s.categories.map(c => c.id))
   const known = new Map([base, remote, local].flatMap(d => d.settings.categories ?? []).map(c => [c.id, c]))
   const touched = <T extends { id: string }>(items: T[], before: T[] = []) => items.filter(x => !equal(x, before.find(y => y.id === x.id)))
-  const used = [...touched(s.events, base.settings.events), ...touched(document.transactions, base.transactions), ...touched(s.rules ?? [], base.settings.rules)]
+  const used = [...touched(s.events, base.settings.events), ...touched(document.transactions, base.transactions), ...touched(s.rules ?? [], base.settings.rules),
+    ...touched(Array.isArray(document.inbox) ? document.inbox : [], base.inbox)]   // anche i movimenti importati da confermare
   for (const { category } of used) if (category && !have.has(category) && known.has(category)) { s.categories.push(clone(known.get(category)!)); have.add(category) }
 }
 

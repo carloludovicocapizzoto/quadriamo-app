@@ -5,17 +5,10 @@ import { authStorage, authStorageKey, authVersion, watchAuthStorage, authCleanup
 import { ENV } from '../env'
 import { storedAuthSession } from './offlineSession'
 import { INVITE_LINK } from '../entry'
+import { alphaFetch } from './alphaFetch'
 
-// La nuova Alpha manda solo la Data API alla funzione della propria origine.
-// Auth e Storage usano il progetto Supabase Alpha; il suo endpoint REST diretto
-// richiede comunque la firma privata della funzione Pages.
-export const alphaFetch: typeof fetch = (input, init) => {
-  const request = new Request(input, init)
-  const direct = ENV.supabase?.url.replace(/\/$/, '') + '/rest/v1/'
-  if (ENV.name !== 'alpha' || !ENV.supabase || !request.url.startsWith(direct)) return fetch(request)
-  const path = request.url.slice(direct.length)
-  return fetch(new Request(`${location.origin}${ENV.base}api/rest/${path}`, request))
-}
+// La nuova Alpha manda solo la Data API alla funzione della propria origine (alphaFetch).
+export { alphaFetch }
 
 export const AUTH_KEY = ENV.supabase ? authStorageKey(ENV.supabase.url) : ''
 export const ALPHA_INVITE_LINK = ENV.name === 'alpha' && INVITE_LINK

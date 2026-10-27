@@ -53,7 +53,7 @@ export function SyncRecovery({ storage, lease, status, retry, activate, failureC
     </div>
     {failed && <p role="alert">{t('cloud.actionError')}</p>}
     {cloud?.conflict?.cause === 'expired-receipt' && <p role="alert">{t('cloud.expiredReceiptConflict')}</p>}
-    {cloud?.conflict && <ConflictForm key={cloud.conflict.id} conflict={cloud.conflict} storage={storage} lease={lease} />}
+    {cloud?.conflict && <ConflictForm key={cloud.conflict.id} conflict={cloud.conflict} storage={storage} lease={lease} onResolved={retry} />}
     {!!cloud?.recovery.length && <details><summary>{t('cloud.archive', { count: cloud.recovery.length })}</summary>
       <p>{t('cloud.archiveHint')}</p>
       {cloud.recovery.map(copy => <div className="cloud-archive" key={copy.id}>
@@ -66,7 +66,7 @@ export function SyncRecovery({ storage, lease, status, retry, activate, failureC
   </section>
 }
 
-function ConflictForm({ conflict, storage, lease }: { conflict: DataConflict; storage: AccountStore; lease: ScopeLease }) {
+function ConflictForm({ conflict, storage, lease, onResolved }: { conflict: DataConflict; storage: AccountStore; lease: ScopeLease; onResolved: () => Promise<void> }) {
   const { t } = useI18n(), [choices, setChoices] = useState<Record<string, 'local' | 'remote'>>({})
   const [error, setError] = useState(false), [saving, setSaving] = useState(false)
   const submit = async (event: React.SubmitEvent) => {
@@ -82,6 +82,8 @@ function ConflictForm({ conflict, storage, lease }: { conflict: DataConflict; st
         cloud.base = clone(conflict.remote); cloud.pending = null; cloud.conflict = null; cloud.status = 'pending'
         return { data: selected, cloud }
       })
+      // la scelta va subito sul cloud: se si tiene questa versione i dati locali non cambiano e niente altro farebbe ripartire l'invio
+      if (lease.current()) void onResolved()
     } catch { if (lease.current()) setError(true) }
     finally { if (lease.current()) setSaving(false) }
   }
@@ -144,8 +146,16 @@ function Version({ document, other, path }: { document: AppData | null; other: A
     <details><summary>{t('cloud.contents')}</summary>{document.transactions.map(tx => <p key={tx.id}>{tx.date ? date(tx.date) : '—'} · {tx.description} · {tx.amount === null ? '—' : money(tx.amount, tx.currency || document.settings.currency)}</p>)}</details>
   </>
   if (path.startsWith(EVENT)) {
-    const event = document.settings.events.find(item => item.id === path.slice(EVENT.length))
+    // tutto l'evento (`…/<id>`) oppure un solo campo (`…/<id>/<campo>`), quando l'altra versione ha cambiato altri campi
+    const [id, field] = path.slice(EVENT.length).split('/')
+    const event = document.settings.events.find(item => item.id === id)
     if (!event) return <p>{t('cloud.deleted')}</p>
+    if (field) {
+      const value = (event as unknown as Record<string, unknown>)[field]
+      return <dl><dt>{t('cloud.name')}</dt><dd>{event.title}</dd>
+        <dt>{labels[field] ?? field}</dt><dd>{value === undefined || value === null ? '—' : field === 'amount' && typeof value === 'number'
+          ? money(value, document.settings.currency) : typeof value === 'object' ? JSON.stringify(value) : String(value)}</dd></dl>
+    }
     return <dl><dt>{t('cloud.name')}</dt><dd>{event.title}</dd>
       <dt>{t('cloud.amount')}</dt><dd>{event.amount === null ? '—' : money(event.amount, document.settings.currency)}</dd>
       <dt>{t('cloud.date')}</dt><dd>{date(event.date)}</dd>

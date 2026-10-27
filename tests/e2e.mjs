@@ -177,6 +177,21 @@ await step('senza rete l\'app si riapre lo stesso, con i dati', async () => {
 }, `/12,50/.test(document.querySelector('.w-today')?.innerText ?? '')`)
 await cdp('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 })
 
+console.log('Categorie')
+// eliminare una categoria usata non cancella niente: si sceglie dove spostare i movimenti, poi sparisce
+const catRow = name => `[...document.querySelectorAll('.edit-list li')].find(l => l.querySelector('input')?.value === '${name}')`
+await step('Profilo → Budget: eliminare «Affitto» mostra chi la usa', async () => {
+  await js(`document.querySelector('.kb-list') && document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`)
+  await js(`location.hash = '#/profile/budget'`); await sleep(900)
+  await click(`${catRow('Affitto')}?.querySelector('button.icon-btn')`)
+}, `/Movimenti: 1/.test(${catRow('Affitto')}?.querySelector('.cat-delete')?.innerText ?? '')`)
+await step('«Sposta ed elimina» porta la spesa in «Spesa» e toglie la categoria', async () => {
+  await setField('.cat-delete select', 'groceries'); await sleep(200)
+  await click(byText('/Sposta ed elimina/', '.cat-delete button')); await sleep(600)
+}, `!${catRow('Affitto')}`)
+await step('la spesa da 12,50 € c\'è ancora, ora in «Spesa»', () => js(`location.hash = '#/analysis/transactions'`),
+  `/12,50/.test(document.body.innerText) && /Spesa/.test([...document.querySelectorAll('li, .row')].find(r => /12,50/.test(r.textContent))?.textContent ?? '')`)
+
 console.log('Tastiera')
 const press = (key, code) => cdp('Input.dispatchKeyEvent', { type: 'keyDown', key, code, text: key.length === 1 ? key : undefined, windowsVirtualKeyCode: key.toUpperCase().charCodeAt(0) })
 await step('G poi N apre le Notizie', async () => { await js(`document.activeElement?.blur()`); await press('g', 'KeyG'); await press('n', 'KeyN') }, `location.hash === '#/news'`)

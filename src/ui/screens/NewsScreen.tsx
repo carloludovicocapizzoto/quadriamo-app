@@ -10,6 +10,7 @@ import { AREAS, EMPTY, LANGS, SOURCES, TOPICS, TYPES, activeCount, applyFilter, 
 import { Icon } from '../Icon'
 import { tap } from '../kit/motion'
 import { Sheet } from '../kit/Sheet'
+import { cloudFeature } from '../../features'
 
 
 /**
@@ -33,6 +34,7 @@ export function NewsScreen({ onAction }: { onAction: (a: NonNullable<Tip['action
 
   useEffect(() => {
     let alive = true
+    if (!cloudFeature('news')) return                    // nell'Alpha il servizio delle notizie non c'è: restano i consigli
     void loadHub(lang, tick > 0).then(async h => {
       if (!alive) return
       setNow(Date.now()); setHub(h)
@@ -67,7 +69,8 @@ export function NewsScreen({ onAction }: { onAction: (a: NonNullable<Tip['action
         </button>
       </div>}
 
-      {hub === undefined ? <div className="news-loading">{[0, 1, 2, 3].map(i => <div key={i} className="skel"><span /><span /></div>)}</div>
+      {!cloudFeature('news') ? <p className="muted news-empty">{t('news.notInAlpha')}</p>
+        : hub === undefined ? <div className="news-loading">{[0, 1, 2, 3].map(i => <div key={i} className="skel"><span /><span /></div>)}</div>
         : hub ? (narrowed
           ? <>
               {q.length > 1 && <button className="link-btn news-follow" onClick={() => { tap(); setTopics(followed ? unfollow(q) : follow(q)) }}>

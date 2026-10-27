@@ -50,6 +50,7 @@ export type Action =
   | { type: 'updateTx'; tx: Transaction; at?: string }
   | { type: 'deleteTx'; id: string; at?: string }
   | { type: 'setSettings'; settings: Settings; at?: string }
+  | { type: 'deleteCategory'; id: string; moveTo: string | null; at?: string }   // sposta movimenti, scadenze e regole, poi elimina
   | { type: 'setFx'; currency: string; rates: Record<string, number>; date: string }   // cambi automatici: non sono una modifica dell'utente
   | { type: 'setInvestments'; investments: Investments; at?: string }
   | { type: 'addInbox'; items: InboxItem[] }

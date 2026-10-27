@@ -20,6 +20,13 @@ export function parseBackup(text: string): AppData {
            ...(Array.isArray(d.goals) ? { goals: d.goals } : {}) }
 }
 
+/** Cosa sparisce ripristinando `backup` al posto dei dati attuali: movimenti e scadenze che il backup non contiene. */
+export function restoreLoss(current: AppData | null, backup: AppData): { transactions: number; events: number } {
+  if (!current) return { transactions: 0, events: 0 }
+  const txs = new Set(backup.transactions.map(t => t.id)), events = new Set((backup.settings.events ?? []).map(e => e.id))
+  return { transactions: current.transactions.filter(t => !txs.has(t.id)).length, events: current.settings.events.filter(e => !events.has(e.id)).length }
+}
+
 /** Esporta i movimenti in CSV (separatore ";" e virgola decimale non servono: Excel/Sheets leggono il punto se indicato). */
 export function toCsv(d: AppData, names: { category: (id: string | null) => string; bucket: (id: string | null) => string }): string {
   const esc = (v: unknown) => {

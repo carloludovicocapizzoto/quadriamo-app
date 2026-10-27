@@ -7,6 +7,7 @@ import type { Dict } from '../../i18n/en'
 import { supabase } from '../../sync/client'
 import { Icon } from '../Icon'
 import type { WidgetCtx } from './widgets'
+import { cloudFeature } from '../../features'
 
 const k = (s: string) => s as keyof Dict
 type Box = (body: ReactNode) => ReactNode
@@ -25,7 +26,7 @@ export function Events({ c, box }: { c: WidgetCtx; box: Box }) {
   const { lang, date } = useI18n()
   const [rows, setRows] = useState<{ id: number; day: string; title_it: string; title_en: string; title_fr: string | null; title_es: string | null; url: string | null }[] | null>(null)
   useEffect(() => {
-    if (!supabase) return
+    if (!supabase || !cloudFeature('econEvents')) return
     void supabase.from('econ_events').select('*').gte('day', c.today).order('day').limit(3).then(({ data }) => setRows(data ?? []), () => setRows([]))
   }, [c.today])
   if (!rows?.length) return null

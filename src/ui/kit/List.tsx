@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { useI18n } from '../../i18n/core'
 import { Icon } from '../Icon'
 import { tap } from './motion'
@@ -29,14 +29,15 @@ type RowProps = {
    | { onClick?: never; href?: never; toggle?: never })
 
 export function Row({ label, value, detail, danger, morph, ...kind }: RowProps) {
+  const id = useId()
   const body = <>
-    <span className="row-main"><span className={danger ? 'bad-text' : undefined} data-morph={morph}>{label}</span>{detail && <small>{detail}</small>}</span>
+    <span className="row-main"><span id={id} className={danger ? 'bad-text' : undefined} data-morph={morph}>{label}</span>{detail && <small>{detail}</small>}</span>
     {value != null && <span className="row-value">{value}</span>}
   </>
   if ('toggle' in kind && kind.toggle) {
     const { on, onChange, disabled } = kind.toggle
     return <li><label className="row">{body}
-      <button type="button" role="switch" aria-checked={on} className={`switch${on ? ' on' : ''}`} disabled={disabled}
+      <button type="button" role="switch" aria-checked={on} aria-labelledby={id} className={`switch${on ? ' on' : ''}`} disabled={disabled}
               onClick={() => { tap(); onChange(!on) }}><i /></button></label></li>
   }
   if ('href' in kind && kind.href) return <li><a className="row" href={kind.href} target="_blank" rel="noopener">{body}<Icon name="external" size={16} className="row-chev" /></a></li>

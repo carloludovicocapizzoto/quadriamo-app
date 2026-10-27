@@ -4,6 +4,7 @@
 import type { ProfilePage } from '../../profile/pages'
 import type { Dict } from '../../i18n/en'
 import type { Prefs } from '../../app/prefs'
+import { cloudFeature } from '../../features'
 
 export interface Ctx {
   signedIn: boolean
@@ -43,7 +44,7 @@ export const SECTIONS: { title: keyof Dict; items: Item[] }[] = [
     { page: 'goals', label: 'prof.goalsPage' },
     { page: 'documents', label: 'prof.documents' },
     { page: 'rules', label: 'prof.rules' },
-    { page: 'shared', label: 'prof.shared' },
+    { page: 'shared', label: 'prof.shared', when: () => cloudFeature('shared') },
   ] },
   { title: 'prof.sec.prefs', items: [
     { page: 'appearance', label: 'prof.appearance', value: c => c.t(`theme.${c.prefs.theme}`) },
@@ -56,7 +57,7 @@ export const SECTIONS: { title: keyof Dict; items: Item[] }[] = [
   { title: 'prof.sec.privacy', items: [
     { href: c => c.privacyUrl, label: 'legal.privacy' },
     { href: c => c.termsUrl, label: 'legal.terms' },
-    { toggle: c => ({ on: c.stats, onChange: c.setStats }), label: 'beta.stats' },
+    { toggle: c => ({ on: c.stats, onChange: c.setStats }), label: 'beta.stats', when: () => cloudFeature('telemetry') },
     { page: 'data', label: 'prof.exportImport' },
     { page: 'delete', label: 'prof.delete', danger: true, when: c => c.signedIn },
     { page: 'delete', label: 'prof.deleteLocal', danger: true, when: c => !c.signedIn },
@@ -65,7 +66,7 @@ export const SECTIONS: { title: keyof Dict; items: Item[] }[] = [
     { page: 'help', label: 'prof.help' },
     { href: c => `mailto:${c.contactEmail}`, label: 'prof.contact', when: c => !!c.contactEmail },
     { page: 'feedback', label: 'prof.feedback' },
-    { action: c => c.invite(), label: 'beta.invite' },
+    { action: c => c.invite(), label: 'beta.invite', when: () => cloudFeature('invite') },
     { page: 'licenses', label: 'prof.licenses' },
     { action: c => c.openAdmin(), label: 'admin.open', when: c => c.isAdmin },
     { info: c => c.version, label: 'prof.version' },

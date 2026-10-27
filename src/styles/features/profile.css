@@ -9,6 +9,10 @@
   .edit-list li > :first-child { grid-column: 1 / -1; }
   .edit-list li { padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 }
+/* conferma dell'eliminazione di una categoria: occupa tutta la riga, sulla superficie (niente card) */
+.cat-delete { grid-column: 1 / -1; display: grid; gap: var(--s2); padding: var(--s3) 0 var(--s2); border-top: 1px solid var(--line); }
+.cat-delete p { margin: 0; }
+.cat-uses { display: grid; gap: 2px; }
 .save-bar { position: fixed; left: 0; right: 0; bottom: calc(var(--bar-h) + var(--bar-gap) + var(--s2)); display: flex; gap: 12px;
   align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--surface);
   border-top: 1px solid var(--line); z-index: 6; }
@@ -90,3 +94,7 @@
 .photo { display: flex; align-items: center; gap: var(--s4); margin: 0 0 var(--s6); }
 .photo-actions { display: grid; justify-items: start; gap: 2px; }
 .photo-actions .link-btn { padding: 4px 0; cursor: pointer; }
+/* segnalazione dell'Alpha: i dettagli tecnici vanno a capo sul telefono, nessuno scorrimento orizzontale */
+.alpha-report ul { margin: 0; padding-left: 18px; display: grid; gap: var(--s1); }
+.alpha-details { white-space: pre-wrap; overflow-wrap: anywhere; font: var(--t-cap)/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+  background: var(--fill); border-radius: var(--r-md); padding: var(--s3); margin: 0; }

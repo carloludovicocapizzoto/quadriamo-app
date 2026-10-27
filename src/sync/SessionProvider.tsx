@@ -21,6 +21,7 @@ import { isAuthRetryableFetchError } from '@supabase/supabase-js'
 import { downloadFile } from '../ui/kit/download'
 
 type User = SyncApi['user']
+const SESSION_ENDED = 'q.sessionEnded'
 type AuthUser = { id: string; email?: string; email_confirmed_at?: string; user_metadata?: { first_name?: string; last_name?: string } }
 const toUser = (u: AuthUser | null | undefined): User => u ? {
   id: u.id, email: u.email ?? '', firstName: u.user_metadata?.first_name ?? '', lastName: u.user_metadata?.last_name ?? '',
@@ -37,24 +38,33 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [inviteSetup, setInviteSetup] = useState(false)
   const [seed, setSeed] = useState<AppData>()
   const [localSession, setLocalSession] = useState(false), [localLogout, setLocalLogout] = useState(false)
+  // la sessione è finita da sola (rinnovo rifiutato, uscita da un altro dispositivo): si dice perché si torna all'accesso
+  // resta anche dopo una ricarica (sul dispositivo, senza dati personali) finché non si accede di nuovo o si esce volontariamente
+  const [sessionEnded, setEnded] = useState(() => local.get(SESSION_ENDED) === '1'), leaving = useRef(false), expected = useRef<string | null>(null)
+  const setSessionEnded = useCallback((on: boolean) => { local.set(SESSION_ENDED, on ? '1' : null); setEnded(on) }, [])
   const [authFailed, setAuthFailed] = useState(false)
   const recoveryOwner = useRef<string | null>(null)
   const inviteArrival = useRef(ALPHA_INVITE_LINK)
   const authUser = useRef<User>(null)
   const installUser = useCallback((next: User) => {
+    const previous = authUser.current                                  // prima di sovrascriverlo: serve a capire se la sessione è finita
     authUser.current = next
     const scope = scopeFor(next?.id ?? null)
     const current = currentScope()
     const lease = current.current() && scopeKey(current.scope) === scopeKey(scope) ? current : activateScope(scope)
     if (!next) recoveryOwner.current = null
-    if (next) setLocalLogout(false)
+    if (next) { setLocalLogout(false); setSessionEnded(false) }
+    // anche all'avvio: c'era una sessione salvata (expected) ma il server non l'ha rinnovata
+    else if (leaving.current) { setSessionEnded(false); leaving.current = false }
+    else if (previous || expected.current) setSessionEnded(true)
+    expected.current = null
     if (inviteArrival.current && next) {
       local.set(personalKey('q.alphaInvitePending', scope), '1')
       inviteArrival.current = false
     }
     setInviteSetup(!!next && ENV.name === 'alpha' && local.get(personalKey('q.alphaInvitePending', scope)) === '1')
     setUser(next); setSeed(undefined); setLease(lease); setReady(true); setRecovery(!!next && recoveryOwner.current === next.id); setTransitioning(false)
-  }, [])
+  }, [setSessionEnded])
 
   useEffect(() => {
     let alive = true
@@ -72,7 +82,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (stored?.user.id !== authUser.current?.id) {
         stop(); observed = undefined
         if (!stored) { setLocalSession(false); installUser(null) }
-        else { setLease(activateScope(scopeFor(null))); setUser(null); setReady(false); setTransitioning(true) }
+        else { expected.current = stored.user.id; setLease(activateScope(scopeFor(null))); setUser(null); setReady(false); setTransitioning(true) }
       }
       if (authRuntimeError) { stop(); observed = undefined; setAuthFailed(true); return }
       if (!authRuntimeCurrent() || !supabase || observed === supabase) return
@@ -194,9 +204,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (error) throw error
     },
     signOut: () => depart(async guard => {
-      if (!navigator.onLine || localSession) { await closeLocalSession(guard); setLocalLogout(true); return }
-      const { error } = await authCommand(guard, auth => auth.signOut())
-      if (error) throw error
+      leaving.current = true                                   // uscita voluta: resta finché l'uscita non è registrata
+      try {
+        if (!navigator.onLine || localSession) { await closeLocalSession(guard); setLocalLogout(true); return }
+        const { error } = await authCommand(guard, auth => auth.signOut())
+        if (error) throw error
+      } catch (error) { leaving.current = false; throw error }
     }),
     deleteAccount: () => depart(async guard => {
       if (ENV.name === 'alpha') throw new Error('alpha account deletion requires assisted recovery review')
@@ -211,7 +224,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       store.dispatch({ type: 'replace', data: null })
       await store.flush()
       guard.assert()
-      await authCommand(guard, auth => auth.signOut())
+      leaving.current = true
+      try { await authCommand(guard, auth => auth.signOut()) } catch (error) { leaving.current = false; throw error }
     }),
   }), [ready, user, recovery, inviteSetup, lease, seed, appUrl, confirmUrl, transitioning, depart, localSession])
   return <SessionContext.Provider value={api}>
@@ -222,6 +236,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (lease.current() && data) downloadFile('quadriamo-recovery', 'json', JSON.stringify(data, null, 2), 'application/json')
       }}>{t('storage.export')}</button>}
       </section>
-      : <>{localLogout && <p className="card" role="status">{t('auth.localLogout')}</p>}{children}</>}
+      : <>{localLogout && <p className="card" role="status">{t('auth.localLogout')}</p>}
+        {sessionEnded && !localLogout && <p className="card" role="status">{t('auth.sessionEnded')}</p>}{children}</>}
   </SessionContext.Provider>
 }

@@ -1,14 +1,16 @@
 // Chrome senza finestra guidato dal protocollo DevTools: lo usano i test che usano l'app (tests/e2e.mjs)
 // e gli scatti per i contenuti e per il sito (marketing/). Profilo usa e getta, cancellato alla chiusura
 // (senza, ogni giro lascia centinaia di MB nella cartella temporanea).
-// Chrome: CHROME=/percorso/del/chrome, altrimenti quello del Mac o google-chrome (GitHub Actions).
+// Chrome: CHROME=/percorso/del/chrome, altrimenti quello del Mac, di Windows o google-chrome (GitHub Actions).
 import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-const CHROME = process.env.CHROME ?? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable']
-  .find(p => existsSync(p)) ?? 'google-chrome'
+const WINDOWS = [process.env.PROGRAMFILES, process.env['PROGRAMFILES(X86)'], process.env.LOCALAPPDATA].filter(Boolean)
+  .map(dir => join(dir, 'Google', 'Chrome', 'Application', 'chrome.exe'))
+const CHROME = process.env.CHROME ?? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', ...WINDOWS]
+  .find(p => existsSync(p)) ?? (process.platform === 'win32' ? 'chrome.exe' : 'google-chrome')
 export const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 /**

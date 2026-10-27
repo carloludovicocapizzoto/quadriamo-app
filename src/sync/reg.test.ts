@@ -2,7 +2,7 @@
 // Three-way merge only; the full CAS cycle with two devices is in runSync.test.ts ("REG").
 import { describe, expect, it } from 'vitest'
 import { defaultSettings } from '../engine'
-import type { CalEvent } from '../engine/calendar'
+import { withPriceChange, type CalEvent } from '../engine/calendar'
 import { reducer } from '../store/reducer'
 import type { Action, AppData } from '../store/types'
 import { clone, EVENT, reconcile, resolveConflict, type DataConflict } from './protocol'
@@ -84,10 +84,56 @@ describe('REG: calendar events merge one by one', () => {
     const r = reconcile(marked, pc, phone)
     expect(r.paths).toEqual([]); expect(r.document?.settings.events.find(e => e.id === 's2')).toMatchObject({ title: 'Spotify Duo', done: ['2026-10-05'] })
   })
+  it.each(['local', 'remote'] as const)('a price change on both devices asks only the amount; the price history follows the choice (%s)', side => {
+    const price = (amount: number, day: string) => (list: CalEvent[]) => list.map(e => e.id === 's1' ? withPriceChange(e, { ...e, amount }, day) : e)
+    const phone = events(base, '2026-10-21T09:00:00.000Z', price(13.99, '2026-10-21'))
+    const pc = events(base, '2026-10-21T09:05:00.000Z', price(14.99, '2026-10-21'))
+    const r = reconcile(base, pc, phone)
+    expect(r.paths).toEqual([EVENT + 's1/amount'])
+    const chosen = resolveConflict({ id: 'c', paths: r.paths, base: { protocol: 2, mode: 'protected', revision: '1', document: base }, local: pc,
+      remote: { protocol: 2, mode: 'protected', revision: '2', document: phone } }, { [EVENT + 's1/amount']: side })!
+    const s1 = chosen.settings.events.find(e => e.id === 's1')!
+    expect(s1.amount).toBe(side === 'local' ? 14.99 : 13.99); expect(s1.prices).toEqual([{ date: '2026-10-21', from: 9.99, to: s1.amount }])
+  })
+  it.each(['local', 'remote'] as const)('amount removed on one device, changed on the other: the history never keeps the discarded price (%s)', side => {
+    // il telefono porta l'importo a 12,99 (lo storico registra 9,99 → 12,99); il PC lo toglie (storico invariato)
+    const phone = events(base, '2026-10-21T09:00:00.000Z', list => list.map(e => e.id === 's1' ? withPriceChange(e, { ...e, amount: 12.99 }, '2026-10-21') : e))
+    const pc = events(base, '2026-10-21T09:05:00.000Z', list => list.map(e => e.id === 's1' ? withPriceChange(e, { ...e, amount: null }, '2026-10-21') : e))
+    const r = reconcile(base, pc, phone)
+    expect(r.paths).toEqual([EVENT + 's1/amount'])
+    const chosen = resolveConflict({ id: 'c', paths: r.paths, base: { protocol: 2, mode: 'protected', revision: '1', document: base }, local: pc,
+      remote: { protocol: 2, mode: 'protected', revision: '2', document: phone } }, { [EVENT + 's1/amount']: side })!
+    const s1 = chosen.settings.events.find(e => e.id === 's1')!
+    if (side === 'local') { expect(s1.amount).toBeNull(); expect(s1.prices ?? []).toEqual([]) }
+    else { expect(s1.amount).toBe(12.99); expect(s1.prices).toEqual([{ date: '2026-10-21', from: 9.99, to: 12.99 }]) }
+  })
+  it('the history follows the amount even when only the other device touched the history', () => {
+    // il telefono cambia prezzo e poi lo rimette com'era (due righe di storico, importo uguale all'inizio); il PC toglie l'importo
+    const phone = events(base, '2026-10-21T09:00:00.000Z', list => list.map(e => {
+      if (e.id !== 's1') return e
+      const up = withPriceChange(e, { ...e, amount: 13.99 }, '2026-10-20')
+      return withPriceChange(up, { ...up, amount: 9.99 }, '2026-10-21')
+    }))
+    const pc = events(base, '2026-10-21T09:05:00.000Z', list => list.map(e => e.id === 's1' ? { ...e, amount: null } : e))
+    const r = reconcile(base, pc, phone)
+    expect(r.paths).toEqual([])
+    const s1 = r.document!.settings.events.find(e => e.id === 's1')!
+    expect(s1.amount).toBeNull(); expect(s1.prices ?? []).toEqual([])
+  })
   it('the same field changed differently stays a question about that event', () => {
     const phone = events(base, '2026-10-21T09:00:00.000Z', list => list.map(e => e.id === 's2' ? { ...e, amount: 10.99 } : e))
     const pc = events(base, '2026-10-21T09:05:00.000Z', list => list.map(e => e.id === 's2' ? { ...e, amount: 11.99 } : e))
-    expect(reconcile(base, pc, phone).paths).toEqual([EVENT + 's2'])
+    expect(reconcile(base, pc, phone).paths).toEqual([EVENT + 's2/amount'])
+  })
+  it.each(['local', 'remote'] as const)('same field in conflict plus independent fields: choosing %s for the field keeps both sides\' other edits', side => {
+    const phone = events(base, '2026-10-21T09:00:00.000Z', list => list.map(e => e.id === 's1' ? { ...e, amount: 13.99, title: 'Netflix Premium' } : e))
+    const pc = events(base, '2026-10-21T09:05:00.000Z', list => list.map(e => e.id === 's1' ? { ...e, amount: 12.99, reminders: [{ days: 3 }] } : e))
+    const r = reconcile(base, pc, phone)
+    expect(r.paths).toEqual([EVENT + 's1/amount'])
+    const chosen = resolveConflict({ id: 'c', paths: r.paths, base: { protocol: 2, mode: 'protected', revision: '1', document: base }, local: pc,
+      remote: { protocol: 2, mode: 'protected', revision: '2', document: phone } }, { [EVENT + 's1/amount']: side })!
+    expect(chosen.settings.events.find(e => e.id === 's1')).toMatchObject({ amount: side === 'local' ? 12.99 : 13.99, title: 'Netflix Premium', reminders: [{ days: 3 }] })
+    expect(titles(chosen)).toEqual(['Affitto', 'Netflix Premium', 'Spotify'])
   })
   it('rates follow the merged currency: a stale refresh in the old currency is not mixed in', () => {
     const phone = act(base, { type: 'setSettings', at: '2026-10-21T09:00:00.000Z', settings: { ...base.settings, currency: 'USD', fxRates: { EUR: 0.92 }, fxDate: '2026-10-21' } })

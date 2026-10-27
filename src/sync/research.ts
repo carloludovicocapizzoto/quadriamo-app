@@ -4,6 +4,7 @@ import type { PrivateProfile } from '../store/state'
 import { scopedClient } from './scopedClient'
 import { currentScope, personalKey, type ScopeLease } from '../store/scope'
 import { local } from '../storage'
+import { cloudFeature } from '../features'
 
 const KEY = 'q.researchToken'
 function token(create: boolean, lease: ScopeLease): string | null {
@@ -22,7 +23,7 @@ function incomeBand(n: number | null): string | null {
 /** Invia o aggiorna la scheda anonima; con research=false la ritira. */
 export async function syncResearch(p: PrivateProfile | null, shares: number[], lease = currentScope()) {
   const supabase = scopedClient(lease)
-  if (!supabase) return
+  if (!supabase || !cloudFeature('research')) return
   if (!p?.research) {
     const t = token(false, lease)
     if (t) { await supabase.rpc('remove_research', { p_token: t }); lease.assert(); local.set(personalKey(KEY, lease.scope), null) }
