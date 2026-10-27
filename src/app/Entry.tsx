@@ -34,12 +34,12 @@ export function Entry({ children }: { children: ReactNode }) {
   const inSetup = setupPending.get()
   // nuovo account senza dati su questo dispositivo: si crea il budget e parte la configurazione
   const newAccount = !data && state.loaded && !!sync.user && inSetup
-  useEffect(() => { if (newAccount) dispatch({ type: 'replace', data: createInitial(guessCurrency(), todayIso(), 1) }) }, [newAccount, dispatch])
+  useEffect(() => { if (newAccount && !sync.inviteSetup) dispatch({ type: 'replace', data: createInitial(guessCurrency(), todayIso(), 1) }) }, [newAccount, sync.inviteSetup, dispatch])
 
   if (!state.loaded || !sync.ready) return <Splash />
   if (confirmed) return <ConfirmedScreen onContinue={() => setConfirmed(false)} />
   // "password dimenticata": prima la nuova password, poi l'app
-  if (sync.recovery) return <div className="gate gate-login"><div className="gate-panel"><LoginScreen /></div></div>
+  if (sync.recovery || sync.inviteSetup) return <div className="gate gate-login"><div className="gate-panel"><LoginScreen /></div></div>
 
   // senza il server (copia locale di sviluppo): solo su questo dispositivo; se non c'è ancora un budget parte la configurazione
   const startLocal = () => {
@@ -47,10 +47,10 @@ export function Entry({ children }: { children: ReactNode }) {
     if (!data) { setupPending.set(); dispatch({ type: 'replace', data: createInitial(guessCurrency(), today, 1) }) }
     refresh()
   }
-  const demo = () => { refresh(); dispatch({ type: 'replace', data: demoAppData(today, lang) }) }
+  const demo = () => sync.startDemo(demoAppData(today, lang))
   // serve l'account per usare l'app: senza, solo i dati di esempio (che non vanno mai online).
-  // Chi aveva già dati su questo telefono li ritrova nell'account appena accede.
-  if (sync.enabled && !sync.user && !data?.demo) return <Gate hasData={!!data} onLocal={startLocal} onDemo={demo} />
+  // Il vecchio archivio senza proprietario resta nel recupero locale, separato dall'account.
+  if (sync.enabled && !sync.user && !sync.isolatedPreview) return <Gate hasData={!!data} onLocal={startLocal} onDemo={demo} />
   if (!sync.enabled && !data) return <Gate hasData={false} onLocal={startLocal} onDemo={demo} />
 
   if (data && inSetup && !data.demo) return <PreApp><SetupWizard onDone={() => { setupPending.clear(); refresh(); window.scrollTo(0, 0) }} /></PreApp>
@@ -74,11 +74,11 @@ function PreApp({ children }: { children: ReactNode }) {
   return (
     <div className="app">
       <header className="top">
-        <a className="logo" href={ENV.base}>Quadriamo<span>.</span> <small className="beta">{t('beta.badge')}</small></a>
+        <a className="logo" href={ENV.base}>Quadriamo<span>.</span> <small className="beta">{ENV.name === 'alpha' ? 'Alpha' : t('beta.badge')}</small></a>
         {sync.user && (
           <button className="sync-pill" onClick={() => void sync.syncNow()} title={t('sync.now')}>
             <span className={`dot ${sync.status}`} aria-hidden="true" />
-            {sync.status === 'syncing' ? t('sync.syncing') : sync.status === 'error' ? '!' : sync.status === 'offline' ? 'offline' : t('sync.ok')}
+            {sync.status === 'ok' ? t('sync.ok') : sync.status === 'syncing' ? t('sync.syncing') : t(`cloud.${sync.status}`)}
           </button>
         )}
         {!state.data && (

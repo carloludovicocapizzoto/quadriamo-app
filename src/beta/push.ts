@@ -1,89 +1,57 @@
-// Notifiche push (promemoria per il feedback). Su iPhone funzionano solo con l'app installata sulla schermata Home.
-import { supabase } from '../sync/client'
-import { deviceId } from './device'
-import { track } from './telemetry'
-import { local } from '../storage'
+import { useSyncExternalStore } from 'react'
 import { ENV } from '../env'
+import { ISOLATION_WORKER } from '../pushProtocol'
+import { personal } from '../storage'
+import { onScopeChange } from '../store/scope'
 
-const VAPID = ENV.vapidKey
+// L'endpoint e i payload precedenti non hanno un binding verificabile con lo scope locale.
+// Nessuna registrazione/RPC finché il protocollo non sarà aggiornato e provato separatamente.
+export const PERSONAL_PUSH_PAUSED = true
+export const pushSupported = () => false
+export const pushEnabled = async (): Promise<boolean> => false
+export const enablePush = async (_lang: string): Promise<boolean> => false
 
-export const pushSupported = () =>
-  !!supabase && !!VAPID && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+export type PushIsolation = 'checking' | 'safe' | 'retired' | 'error'
+let isolation: PushIsolation = 'checking'
+let running: Promise<void> | null = null
+let retired = false
+const listeners = new Set<() => void>()
+const publish = (value: PushIsolation) => { isolation = value; listeners.forEach(f => f()) }
+export const pushIsolationSnapshot = () => isolation
+export const usePushIsolation = () => useSyncExternalStore(f => { listeners.add(f); return () => { listeners.delete(f) } }, pushIsolationSnapshot)
 
-function keyBytes(base64url: string): Uint8Array {
-  const pad = '='.repeat((4 - (base64url.length % 4)) % 4)
-  const raw = atob((base64url + pad).replace(/-/g, '+').replace(/_/g, '/'))
-  return Uint8Array.from(raw, c => c.charCodeAt(0))
+/** Ritira localmente i worker precedenti, anche senza rete. Nessuna revoca usa il token di un altro account. */
+export function quarantinePersonalPush(): Promise<void> {
+  if (running) return running
+  if (isolation === 'error') publish('checking')
+  running = (async () => {
+    if (typeof navigator === 'undefined' || !navigator.serviceWorker) { publish('safe'); return }
+    const scope = new URL(ENV.base, location.origin).href
+    const safeWorker = new URL(ISOLATION_WORKER, scope).href
+    const registrations = await navigator.serviceWorker.getRegistrations()
+    let failed = false
+    await Promise.all(registrations.filter(reg => reg.scope === scope).map(async reg => {
+      const unsafe = [reg.active, reg.waiting, reg.installing].some(worker => worker && worker.scriptURL !== safeWorker)
+      try {
+        const notifications = await reg.getNotifications()
+        notifications.forEach(n => n.close())
+        const sub = await reg.pushManager?.getSubscription()
+        if (sub && !await sub.unsubscribe()) failed = true
+      } catch { failed = true }
+      if (unsafe) {
+        // Il vecchio script non può essere aggiornato offline. Rimuovere la registrazione interrompe i nuovi push.
+        try { if (!await reg.unregister()) failed = true; else retired = true } catch { failed = true }
+      }
+    }))
+    publish(failed ? 'error' : retired ? 'retired' : 'safe')
+    if (failed) throw Error('push isolation not verified')
+  })().catch(e => { publish('error'); throw e }).finally(() => { running = null })
+  return running
 }
 
-export async function pushEnabled(): Promise<boolean> {
-  if (!pushSupported() || Notification.permission !== 'granted') return false
-  const reg = await navigator.serviceWorker.getRegistration()
-  return !!(await reg?.pushManager.getSubscription())
-}
-
-/** Chiede il permesso e iscrive il dispositivo. Restituisce false se l'utente rifiuta. */
-export async function enablePush(lang: string): Promise<boolean> {
-  if (!pushSupported()) return false
-  if ((await Notification.requestPermission()) !== 'granted') return false
-  const reg = await navigator.serviceWorker.ready
-  const sub = (await reg.pushManager.getSubscription()) ??
-    await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(VAPID!) as BufferSource })
-  await register(sub, lang)
-  void track('push_on')
-  return true
-}
-
-async function register(sub: PushSubscription, lang: string) {
-  const j = sub.toJSON()
-  const { error } = await supabase!.rpc('save_push_subscription', {
-    p_endpoint: sub.endpoint, p_p256dh: j.keys?.p256dh ?? '', p_auth: j.keys?.auth ?? '', p_device: deviceId(), p_lang: lang,
-  })
-  if (error) throw error
-  // la notifica del mattino è sempre inclusa nelle notifiche; le notizie principali salvo che l'utente le abbia spente
-  await supabase!.rpc('set_morning_push', { p_endpoint: sub.endpoint, p_on: true })
-  await supabase!.rpc('set_news_push', { p_endpoint: sub.endpoint, p_on: newsWanted() })
-}
-
-const NEWS_PREF = 'q.newsPush'
-export const newsWanted = () => local.get(NEWS_PREF) !== 'off'
-/** Notizie principali sì/no per questo dispositivo. */
-export async function setNewsPush(on: boolean) {
-  local.set(NEWS_PREF, on ? 'on' : 'off')
-  const reg = await navigator.serviceWorker?.getRegistration()
-  const sub = await reg?.pushManager.getSubscription()
-  if (sub && supabase) await supabase.rpc('set_news_push', { p_endpoint: sub.endpoint, p_on: on })
-}
-
-/** Dice al server che oggi l'utente ha aggiornato Quadriamo (solo la data: niente importi), così non riceve
- *  il promemoria "a sorpresa". Una volta al giorno per dispositivo. */
-export async function touchPush(day: string): Promise<void> {
-  try {
-    if (local.get('q.touched') === day) return
-    if (!pushSupported() || Notification.permission !== 'granted') return
-    const reg = await navigator.serviceWorker.getRegistration()
-    const sub = await reg?.pushManager.getSubscription()
-    if (!sub) return
-    const { error } = await supabase!.rpc('touch_push', { p_endpoint: sub.endpoint, p_day: day })
-    if (!error) local.set('q.touched', day)
-  } catch { /* offline: si riprova */ }
-}
-
-/** All'apertura: se le notifiche sono già attive, riallinea l'iscrizione sul server (anche quelle fatte prima che esistesse
- *  la notifica del mattino, o cancellate dal server). Non chiede mai il permesso. */
-export async function syncPush(lang: string): Promise<void> {
-  try {
-    if (!pushSupported() || Notification.permission !== 'granted') return
-    const reg = await navigator.serviceWorker.getRegistration()
-    const sub = await reg?.pushManager.getSubscription()
-    if (sub) await register(sub, lang)
-  } catch { /* offline: si riprova alla prossima apertura */ }
-}
-
-export async function disablePush(): Promise<void> {
-  const reg = await navigator.serviceWorker.getRegistration()
-  const sub = await reg?.pushManager.getSubscription()
-  if (!sub) return
-  await supabase?.rpc('remove_push_subscription', { p_endpoint: sub.endpoint })
-  await sub.unsubscribe()
-}
+onScopeChange(() => { publish('checking'); void quarantinePersonalPush().catch(() => undefined) })
+export const syncPush = async (_lang: string) => { await quarantinePersonalPush().catch(() => undefined) }
+export const disablePush = quarantinePersonalPush
+export const touchPush = async (_day: string): Promise<void> => {}
+export const newsWanted = () => personal.get('q.newsPush') !== 'off'
+export async function setNewsPush(on: boolean) { personal.set('q.newsPush', on ? 'on' : 'off') }

@@ -1,11 +1,11 @@
 // L'ambiente in cui gira l'app e tutta la sua configurazione, in un punto solo: il resto del codice legge da qui.
-// Due ambienti: development (npm run dev) e production (npm run build).
+// Tre ambienti: development, production esistente e la nuova Alpha su origine separata.
 // I valori arrivano dai file .env.<ambiente> e dalle variabili della GitHub Action: cambiare ambiente o chiavi
 // non richiede modifiche al codice. Qui solo valori pubblici: i segreti stanno nelle funzioni di Supabase, mai nell'app.
-export type EnvName = 'development' | 'production'
+export type EnvName = 'development' | 'production' | 'alpha'
 
 const e = import.meta.env
-const name: EnvName = e.MODE === 'production' ? 'production' : 'development'
+const name: EnvName = e.MODE === 'alpha' ? 'alpha' : e.MODE === 'production' ? 'production' : 'development'
 const flags = new Set(String(e.VITE_FLAGS ?? '').split(',').map(f => f.trim()))
 const url = e.VITE_SUPABASE_URL as string | undefined
 const key = (e.VITE_SUPABASE_PUBLISHABLE_KEY ?? e.VITE_SUPABASE_ANON_KEY) as string | undefined

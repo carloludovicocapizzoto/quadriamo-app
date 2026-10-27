@@ -3,9 +3,9 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { mainIncome, type ClassifiedTx, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
-import { createInitial } from '../store/state'
 import { useSync } from '../sync/context'
 import { ConsentCard } from '../ui/beta/ConsentCard'
+import { cloudFeature } from '../features'
 import { FeedbackCard } from '../ui/beta/FeedbackCard'
 import { FxAutoUpdate } from '../ui/FxAutoUpdate'
 import { HomeScreen } from '../ui/home/HomeScreen'
@@ -38,7 +38,7 @@ const idle = (f: () => void) => ('requestIdleCallback' in window ? window.reques
 
 export function AppShell() {
   const { t, lang } = useI18n()
-  const { state, dispatch } = useStore()
+  const { state, dispatch, lease } = useStore()
   const sync = useSync()
   const route = useRoute()
   const entry = useEntry()
@@ -85,7 +85,7 @@ export function AppShell() {
   const defaultDate = route.tab !== 'analysis' || (month.period.start <= today && today <= month.period.end) ? today : month.period.start
   const go = (r: Route) => navigate(r)
   const toTransactions = () => go({ tab: 'analysis', view: 'transactions' })
-  const importStatement = () => { toTransactions(); setTimeout(() => document.querySelector<HTMLInputElement>('input[type=file]')?.click(), 150) }
+  const importStatement = () => { toTransactions(); setTimeout(() => { if (lease?.current()) document.querySelector<HTMLInputElement>('input[type=file]')?.click() }, 150) }
 
   return (
     <div className="app has-nav app2">
@@ -94,7 +94,7 @@ export function AppShell() {
           <span>{t('demo.banner')}</span>
           <button className="btn small-btn" onClick={() => {
             // senza account si torna all'accesso: i propri dati si inseriscono solo con l'account
-            dispatch({ type: 'replace', data: sync.enabled && !sync.user ? null : createInitial(data.settings.currency, today, data.settings.monthStartDay) }); go({ tab: 'home' })
+            sync.endPreview(); go({ tab: 'home' })
           }}>{t('demo.clear')}</button>
         </div>
       )}
@@ -103,10 +103,10 @@ export function AppShell() {
         <SectionBoundary>
           <Suspense fallback={<div className="screen-loading" aria-busy="true" />}>
             {route.tab === 'home' && <>
-              <ConsentCard onAnswer={yes => ping(yes)} />
+              {cloudFeature('telemetry') && <ConsentCard onAnswer={yes => ping(yes)} />}
               {sync.user && askProfile && !data.demo && !entry.inSetup && (
                 <section className="card"><h3 className="h-plain">{t('prof.promptTitle')}</h3><ProfileForm onDone={() => setAskProfile(false)} /></section>)}
-              {feedback && <FeedbackCard onClose={closeFeedback} />}
+              {feedback && cloudFeature('feedback') && <FeedbackCard onClose={closeFeedback} />}
               <HomeScreen data={data} r={thisMonth} today={today} streak={streak}
                 onAdd={kind => openComposer(kind === 'income' ? { prefill: { category: mainIncome(data.settings) } } : {})}
                 onOpen={openTx} onAll={toTransactions} />

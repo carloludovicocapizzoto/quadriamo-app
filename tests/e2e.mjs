@@ -98,10 +98,16 @@ await step('Analisi → Calendario: creo una bolletta mensile', async () => {
 await step('l\'agenda la mostra anche il mese prossimo', () => click(byText('/^Agenda$/')),
   `(document.querySelector('.calendar')?.innerText.match(/Luce e gas/g) ?? []).length >= 2`)
 await step('Profilo → Centro notifiche: una notifica arrivata si archivia', async () => {
-  // come la salverebbe il service worker (public/push-sw.js)
+  // Fixture nel namespace locale corrente; una vecchia notifica globale rimane esclusa.
   await js(`new Promise(ok => { const r = indexedDB.open('keyval-store'); r.onsuccess = () => { const tx = r.result.transaction('keyval', 'readwrite');
-    tx.objectStore('keyval').put([{ id: 'e2e', at: new Date().toISOString(), kind: 'reminder', title: 'Domani: Luce e gas', body: '62,00 €', url: './app/' }], 'quadriamo.inbox'); tx.oncomplete = ok } })`)
+    const store = tx.objectStore('keyval'); const keys = store.getAllKeys(); keys.onsuccess = () => {
+      const key = keys.result.find(k => typeof k === 'string' && k.startsWith('quadriamo.data.v2/') && JSON.parse(decodeURIComponent(k.slice('quadriamo.data.v2/'.length)))[2] === 'local');
+      if (!key) throw Error('missing local cache');
+      const inboxKey = 'q.v2/' + key.slice('quadriamo.data.v2/'.length) + '/quadriamo.inbox';
+      store.put([{ id: 'legacy-A', at: new Date().toISOString(), kind: 'message', title: 'PRIVATE-LEGACY-A', body: '', url: './app/' }], 'quadriamo.inbox');
+      store.put([{ id: 'e2e', at: new Date().toISOString(), kind: 'reminder', title: 'Domani: Luce e gas', body: '62,00 €', url: './app/' }], inboxKey) }; tx.oncomplete = ok } })`)
   await js(`location.hash = '#/profile/inbox'`); await sleep(800)
+  if (await js(`document.body.innerText.includes('PRIVATE-LEGACY-A')`)) throw Error('legacy inbox exposed')
   await click(`document.querySelector('.nc-more')`); await sleep(500)
   await click(byText('/^Archivia$/', '.bs-body button'))
 }, `!document.querySelector('.nc-list') && ${has('/Nessuna notifica/')}`)
@@ -111,7 +117,11 @@ console.log('Abbonamenti, documenti, ricevuta')
 const setField = (sel, v) => js(`(() => { const el = document.querySelector('${sel}'); if (!el) return false
   Object.getOwnPropertyDescriptor(el.constructor.prototype, 'value').set.call(el, ${JSON.stringify(v)})
   el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); return true })()`)
-const inDays = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10)
+const inDays = n => {
+  const d = new Date()
+  d.setDate(d.getDate() + n)
+  return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-')
+}
 await step('Profilo → Abbonamenti: aggiungo Netflix dal catalogo', async () => {
   await js(`location.hash = '#/profile/recurring'`); await sleep(800)
   await click(byText('/Aggiungi abbonamento/')); await sleep(700)
@@ -166,6 +176,21 @@ await step('senza rete l\'app si riapre lo stesso, con i dati', async () => {
   await js(`location.hash = '#/'`); await cdp('Page.reload'); await sleep(1500)
 }, `/12,50/.test(document.querySelector('.w-today')?.innerText ?? '')`)
 await cdp('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 })
+
+console.log('Categorie')
+// eliminare una categoria usata non cancella niente: si sceglie dove spostare i movimenti, poi sparisce
+const catRow = name => `[...document.querySelectorAll('.edit-list li')].find(l => l.querySelector('input')?.value === '${name}')`
+await step('Profilo → Budget: eliminare «Affitto» mostra chi la usa', async () => {
+  await js(`document.querySelector('.kb-list') && document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`)
+  await js(`location.hash = '#/profile/budget'`); await sleep(900)
+  await click(`${catRow('Affitto')}?.querySelector('button.icon-btn')`)
+}, `/Movimenti: 1/.test(${catRow('Affitto')}?.querySelector('.cat-delete')?.innerText ?? '')`)
+await step('«Sposta ed elimina» porta la spesa in «Spesa» e toglie la categoria', async () => {
+  await setField('.cat-delete select', 'groceries'); await sleep(200)
+  await click(byText('/Sposta ed elimina/', '.cat-delete button')); await sleep(600)
+}, `!${catRow('Affitto')}`)
+await step('la spesa da 12,50 € c\'è ancora, ora in «Spesa»', () => js(`location.hash = '#/analysis/transactions'`),
+  `/12,50/.test(document.body.innerText) && /Spesa/.test([...document.querySelectorAll('li, .row')].find(r => /12,50/.test(r.textContent))?.textContent ?? '')`)
 
 console.log('Tastiera')
 const press = (key, code) => cdp('Input.dispatchKeyEvent', { type: 'keyDown', key, code, text: key.length === 1 ? key : undefined, windowsVirtualKeyCode: key.toUpperCase().charCodeAt(0) })

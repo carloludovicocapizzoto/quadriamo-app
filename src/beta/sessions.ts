@@ -3,6 +3,7 @@
 // ogni tipo di azione, rallentamenti, errori, l'ultima schermata prima di uscire. Mai importi, testi o nomi.
 // Una sola richiesta quando l'app va in secondo piano: niente traffico mentre la si usa. Dopo 30 minuti fuori
 // dall'app, al ritorno inizia una sessione nuova.
+import { currentScope, onScopeChange } from '../store/scope'
 import { ENV } from '../env'
 import { onNote, route } from '../app/diagnostics'
 import { deviceId, isStandalone, platform, statsConsent, uuid } from './device'
@@ -25,12 +26,13 @@ function leave() {
 
 function flush() {
   leave()
+  const lease = currentScope()
   const seconds = Math.round((performance.now() - started) / 1000)
   const sb = ENV.supabase
-  if (seconds >= 1 && sb && statsConsent() === 'yes' && navigator.onLine) {
+  if (lease.scope.kind !== 'demo' && lease.scope.kind !== 'recovery' && seconds >= 1 && sb && statsConsent() === 'yes' && navigator.onLine) {
     // keepalive: la richiesta parte anche se il sistema chiude l'app subito dopo
     void fetch(`${sb.url}/rest/v1/usage_sessions`, {
-      method: 'POST', keepalive: true,
+      method: 'POST', keepalive: true, signal: lease.signal,
       headers: { apikey: sb.key, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({
         session_id: session, device_id: deviceId(), seconds,
@@ -58,3 +60,8 @@ export function watchSessions() {
     since = started = performance.now()   // il tempo fuori dall'app non conta
   })
 }
+
+onScopeChange(() => {
+  session = uuid(); here = route(); since = started = performance.now(); hiddenAt = 0
+  screens = {}; path = []; actions = {}; slow = 0; errors = 0
+})

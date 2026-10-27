@@ -16,7 +16,7 @@ export function screenName(hash: string): string {
 /** Il nome di ogni tipo di azione dell'app (store/types.ts): un'azione nuova senza nome non compila. */
 export const ACTION_NAMES: Record<Exclude<Action['type'], 'load'>, string> = {
   addTx: 'Aggiunge un movimento', updateTx: 'Modifica un movimento', deleteTx: 'Elimina un movimento',
-  setSettings: 'Cambia le impostazioni', setInvestments: 'Aggiorna gli investimenti',
+  setSettings: 'Cambia le impostazioni', setFx: 'Aggiorna i cambi automatici', deleteCategory: 'Elimina una categoria', setInvestments: 'Aggiorna gli investimenti',
   addInbox: 'Importa un estratto conto', updateInbox: 'Rivede un movimento importato', confirmInbox: 'Conferma movimenti importati', ignoreInbox: 'Scarta movimenti importati',
   togglePayday: 'Segna un pagamento', setProfile: 'Aggiorna il profilo', saveGoal: 'Salva un obiettivo', deleteGoal: 'Elimina un obiettivo',
   goalMoney: 'Versa su un obiettivo', replace: 'Ripristina o azzera i dati',

@@ -1,18 +1,16 @@
-// Notifica del mattino "Oggi puoi spendere…": l'app salva sul dispositivo un piccolo riepilogo (quanto resta libero in ogni
-// parte e fino a quando); la mattina il service worker (public/push-sw.js) lo legge e calcola il numero del giorno.
-// Così gli importi non passano mai dal server: arriva solo la "sveglia".
+// Snapshot proprietario: il worker non lo usa finché i push non hanno un binding verificabile.
 import { set } from 'idb-keyval'
-
-const MORNING_KEY = 'quadriamo.morning'   // la legge anche il service worker (public/push-sw.js)
+import { currentScope, personalKey } from '../store/scope'
 
 export interface MorningSnapshot {
-  lang: string; currency: string; end: string            // fine del periodo (YYYY-MM-DD)
-  items: { name: string; free: number }[]                 // libero per parte (già al netto dei pagamenti in arrivo)
+  lang: string; currency: string; end: string
+  items: { name: string; free: number }[]
   updatedAt: string
-  streak?: number; lastActive?: string                    // slancio: per il testo delle notifiche "a sorpresa"
+  streak?: number; lastActive?: string
 }
 
 export async function saveMorningSnapshot(s: MorningSnapshot | null) {
-  try { await set(MORNING_KEY, s) } catch { /* archivio non disponibile */ }
+  const lease = currentScope()
+  if (lease.scope.kind !== 'account' && lease.scope.kind !== 'local') return
+  try { await set(personalKey('quadriamo.morning', lease.scope), s) } catch { /* archivio accessorio non disponibile */ }
 }
-

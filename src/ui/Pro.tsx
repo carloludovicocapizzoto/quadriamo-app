@@ -4,6 +4,7 @@ import { useI18n } from '../i18n/core'
 import type { Dict } from '../i18n/en'
 import { useSync } from '../sync/context'
 import { Icon } from './Icon'
+import { ENV } from '../env'
 
 /** Mostra il contenuto solo con Pro; altrimenti un invito sobrio a passare a Pro. */
 export function ProGate({ feature, children, compact = false }: { feature: ProFeature; children: ReactNode; compact?: boolean }) {
@@ -41,9 +42,14 @@ export function PlanCard({ onLogin }: { onLogin: () => void }) {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const [test, setTest] = useState<boolean | null>(null)
-  useEffect(() => { void billingStatus().then(s => setTest(s.configured ? !!s.test : null)) }, [])
+  useEffect(() => { if (ENV.name !== 'alpha') void billingStatus().then(s => setTest(s.configured ? !!s.test : null)) }, [])
   const paid = !!plan.sub && ['active', 'trialing', 'past_due'].includes(plan.sub.status)
   const save = Math.round((1 - PRICE.year / (PRICE.month * 12)) * 100)
+
+  if (ENV.name === 'alpha') return <section className="card plan" id="plan">
+    <div className="plan-head"><h3 className="h-plain">{t('pro.title')}</h3><span className="pro-badge free">Free</span></div>
+    <p className="muted">{t('pro.notReady')}</p>
+  </section>
 
   async function go(fn: () => Promise<void>) {
     setBusy(true); setErr('')

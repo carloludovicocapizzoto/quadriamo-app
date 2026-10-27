@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { local } from './storage'
+import { local, personal, personalFor } from './storage'
+import { activateScope } from './store/scope'
 
 const memory = () => {
   const m = new Map<string, string>()
@@ -30,5 +31,15 @@ describe('local', () => {
     expect(local.get('a')).toBeNull()
     expect(local.set('a', '1')).toBe(false)
     expect(local.json('a', 7)).toBe(7)
+  })
+  it('a captured personal cache cannot write into the next account', () => {
+    vi.stubGlobal('localStorage', memory())
+    const a = activateScope({ environment: 'test', backend: 'synthetic', kind: 'account', owner: 'A' })
+    const callbackCache = personalFor(a.scope)
+    activateScope({ ...a.scope, owner: 'B' })
+    callbackCache.set('q.sharedBudget', 'A-only')
+    expect(personal.get('q.sharedBudget')).toBeNull()
+    activateScope(a.scope)
+    expect(personal.get('q.sharedBudget')).toBe('A-only')
   })
 })

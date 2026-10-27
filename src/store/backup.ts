@@ -11,12 +11,20 @@ export function parseBackup(text: string): AppData {
     d.transactions.every((t: Transaction) => typeof t.id === 'string' && typeof t.description === 'string')
   if (!ok) throw new Error('invalid backup')
   return { version: 1, settings: { fxRates: {}, ...d.settings }, transactions: d.transactions,
+           ...(d.demo === true ? { demo: true } : {}),
            deleted: d.deleted ?? {}, settingsUpdatedAt: d.settingsUpdatedAt,
            ...(d.investments ? { investments: d.investments, investmentsUpdatedAt: d.investmentsUpdatedAt } : {}),
            inbox: d.inbox ?? [], importDone: d.importDone ?? {}, payday: d.payday ?? {},
            ...(d.profile ? { profile: d.profile, profileUpdatedAt: d.profileUpdatedAt } : {}),
            ...(Array.isArray(d.activity) ? { activity: d.activity } : {}),
            ...(Array.isArray(d.goals) ? { goals: d.goals } : {}) }
+}
+
+/** Cosa sparisce ripristinando `backup` al posto dei dati attuali: movimenti e scadenze che il backup non contiene. */
+export function restoreLoss(current: AppData | null, backup: AppData): { transactions: number; events: number } {
+  if (!current) return { transactions: 0, events: 0 }
+  const txs = new Set(backup.transactions.map(t => t.id)), events = new Set((backup.settings.events ?? []).map(e => e.id))
+  return { transactions: current.transactions.filter(t => !txs.has(t.id)).length, events: current.settings.events.filter(e => !events.has(e.id)).length }
 }
 
 /** Esporta i movimenti in CSV (separatore ";" e virgola decimale non servono: Excel/Sheets leggono il punto se indicato). */

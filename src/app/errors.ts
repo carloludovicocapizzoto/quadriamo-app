@@ -2,7 +2,9 @@
 // con gli ultimi passi del diario tecnico (diagnostics.ts), l'ambiente e il commit, così si può ricostruire.
 // Solo dati tecnici, le email nei messaggi vengono oscurate; al massimo 5 errori diversi per apertura dell'app.
 import { ENV } from '../env'
-import { supabase } from '../sync/client'
+import { cloudFeature } from '../features'
+import { scopedClient } from '../sync/scopedClient'
+import { currentScope } from '../store/scope'
 import { deviceInfo, note, route, trailNow } from './diagnostics'
 
 const sent = new Set<string>()
@@ -15,7 +17,8 @@ export function reportError(e: unknown) {
   const message = hideEmails(err.message || 'errore').slice(0, 300)
   if (NOISE.test(message)) return
   note('error', message)
-  if (!supabase || !navigator.onLine || sent.size >= 5 || sent.has(message)) return
+  const lease = currentScope(), supabase = scopedClient(lease, true)
+  if (!supabase || !navigator.onLine || sent.size >= 5 || sent.has(message) || !cloudFeature('errorReports')) return
   sent.add(message)
   const d = deviceInfo()
   const base = { message, stack: hideEmails(err.stack ?? '').slice(0, 2000), route: route(), version: ENV.release,
@@ -23,7 +26,7 @@ export function reportError(e: unknown) {
   const db = supabase
   // env, commit e diario arrivano con la migrazione 0024: prima di allora si manda l'errore senza
   void db.from('client_errors').insert({ ...base, env: ENV.name, commit: ENV.commit, trail: trailNow() })
-    .then(({ error }) => error && db.from('client_errors').insert(base))
+    .then(({ error }) => error && lease.current() ? db.from('client_errors').insert(base) : null)
     .then(() => undefined, () => undefined)
 }
 

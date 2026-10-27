@@ -6,10 +6,13 @@ import { useI18n } from '../../i18n/core'
 import { Segmented } from '../kit/Segmented'
 import { FeedbackCard } from './FeedbackCard'
 import { ReportForm } from './ReportForm'
+import { cloudFeature } from '../../features'
+import { AlphaReport } from './AlphaReport'
 
 export function FeedbackPage({ onClose }: { onClose: () => void }) {
   const { t } = useI18n()
   const [tab, setTab] = useState<'report' | 'rate'>('report')
+  if (!cloudFeature('feedback')) return <AlphaReport />
   if (!ENV.flags.tester) return <FeedbackCard onClose={onClose} />
   return <>
     <Segmented className="feedback-tabs" value={tab} onChange={setTab} label={t('prof.feedback')} options={[{ id: 'report', label: t('rep.tab.report') }, { id: 'rate', label: t('rep.tab.rate') }]} />

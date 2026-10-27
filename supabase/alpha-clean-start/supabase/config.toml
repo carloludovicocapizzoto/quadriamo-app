@@ -1,0 +1,64 @@
+# Run the Supabase CLI from supabase/alpha-clean-start, never from the repository root.
+# These are local-only ports. Cloud Auth, SMTP and redirect settings must be reviewed
+# on the newly authorized project before any invitation is sent.
+project_id = "quadriamo-alpha-clean-start"
+
+[api]
+enabled = true
+port = 55460
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 55461
+major_version = 17
+
+[db.migrations]
+enabled = true
+
+[db.seed]
+enabled = false
+
+[studio]
+port = 55462
+
+[inbucket]
+enabled = true
+port = 55463
+smtp_port = 55464
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:4173/app/"
+additional_redirect_urls = ["http://127.0.0.1:4173/app/*", "http://127.0.0.1:5173/app/*"]
+enable_signup = false
+enable_anonymous_sign_ins = false
+jwt_expiry = 3600
+
+[auth.rate_limit]
+email_sent = 12
+token_verifications = 30
+
+[auth.email]
+enable_signup = false
+enable_confirmations = true
+double_confirm_changes = true
+otp_expiry = 3600
+otp_length = 6
+
+[auth.email.template.invite]
+subject = "Invito alla nuova Alpha Quadriamo"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.recovery]
+subject = "Recupera l'accesso alla nuova Alpha Quadriamo"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.magic_link]
+subject = "Codice di accesso alla nuova Alpha Quadriamo"
+content_path = "./supabase/templates/magic_link.html"
+
+[storage]
+enabled = true
+file_size_limit = "1MiB"

@@ -1,46 +1,62 @@
-// Foto profilo. Si riduce sul telefono (256x256, ritaglio al centro) prima di salvarla.
-// Senza account resta su questo dispositivo; con un account va nello spazio privato "avatars" (vedi 0017_avatars.sql),
-// leggibile solo dal suo proprietario, e una copia resta qui per mostrarla subito e anche offline.
+// La foto offline ha lo stesso proprietario del budget; i download vecchi non aggiornano il nuovo account.
 import { useSyncExternalStore } from 'react'
-import { supabase } from '../sync/client'
+import { scopedClient } from '../sync/scopedClient'
 import { shrinkImage } from '../image'
 import { local } from '../storage'
+import { currentScope, onScopeChange, personalKey, type ScopeLease } from '../store/scope'
 
 const KEY = 'q.avatar'
-const SIZE = 256
-const read = () => local.get(KEY)
-let current = read()
 const listeners = new Set<() => void>()
-const set = (v: string | null) => {
-  current = v
-  local.set(KEY, v || null)
-  listeners.forEach(f => f())
+export const avatarSnapshot = () => local.get(personalKey(KEY))
+const emit = () => listeners.forEach(f => f())
+onScopeChange(emit)
+export const useAvatar = () => useSyncExternalStore(f => { listeners.add(f); return () => { listeners.delete(f) } }, avatarSnapshot, () => null)
+const path = (userId: string) => userId + '/avatar.webp'
+const toDataUrl = (b: Blob) => new Promise<string>((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onload = () => resolve(reader.result as string)
+  reader.onerror = () => reject(reader.error)
+  reader.readAsDataURL(b)
+})
+function write(value: string | null, lease: ScopeLease) {
+  lease.assert()
+  if (!local.set(personalKey(KEY, lease.scope), value)) throw Error('avatar cache unavailable')
+  emit()
 }
-export const useAvatar = () => useSyncExternalStore(f => { listeners.add(f); return () => { listeners.delete(f) } }, () => current)
-const path = (userId: string) => `${userId}/avatar.webp`
-
-const toDataUrl = (b: Blob) => new Promise<string>(r => { const fr = new FileReader(); fr.onload = () => r(fr.result as string); fr.readAsDataURL(b) })
+function clientFor(userId: string | null, lease: ScopeLease) {
+  lease.assert()
+  if (userId && (lease.scope.kind !== 'account' || lease.scope.owner !== userId)) throw Error('avatar owner mismatch')
+  return userId ? scopedClient(lease) : null
+}
 
 export async function setAvatar(file: File, userId: string | null) {
-  const blob = await shrinkImage(file, { size: SIZE, square: true })
-  set(await toDataUrl(blob))   // prima qui: se il caricamento non riesce, la foto resta almeno su questo dispositivo
-  if (userId && supabase) {
-    const { error } = await supabase.storage.from('avatars').upload(path(userId), blob, { upsert: true, contentType: blob.type })
+  const lease = currentScope(), sb = clientFor(userId, lease)
+  const blob = await shrinkImage(file, { size: 256, square: true })
+  lease.assert()
+  const url = await toDataUrl(blob)
+  write(url, lease)
+  if (userId && sb) {
+    const { error } = await sb.storage.from('avatars').upload(path(userId), blob, { upsert: true, contentType: blob.type })
+    lease.assert()
     if (error) throw error
   }
 }
 
-/** Toglie la foto solo da questo dispositivo (all'uscita: il telefono potrebbe passare a un'altra persona). */
-export const forgetAvatar = () => set(null)
-
+/** Il cambio scope nasconde la foto senza eliminare la cache offline del proprietario. */
+export const forgetAvatar = () => emit()
 export async function removeAvatar(userId: string | null) {
-  if (userId && supabase) await supabase.storage.from('avatars').remove([path(userId)])
-  set(null)
+  const lease = currentScope(), sb = clientFor(userId, lease)
+  if (userId && sb) {
+    const { error } = await sb.storage.from('avatars').remove([path(userId)])
+    lease.assert()
+    if (error) throw error
+  }
+  write(null, lease)
 }
-
-/** All'accesso: scarica la propria foto (se c'è) su questo dispositivo. All'uscita: la toglie da qui. */
 export async function loadAvatar(userId: string | null) {
-  if (!userId || !supabase) return
-  const { data, error } = await supabase.storage.from('avatars').download(path(userId))
-  if (!error && data) set(await toDataUrl(data))
+  const lease = currentScope(), sb = clientFor(userId, lease)
+  if (!userId || !sb) return
+  const { data, error } = await sb.storage.from('avatars').download(path(userId))
+  lease.assert()
+  if (!error && data) write(await toDataUrl(data), lease)
 }

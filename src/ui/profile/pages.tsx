@@ -18,6 +18,7 @@ import { Group, Row } from '../kit/List'
 import { Avatar } from './Avatar'
 import { StreakCalendar } from '../shell/StreakCalendar'
 import { Flame } from '../Streak'
+import { ENV } from '../../env'
 
 export function Progress({ data, streak, today, badges }: { data: AppData; streak: Streak | null; today: string; badges: Badge[] }) {
   const { t } = useI18n()
@@ -97,7 +98,7 @@ export function Personal({ onLogin }: { onLogin: () => void }) {
     <div className="txs-rows">
       {pick('country', 'personal.country')}
       <label className="txs-row"><span>{t('personal.abroad')}</span>
-        <span className="row-switch"><button type="button" role="switch" aria-checked={abroad} className={`switch${abroad ? ' on' : ''}`}
+        <span className="row-switch"><button type="button" role="switch" aria-checked={abroad} aria-label={t('personal.abroad')} className={`switch${abroad ? ' on' : ''}`}
           onClick={() => { const on = !abroad; setAbroad(on); if (!on) setCountry('residence', null) }}><i /></button></span></label>
       {abroad && pick('residence', 'personal.residence')}
       <div className="txs-row"><span>{t('personal.tz')}</span><span className="row-value">{Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' ')}</span></div>
@@ -134,7 +135,8 @@ export function Security() {
     </form>
     <Group>
       <Row label={t('sec.signOutOthers')} onClick={() => { void sync.signOutOthers().then(() => setMsg({ ok: true, text: t('sec.othersDone') })) }} />
-      <Row label={t('sec.signOut')} detail={t('sync.signOutHint')} onClick={() => { void sync.signOut() }} />
+      {(sync.status === 'offline' || sync.localSession) && <p className="small">{t('auth.localLogoutHint')}</p>}
+      <Row label={t('sec.signOut')} detail={t('sync.signOutHint')} onClick={() => { void sync.signOut().catch(() => setMsg({ ok: false, text: t('auth.localError') })) }} />
     </Group>
   </>
 }
@@ -183,6 +185,7 @@ export function Delete({ onDone }: { onDone: () => void }) {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const word = t('del.word')
+  if (ENV.name === 'alpha') return <p className="muted">{t('auth.alphaDeleteHold')}</p>
   const go = async () => {
     setBusy(true); setErr('')
     try {
