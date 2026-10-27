@@ -95,6 +95,31 @@ describe('REG: calendar events merge one by one', () => {
     const s1 = chosen.settings.events.find(e => e.id === 's1')!
     expect(s1.amount).toBe(side === 'local' ? 14.99 : 13.99); expect(s1.prices).toEqual([{ date: '2026-10-21', from: 9.99, to: s1.amount }])
   })
+  it.each(['local', 'remote'] as const)('amount removed on one device, changed on the other: the history never keeps the discarded price (%s)', side => {
+    // il telefono porta l'importo a 12,99 (lo storico registra 9,99 → 12,99); il PC lo toglie (storico invariato)
+    const phone = events(base, '2026-10-21T09:00:00.000Z', list => list.map(e => e.id === 's1' ? withPriceChange(e, { ...e, amount: 12.99 }, '2026-10-21') : e))
+    const pc = events(base, '2026-10-21T09:05:00.000Z', list => list.map(e => e.id === 's1' ? withPriceChange(e, { ...e, amount: null }, '2026-10-21') : e))
+    const r = reconcile(base, pc, phone)
+    expect(r.paths).toEqual([EVENT + 's1/amount'])
+    const chosen = resolveConflict({ id: 'c', paths: r.paths, base: { protocol: 2, mode: 'protected', revision: '1', document: base }, local: pc,
+      remote: { protocol: 2, mode: 'protected', revision: '2', document: phone } }, { [EVENT + 's1/amount']: side })!
+    const s1 = chosen.settings.events.find(e => e.id === 's1')!
+    if (side === 'local') { expect(s1.amount).toBeNull(); expect(s1.prices ?? []).toEqual([]) }
+    else { expect(s1.amount).toBe(12.99); expect(s1.prices).toEqual([{ date: '2026-10-21', from: 9.99, to: 12.99 }]) }
+  })
+  it('the history follows the amount even when only the other device touched the history', () => {
+    // il telefono cambia prezzo e poi lo rimette com'era (due righe di storico, importo uguale all'inizio); il PC toglie l'importo
+    const phone = events(base, '2026-10-21T09:00:00.000Z', list => list.map(e => {
+      if (e.id !== 's1') return e
+      const up = withPriceChange(e, { ...e, amount: 13.99 }, '2026-10-20')
+      return withPriceChange(up, { ...up, amount: 9.99 }, '2026-10-21')
+    }))
+    const pc = events(base, '2026-10-21T09:05:00.000Z', list => list.map(e => e.id === 's1' ? { ...e, amount: null } : e))
+    const r = reconcile(base, pc, phone)
+    expect(r.paths).toEqual([])
+    const s1 = r.document!.settings.events.find(e => e.id === 's1')!
+    expect(s1.amount).toBeNull(); expect(s1.prices ?? []).toEqual([])
+  })
   it('the same field changed differently stays a question about that event', () => {
     const phone = events(base, '2026-10-21T09:00:00.000Z', list => list.map(e => e.id === 's2' ? { ...e, amount: 10.99 } : e))
     const pc = events(base, '2026-10-21T09:05:00.000Z', list => list.map(e => e.id === 's2' ? { ...e, amount: 11.99 } : e))

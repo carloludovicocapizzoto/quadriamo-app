@@ -120,9 +120,11 @@ function mergeItem(base: Fields, local: Fields, remote: Fields, at: string, m: M
     if (key === 'done' && [b, l, r].every(s => Array.isArray(s[0]))) { out.done = mergeSet(b[0] as unknown[], l[0] as unknown[], r[0] as unknown[]); continue }
     if (/^updatedAt$|UpdatedAt$/.test(key)) { put(out, key, latest(l, r)); continue }
     const parent = FOLLOWS[key] && kept[FOLLOWS[key]]
-    if (parent && !pick(b, l, r)) {
-      if (parent === 'asked') continue                                   // resolved together with its parent field
-      if (parent !== 'same') { put(out, key, parent === 'local' ? l : r); continue }
+    if (parent === 'asked') continue                                     // resolved together with its parent field
+    // the copy that gave the parent field gives this one too, even if only the other copy touched it:
+    // otherwise the history could keep a price of the discarded version
+    if (parent === 'local' || parent === 'remote') { put(out, key, parent === 'local' ? l : r); continue }
+    if (parent === 'same' && !pick(b, l, r)) {
       const lists = [b, l, r].map(s => Array.isArray(s[0]) ? s[0] as unknown[] : [])
       put(out, key, [[...new Map([...lists[1], ...lists[2]].map(x => [JSON.stringify(x), x])).values()]
         .filter(x => !lists[0].some(y => equal(x, y)) || lists[1].some(y => equal(x, y)) && lists[2].some(y => equal(x, y)))
