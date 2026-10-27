@@ -149,7 +149,8 @@ function keepUsedCategories(base: AppData, local: AppData, remote: AppData, docu
   const have = new Set(s.categories.map(c => c.id))
   const known = new Map([base, remote, local].flatMap(d => d.settings.categories ?? []).map(c => [c.id, c]))
   const touched = <T extends { id: string }>(items: T[], before: T[] = []) => items.filter(x => !equal(x, before.find(y => y.id === x.id)))
-  const used = [...touched(s.events, base.settings.events), ...touched(document.transactions, base.transactions), ...touched(s.rules ?? [], base.settings.rules)]
+  const used = [...touched(s.events, base.settings.events), ...touched(document.transactions, base.transactions), ...touched(s.rules ?? [], base.settings.rules),
+    ...touched(Array.isArray(document.inbox) ? document.inbox : [], base.inbox)]   // anche i movimenti importati da confermare
   for (const { category } of used) if (category && !have.has(category) && known.has(category)) { s.categories.push(clone(known.get(category)!)); have.add(category) }
 }
 

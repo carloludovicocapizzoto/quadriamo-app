@@ -93,6 +93,15 @@ describe('deleting a category while another device keeps working (CAS v2 merge)'
     expect(r.document!.transactions.find(t => t.id === 't1')?.category).toBe('groceries')
     expect(r.document!.transactions.find(t => t.id === 't3')?.category).toBe('pets')
   })
+  it('an imported item proposed in that category on the PC keeps the category alive: no invalid reference', () => {
+    const quiet: AppData = { ...clone(base), inbox: [] }                         // nessun movimento importato in «Animali» prima
+    const phoneDel = deleteCategory(quiet, 'pets', 'groceries', AT)!
+    const pc = reducer({ loaded: true, data: clone(quiet) }, { type: 'addInbox', items: [{ id: 'i2', fingerprint: 'f2', date: '2026-10-26',
+      description: 'Zooplus', amount: -18, currency: null, category: 'pets', paidFrom: null, source: 'csv' }] }).data!
+    const r = reconcile(quiet, pc, phoneDel)
+    expect(r.paths).toEqual([]); expect(dangling(r.document!)).toEqual([])
+    expect(r.document!.inbox?.find(i => i.id === 'i2')?.category).toBe('pets')
+  })
   it('a due date of that category edited on the PC keeps the edit and follows the move', () => {
     const pc = clone(base); pc.settings.events[0].amount = 12.99
     const r = reconcile(base, pc, phone)
