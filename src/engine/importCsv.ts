@@ -8,7 +8,7 @@ export interface ColumnMap { date: number; description: number[]; amount: number
   currency: number | null; fee: number | null; state: number | null }
 
 /** Divide un CSV in righe e celle, rispettando le virgolette. Riconosce il separatore (, ; o tab). */
-function parseCsv(text: string): string[][] {
+export function parseCsv(text: string): string[][] {
   const clean = text.replace(/^﻿/, '')
   const counts = [',', ';', '\t'].map(d => {
     let count = 0, quoted = false
@@ -83,7 +83,7 @@ export function parseBankDate(s: string): string | null {
 
 /** Importo bancario -> numero con segno ("-1.234,56", "1,234.56", "−12,00 €"). */
 export function parseBankAmount(s: string): number | null {
-  let t = s.replace(/[\s€$£]|EUR|USD|GBP|CHF/g, '').replace('−', '-')
+  let t = s.replace(/â‚¬/g, '€').replace(/[\s€$£]|EUR|USD|GBP|CHF/g, '').replace('−', '-')
   if (!t) return null
   const neg = t.startsWith('-') || (t.startsWith('(') && t.endsWith(')'))
   if (t.startsWith('(') && t.endsWith(')')) t = t.slice(1, -1)
@@ -101,18 +101,23 @@ export function parseBankAmount(s: string): number | null {
 }
 
 /** Trasforma il CSV in righe pronte per la casella "Da confermare". */
-export function readStatement(text: string, map?: ColumnMap): { rows: ImportRow[]; map: ColumnMap | null; header: string[] } {
+export function readStatement(text: string, map?: ColumnMap): { rows: ImportRow[]; map: ColumnMap | null; header: string[]; error?: 'multiple_sections' } {
   const all = parseCsv(text)
   const headerIdx = all.findIndex(r => detectColumns(r) != null)
   const header = all[headerIdx >= 0 ? headerIdx : 0] ?? []
   const cols = map ?? detectColumns(header)
   if (!cols) return { rows: [], map: null, header }
+  // Distinct sections may describe different accounts or repeat the same transfers.
+  // Do not silently import a partial or duplicated consolidated statement.
+  if (headerIdx >= 0 && all.slice(headerIdx + 1).some(r => detectColumns(r) !== null))
+    return { rows: [], map: null, header, error: 'multiple_sections' }
   const rows: ImportRow[] = []
   for (const r of all.slice((headerIdx >= 0 ? headerIdx : 0) + 1)) {
     if (cols.state != null && r[cols.state] && !/completed|completat|eseguit|booked|contabilizzat/i.test(r[cols.state])) continue
     const date = parseBankDate(r[cols.date] ?? '')
     let amount: number | null = null
     if (cols.amount != null) amount = parseBankAmount(r[cols.amount] ?? '')
+    else if (cols.debit != null && cols.debit === cols.credit) amount = parseBankAmount(r[cols.debit] ?? '')
     else {
       const d = cols.debit != null ? parseBankAmount(r[cols.debit] ?? '') : null
       const c = cols.credit != null ? parseBankAmount(r[cols.credit] ?? '') : null

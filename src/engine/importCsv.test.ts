@@ -3,6 +3,14 @@ import { defaultSettings, parseBankAmount, parseBankDate, readStatement } from '
 import { toCsv } from '../store/backup'
 
 describe('CSV: dati e delimitatori validi', () => {
+  it('conserva il segno di una colonna unica entrata/uscita', () => {
+    const csv = 'Data,Descrizione,Categoria,Denaro in entrata/uscita,Saldo\n01/10/2026,Spesa sintetica,Altro,-2.50,100\n02/10/2026,Entrata sintetica,Altro,3.00,103'
+    expect(readStatement(csv).rows.map(r => r.amount)).toEqual([-2.5, 3])
+  })
+  it('rifiuta estratti con più sezioni interpretabili come movimenti', () => {
+    const csv = 'Data,Descrizione,Denaro in entrata/uscita\n01/10/2026,Spesa,-2.50\nData,Descrizione,Denaro in entrata/uscita\n02/10/2026,Altra,-1.00'
+    expect(readStatement(csv)).toMatchObject({ rows: [], error: 'multiple_sections' })
+  })
   it('rifiuta un file con un campo tra virgolette non chiuso', () => {
     expect(readStatement('Date,Amount,Description\n2026-10-17,-10,"Coffee').rows).toEqual([])
   })
