@@ -1,8 +1,15 @@
 import { isIsoDate } from './dates'
-import { parseBankAmount, parseCsv, type ImportRow } from './importCsv'
+import { parseBankAmount, parseBankDate, parseCsv, type ImportRow } from './importCsv'
 import { normalize } from './rules'
 
-export interface ConsolidatedPreview { rows: ImportRow[]; depositBalance: number | null; transfersExcluded: number }
+export interface ConsolidatedPreview {
+  rows: ImportRow[]
+  depositBalance: number | null
+  transfersExcluded: number
+  periodStart: string
+  periodEnd: string
+  repeatedRows: number
+}
 
 const label = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ')
 const months: Record<string, string> = { gen:'01', feb:'02', mar:'03', apr:'04', mag:'05', giu:'06', lug:'07', ago:'08', set:'09', ott:'10', nov:'11', dic:'12' }
@@ -50,44 +57,90 @@ function safeXlsxEnvelope(buffer: ArrayBuffer): boolean {
   return at === end
 }
 
-/** Strictly supported Italian consolidated statement; rejects ambiguity instead of importing partial data. */
-export function parseConsolidated(text: string): ConsolidatedPreview | null {
-  const all = parseCsv(text)
-  const personal = all.flatMap((r, i) => label(r[0] ?? '') === 'conto personale (eur)' ? [i] : [])
-  const candidates = personal.filter(i => all.slice(i + 1, i + 8).some(r => label(r[0] ?? '') === 'data' && label(r[1] ?? '') === 'descrizione' && label(r[3] ?? '') === 'denaro in entrata/uscita'))
-  if (candidates.length !== 1) return null
-  const start = candidates[0]; const offset = all.slice(start + 1, start + 8).findIndex(r => label(r[0] ?? '') === 'data' && label(r[1] ?? '') === 'descrizione' && label(r[3] ?? '') === 'denaro in entrata/uscita')
-  const header = start + 1 + offset; const rows: ImportRow[] = []; let transfersExcluded = 0; let finished = false
-  for (const r of all.slice(header + 1)) {
-    const first = (r[0] ?? '').trim()
-    if (!first) continue
-    const date = italianDate(first)
-    if (!date) {
-      if (label(first) === 'totale' && (rows.length || transfersExcluded)) { finished = true; break }
-      return null
-    }
-    const amount = parseBankAmount(r[3] ?? '')
-    if (amount == null || amount === 0 || !(r[1] ?? '').trim()) return null
-    const transfer = label(r[1]).match(/^(a|da) eur conto deposito senza vincoli$/)
-    if (transfer) {
-      if ((transfer[1] === 'a' && amount >= 0) || (transfer[1] === 'da' && amount <= 0)) return null
-      transfersExcluded++; continue
-    }
-    rows.push({ date, description: r[1].trim(), amount: Math.round(amount * 100) / 100, currency: 'EUR' })
+type StatementFormat = 'italian' | 'english'
+interface StatementTable { marker: number; header: number; format: StatementFormat }
+
+function tableHeader(row: string[]): StatementFormat | null {
+  if (label(row[0] ?? '') === 'data' && label(row[1] ?? '') === 'descrizione' && label(row[3] ?? '') === 'denaro in entrata/uscita') return 'italian'
+  if (label(row[0] ?? '') === 'date' && label(row[1] ?? '') === 'description' && label(row[3] ?? '') === 'money in/out' && label(row[4] ?? '') === 'balance') return 'english'
+  return null
+}
+
+/** Only exclude clearly labelled internal transfers, and reject a sign that contradicts their direction. */
+function internalTransfer(description: string, format: StatementFormat): 'out' | 'in' | null {
+  const d = label(description)
+  if (format === 'italian') {
+    const m = d.match(/^(a|da) eur conto deposito senza vincoli$/)
+    return m ? (m[1] === 'a' ? 'out' : 'in') : null
   }
-  if (!finished || !rows.length) return null
-  // The existing import ledger collapses identical fingerprints; refuse ambiguous
-  // same-day transactions rather than silently discarding a legitimate movement.
-  const fingerprints = rows.map(r => `${r.date}|${r.amount.toFixed(2)}|${normalize(r.description)}`)
-  if (new Set(fingerprints).size !== fingerprints.length) return null
-  const deposits = all.flatMap((r, i) => label(r[0] ?? '') === 'deposito senza vincoli (eur)' ? [i] : [])
+  const m = d.match(/^(to|from)\s+(instant access savings|pocket)\b/)
+  return m ? (m[1] === 'to' ? 'out' : 'in') : null
+}
+
+function extractDepositBalance(all: string[][], before: number): number | null {
+  const summaries = all.flatMap((r, i) => i < before && label(r[0] ?? '') === 'savings accounts summaries' ? [i] : [])
+  if (summaries.length !== 1) return null
+  const details = all.flatMap((r, i) => i > summaries[0] && i < before && label(r[0] ?? '') === 'savings account details' ? [i] : [])
+  if (details.length !== 1) return null
+  const products = all.flatMap((r, i) => i > summaries[0] && i < details[0] && /^instant access savings\s*\(eur\)$/.test(label(r[0] ?? '')) ? [i] : [])
+  if (products.length !== 1) return null
+  const balances = all.slice(details[0] + 1, before).filter(r => label(r[2] ?? '') === 'closing balance')
+    .map(r => parseBankAmount(r[3] ?? ''))
+  return balances.length === 1 && balances[0] != null && balances[0] >= 0 ? balances[0] : null
+}
+
+function extractItalianDepositBalance(all: string[][], before: number): number | null {
+  const deposits = all.flatMap((r, i) => i < before && label(r[0] ?? '') === 'deposito senza vincoli (eur)' ? [i] : [])
   const balances = deposits.flatMap(i => {
-    const value = all.slice(i + 1, i + 25); const marker = value.findIndex(r => label(r[0] ?? '') === 'valore del deposito')
+    const value = all.slice(i + 1, Math.min(before, i + 25)); const marker = value.findIndex(r => label(r[0] ?? '') === 'valore del deposito')
     if (marker < 0) return []
     return value.slice(marker + 1).flatMap(r => label(r[2] ?? '') === 'saldo di chiusura' ? [parseBankAmount(r[3] ?? '')] : [])
   })
-  if (balances.length > 1 || balances.some(x => x == null || x < 0)) return null
-  return { rows, depositBalance: balances[0] ?? null, transfersExcluded }
+  return balances.length === 1 && balances[0] != null && balances[0] >= 0 ? balances[0] : null
+}
+
+/** Supports the existing Italian export and the multi-section English Revolut consolidated CSV.
+ * Selects exactly one personal EUR transaction table and rejects partial or ambiguous statements. */
+export function parseConsolidated(text: string): ConsolidatedPreview | null {
+  const all = parseCsv(text)
+  const markers = all.flatMap((r, i) => ['conto personale (eur)', 'personal account (eur)'].includes(label(r[0] ?? '')) ? [i] : [])
+  const tables: StatementTable[] = []
+  for (const marker of markers) {
+    const header = all.findIndex((r, i) => i > marker && i <= marker + 15 && tableHeader(r) != null)
+    if (header >= 0) tables.push({ marker, header, format: tableHeader(all[header])! })
+  }
+  if (tables.length !== 1) return null
+  const table = tables[0], rows: ImportRow[] = []
+  let transfersExcluded = 0, finished = false
+  for (const r of all.slice(table.header + 1)) {
+    const first = (r[0] ?? '').trim()
+    if (!first) continue
+    if (label(first) === 'totale' || label(first) === 'total') { finished = rows.length + transfersExcluded > 0; break }
+    const date = table.format === 'italian' ? italianDate(first) : parseBankDate(first)
+    if (!date) return null
+    const amount = parseBankAmount(r[3] ?? ''), description = (r[1] ?? '').trim()
+    if (amount == null || amount === 0 || !description) return null
+    const transfer = internalTransfer(description, table.format)
+    if (transfer) {
+      if ((transfer === 'out' && amount >= 0) || (transfer === 'in' && amount <= 0)) return null
+      transfersExcluded++; continue
+    }
+    rows.push({ date, description, amount: Math.round(amount * 100) / 100, currency: 'EUR' })
+  }
+  if (!finished || !rows.length) return null
+  const occurrenceCounts = new Map<string, number>()
+  let repeatedRows = 0
+  for (const r of rows) {
+    const key = `${r.date}|${r.amount.toFixed(2)}|${normalize(r.description)}`
+    const count = (occurrenceCounts.get(key) ?? 0) + 1
+    occurrenceCounts.set(key, count)
+    if (count > 1) repeatedRows++
+  }
+  const dates = rows.map(r => r.date).sort()
+  const depositBalance = table.format === 'english'
+    ? extractDepositBalance(all, table.header)
+    : extractItalianDepositBalance(all, table.header)
+  return { rows, depositBalance, transfersExcluded, periodStart: dates[0], periodEnd: dates.at(-1)!, repeatedRows }
 }
 
 /** Local-only parse; does not upload the spreadsheet. Limits size and rejects unexpected workbook layout. */

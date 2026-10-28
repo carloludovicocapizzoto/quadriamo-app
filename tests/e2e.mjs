@@ -244,6 +244,29 @@ await step('il capitale preesistente è conservato', () => js(`location.hash = '
 if (savingsChoiceEnabled) await step('il saldo del deposito entra solo nella destinazione confermata', null,
   `/Conto deposito/.test(document.body.innerText) && /100,00/.test(document.body.innerText) && /2[.]000,00/.test(document.body.innerText)`)
 
+console.log('Importazione CSV annuale')
+const annualRows = ['Savings Accounts Summaries,,,,', 'Instant Access Savings (EUR),,,,', 'Savings account details,,,,',
+  ',,Closing balance,123.45,', 'Personal Account (EUR),,,,', 'Summary,,,,', 'Date,Description,Category,Money in/out,Balance',
+  ...['Jan 02', 'Feb 03', 'Mar 04', 'Apr 05', 'May 06', 'Jun 07', 'Jul 08', 'Aug 09', 'Sep 10', 'Oct 11', 'Nov 12', 'Dec 31']
+    .map((d, i) => `"${d}, 2026",QA-B-${i + 1},Other,${i === 0 ? '-2.35' : '1.00'},100.00`),
+  '"Jan 06, 2026",QA-B-repeat,Other,-1.25,90.00', '"Jan 06, 2026",QA-B-repeat,Other,-1.25,88.75',
+  'Total,,,,' ]
+const annualCsv = join(fixtureDir, 'synthetic-year.csv'); writeFileSync(annualCsv, annualRows.join('\n'))
+const selectCsv = async () => {
+  const root = await cdp('DOM.getDocument'), input = await cdp('DOM.querySelector', { nodeId: root.result.root.nodeId, selector: 'input[type=file]' })
+  if (!input.result.nodeId) throw Error('input CSV non trovato')
+  await cdp('DOM.setFileInputFiles', { nodeId: input.result.nodeId, files: [annualCsv] })
+}
+await step('il CSV annuale mostra tutte le date e conserva le righe ripetute', async () => {
+  await js(`location.hash = '#/analysis/transactions'`); await sleep(500); await selectCsv()
+}, `/Periodo trovato nel file/.test(document.body.innerText) && /2026/.test(document.body.innerText) && /righe hanno data/.test(document.body.innerText)`)
+await step('la conferma inserisce tutte le date annuali nella casella globale', async () => {
+  await clickNative('[aria-label="Controlla l’importazione"] button'); await sleep(300)
+}, `/QA-B-12/.test(document.body.innerText) && /QA-B-repeat/.test(document.body.innerText) && /15/.test(document.querySelector('h3')?.innerText ?? '')`)
+await step('un secondo caricamento dello stesso CSV non crea duplicati', async () => {
+  await selectCsv(); await sleep(250); await clickNative('[aria-label="Controlla l’importazione"] button')
+}, `/0 movimenti da confermare · 14 già importati/.test(document.body.innerText) && /15/.test(document.querySelector('h3')?.innerText ?? '')`)
+
 if (errors.length) { console.error(`\nErrori nella pagina:\n  ${errors.join('\n  ')}`); await done(1) }
 console.log(`\nTutti i ${n} passi sono andati bene.`)
 await done(0)
