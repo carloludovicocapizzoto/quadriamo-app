@@ -4,6 +4,7 @@ import type { AccountStore } from '../store/accountStore'
 import { exportCache } from '../store/persist'
 import type { ScopeLease } from '../store/scope'
 import type { AppData } from '../store/types'
+import { Icon } from '../ui/Icon'
 import { downloadFile } from '../ui/kit/download'
 import { bucketName, categoryName } from '../ui/names'
 import type { SyncStatus } from './context'
@@ -48,11 +49,19 @@ export function SyncRecovery({ storage, lease, status, retry, activate, failureC
     {coolingDown && <p role="note">{t('cloud.rateLimited', { time: new Date(cooldownAt).toLocaleTimeString() })}</p>}
     {status === 'error' && failureCode && <p role="alert">{t(failureCode)}</p>}
     {(status === 'upgrade' || status === 'paused') && <p>{t(cloud?.activationBlocked ? 'cloud.pilotWait' : cloud?.available ? 'cloud.activationHint' : 'cloud.upgradeHint')}</p>}
-    <div className="cloud-actions">
+    {/* nella pagina dei dati le azioni sono righe, come il resto della pagina; nell'avviso restano bottoni */}
+    {inline ? <ul className="group-list cloud-rows">
+      <li><button className="row" disabled={status === 'syncing' || !!snapshot.error || coolingDown} onClick={() => void retry()}>
+        <span className="row-main"><span>{t('cloud.retry')}</span></span><Icon name="chevron" size={18} className="row-chev" /></button></li>
+      <li><button className="row" onClick={() => void exportAll().catch(() => setFailed(true))}>
+        <span className="row-main"><span>{t('cloud.exportAll')}</span></span><Icon name="chevron" size={18} className="row-chev" /></button></li>
+      {cloud?.available && <li><button className="row" disabled={status === 'syncing' || !!snapshot.error} onClick={() => void activate()}>
+        <span className="row-main"><span className="add-row">{t('cloud.activate')}</span></span></button></li>}
+    </ul> : <div className="cloud-actions">
       <button className="btn small-btn" onClick={() => void exportAll().catch(() => setFailed(true))}>{t('cloud.exportAll')}</button>
       <button className="btn small-btn" disabled={status === 'syncing' || !!snapshot.error || coolingDown} onClick={() => void retry()}>{t('cloud.retry')}</button>
       {cloud?.available && <button className="btn" disabled={status === 'syncing' || !!snapshot.error} onClick={() => void activate()}>{t('cloud.activate')}</button>}
-    </div>
+    </div>}
     {failed && <p role="alert">{t('cloud.actionError')}</p>}
     {cloud?.conflict?.cause === 'expired-receipt' && <p role="alert">{t('cloud.expiredReceiptConflict')}</p>}
     {cloud?.conflict && <ConflictForm key={cloud.conflict.id} conflict={cloud.conflict} storage={storage} lease={lease} onResolved={retry} />}

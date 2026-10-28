@@ -1,4 +1,4 @@
-// Cambi: tassi automatici per le valute usate, con la possibilità di fissarli a mano.
+// Cambi: una riga per valuta usata, col tasso automatico e un campo per fissarlo a mano.
 import { useState } from 'react'
 import { todayIso } from '../../engine'
 import { fetchRates, FX_SUPPORTED, neededCurrencies } from '../../fx'
@@ -21,16 +21,14 @@ export function FxSection({ d: { data, draft, edit, flash } }: { d: SettingsDraf
     .filter(c => c !== draft.currency).sort()
 
   return (
-    <section className="card">
-      <h3 className="h-plain">{t('settings.fx')}</h3>
-      <p className="muted small">{t('settings.fxHint')}</p>
-      <p className="small">{data.settings.fxDate ? t('settings.fxDate', { date: date(data.settings.fxDate, { day: 'numeric', month: 'short', year: 'numeric' }) }) : t('settings.fxNever')}</p>
-      <ul className="edit-list fx-list">
+    <section className="group">
+      <h2 className="group-title">{t('settings.fx')}</h2>
+      <ul className="group-list">
         {fxList.map(c => (
-          <li key={c}>
-            <span className="fx-code">1 {c} =</span>
-            <span className="muted small">{t('settings.fxAuto')}: {data.settings.fxRates[c] != null ? String(data.settings.fxRates[c]).replace('.', ',') : '—'}</span>
-            <input aria-label={`${t('settings.fxManual')} ${c}`} placeholder={t('settings.fxManual')} inputMode="decimal"
+          <li key={c}><label className="row">
+            <span className="row-main"><span className="fx-code">1 {c}</span>
+              <small>{t('settings.fxAuto')}: {data.settings.fxRates[c] != null ? String(data.settings.fxRates[c]).replace('.', ',') : '—'} {draft.currency}</small></span>
+            <input className="row-input row-fx" aria-label={`${t('settings.fxManual')} ${c}`} placeholder={t('settings.fxManual')} inputMode="decimal"
                    defaultValue={draft.fxManual?.[c] != null ? String(draft.fxManual[c]).replace('.', ',') : ''}
                    onChange={e => edit(s => {
                      const v = parseAmount(e.target.value)
@@ -38,22 +36,27 @@ export function FxSection({ d: { data, draft, edit, flash } }: { d: SettingsDraf
                      if (v && v > 0) m[c] = v; else delete m[c]
                      s.fxManual = m
                    })} />
-            <span className="muted small">{draft.currency}</span>
-          </li>
+          </label></li>
         ))}
+        <li><button type="button" className="row" disabled={fxBusy} onClick={() => void updateRates()}>
+          <span className="row-main"><span className="add-row">{t('settings.fxUpdate')}</span></span>
+          <span className="row-value">{data.settings.fxDate ? t('settings.fxDate', { date: date(data.settings.fxDate, { day: 'numeric', month: 'short' }) }) : t('settings.fxNever')}</span>
+        </button></li>
+        <li><label className="row">
+          <span className="row-main"><span className="add-row">+ {t('settings.fxAdd')}</span></span>
+          {/* la scelta della valuta: il menu del sistema si apre toccando la riga */}
+          <select className="row-cover" aria-label={t('settings.fxAdd')} value="" onChange={e => {
+            const c = e.target.value
+            if (!c) return
+            setExtraFx(x => [...x, c])
+            void updateRates([c])
+          }}>
+            <option value="">+ {t('settings.fxAdd')}</option>
+            {FX_SUPPORTED.filter(c => c !== draft.currency && !fxList.includes(c)).map(c => <option key={c}>{c}</option>)}
+          </select>
+        </label></li>
       </ul>
-      <div className="stack-row">
-        <button className="btn" disabled={fxBusy} onClick={() => void updateRates()}>{t('settings.fxUpdate')}</button>
-        <select aria-label={t('settings.fxAdd')} value="" onChange={e => {
-          const c = e.target.value
-          if (!c) return
-          setExtraFx(x => [...x, c])
-          void updateRates([c])
-        }}>
-          <option value="">+ {t('settings.fxAdd')}</option>
-          {FX_SUPPORTED.filter(c => c !== draft.currency && !fxList.includes(c)).map(c => <option key={c}>{c}</option>)}
-        </select>
-      </div>
-      </section>
+      <p className="group-foot">{t('settings.fxHint')}</p>
+    </section>
   )
 }

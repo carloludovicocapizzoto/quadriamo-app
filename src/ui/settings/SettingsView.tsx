@@ -20,10 +20,11 @@ export function SettingsView({ only, wizard = false }: { only: SettingsSection[]
   return (
     <div className="settings">
       <Fragment key={d.version}>
-        {show('general') && <GeneralSection d={d} />}
-        {show('fx') && <FxSection d={d} />}
+        {show('general') && <GeneralSection d={d} wizard={wizard} />}
         {show('rule') && <RuleSection d={d} />}
         {show('categories') && <CategoriesSection d={d} />}
+        {/* i cambi in fondo: servono solo a chi usa più valute */}
+        {show('fx') && <FxSection d={d} />}
         {show('rules') && <RulesSection d={d} />}
         {show('data') && <DataSection d={d} wizard={wizard} />}
       </Fragment>

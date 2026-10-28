@@ -8,7 +8,7 @@ import type { Dict } from '../../i18n/en'
 import { useStore } from '../../store/context'
 import { newId } from '../../store/state'
 import { AmountInput } from '../kit/AmountInput'
-import { Empty } from '../kit/Empty'
+import { AddRow } from '../kit/List'
 import { tap } from '../kit/motion'
 import { Money } from '../kit/Money'
 import { Outcome } from '../Outcome'
@@ -38,7 +38,11 @@ export function CapitalPage() {
     setParts(clean)
   }
 
-  if (!saved && !parts.length) return <Empty title={t('cap.emptyTitle')} text={t('cap.emptyText')} action={{ label: t('cap.start'), onClick: add }} />
+  // vuoto: la stessa forma di Obiettivi e Abbonamenti, una frase e la riga per cominciare
+  if (!saved && !parts.length) return <section className="group">
+    <p className="muted small group-intro">{t('cap.emptyText')}</p>
+    <ul className="group-list"><AddRow label={t('cap.start')} onClick={add} /></ul>
+  </section>
 
   return <>
     <Outcome value={sum.total} currency={cur} label={t('cap.totalLabel', { date: date(saved?.date ?? day, { day: 'numeric', month: 'long', year: 'numeric' }) })}

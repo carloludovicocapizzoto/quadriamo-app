@@ -6,7 +6,6 @@
 .goal-amt { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; }
 .goal-amt .cur { color: var(--muted); font-weight: 400; }
 .goal-done { display: flex; align-items: center; gap: 4px; }
-.goal-add { margin: var(--s4) 0 var(--s2); }
 .goal-detail { display: grid; }
 .gd-head { display: grid; gap: var(--s2); padding: var(--s2) 0 var(--s5); }
 .gd-head h2 { margin: 0 0 var(--s2); font-size: var(--t-h2); }
