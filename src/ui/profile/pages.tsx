@@ -19,6 +19,7 @@ import { Avatar } from './Avatar'
 import { StreakCalendar } from '../shell/StreakCalendar'
 import { Flame } from '../Streak'
 import { ENV } from '../../env'
+import { PAGES as LEGAL } from '../../config'
 
 export function Progress({ data, streak, today, badges }: { data: AppData; streak: Streak | null; today: string; badges: Badge[] }) {
   const { t } = useI18n()
@@ -159,11 +160,11 @@ export function Language() {
     <Row key={c} label={n} value={lang === c ? <Icon name="check" size={18} /> : null} onClick={() => setLang(c as Lang)} />)}</Group>
 }
 
-export function Motion() {
+export function Motion({ titled = false }: { titled?: boolean }) {
   const { t } = useI18n()
   const prefs = usePrefs()
   const canVibrate = typeof navigator !== 'undefined' && 'vibrate' in navigator
-  return <Group>
+  return <Group title={titled ? t('prof.motion') : undefined}>
     {canVibrate && <Row label={t('motion.haptics')} detail={t('motion.hapticsHint')} toggle={{ on: prefs.haptics, onChange: on => setPrefs({ haptics: on }) }} />}
     <Row label={t('motion.reduce')} detail={t('motion.reduceHint')} toggle={{ on: prefs.motion === 'reduce', onChange: on => setPrefs({ motion: on ? 'reduce' : 'system' }) }} />
   </Group>
@@ -172,8 +173,17 @@ export function Motion() {
 export function Accessibility() {
   const { t } = useI18n()
   const prefs = usePrefs()
-  return <Group foot={t('a11y.hint')}>
+  return <Group title={t('prof.accessibility')} foot={t('a11y.hint')}>
     <Row label={t('a11y.large')} toggle={{ on: prefs.text === 'large', onChange: on => setPrefs({ text: on ? 'large' : 'normal' }) }} />
+  </Group>
+}
+
+/** Privacy policy e termini d'uso: due link in una pagina sola. */
+export function Legal() {
+  const { t, lang } = useI18n()
+  return <Group>
+    <Row label={t('legal.privacy')} href={`${LEGAL.privacy}?lang=${lang}`} />
+    <Row label={t('legal.terms')} href={`${LEGAL.terms}?lang=${lang}`} />
   </Group>
 }
 

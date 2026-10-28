@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useInbox } from '../../beta/inbox'
-import { badges, goalStatus, monthOf, monthlyTrend, prevMonth, type Streak } from '../../engine'
-import { useI18n } from '../../i18n/core'
+import { badges, goalStatus, monthOf, monthlyTrend, prevMonth, seedRules, type Streak } from '../../engine'
+import { LANGS, useI18n } from '../../i18n/core'
+import { PERSONAL_PUSH_PAUSED } from '../../beta/push'
 import { usePrefs } from '../../app/prefs'
 import { setStatsConsent, statsConsent } from '../../beta/device'
 import { track } from '../../beta/telemetry'
-import { PAGES as LEGAL } from '../../config'
 import { useHelp } from '../../profile/help'
 import type { ProfilePage } from '../../profile/pages'
 import type { AppData } from '../../store/state'
@@ -58,7 +58,8 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
 
   const ctx: Ctx = {
     signedIn: !!sync.user, isAdmin, prefs, contactEmail: help?.contact ?? '', version: ENV.label, stats, unread,
-    privacyUrl: `${LEGAL.privacy}?lang=${lang}`, termsUrl: `${LEGAL.terms}?lang=${lang}`, t,
+    langName: LANGS[lang], notifyPaused: PERSONAL_PUSH_PAUSED && !!ENV.supabase, rules: (data.settings.rules ?? seedRules()).length,
+    t,
     setStats: on => { setStats(on); setStatsConsent(on ? 'yes' : 'no') },
     invite: async () => {
       const url = `${SITE}?lang=${lang}`
@@ -91,7 +92,7 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
       {SECTIONS.map(s => {
         const items = s.items.filter(i => !i.when || i.when(ctx))
         return (
-          <Group key={s.title} title={t(s.title)}>
+          <Group key={s.title} title={t(s.title)} foot={s.foot?.(ctx)}>
             {items.map((i, n) => {
               const label = t(i.label)
               if ('page' in i) return <Row key={n} label={label} danger={i.danger} value={i.value?.(ctx)} onClick={() => open(i.page)} morph={i.page} />
