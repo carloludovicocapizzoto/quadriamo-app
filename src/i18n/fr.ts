@@ -1260,6 +1260,7 @@ const fr: Dict = {
   'personal.tzHint': "Repris du téléphone.",
   'personal.guest': "Avec un compte, vous enregistrez nom et e-mail et retrouvez vos données sur chaque appareil. Le pays reste sur ce téléphone.",
   'personal.save': "Enregistrer",
+  'personal.add': "Ajouter",
   'personal.saved': "Enregistré",
   'sec.password': "Changer le mot de passe",
   'sec.current': "Mot de passe actuel",

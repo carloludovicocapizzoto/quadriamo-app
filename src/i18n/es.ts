@@ -1260,6 +1260,7 @@ const es: Dict = {
   'personal.tzHint': "La toma del teléfono.",
   'personal.guest': "Con una cuenta guardas nombre y correo y encuentras tus datos en cada dispositivo. El país se queda en este teléfono.",
   'personal.save': "Guardar",
+  'personal.add': "Añadir",
   'personal.saved': "Guardado",
   'sec.password': "Cambiar contraseña",
   'sec.current': "Contraseña actual",

@@ -78,32 +78,33 @@ export function Personal({ onLogin }: { onLogin: () => void }) {
         <small className="muted">{photoErr ? <span className="bad-text">{photoErr}</span> : t('photo.private')}</small>
       </div>
     </div>
-    {sync.user ? <form className="txs-rows" onSubmit={save}>
-      <label className="txs-row"><span>{t('auth.firstName')}</span>
-        <input autoComplete="given-name" maxLength={80} value={first} onChange={e => { setFirst(e.target.value); setNote('') }} /></label>
-      <label className="txs-row"><span>{t('auth.lastName')}</span>
-        <input autoComplete="family-name" maxLength={80} value={last} onChange={e => { setLast(e.target.value); setNote('') }} /></label>
-      <div className="form-end">{note && <span className="muted small">{note}</span>}
-        <button className="btn small-btn" disabled={first === sync.user.firstName && last === sync.user.lastName}>{t('personal.save')}</button></div>
-    </form> : <div className="guest-note"><p className="muted">{t('personal.guest')}</p>
+    {!sync.user && <div className="guest-note"><p className="muted">{t('personal.guest')}</p>
       {sync.enabled && <button className="btn primary" onClick={onLogin}>{t('prof.signIn')}</button>}</div>}
 
-    {sync.user && <Group>
-      <Row label={t('personal.email')} value={sync.user.email}
-           detail={sync.user.emailConfirmed ? t('personal.verified') : <span className="warn-text">{t('personal.unverified')}</span>} />
-      {!sync.user.emailConfirmed && <Row label={t('personal.resend')}
-           onClick={() => { void sync.resendSignup(sync.user!.email).then(() => setNote(t('personal.sent'))) }} />}
-    </Group>}
-
-    <div className="txs-rows">
+    {/* una sola lista: nome, email, paese, fuso orario; «Salva» compare solo quando nome o cognome cambiano */}
+    <form className="txs-rows" onSubmit={save}>
+      {sync.user && <>
+        <label className="txs-row"><span>{t('auth.firstName')}</span>
+          <input autoComplete="given-name" maxLength={80} placeholder={t('personal.add')} value={first} onChange={e => { setFirst(e.target.value); setNote('') }} /></label>
+        <label className="txs-row"><span>{t('auth.lastName')}</span>
+          <input autoComplete="family-name" maxLength={80} placeholder={t('personal.add')} value={last} onChange={e => { setLast(e.target.value); setNote('') }} /></label>
+        <div className="txs-row"><span>{t('personal.email')}</span>
+          <span className="row-value personal-email"><span>{sync.user.email}</span>
+            {sync.user.emailConfirmed ? <small>{t('personal.verified')}</small>
+              : <button type="button" className="link-btn warn-text" onClick={() => { void sync.resendSignup(sync.user!.email).then(() => setNote(t('personal.sent'))) }}>
+                  {t('personal.unverified')} · {t('personal.resend')}</button>}</span></div>
+      </>}
       {pick('country', 'personal.country')}
       <label className="txs-row"><span>{t('personal.abroad')}</span>
         <span className="row-switch"><button type="button" role="switch" aria-checked={abroad} aria-label={t('personal.abroad')} className={`switch${abroad ? ' on' : ''}`}
           onClick={() => { const on = !abroad; setAbroad(on); if (!on) setCountry('residence', null) }}><i /></button></span></label>
       {abroad && pick('residence', 'personal.residence')}
       <div className="txs-row"><span>{t('personal.tz')}</span><span className="row-value">{Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' ')}</span></div>
-    </div>
-    <p className="group-foot">{t('personal.tzHint')}{profile?.country && profile.residence ? ` ${countryName(profile.country, lang)} → ${countryName(profile.residence, lang)}` : ''}</p>
+      <p className="group-foot">{t('personal.tzHint')}{profile?.country && profile.residence ? ` ${countryName(profile.country, lang)} → ${countryName(profile.residence, lang)}` : ''}</p>
+      {sync.user && (note || first !== sync.user.firstName || last !== sync.user.lastName) && <div className="form-end">
+        {note && <span className="muted small" role="status">{note}</span>}
+        {(first !== sync.user.firstName || last !== sync.user.lastName) && <button className="btn primary small-btn">{t('personal.save')}</button>}</div>}
+    </form>
   </>
 }
 

@@ -1260,6 +1260,7 @@ const en = {
   'personal.tzHint': "Taken from your phone.",
   'personal.guest': "With an account you save your name and email and find your data on every device. The country stays on this phone.",
   'personal.save': "Save",
+  'personal.add': "Add",
   'personal.saved': "Saved",
   'sec.password': "Change password",
   'sec.current': "Current password",

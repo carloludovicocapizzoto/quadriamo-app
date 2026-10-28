@@ -101,3 +101,8 @@ label.row:has(> .row-cover) { position: relative; }
 /* l'elenco continua le due righe sopra, senza una seconda linea */
 .group-list + .rules-list { border-top: 0; }
 .rule-off .row-main > span:first-child, .rule-off .row-value { color: var(--faint); }
+/* Dati personali: l'email a destra, con lo stato sotto */
+.personal-email { display: grid; justify-items: end; gap: 2px; min-width: 0; max-width: none; }
+.personal-email > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.personal-email small { font-size: var(--t-sm); }
+.personal-email .link-btn { padding: 0; font-size: var(--t-sm); }
