@@ -56,15 +56,15 @@ a.btn { text-decoration: none; color: var(--text); }
   color: var(--muted); background: var(--fill); }
 .mini-chip.on { color: var(--on-accent); background: var(--accent); }
 
-/* ---------- schede (segmented control): 3 o 4 voci, la pillola scorre sotto la scelta ---------- */
+/* ---------- schede (segmented control): 2-5 voci, la pillola scorre sotto la scelta e ne prende la larghezza ---------- */
 .segmented { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); padding: 4px; border-radius: var(--r-md); margin-bottom: var(--s4);
   background: var(--fill); }
 .segmented:has(> button:nth-of-type(4)) { grid-template-columns: repeat(4, 1fr); }
-.segmented button { position: relative; z-index: 1; height: 36px; padding: 0 2px; border: 0; background: none; font: inherit; font-size: var(--t-sm); font-weight: 600;
+.segmented button { position: relative; z-index: 1; height: 36px; padding: 0 8px; border: 0; background: none; font: inherit; font-size: var(--t-sm); font-weight: 600;
   color: var(--muted); cursor: pointer; white-space: nowrap; }
 .segmented button.on { color: var(--text); }
 .seg-pill { position: absolute; top: 4px; left: 4px; width: calc((100% - 8px) / 3); height: 36px; border-radius: 7px; background: var(--bg);
-  transition: transform var(--d-spring) var(--spring-snappy); }
+  transition: transform var(--d-spring) var(--spring-snappy), width var(--d-spring) var(--spring-snappy); }
 .segmented:has(> button:nth-of-type(4)) .seg-pill { width: calc((100% - 8px) / 4); }
 .seg-badge { position: absolute; top: -6px; right: -2px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: var(--r-md); background: var(--bad); color: var(--on-accent);
   font-size: 10.5px; font-style: normal; font-weight: 600; display: grid; place-items: center; }

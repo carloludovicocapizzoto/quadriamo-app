@@ -45,3 +45,6 @@ marketing/site-shots/
 marketing/out/video/_work/
 marketing/shots-campaign/
 screens-alpha
+
+# evidenze locali delle prove intermittenti (non si committano)
+evidenze-e2e-*/
