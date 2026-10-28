@@ -92,6 +92,38 @@ await step('segno una spesa di 12,50 €', async () => {
 // il salvataggio sul dispositivo parte appena la schermata si aggiorna: una persona non ricarica nello stesso istante
 await step('dopo aver ricaricato la pagina, la spesa c\'è ancora', async () => { await sleep(500); await cdp('Page.reload') }, `/12,50/.test(document.querySelector('.w-today')?.innerText ?? '')`)
 
+console.log('Importi incollati (P1.1)')
+// incolla vero: appunti del sistema e comando «incolla» di Chrome, nel campo importo del nuovo movimento
+await cdp('Browser.grantPermissions', { permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'], origin: new URL(URL_APP).origin })
+await cdp('Page.bringToFront')
+const pasteAmount = async text => {
+  await js(`navigator.clipboard.writeText(${JSON.stringify(text)})`)
+  await js(`(() => { const el = document.querySelector('.tx-sheet .amount-input'); el.focus(); el.select() })()`)
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'v', code: 'KeyV', modifiers: 4, commands: ['paste'] })
+  await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'v', code: 'KeyV', modifiers: 4 })
+  await sleep(250)
+}
+const amountField = `document.querySelector('.tx-sheet .amount-input')`
+await step('incollo «2.35» in italiano: diventa 2,35, non 235', async () => {
+  await click(`document.querySelector('.tab-add')`); await sleep(700)
+  await js(`navigator.clipboard.writeText('0')`); await sleep(100)                  // appunti pronti prima del primo incolla
+  await pasteAmount('2.35')
+}, `${amountField}?.value === '2,35' && ${amountField}?.getAttribute('aria-invalid') !== 'true'`)
+await step('incollo «1,234.56»: 1.234,56', () => pasteAmount('1,234.56'), `${amountField}?.value === '1.234,56'`)
+await step('incollo «0.123»: resta visibile, segnato come non valido, e non si salva', async () => {
+  await pasteAmount('0.123')
+  await click(`document.querySelector('.cat-pick button')`)
+  await click(`document.querySelector('.tx-sheet button[type=submit]')`); await sleep(300)
+}, `${amountField}?.value === '0.123' && ${amountField}?.getAttribute('aria-invalid') === 'true' && !!document.querySelector('.tx-sheet')`)
+await step('scrivo «2.35» tasto per tasto, dopo aver selezionato tutto: 2,35', async () => {
+  await js(`(() => { const el = ${amountField}; el.focus(); el.select() })()`)
+  for (const ch of '2.35') await cdp('Input.insertText', { text: ch })
+  await sleep(200)
+}, `${amountField}?.value === '2,35'`)
+await step('chiudo senza salvare: nessun movimento da 235', async () => {
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }); await sleep(500)
+}, `!document.querySelector('.tx-sheet') && !/235/.test(document.querySelector('.w-today')?.innerText ?? '')`)
+
 console.log('Le altre sezioni')
 await step('Analisi → Mese mostra come finisce il mese', () => js(`location.hash = '#/analysis/month'`), `!!document.querySelector('.outcome-amount')`)
 await step('Analisi → Movimenti elenca la spesa', () => js(`location.hash = '#/analysis/transactions'`), has('/12,50/'))
@@ -323,6 +355,24 @@ await step('un Excel con due fogli: importa quello dei movimenti con l’importo
 await step('confermato, entra nella casella', async () => {
   await click(byText('/^Importa 1 movimento$/', '.bs button')); await sleep(600)
 }, `/QA Excel Spesa/.test(document.body.innerText)`)
+
+// P2.3: una cella con formula ha un valore salvato che può essere vecchio: la riga si esclude con il motivo, non si importa
+const formulaBook = XLSX.utils.book_new()
+XLSX.utils.book_append_sheet(formulaBook, XLSX.utils.aoa_to_sheet([['Data', 'Descrizione', 'Importo'],
+  [new Date(2026, 9, 27), 'QA Excel Formula', { t: 'n', f: 'C3*100', v: -999 }], [new Date(2026, 9, 27), 'QA Excel Numero', -7.25]], { cellDates: true }), 'Movimenti')
+const formulaFile = join(fixtureDir, 'synthetic-formula.xlsx'); writeFileSync(formulaFile, XLSX.write(formulaBook, { type: 'buffer', bookType: 'xlsx' }))
+await step('un Excel con una formula nell’importo: quella riga è esclusa con il motivo', async () => {
+  await selectCsv(formulaFile); await sleep(900)
+}, inSheet(`/Movimenti da importare[^0-9]*1[^0-9]/`) + ` && ` + inSheet(`/Riga 2 · valore calcolato da una formula/`) + ` && !` + inSheet(`/999/`))
+await click(byText('/^Annulla$/', '.bs button')); await sleep(300)
+
+// P2.2: un CSV oltre i limiti non si legge: messaggio chiaro e nessun cambiamento nella casella
+const bigCsv = join(fixtureDir, 'synthetic-too-large.csv')
+writeFileSync(bigCsv, 'Data;Descrizione;Importo\n' + '28/10/2026;QA Grande;-1,00\n'.repeat(Math.ceil(5 * 1024 * 1024 / 28)))
+const inboxBefore = await js(`document.querySelector('.card-inbox h3')?.innerText ?? ''`)
+await step('un CSV troppo grande è rifiutato prima di leggerlo, e la casella non cambia', async () => {
+  await selectCsv(bigCsv); await sleep(600)
+}, `/File troppo grande/.test(document.body.innerText) && !document.querySelector('.bs') && (document.querySelector('.card-inbox h3')?.innerText ?? '') === ${JSON.stringify(inboxBefore)}`)
 
 if (errors.length) { console.error(`\nErrori nella pagina:\n  ${errors.join('\n  ')}`); await done(1) }
 console.log(`\nTutti i ${n} passi sono andati bene.`)

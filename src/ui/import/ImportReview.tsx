@@ -3,7 +3,7 @@
 // 3. come sono scritti numeri e date (file ambiguo: con un esempio letto nei due modi); 4. il riepilogo.
 // Niente entra nella casella «Da confermare» finché non si conferma qui.
 import { useMemo, useState, type ReactNode } from 'react'
-import { detectColumns, parseCsv, parseDateWith, parseMoney, readStatement, type ColumnMap, type DateOrder, type DecimalMark, type StatementOptions } from '../../engine'
+import { CSV_LIMITS, detectColumns, parseCsv, parseDateWith, parseMoney, readStatement, type ColumnMap, type DateOrder, type DecimalMark, type StatementOptions } from '../../engine'
 import type { WorkbookSheet } from '../../engine/workbook'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
@@ -41,7 +41,7 @@ export function ImportReview({ sheets, data, onDone, onClose }: {
 }
 
 function SheetReview({ csv, data, onDone, onClose }: { csv: string; data: AppData; onDone: (items: InboxItem[], duplicates: number) => void; onClose: () => void }) {
-  const { t, money, date } = useI18n()
+  const { t, money, date, lang } = useI18n()
   const auto = useMemo(() => readStatement(csv), [csv])
   const [map, setMap] = useState<ColumnMap | undefined>(() => (auto.map ? undefined : savedColumns(auto.header) ?? undefined))
   const [mapping, setMapping] = useState(false)
@@ -52,12 +52,17 @@ function SheetReview({ csv, data, onDone, onClose }: { csv: string; data: AppDat
   const long = (iso: string) => date(iso, { day: 'numeric', month: 'short', year: 'numeric' })
   const cancel = <button type="button" className="link-btn" onClick={onClose}>{t('imp.previewCancel')}</button>
 
+  if (res.error === 'too_large') return <div className="import-review">
+    <p className="bad-text small" role="status">{t('imp.tooLarge', { mb: String(CSV_LIMITS.bytes / 1024 / 1024), rows: (CSV_LIMITS.records - 1).toLocaleString(lang), cols: String(CSV_LIMITS.columns) })}</p>
+    <div className="form-end">{cancel}</div>
+  </div>
   if (!res.map || mapping) return <Columns header={res.header} initial={res.map ?? map ?? null} onCancel={onClose}
     onDone={m => { saveColumns(res.header, m); setMap(m); setOpts({}); setMapping(false) }} />
   if (res.needs) return <Formats needs={res.needs} cur={cur} cancel={cancel} onDone={setOpts} />
 
   const dates = res.rows.map(r => r.date).sort()
   const base = plan.items.filter(i => !i.currency)
+  const toCheck = plan.items.filter(i => i.maybeImported).length
   const income = base.filter(i => i.amount > 0).reduce((a, i) => a + i.amount, 0)
   const spent = base.filter(i => i.amount < 0).reduce((a, i) => a - i.amount, 0)
   return <div className="import-review">
@@ -65,6 +70,7 @@ function SheetReview({ csv, data, onDone, onClose }: { csv: string; data: AppDat
       {dates.length > 0 && <Row label={t('imp.periodShort')} value={`${long(dates[0])} – ${long(dates.at(-1)!)}`} />}
       <Row label={t('imp.rowsNew')} value={String(plan.items.length)} />
       {plan.duplicates > 0 && <Row label={t('imp.rowsDup')} detail={t('imp.rowsDupHint')} value={String(plan.duplicates)} />}
+      {toCheck > 0 && <Row label={t('imp.rowsCheck')} detail={t('imp.rowsCheckHint')} value={String(toCheck)} />}
       {res.skipped.length > 0 && <Row label={t('imp.rowsSkipped')} detail={t('imp.rowsSkippedHint')} value={String(res.skipped.length)} />}
       {income > 0 && <Row label={t('imp.totalIn')} value={money(income, cur)} />}
       {spent > 0 && <Row label={t('imp.totalOut')} value={money(-spent, cur)} />}
