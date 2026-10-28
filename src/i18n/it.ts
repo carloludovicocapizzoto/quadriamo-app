@@ -1043,7 +1043,6 @@ const it: Dict = {
   'setup.capitalText': "Se hai già dei soldi da parte, scrivi quanti sono: restano separati dal budget del mese e li vedi crescere (o calare) nel tempo.",
   'setup.capitalHint': "Facoltativo. Puoi dividerlo in più destinazioni e scegliere come usarlo da Profilo → Capitale.",
   'prof.capital': "Capitale",
-  'cap.emptyTitle': "Il tuo capitale di partenza",
   'cap.emptyText': "I soldi che hai già oggi, separati dalle entrate e dal budget del mese. Dividili in destinazioni (emergenza, liquidità, un acquisto) e scegli come si possono usare.",
   'cap.start': "Inserisci il saldo",
   'cap.totalLabel': "capitale al {date}",

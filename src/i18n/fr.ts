@@ -1043,7 +1043,6 @@ const fr: Dict = {
   'setup.capitalText': "Si vous avez déjà de l’argent de côté, indiquez combien : il reste séparé du budget du mois et vous le voyez évoluer.",
   'setup.capitalHint': "Facultatif. Vous pouvez le répartir et choisir comment l’utiliser dans Profil → Capital.",
   'prof.capital': "Capital",
-  'cap.emptyTitle': "Votre capital de départ",
   'cap.emptyText': "L’argent que vous avez déjà, séparé de vos revenus et du budget du mois. Répartissez-le (urgence, liquidités, un achat) et choisissez comment l’utiliser.",
   'cap.start': "Saisir le solde",
   'cap.totalLabel': "capital au {date}",

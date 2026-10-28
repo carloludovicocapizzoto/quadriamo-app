@@ -78,7 +78,7 @@ await step('Analisi → Movimenti elenca la spesa', () => js(`location.hash = '#
 await step('Notizie si apre senza errori', () => js(`location.hash = '#/news'`), `!!document.querySelector('.news2') && !document.querySelector('[role=status] .btn') || ${has('/Notizie/')}`)
 await step('Profilo → Capitale: inserisco 2.000 €', async () => {
   await js(`location.hash = '#/profile/capital'`); await sleep(800)
-  await click(`document.querySelector('.empty .btn')`); await sleep(400)
+  await click(byText('/Inserisci il saldo/', '.row')); await sleep(400)
   await js(`document.querySelector('.cap-parts input[inputmode]')?.focus() ?? [...document.querySelectorAll('.cap-parts input')][1]?.focus()`)
   await type('2000'); await sleep(200)
   await click(byText('/Salva il saldo/'))

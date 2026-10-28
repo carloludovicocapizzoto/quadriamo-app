@@ -1043,7 +1043,6 @@ const en = {
   'setup.capitalText': "If you already have money set aside, enter how much: it stays separate from this month’s budget and you can watch it grow (or shrink) over time.",
   'setup.capitalHint': "Optional. You can split it into more destinations and choose how to use it in Profile → Capital.",
   'prof.capital': "Capital",
-  'cap.emptyTitle': "Your starting capital",
   'cap.emptyText': "The money you already have today, separate from your income and this month’s budget. Split it into destinations (emergency, cash, a purchase) and choose how it can be used.",
   'cap.start': "Enter your balance",
   'cap.totalLabel': "capital as of {date}",

@@ -1043,7 +1043,6 @@ const es: Dict = {
   'setup.capitalText': "Si ya tienes dinero apartado, escribe cuánto: queda separado del presupuesto del mes y ves cómo evoluciona.",
   'setup.capitalHint': "Opcional. Puedes dividirlo y elegir cómo usarlo en Perfil → Capital.",
   'prof.capital': "Capital",
-  'cap.emptyTitle': "Tu capital inicial",
   'cap.emptyText': "El dinero que ya tienes hoy, separado de tus ingresos y del presupuesto del mes. Divídelo en destinos (emergencia, liquidez, una compra) y elige cómo se puede usar.",
   'cap.start': "Introduce el saldo",
   'cap.totalLabel': "capital a {date}",
