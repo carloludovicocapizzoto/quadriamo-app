@@ -292,6 +292,38 @@ await step('reimportare lo stesso file non crea doppioni', async () => {
 }, inSheet(`/Già importati/`) + ` && !!document.querySelector('.bs .btn.primary')?.disabled`)
 await click(byText('/^Annulla$/', '.bs button'))
 
+// colonne sconosciute: si scelgono a mano (uscite ed entrate separate) e il telefono le ricorda per lo stesso tipo di file
+const columnsCsv = join(fixtureDir, 'synthetic-columns.csv')
+writeFileSync(columnsCsv, 'Quando;Cosa;Uscita;Entrata\n28/10/2026;QA Colonne Affitto;1.234,00;\n29/10/2026;QA Colonne Rimborso;;12,50\n')
+const pickColumn = (i, col) => js(`(() => { const s = document.querySelectorAll('.bs select')[${i}]
+  Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(s, '${col}'); s.dispatchEvent(new Event('change', { bubbles: true })) })()`)
+await step('un CSV con colonne sconosciute chiede quali usare', async () => {
+  await selectCsv(columnsCsv); await sleep(600)
+}, inSheet(`/Quali colonne usare/`))
+await step('scelte data, descrizione, uscite ed entrate: il riepilogo legge segni e importi esatti', async () => {
+  await pickColumn(0, 0); await pickColumn(1, 1); await pickColumn(3, 2); await pickColumn(4, 3); await sleep(200)
+  await click(byText('/^Continua$/', '.bs button')); await sleep(400)
+}, inSheet(`/Movimenti da importare[^0-9]*2[^0-9]/`) + ` && ` + inSheet(`/scelte a mano/`) + ` && ` + inSheet(`/1[.]234,00/`))
+await step('confermati, entrano nella casella', async () => {
+  await click(byText('/^Importa 2 movimenti$/', '.bs button')); await sleep(600)
+}, `/QA Colonne Affitto/.test(document.body.innerText) && /QA Colonne Rimborso/.test(document.body.innerText)`)
+await step('lo stesso tipo di file la volta dopo: colonne ricordate, nessun doppione', async () => {
+  await selectCsv(columnsCsv); await sleep(600)
+}, `!` + inSheet(`/Quali colonne usare/`) + ` && ` + inSheet(`/Già importati/`))
+await click(byText('/^Annulla$/', '.bs button'))
+
+// Excel generico con due fogli: si importa quello con le colonne riconosciute, date e numeri presi dalle celle
+const workbook = XLSX.utils.book_new()
+XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['Estratto sintetico QA'], ['nessun movimento qui']]), 'Info')
+XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['Data', 'Descrizione', 'Importo'], [new Date(2026, 9, 27), 'QA Excel Spesa', -42.5]], { cellDates: true }), 'Movimenti')
+const xlsxFile = join(fixtureDir, 'synthetic-two-sheets.xlsx'); writeFileSync(xlsxFile, XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }))
+await step('un Excel con due fogli: importa quello dei movimenti con l’importo della cella', async () => {
+  await selectCsv(xlsxFile); await sleep(900)
+}, inSheet(`/Movimenti da importare[^0-9]*1[^0-9]/`) + ` && ` + inSheet(`/42,50/`))
+await step('confermato, entra nella casella', async () => {
+  await click(byText('/^Importa 1 movimento$/', '.bs button')); await sleep(600)
+}, `/QA Excel Spesa/.test(document.body.innerText)`)
+
 if (errors.length) { console.error(`\nErrori nella pagina:\n  ${errors.join('\n  ')}`); await done(1) }
 console.log(`\nTutti i ${n} passi sono andati bene.`)
 await done(0)

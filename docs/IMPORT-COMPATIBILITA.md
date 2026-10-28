@@ -39,16 +39,30 @@ Legenda degli stati:
 | CSV italiano generico (`Data;Descrizione;Importo`) | IT | sì | no | `;`, `1.234,56`, giorno/mese | generico verificato | `bankNumbers.test.ts`, e2e «Fase 2E» |
 | CSV americano generico (`Date,Description,Amount`) | US | sì | no | `,`, `1,234.56`, mese/giorno | generico verificato | `bankNumbers.test.ts` |
 | CSV francese generico (`Date;Libellé;Montant`) | FR | sì | no | `;`, `1 234,56` | generico verificato | `bankNumbers.test.ts` |
-| CSV con Dare/Avere o Débit/Crédit separati | — | sì | no | due colonne senza segno | generico verificato | logica esistente, letta con la nuova convenzione |
+| CSV con Dare/Avere o Débit/Crédit separati | — | sì | sì | due colonne senza segno | generico verificato | `workbook.test.ts` (colonne scelte a mano), e2e «colonne» |
+| Excel generico, anche con più fogli | — | — | sì | date e numeri presi dalle celle | generico verificato | `workbook.test.ts`, e2e «Excel con due fogli» |
+| Qualunque CSV/XLSX con colonne non riconosciute | — | sì | sì | colonne indicate a mano, ricordate sul telefono | generico verificato | e2e «colonne sconosciute» |
 | N26, Wise, Intesa Sanpaolo, UniCredit, Fineco, ING, BBVA, PayPal, bunq, Monzo e gli altri | — | — | — | — | non verificato | nessun tracciato pubblico verificato in questa fase |
 
-## Non ancora fatto
-In questa fase **non** sono stati fatti:
-- la scelta manuale delle colonne per formati sconosciuti;
-- l'XLSX generico a più fogli;
-- la ricerca documentata dei tracciati delle singole banche;
-- il riconoscimento della banca;
-- l'identificativo originale delle transazioni per i doppioni;
-- la gestione esplicita dei movimenti in sospeso poi contabilizzati.
+## Scelta delle colonne ed Excel generico
+- **Colonne non riconosciute:** si indicano a mano. Servono:
+  - la data;
+  - la descrizione, più una facoltativa;
+  - l'importo con il segno, oppure le uscite (Dare) e le entrate (Avere);
+  - la valuta, facoltativa.
+  
+  Senza i campi obbligatori non si può continuare. La scelta è ricordata su questo telefono per i file con la stessa intestazione: si salvano solo i titoli e i numeri delle colonne, nessun importo, data o descrizione.
+- **Excel (`.xlsx`):**
+  - prima si prova l'estratto consolidato di Revolut;
+  - altrimenti ogni foglio non vuoto diventa un CSV, letto con lo stesso motore;
+  - con più fogli si parte da quello con le colonne riconosciute, se è uno solo; altrimenti si sceglie il foglio;
+  - date dalle celle data (ISO), numeri dalle celle numero, col punto decimale e senza migliaia; un numero con tre decimali resta riconoscibile come tale;
+  - le formule non si eseguono: si usano i valori salvati nel file, e un testo che comincia con «=» resta testo;
+  - limiti: 5 MB, 20 fogli, 20.000 righe e 60 colonne per foglio, 2.000 caratteri per cella, più i controlli esistenti sull'archivio ZIP.
 
-Un file con colonne non riconosciute oggi viene rifiutato con un messaggio, non importato a metà.
+## Non ancora fatto
+- la ricerca documentata dei tracciati delle singole banche e il riconoscimento della banca;
+- l'identificativo originale delle transazioni per i doppioni;
+- la gestione esplicita dei movimenti in sospeso poi contabilizzati (oggi le righe non contabilizzate sono escluse con il motivo);
+- l'opzione «la prima riga contiene già dati», per i file senza intestazione;
+- l'XLS vecchio (`.xls`), che resta rifiutato con un messaggio.
