@@ -33,9 +33,9 @@ describe('Fase 2E: doppioni con valute diverse e tre decimali', () => {
     st = reducer(st, { type: 'addInbox', items: planImport(st.data!, [row(-5, 'USD')]).items })
     expect(planImport(st.data!, [row(-5, 'GBP')]).items).toHaveLength(1)
   })
-  it('compatibilità: le righe nella valuta di base hanno ancora l’impronta di prima', () => {
+  it('le nuove righe salvano valuta e numero di occorrenza anche nella valuta di base', () => {
     const p = planImport(base().data!, [row(-52.3, 'EUR'), row(-52.3, null)])
-    expect(p.items.map(i => i.fingerprint)).toEqual(['2026-10-28|-52.30|qa bonifico', '2026-10-28|-52.30|qa bonifico|occurrence:2'])
+    expect(p.items.map(i => i.fingerprint)).toEqual(['2026-10-28|-52.30|qa bonifico|EUR', '2026-10-28|-52.30|qa bonifico|EUR|occurrence:2'])
   })
   it('compatibilità: un movimento in valuta estera importato con la vecchia impronta torna una volta sola, da verificare', () => {
     const st = base()
@@ -72,14 +72,15 @@ describe('P1.2: corrispondenze solo con l’impronta vecchia', () => {
     expect(p.items[0].maybeImported).toBe(true)
     expect(p.items[0].fingerprint).not.toBe('2026-10-28|-5.00|qa bonifico')
   })
-  it('compatibilità: un estratto nella valuta di base già importato con le impronte vecchie resta tutto «già importato»', () => {
+  it('compatibilità: le sole impronte vecchie nella valuta di base richiedono una decisione, senza importazione automatica', () => {
     const st = legacyDone(base(), '2026-10-28|-5.00|qa bonifico', '2026-10-28|-5.00|qa bonifico|occurrence:2', '2026-10-29|1200.00|qa stipendio')
     const p = planImport(st.data!, [row(-5), row(-5, 'EUR'), { ...row(1200), date: '2026-10-29', description: 'QA Stipendio' }])
-    expect(p).toMatchObject({ items: [], duplicates: 3 })
+    expect(p.duplicates).toBe(0)
+    expect(p.items.map(i => i.maybeImported)).toEqual([true, true, true])
   })
   it('JPY: vecchie impronte riconosciute; lo stesso importo in un’altra valuta è da verificare, non scartato', () => {
     const st = legacyDone(base('JPY'), '2026-10-28|-500.00|qa bonifico')
-    expect(planImport(st.data!, [row(-500)])).toMatchObject({ items: [], duplicates: 1 })
+    expect(planImport(st.data!, [row(-500)]).items.map(i => i.maybeImported)).toEqual([true])
     const p = planImport(st.data!, [row(-500, 'EUR')])
     expect(p.items.map(i => i.maybeImported)).toEqual([true])
   })
