@@ -236,7 +236,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (lease.current() && data) downloadFile('quadriamo-recovery', 'json', JSON.stringify(data, null, 2), 'application/json')
       }}>{t('storage.export')}</button>}
       </section>
-      : <>{localLogout && <p className="card" role="status">{t('auth.localLogout')}</p>}
-        {sessionEnded && !localLogout && <p className="card" role="status">{t('auth.sessionEnded')}</p>}{children}</>}
+      : <>{localLogout && <p className="notice" role="status">{t('auth.localLogout')}</p>}
+        {sessionEnded && !localLogout && <p className="notice" role="status">{t('auth.sessionEnded')}</p>}{children}</>}
   </SessionContext.Provider>
 }

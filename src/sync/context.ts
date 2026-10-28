@@ -31,8 +31,8 @@ export interface SyncApi {
   signOut: () => Promise<void>
   deleteAccount: () => Promise<void>
   syncNow: () => Promise<void>
-  /** il pannello della sincronizzazione (stato, esportazione, archivio di recupero) anche quando va tutto bene */
-  showSyncDetails?: (on: boolean) => void
+  /** il punto della pagina «Esporta e importa» dove mostrare il pannello della sincronizzazione anche quando va tutto bene */
+  showSyncDetails?: (slot: HTMLElement | null) => void
   startDemo: (data: AppData) => void
   endPreview: () => void
   isolatedPreview: boolean
