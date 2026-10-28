@@ -40,7 +40,7 @@ export function InboxView({ settings }: { settings: Settings }) {
     if (lease && !lease.current()) return
     const consolidated = parseConsolidated(text)
     if (consolidated) { setMsg(null); setPreview(consolidated); return }
-    if (/conto personale\s*\(eur\)/i.test(text)) { setMsg({ text: t('imp.sections'), bad: true }); return }
+    if (/(?:conto personale|personal account)\s*\(eur\)/i.test(text)) { setMsg({ text: t('imp.sections'), bad: true }); return }
     const { rows, error } = readStatement(text)
     if (error === 'multiple_sections') { setMsg({ text: t('imp.sections'), bad: true }); return }
     if (!rows.length) { setMsg({ text: t('imp.none'), bad: true }); return }
@@ -73,7 +73,9 @@ export function InboxView({ settings }: { settings: Settings }) {
   }
   const importPreview = preview && <section className="card" role="region" aria-label={t('imp.previewTitle')}>
     <h3>{t('imp.previewTitle')}</h3>
+    <p>{t('imp.period', { from: date(preview.periodStart, { day: 'numeric', month: 'short', year: 'numeric' }), to: date(preview.periodEnd, { day: 'numeric', month: 'short', year: 'numeric' }) })}</p>
     <p>{t('imp.previewSummary', { n: preview.rows.length, transfers: preview.transfersExcluded })}</p>
+    {preview.repeatedRows > 0 && <p role="note">{t('imp.repeatedRows', { n: preview.repeatedRows })}</p>}
     {preview.depositBalance != null && <>
       <p>{t('imp.depositBalance', { amount: money(preview.depositBalance, 'EUR') })}</p>
       <p>{t('imp.depositWarning')}</p>

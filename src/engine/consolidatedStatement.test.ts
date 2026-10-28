@@ -18,6 +18,33 @@ const csv = [
   '4 ott 2026,Negozio,Spesa,-5.00,100,',
 ].join('\n')
 
+const englishYear = [
+  'Savings Accounts Summaries,,,,',
+  'Instant Access Savings (EUR),,,,',
+  ',,,,',
+  'Savings account details,,,,',
+  ',,,',
+  ',,Closing balance,123.45,',
+  'Personal Account (EUR),,,,',
+  ',,,,',
+  'Summary,,,,',
+  'Date,Description,Category,Money in/out,Balance',
+  ...['Jan 02', 'Feb 03', 'Mar 04', 'Apr 05', 'May 06', 'Jun 07', 'Jul 08', 'Aug 09', 'Sep 10', 'Oct 11', 'Nov 12', 'Dec 31']
+    .map((d, i) => `"${d}, 2026",QA-B-${i + 1},Other,${i === 0 ? '-2.35' : '1.00'},100.00`),
+  '"Jan 02, 2026",To Instant Access Savings,Transfer,-10.00,90.00',
+  '"Jan 03, 2026",From Instant Access Savings,Transfer,5.00,95.00',
+  '"Jan 04, 2026",To Pocket Synthetic,Transfer,-3.00,92.00',
+  '"Jan 05, 2026",From Pocket Synthetic,Transfer,2.00,94.00',
+  '"Jan 06, 2026",To Merchant,Transfer,-4.00,90.00',
+  '"Jan 06, 2026",QA-B-repeat,Other,-1.25,92.75',
+  '"Jan 06, 2026",QA-B-repeat,Other,-1.25,91.50',
+  'Total,,,,',
+  'Savings Accounts Transaction Statements,,,,',
+  'Instant Access Savings (EUR),,,,',
+  'Date,Description,Category,Money in/out,Balance',
+  '"Jan 01, 2026",Not part of personal account,Other,-100,0',
+].join('\n')
+
 describe('estratto consolidato', () => {
   it('isola il conto EUR e propone il deposito separato', () => {
     const result = parseConsolidated(csv)
@@ -63,7 +90,28 @@ describe('estratto consolidato', () => {
   it('rifiuta trasferimenti verso il deposito con segno contraddittorio', () => {
     expect(parseConsolidated(csv.replace('-10,00€', '10,00€'))).toBeNull()
   })
-  it('rifiuta due righe indistinguibili invece di scartarne una', () => {
-    expect(parseConsolidated(csv.replace('Totale,', '1 ott 2026,Bar,Spesa,"-2,50€","100,00€",\nTotale,'))).toBeNull()
+  it('preserva righe identiche che possono essere movimenti legittimi', () => {
+    const result = parseConsolidated(csv.replace('Totale,', '1 ott 2026,Bar,Spesa,"-2,50€","100,00€",\nTotale,'))
+    expect(result?.rows.filter(r => r.description === 'Bar')).toHaveLength(2)
+    expect(result?.repeatedRows).toBe(1)
+  })
+  it('legge l’intero intervallo annuale, esclude solo i trasferimenti interni e separa il deposito', () => {
+    const result = parseConsolidated(englishYear)
+    expect(result?.periodStart).toBe('2026-01-02')
+    expect(result?.periodEnd).toBe('2026-12-31')
+    expect(result?.rows).toHaveLength(15)
+    expect(result?.rows[0]).toMatchObject({ date: '2026-01-02', amount: -2.35, currency: 'EUR' })
+    expect(result?.rows.some(r => r.description === 'To Merchant')).toBe(true)
+    expect(result?.rows.filter(r => r.description === 'QA-B-repeat')).toHaveLength(2)
+    expect(result?.transfersExcluded).toBe(4)
+    expect(result?.depositBalance).toBe(123.45)
+    expect(result?.repeatedRows).toBe(1)
+  })
+  it('rifiuta una direzione del trasferimento che contraddice il segno', () => {
+    expect(parseConsolidated(englishYear.replace('To Instant Access Savings,Transfer,-10.00', 'To Instant Access Savings,Transfer,10.00'))).toBeNull()
+  })
+  it('non importa più tabelle personali EUR ambigue', () => {
+    const second = 'Personal Account (EUR),,,,\nDate,Description,Category,Money in/out,Balance\n"Dec 31, 2026",QA-B-other,Other,-1,1\nTotal,,,,'
+    expect(parseConsolidated(`${englishYear}\n${second}`)).toBeNull()
   })
 })
