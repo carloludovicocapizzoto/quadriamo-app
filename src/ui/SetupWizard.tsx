@@ -127,7 +127,7 @@ function SalaryStep() {
   const [rentRaw, setRentRaw] = useState(rent ? amountText(rent.amount, lang) : '')
   const saveRent = (v: string) => {
     setRentRaw(v)
-    const n = parseAmount(v)
+    const n = parseAmount(v, lang)
     const others = data.settings.events.filter(x => x !== rent)
     // l'affitto è un evento del calendario: ogni mese dal primo giorno del periodo, prima delle quattro parti
     const events = n && n > 0 ? [...others, { id: 'setup-rent', kind: 'rent' as const, title: rentName, amount: n, category: 'rent', date: period.start,
@@ -135,12 +135,12 @@ function SalaryStep() {
     dispatch({ type: 'setSettings', settings: { ...data.settings, events } })
   }
   const [raw, setRaw] = useState(already?.amount ? amountText(already.amount, lang) : '')
-  const amount = parseAmount(raw) ?? 0
+  const amount = parseAmount(raw, lang) ?? 0
   const days = Math.max(1, daysBetween(today, period.end) + 1)
   const cur = data.settings.currency
   const save = (v: string) => {
     setRaw(v)
-    const n = parseAmount(v)
+    const n = parseAmount(v, lang)
     if (!n || n <= 0) { if (already) dispatch({ type: 'deleteTx', id: already.id }); return }
     const tx = { id: already?.id ?? newId(), date: already?.date ?? today, description: t(`c.${income}` as keyof Dict), category: income, amount: n, paidFrom: SPLIT }
     dispatch({ type: already ? 'updateTx' : 'addTx', tx })
