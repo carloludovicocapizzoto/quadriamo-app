@@ -8,6 +8,15 @@ export interface ImportRow { date: string; description: string; amount: number; 
 export interface ColumnMap { date: number; description: number[]; amount: number | null; debit: number | null; credit: number | null;
   currency: number | null; fee: number | null; state: number | null }
 
+/**
+ * Limiti per i CSV, uguali a quelli dell'Excel generico: valgono anche chiamando il motore direttamente.
+ * 20.001 record = l'intestazione più 20.000 righe. Un file oltre i limiti si rifiuta tutto: nessuna riga a metà.
+ */
+export const CSV_LIMITS = { bytes: 5 * 1024 * 1024, chars: 5 * 1024 * 1024, records: 20001, columns: 60, cellChars: 2000 }
+
+/** Il segno di una cella Excel con formula (il NUL non può stare nel testo di un file Excel): la riga che la usa è esclusa. */
+export const FORMULA_CELL = '\u0000formula'
+
 const SEPARATORS = [',', ';', '\t'] as const
 const SAMPLE_LINES = 50
 
@@ -37,12 +46,20 @@ function detectSeparator(text: string): string {
   return best
 }
 
-/** Divide un CSV in righe e celle, rispettando le virgolette. Riconosce il separatore (, ; o tab). */
-export function parseCsv(text: string): string[][] {
+/** Divide un CSV in righe e celle, rispettando le virgolette. Riconosce il separatore (, ; o tab). Oltre i limiti: `too_large`. */
+export function readCsv(text: string): { rows: string[][]; error?: 'too_large' } {
+  const tooLarge = { rows: [], error: 'too_large' as const }
+  if (text.length > CSV_LIMITS.chars) return tooLarge
   const clean = text.replace(/^\uFEFF/, '')
   const sep = detectSeparator(clean)
   const rows: string[][] = []
   let row: string[] = [], cell = '', q = false
+  const endCell = () => { row.push(cell); cell = ''; return row.length <= CSV_LIMITS.columns }
+  const endRow = () => {
+    if (row.some(c => c.trim())) rows.push(row.map(c => c.trim()))
+    row = []
+    return rows.length <= CSV_LIMITS.records
+  }
   for (let i = 0; i < clean.length; i++) {
     const ch = clean[i]
     if (q) {
@@ -50,18 +67,22 @@ export function parseCsv(text: string): string[][] {
       else if (ch === '"') q = false
       else cell += ch
     } else if (ch === '"') q = true
-    else if (ch === sep) { row.push(cell); cell = '' }
+    else if (ch === sep) { if (!endCell()) return tooLarge }
     else if (ch === '\n' || ch === '\r') {
       if (ch === '\r' && clean[i + 1] === '\n') i++
-      row.push(cell); cell = ''
-      if (row.some(c => c.trim())) rows.push(row.map(c => c.trim()))
-      row = []
+      if (!endCell() || !endRow()) return tooLarge
     } else cell += ch
+    // una cella, anche tra virgolette su più righe, non supera il limite
+    if (cell.length > CSV_LIMITS.cellChars) return tooLarge
   }
-  if (q) return []
-  row.push(cell)
-  if (row.some(c => c.trim())) rows.push(row.map(c => c.trim()))
-  return rows
+  if (q) return { rows: [] }
+  if (!endCell() || !endRow()) return tooLarge
+  return { rows }
+}
+
+/** Le righe del CSV; nessuna se il file non si legge (virgolette aperte) o supera i limiti. */
+export function parseCsv(text: string): string[][] {
+  return readCsv(text).rows
 }
 
 const find = (h: string[], re: RegExp, not?: RegExp) => h.findIndex(x => re.test(x) && !(not && not.test(x)))
@@ -121,7 +142,7 @@ export function parseBankAmount(s: string): number | null {
   return r.ok ? r.value : null
 }
 
-export type SkipReason = 'date' | 'amount' | 'precision' | 'grouping' | 'range' | 'summary' | 'pending' | 'zero'
+export type SkipReason = 'date' | 'amount' | 'precision' | 'grouping' | 'range' | 'summary' | 'pending' | 'zero' | 'both' | 'formula'
 /** Una riga non importata: il numero di record nel file (l'intestazione è 1) e il perché. Mai righe sparite in silenzio. */
 export interface SkippedRow { line: number; reason: SkipReason }
 /** Cosa serve sapere prima di importare: la convenzione dei numeri o l'ordine delle date, con qualche esempio dal file. */
@@ -142,10 +163,12 @@ const SUMMARY = /^(totale|total|totaux|totales|summe|saldo|balance|solde)\b/i
 
 /** Trasforma il CSV in righe pronte per la casella "Da confermare": convenzioni decise sull'intero file, righe escluse sempre spiegate. */
 export function readStatement(text: string, map?: ColumnMap, opts: StatementOptions = {}): {
-  rows: ImportRow[]; map: ColumnMap | null; header: string[]; error?: 'multiple_sections'
+  rows: ImportRow[]; map: ColumnMap | null; header: string[]; error?: 'multiple_sections' | 'too_large'
   skipped: SkippedRow[]; needs?: StatementNeeds; mark: DecimalMark | null; order: DateOrder | null
 } {
-  const all = parseCsv(text)
+  const csv = readCsv(text)
+  if (csv.error) return { rows: [], map: null, header: [], skipped: [], mark: null, order: null, error: csv.error }
+  const all = csv.rows
   const headerIdx = all.findIndex(r => detectColumns(r) != null)
   const top = headerIdx >= 0 ? headerIdx : tableStart(all)
   const header = all[top] ?? []
@@ -173,6 +196,8 @@ export function readStatement(text: string, map?: ColumnMap, opts: StatementOpti
   body.forEach((r, i) => {
     const line = first + i + 1
     const skip = (reason: SkipReason) => { skipped.push({ line, reason }) }
+    const used = [cols.date, ...cols.description, cols.amount, cols.debit, cols.credit, cols.currency, cols.fee, cols.state]
+    if (used.some(j => j != null && r[j] === FORMULA_CELL)) return skip('formula')
     if (cols.state != null && r[cols.state] && !/completed|completat|eseguit|booked|contabilizzat/i.test(r[cols.state])) return skip('pending')
     const date = parseDateWith(r[cols.date] ?? '', order)
     if (!date) return skip(SUMMARY.test(r[cols.date] ?? '') || r.some(c => SUMMARY.test(c)) && !/\d{1,4}[/.-]\d/.test(r[cols.date] ?? '') ? 'summary' : 'date')
@@ -188,6 +213,8 @@ export function readStatement(text: string, map?: ColumnMap, opts: StatementOpti
     } else {
       const d = read(cols.debit), c = read(cols.credit), why = bad(d) ?? bad(c)
       if (why) return skip(problem(why))
+      // uscita ed entrata entrambe diverse da zero: non si sceglie al posto di chi importa
+      if (c?.ok && c.minor && d?.ok && d.minor) return skip('both')
       minor = c?.ok && c.minor ? Math.abs(c.minor) : d?.ok && d.minor ? -Math.abs(d.minor) : null
       if (minor == null) return skip('zero')
     }

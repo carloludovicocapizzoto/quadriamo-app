@@ -53,3 +53,38 @@ describe('Fase 2E: colonne scelte a mano', () => {
       { date: '2026-10-29', description: 'QA Rimborso', amount: 12.5, currency: null }])
   })
 })
+
+// P2.3 (review Codex): una cella con formula ha un valore salvato che può essere vecchio. Non si esegue e non si prende per certo.
+describe('P2.3: celle con formula', () => {
+  const f = (formula: string, v?: unknown, t = 'n') => (v === undefined ? { t, f: formula } : { t, f: formula, v })
+  it('riproduzione: il valore salvato di una formula non diventa un importo; la riga è esclusa con il motivo', async () => {
+    const sheets = await readWorkbookSheets(book({ Movimenti: [['Data', 'Descrizione', 'Importo'],
+      [new Date(2026, 9, 28), 'QA Formula', f('C3*2', -999)],
+      [new Date(2026, 9, 29), 'QA Numero', -12.5]] }))
+    const res = readStatement(sheets![0].csv)
+    expect(res.rows).toEqual([{ date: '2026-10-29', description: 'QA Numero', amount: -12.5, currency: null }])
+    expect(res.skipped).toEqual([{ line: 2, reason: 'formula' }])
+  })
+  it('formula nella data, nella descrizione, senza valore salvato, o di testo: esclusa; formula in una colonna non usata: ignorata', async () => {
+    const sheets = await readWorkbookSheets(book({ Movimenti: [['Data', 'Descrizione', 'Importo', 'Note'],
+      [f('TODAY()', new Date(2026, 9, 28), 'd'), 'QA Data', -1],
+      [new Date(2026, 9, 28), f('CONCAT("QA","x")', 'QAx', 's'), -2],
+      [new Date(2026, 9, 28), 'QA Senza valore', f('C2+1')],
+      [new Date(2026, 9, 28), 'QA Testo', f('"-3"', '-3', 's')],
+      [new Date(2026, 9, 30), 'QA Note', -4, f('1+1', 2)]] }))
+    const res = readStatement(sheets![0].csv)
+    expect(res.rows.map(r => [r.description, r.amount])).toEqual([['QA Note', -4]])
+    expect(res.skipped).toEqual([2, 3, 4, 5].map(line => ({ line, reason: 'formula' })))
+  })
+  it('numeri e date normali restano supportati; un testo che comincia con «=» resta testo', async () => {
+    const sheets = await readWorkbookSheets(book({ Movimenti: [['Data', 'Descrizione', 'Importo'],
+      [new Date(2026, 9, 28), '=SUM(1,2)', -1.25], [new Date(2026, 9, 29), 'QA', 1000]] }))
+    const res = readStatement(sheets![0].csv)
+    expect(res.rows.map(r => [r.date, r.description, r.amount])).toEqual([['2026-10-28', '=SUM(1,2)', -1.25], ['2026-10-29', 'QA', 1000]])
+    expect(res.skipped).toEqual([])
+  })
+  it('file corrotto: rifiutato', async () => {
+    const good = new Uint8Array(await book({ A: [['x']] }).arrayBuffer())
+    expect(await readWorkbookSheets(new File([good.slice(0, good.length / 2)], 'rotto.xlsx'))).toBeNull()
+  })
+})

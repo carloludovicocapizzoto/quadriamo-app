@@ -152,12 +152,15 @@ export async function readConsolidatedWorkbook(file: File): Promise<Consolidated
   const buffer = await file.arrayBuffer()
   if (!safeXlsxEnvelope(buffer)) return null
   const XLSX = await import('xlsx')
-  const workbook = XLSX.read(buffer, { type: 'array', bookVBA: false })
+  // le formule si leggono solo per riconoscerle: il loro valore salvato può essere vecchio, quindi non è un estratto certo
+  const workbook = XLSX.read(buffer, { type: 'array', bookVBA: false, cellFormula: true })
   if (workbook.SheetNames.length !== 1) return null
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
   const ref = sheet['!ref']; if (!ref) return null
   const range = XLSX.utils.decode_range(ref)
   if (range.e.c !== 0 || range.e.r > 20000) return null
+  const formula = (c: unknown) => { const cell = c as { f?: string; F?: string }; return !!(cell.f || cell.F) }
+  if (Object.entries(sheet).some(([k, c]) => !k.startsWith('!') && formula(c))) return null
   const cells = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, raw: false, defval: '' })
   return parseConsolidated(cells.map(r => String(r[0] ?? '')).join('\n'))
 }
