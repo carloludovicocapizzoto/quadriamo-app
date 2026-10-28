@@ -1340,6 +1340,8 @@ const en = {
   'srch.placeholder': "Search transactions",
   'srch.everywhere': "in all months",
   'srch.filters': "Filters",
+  'srch.filtersN': "Filters ({n})",
+  'per.label': "Period",
   'per.month': "This month",
   'per.3m': "3 months",
   'per.year': "This year",

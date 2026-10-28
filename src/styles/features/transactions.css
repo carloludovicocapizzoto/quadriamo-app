@@ -18,6 +18,9 @@
 .tx-upcoming .tx-desc, .tx-upcoming .tx-amount { color: var(--muted); }
 .amount-input { font-size: 32px; font-weight: 600; min-height: 60px; font-variant-numeric: tabular-nums; }
 .import-row { margin: 0 0 var(--s4); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+/* l'elenco del mese continua la riga dell'importazione: la sua linea fa da separatore, come tra un movimento e l'altro */
+.import-row:has(+ .card) { margin-bottom: 0; }
+.import-row + .card, .import-row + .card > .tx-list:first-of-type { margin-top: 0; }
 .row-lead { color: var(--muted); flex: none; }
 .inbox-list { list-style: none; padding: 0; margin: 10px 0 0; border-top: 1px solid var(--line); }
 .inbox-item { border-bottom: 1px solid var(--line); padding: var(--s3) 0; display: grid; gap: 10px; }
@@ -77,22 +80,17 @@
 .txs-date input { width: auto; min-width: 0; max-width: 128px; font-size: 15px; padding: 0; min-height: 30px; }
 .txs-date .mini-chip { flex: none; }
 .search { position: relative; display: flex; align-items: center; margin-bottom: var(--s3); }
+/* stesso campo della ricerca nelle Notizie: 44 px, fondo --fill, bordo che si accende */
 .search > .ico { position: absolute; left: 14px; color: var(--muted); pointer-events: none; }
-.search input { height: 46px; padding: 0 40px 0 42px; border-radius: var(--r-md); border: 1px solid transparent;
-  background: color-mix(in srgb, var(--muted) 11%, transparent); -webkit-appearance: none; appearance: none; }
-.search input:focus-visible { background: var(--surface); }
+.search input { height: 44px; min-height: 44px; padding: 0 40px 0 42px; border-radius: var(--r-md); border: 1.5px solid transparent;
+  background: var(--fill); -webkit-appearance: none; appearance: none; }
+.search input:focus-visible { border-color: var(--accent); }
 .search input::-webkit-search-cancel-button { display: none; }
 .search-x { position: absolute; right: 8px; width: 30px; height: 30px; border-radius: 50%; border: 0; display: grid; place-items: center; cursor: pointer;
   color: var(--surface); background: color-mix(in srgb, var(--muted) 70%, transparent); }
-.filter-row { display: flex; gap: var(--s2); overflow-x: auto; margin: 0 calc(-1 * var(--s4)) var(--s3); padding: 0 var(--s4) 2px; scrollbar-width: none; }
-.filter-row::-webkit-scrollbar { display: none; }
-.fchip { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: var(--r-full); cursor: pointer;
-  border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-size: 14px; font-weight: 600; transition: background .15s, color .15s; }
-.fchip.on { background: var(--text); border-color: var(--text); color: var(--bg); }
-.filter-btn.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-.fchip em { font-style: normal; min-width: 20px; height: 20px; border-radius: var(--r-md); display: grid; place-items: center; font-size: 12px; background: rgba(255,255,255,.25); }
 .pill-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: -4px 0 var(--s3); }
-.apill { display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 8px 0 12px; border-radius: var(--r-full); border: 0; cursor: pointer;
+/* i filtri attivi: piccole etichette da togliere, angoli come i chip (niente bolle) */
+.apill { display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 8px 0 12px; border-radius: var(--r-md); border: 0; cursor: pointer;
   font: inherit; font-size: 13px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .results-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); margin: var(--s2) 0 var(--s2); font-variant-numeric: tabular-nums; }
 .results-head span { font-size: 14px; color: var(--muted); }

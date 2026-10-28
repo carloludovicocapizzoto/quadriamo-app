@@ -60,11 +60,11 @@ export function NewsScreen({ onAction }: { onAction: (a: NonNullable<Tip['action
         <button className="icon-btn ghost" onClick={() => { tap(); setHub(undefined); setTick(x => x + 1) }} aria-label={t('news.refresh')}><Icon name="refresh" size={20} /></button></div>
 
       {/* una riga sola: la ricerca e, a destra, i filtri (con quanti sono attivi) */}
-      {hub && <div className="news-tools">
+      {hub && <div className="tools">
         <label className="news-search"><Icon name="search" size={18} />
           <input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder={t('news.search')} aria-label={t('news.search')} enterKeyHint="search" />
         </label>
-        <button className={`news-filter-btn${active ? ' on' : ''}`} onClick={() => { tap(); setFiltersOpen(true) }} aria-haspopup="dialog">
+        <button className={`filter-btn${active ? ' on' : ''}`} onClick={() => { tap(); setFiltersOpen(true) }} aria-haspopup="dialog">
           <Icon name="filter" size={18} />{active ? t('news.filtersN', { n: active }) : t('news.filters')}
         </button>
       </div>}

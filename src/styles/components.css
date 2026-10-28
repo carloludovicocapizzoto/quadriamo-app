@@ -57,6 +57,13 @@ a.btn { text-decoration: none; color: var(--text); }
 .cur { color: var(--muted); font-weight: 400; margin: 0 .08em; }
 .hero-amount .cur, .outcome-amount .cur, .w-big .cur, .cs-hero .cur { font-size: .5em; font-weight: inherit; letter-spacing: -.02em; }
 
+/* ---------- ricerca e filtri in una riga sola (Movimenti, Notizie): stesse misure in tutte e due ---------- */
+.tools { display: flex; gap: var(--s2); align-items: center; margin: 0 0 var(--s3); }
+.tools > :first-child { flex: 1; min-width: 0; margin: 0; }
+.filter-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 1.5px solid transparent;
+  border-radius: var(--r-md); background: var(--fill); color: var(--text); font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; }
+.filter-btn.on { background: var(--accent); color: var(--on-accent); }
+
 .mini-chip { height: 30px; padding: 0 10px; border-radius: var(--r-md); border: 0; font: inherit; font-size: var(--t-sm); font-weight: 600; cursor: pointer;
   color: var(--muted); background: var(--fill); }
 .mini-chip.on { color: var(--on-accent); background: var(--accent); }

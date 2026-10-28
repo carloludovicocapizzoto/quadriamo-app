@@ -1340,6 +1340,8 @@ const fr: Dict = {
   'srch.placeholder': "Rechercher des mouvements",
   'srch.everywhere': "sur tous les mois",
   'srch.filters': "Filtres",
+  'srch.filtersN': "Filtres ({n})",
+  'per.label': "Période",
   'per.month': "Ce mois",
   'per.3m': "3 mois",
   'per.year': "Cette année",
