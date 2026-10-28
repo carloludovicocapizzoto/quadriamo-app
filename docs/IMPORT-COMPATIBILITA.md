@@ -23,6 +23,9 @@ Tutte le prove usano **file sintetici**, senza dati bancari reali. Qui nessuna b
 - **Nessuna riga sparisce in silenzio.** Ogni esclusione ha numero di record e motivo: data, importo, precisione, migliaia, fuori limite, totale/saldo, non contabilizzata, zero.
 - **Anteprima obbligatoria per i CSV generici:** periodo, movimenti da importare, già importati, righe escluse, entrate, uscite, formati riconosciuti. Senza conferma non entra niente nella casella.
 - **La reimportazione è idempotente.** Le righe identiche dentro lo stesso file restano distinte: le impronte di `planImport` contano le occorrenze.
+- **L'impronta dei doppioni** contiene l'importo con tutte le cifre della sua valuta (KWD 3) e la valuta, se non è quella di base. Per la valuta di base con due decimali è identica a prima, quindi i movimenti già importati non tornano. Le righe in valuta estera importate prima di questa modifica si riconoscono ancora con la vecchia impronta (due decimali, senza valuta), ma solo confrontandole con quanto c'era già, mai fra righe dello stesso file. Limite noto: una riga nuova che coincide al centesimo con una vecchia riga dello stesso giorno e della stessa descrizione, ma in un'altra valuta o con un terzo decimale diverso, viene presa per già importata.
+- **Il separatore del CSV** (`,` `;` tab) si decide sulle prime 50 righe: vince quello che dà più righe con lo stesso numero di celle. Così le righe descrittive prima delle intestazioni (titolo, conto, periodo) non lo falsano. Con colonne non riconosciute, l'intestazione proposta è la prima riga larga quanto la tabella.
+- **Importi scritti a mano:** i decimali in più non si tagliano mentre si scrive. «0,123» resta visibile, in rosso, e non viene salvato come 0,12.
 
 ## Formati
 

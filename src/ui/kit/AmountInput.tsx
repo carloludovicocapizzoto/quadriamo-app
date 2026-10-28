@@ -27,8 +27,12 @@ export function AmountInput({ value, defaultValue, onChange, onValue, ...rest }:
     else while (pos < text.length && digits < want) { if (/\d/.test(text[pos])) digits++; pos++ }
     el.setSelectionRange(pos, pos)
   }, [text])
+  // un importo scritto ma non leggibile (per esempio con troppi decimali) si vede subito, non viene corretto in silenzio;
+  // il separatore decimale appena digitato in fondo («1.200,») è ancora a metà, non un errore
+  const unreadable = /\d/.test(text) && parseAmount(text.replace(/[.,]$/, ''), lang) == null
   return (
     <input ref={ref} inputMode="decimal" autoComplete="off" {...rest} value={text}
+      aria-invalid={rest['aria-invalid'] === true || rest['aria-invalid'] === 'true' || unreadable || undefined}
       onChange={e => {
         const raw = e.target.value, at = e.target.selectionStart ?? raw.length
         // scrivendo in fondo il cursore resta in fondo; in mezzo, dopo lo stesso numero di cifre

@@ -18,8 +18,9 @@ export function amountText(n: number | null | undefined, lang: string): string {
 }
 
 /**
- * Rimette in ordine quello che si sta scrivendo: cifre raggruppate a tre, al massimo due decimali.
+ * Rimette in ordine quello che si sta scrivendo: cifre raggruppate a tre.
  * Il separatore delle migliaia lo mette l'app; il punto appena digitato in fondo (tastiera del computer) vale come virgola.
+ * I decimali non si tagliano: «0,123» resta com'è (e parseAmount lo rifiuta), non diventa «0,12» in silenzio.
  */
 export function groupTyping(raw: string, lang: string): string {
   const { group, dec } = seps(lang)
@@ -29,7 +30,7 @@ export function groupTyping(raw: string, lang: string): string {
   if (!s.includes(dec) && s.endsWith(other)) s = s.slice(0, -1) + dec
   const at = s.indexOf(dec)
   const int = (at < 0 ? s : s.slice(0, at)).replace(/\D/g, '').replace(/^0+(?=\d)/, '')
-  const frac = at < 0 ? null : s.slice(at + 1).replace(/\D/g, '').slice(0, 2)
+  const frac = at < 0 ? null : s.slice(at + 1).replace(/\D/g, '')
   if (!int && frac == null) return neg ? '-' : ''
   return (neg ? '-' : '') + (int || '0').replace(/\B(?=(\d{3})+(?!\d))/g, group) + (frac == null ? '' : dec + frac)
 }

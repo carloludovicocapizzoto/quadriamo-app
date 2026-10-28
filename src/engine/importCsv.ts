@@ -8,21 +8,39 @@ export interface ImportRow { date: string; description: string; amount: number; 
 export interface ColumnMap { date: number; description: number[]; amount: number | null; debit: number | null; credit: number | null;
   currency: number | null; fee: number | null; state: number | null }
 
+const SEPARATORS = [',', ';', '\t'] as const
+const SAMPLE_LINES = 50
+
+/**
+ * Il separatore della tabella, non della prima riga: le banche mettono spesso prima delle intestazioni righe descrittive
+ * (titolo, conto, periodo) con virgole o punti e virgola. Vince il separatore che dà più righe con lo stesso numero di celle.
+ */
+function detectSeparator(text: string): string {
+  const counts = new Map<string, number[]>(SEPARATORS.map(d => [d, []]))
+  let quoted = false, line = new Map<string, number>(), lines = 0
+  const end = () => { for (const d of SEPARATORS) counts.get(d)!.push(line.get(d) ?? 0); line = new Map(); lines++ }
+  for (let i = 0; i < text.length && lines < SAMPLE_LINES; i++) {
+    const ch = text[i]
+    if (ch === '"' && quoted && text[i + 1] === '"') i++
+    else if (ch === '"') quoted = !quoted
+    else if (!quoted && (ch === '\r' || ch === '\n')) { if (ch === '\r' && text[i + 1] === '\n') i++; end() }
+    else if (!quoted && (SEPARATORS as readonly string[]).includes(ch)) line.set(ch, (line.get(ch) ?? 0) + 1)
+  }
+  if (line.size) end()
+  let best: string = SEPARATORS[0], score = -1, width = -1
+  for (const d of SEPARATORS) {
+    // righe con lo stesso numero (non nullo) di separatori: la tabella; a parità, quella più larga
+    const tally = new Map<number, number>()
+    for (const n of counts.get(d)!) if (n > 0) tally.set(n, (tally.get(n) ?? 0) + 1)
+    for (const [n, rows] of tally) if (rows > score || (rows === score && n > width)) { best = d; score = rows; width = n }
+  }
+  return best
+}
+
 /** Divide un CSV in righe e celle, rispettando le virgolette. Riconosce il separatore (, ; o tab). */
 export function parseCsv(text: string): string[][] {
-  const clean = text.replace(/^﻿/, '')
-  const counts = [',', ';', '\t'].map(d => {
-    let count = 0, quoted = false
-    for (let i = 0; i < clean.length; i++) {
-      const ch = clean[i]
-      if (ch === '"' && quoted && clean[i + 1] === '"') i++
-      else if (ch === '"') quoted = !quoted
-      else if (!quoted && (ch === '\r' || ch === '\n')) break
-      else if (!quoted && ch === d) count++
-    }
-    return [d, count] as const
-  })
-  const sep = counts.sort((a, b) => b[1] - a[1])[0][0]
+  const clean = text.replace(/^\uFEFF/, '')
+  const sep = detectSeparator(clean)
   const rows: string[][] = []
   let row: string[] = [], cell = '', q = false
   for (let i = 0; i < clean.length; i++) {
@@ -112,6 +130,14 @@ export interface StatementOptions { mark?: DecimalMark; order?: DateOrder }
 
 // intestazioni non inglesi: in questi paesi le date sono sempre giorno/mese (in inglese possono essere USA o Regno Unito)
 const DAY_FIRST_HEADER = /^(data|descrizione|importo|causale|valuta|datum|betrag|buchungstag|libellé|libelle|montant|fecha|concepto|importe|débit|debit|crédit|dare|avere)\b/i
+/** Intestazione non riconosciuta: la prima riga larga quanto la maggior parte delle righe, dopo eventuali righe descrittive. */
+function tableStart(all: string[][]): number {
+  const widths = new Map<number, number>()
+  for (const r of all.slice(0, SAMPLE_LINES)) widths.set(r.length, (widths.get(r.length) ?? 0) + 1)
+  const [width] = [...widths].filter(([w]) => w >= 2).sort((a, b) => b[1] - a[1] || b[0] - a[0])[0] ?? [0]
+  return Math.max(0, all.findIndex(r => r.length === width))
+}
+
 const SUMMARY = /^(totale|total|totaux|totales|summe|saldo|balance|solde)\b/i
 
 /** Trasforma il CSV in righe pronte per la casella "Da confermare": convenzioni decise sull'intero file, righe escluse sempre spiegate. */
@@ -121,7 +147,8 @@ export function readStatement(text: string, map?: ColumnMap, opts: StatementOpti
 } {
   const all = parseCsv(text)
   const headerIdx = all.findIndex(r => detectColumns(r) != null)
-  const header = all[headerIdx >= 0 ? headerIdx : 0] ?? []
+  const top = headerIdx >= 0 ? headerIdx : tableStart(all)
+  const header = all[top] ?? []
   const cols = map ?? detectColumns(header)
   const none = { rows: [], header, skipped: [], mark: null, order: null }
   if (!cols) return { ...none, map: null }
@@ -129,7 +156,7 @@ export function readStatement(text: string, map?: ColumnMap, opts: StatementOpti
   // Do not silently import a partial or duplicated consolidated statement.
   if (headerIdx >= 0 && all.slice(headerIdx + 1).some(r => detectColumns(r) !== null))
     return { ...none, map: null, error: 'multiple_sections' }
-  const first = (headerIdx >= 0 ? headerIdx : 0) + 1
+  const first = top + 1
   const body = all.slice(first)
   const amountCells = body.flatMap(r => [cols.amount, cols.debit, cols.credit, cols.fee].flatMap(i => (i != null && r[i] ? [r[i]] : [])))
   // la convenzione è quella del file; quella scelta da chi importa vale solo se il file non ne dichiara una diversa

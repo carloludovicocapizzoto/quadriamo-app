@@ -1,25 +1,37 @@
 // Import dell'estratto conto: niente righe già viste, categorie proposte, possibili doppioni con i movimenti a mano.
-import { daysBetween, normalize, suggest, type ImportRow, type Transaction } from '../engine'
+import { daysBetween, minorDigits, normalize, suggest, type ImportRow, type Transaction } from '../engine'
 import { newId } from './model'
 import type { AppData, InboxItem } from './types'
 
-const fingerprintOf = (r: { date: string; amount: number; description: string }) =>
-  `${r.date}|${r.amount.toFixed(2)}|${normalize(r.description)}`
+/**
+ * L'impronta di una riga: data, importo con tutte le cifre della sua valuta, descrizione; più la valuta, se non è quella di base.
+ * Per la valuta di base con al massimo due decimali è identica a quella di sempre, così i movimenti già importati non tornano.
+ */
+function fingerprints(r: { date: string; amount: number; description: string; currency: string | null }, base: string) {
+  const currency = r.currency && r.currency !== base ? r.currency : null
+  const text = normalize(r.description)
+  const exact = `${r.date}|${r.amount.toFixed(Math.max(2, minorDigits(currency ?? base)))}|${text}${currency ? `|${currency}` : ''}`
+  // la vecchia impronta (due decimali, senza valuta) vale solo per riconoscere ciò che era già stato importato
+  return { exact, legacy: `${r.date}|${r.amount.toFixed(2)}|${text}` }
+}
 
 /** Prepara l'import: scarta le righe già viste (in casella, confermate o ignorate) e propone categoria e bucket. */
 export function planImport(d: AppData, rows: ImportRow[], source = 'csv'): { items: InboxItem[]; duplicates: number } {
-  const seen = new Set([...(d.inbox ?? []).map(i => i.fingerprint), ...Object.keys(d.importDone ?? {})])
+  const before = new Set([...(d.inbox ?? []).map(i => i.fingerprint), ...Object.keys(d.importDone ?? {})])
+  const seen = new Set(before)
   const occurrences = new Map<string, number>()
   const items: InboxItem[] = []
   let duplicates = 0
   for (const r of rows) {
-    const base = fingerprintOf(r)
-    const occurrence = (occurrences.get(base) ?? 0) + 1
-    occurrences.set(base, occurrence)
+    const { exact, legacy } = fingerprints(r, d.settings.currency)
+    const occurrence = (occurrences.get(exact) ?? 0) + 1
+    occurrences.set(exact, occurrence)
     // Preserve legitimate repeated-looking bank rows, while giving each occurrence
     // a stable key so importing the same statement again remains idempotent.
-    const fp = occurrence === 1 ? base : `${base}|occurrence:${occurrence}`
-    if (seen.has(fp)) { duplicates++; continue }
+    const nth = (k: string) => (occurrence === 1 ? k : `${k}|occurrence:${occurrence}`)
+    const fp = nth(exact)
+    // la vecchia impronta si confronta solo con quanto c'era prima di questo import, mai con le righe dello stesso file
+    if (seen.has(fp) || (legacy !== exact && before.has(nth(legacy)))) { duplicates++; continue }
     seen.add(fp)
     const sug = suggest(r.description, r.amount, d.settings)
     items.push({ id: newId(), fingerprint: fp, date: r.date, description: r.description, amount: r.amount,

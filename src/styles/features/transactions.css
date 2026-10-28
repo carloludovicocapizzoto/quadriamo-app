@@ -45,6 +45,7 @@
   font-weight: 600; letter-spacing: -.045em; font-size: var(--t-hero); line-height: 1; min-height: 0; color: var(--text); }
 .txs-amount .amount-input::placeholder { color: var(--faint); }
 .txs-amount .amount-input:focus-visible { border: 0; }
+.txs-amount .amount-input[aria-invalid="true"] { color: var(--bad); }
 /* la valuta: secondaria come il simbolo del numero del giorno, si cambia toccandola */
 .txs-cur { width: auto; min-height: 32px; padding: 0 18px 0 2px; border: 0; background-color: transparent; background-position: right 2px center;
   font-size: var(--t-h2); font-weight: 600; color: var(--muted); }
