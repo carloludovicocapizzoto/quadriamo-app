@@ -1,0 +1,82 @@
+# Importazione estratti conto: compatibilità e regole (Fase 2E)
+
+Aggiornato al 28/10/2026, sul branch `feature/phase2e-bank-import`.
+
+Tutte le prove usano **file sintetici**, senza dati bancari reali. Qui nessuna banca è «supportata» senza un test che lo dimostri.
+
+## Regole di lettura
+- **La convenzione dei numeri si decide sull'intero file**, mai riga per riga.
+  - `1.234,56`, `1 234,56`, uno spazio Unicode come separatore delle migliaia, o `1.234.567` → la virgola è il decimale.
+  - `1,234.56` o `1,234,567` → il punto è il decimale.
+  - `0,123` → decimale (un gruppo delle migliaia non inizia con 0).
+  - `-1.234` e `-1,234` senza altri indizi nel file sono **ambigui**: l'app chiede, mostrando l'esempio letto nei due modi.
+  - Se il file contiene indizi opposti, l'app chiede quale convenzione vale. Le righe scritte nell'altro modo vengono escluse e indicate.
+- **Gli importi si leggono dalla stringa esatta in unità minime**, con le cifre decimali della valuta: EUR 2, JPY 0, KWD 3.
+  - Più decimali del consentito: riga esclusa con il motivo «precisione», **mai arrotondata**.
+  - Meno tipografico, meno finale (`1.234,56-`), parentesi contabili, simbolo o codice della valuta: tutti letti.
+  - Oltre 12 cifre intere: riga esclusa con il motivo «fuori limite».
+- **Ordine delle date**, ricavato dalle righe non ambigue (`28/10` è per forza giorno/mese).
+  - Un'intestazione in italiano, francese, spagnolo o tedesco vale giorno/mese.
+  - In inglese (Stati Uniti o Regno Unito) con tutte le date ambigue, l'app chiede.
+  - Sono supportati: ISO con orario e fuso, separatori `/`, `-`, `.`, anni a due cifre, nomi dei mesi in italiano, inglese, francese e spagnolo (`1 ott 2026`, `Oct 1, 2026`, `1 octobre 2026`, `1 de octubre de 2026`, `01-Oct-2026`).
+  - Le date impossibili vengono escluse con il motivo.
+- **Nessuna riga sparisce in silenzio.** Ogni esclusione ha numero di record e motivo: data, importo, precisione, migliaia, fuori limite, totale/saldo, non contabilizzata, zero.
+- **Anteprima obbligatoria per i CSV generici:** periodo, movimenti da importare, già importati, righe escluse, entrate, uscite, formati riconosciuti. Senza conferma non entra niente nella casella.
+- **La reimportazione è idempotente.** Le righe identiche dentro lo stesso file restano distinte: le impronte di `planImport` contano le occorrenze.
+- **L'impronta dei doppioni** ha tre forme:
+  - completa: data, importo con tutte le cifre della valuta (EUR 2, JPY 0→2, KWD 3), descrizione, valuta;
+  - salvata: per la valuta di base con due decimali è uguale a quella delle versioni precedenti, così i movimenti già importati restano riconosciuti; altrimenti è la completa;
+  - vecchia: due decimali, senza valuta, come la salvavano le versioni precedenti.
+
+  Una riga è **già importata** solo se combacia con la forma completa (casella o storico), oppure con la forma salvata quando nessun movimento confermato in un'altra valuta o con più di due decimali ha la stessa impronta vecchia. Se combacia **solo** con un'impronta vecchia dello storico, non si scarta: entra nella casella come **«da verificare»** (`maybeImported`), con «Aggiungi comunque» o «È la stessa, ignora», ed è esclusa da «Conferma tutti». La decisione salva l'impronta della riga nello storico: i reimport successivi la riconoscono, anche dopo la sincronizzazione. Le righe ancora in casella si confrontano con la forma completa ricalcolata dai loro dati, non con l'impronta salvata. Lo schema salvato cambia solo per il campo facoltativo `maybeImported`; nessun movimento vecchio viene reimportato da solo.
+- **Il separatore del CSV** (`,` `;` tab) si decide sulle prime 50 righe: vince quello che dà più righe con lo stesso numero di celle. Così le righe descrittive prima delle intestazioni (titolo, conto, periodo) non lo falsano. Con colonne non riconosciute, l'intestazione proposta è la prima riga larga quanto la tabella.
+- **Importi scritti a mano:**
+  - i decimali in più non si tagliano mentre si scrive: «0,123» resta visibile, in rosso, e non viene salvato come 0,12;
+  - **un importo incollato (o trascinato, o completato dal sistema) si legge per intero**, come parseAmount nella lingua: «2.35» in italiano è 2,35, «1,234.56» è 1.234,56; senza una lettura sicura («0.123», «1,234» in italiano) resta com'è, in rosso, e non si salva. Mai 235;
+  - un «.» o «,» digitato che non è il decimale della lingua raggruppa le migliaia solo se ha esattamente tre cifre dopo; altrimenti è il decimale (anche sostituendo la virgola selezionata);
+  - dopo un testo incollato e rifiutato, l'app non lo rimette in ordine mentre lo si corregge: rimetterlo in ordine potrebbe cambiare l'importo.
+- **Dare e avere entrambi diversi da zero** sulla stessa riga: riga esclusa con il motivo, mai scelto uno dei due.
+- **Limiti dei CSV**, gli stessi dell'Excel e controllati anche dal motore: 5 MB prima di leggere il file, 5 milioni di caratteri, 20.000 righe più l'intestazione, 60 colonne, 2.000 caratteri per cella (anche tra virgolette su più righe). Oltre i limiti il file è rifiutato tutto, con un messaggio nelle quattro lingue, e niente cambia.
+
+## Formati
+
+Legenda degli stati:
+- **specifico:** adattatore dedicato, con test;
+- **generico verificato:** letto dal motore generico, con test su un file sintetico che riproduce il tracciato;
+- **non verificato:** nessuna prova.
+
+| Banca / formato | Paese | CSV | XLSX | Convenzioni | Stato | Prova |
+|---|---|---|---|---|---|---|
+| Revolut, estratto consolidato in italiano | IT | sì | sì (1 foglio, 1 colonna) | `1.000,00€`, date `1 ott 2026` | specifico | `consolidatedStatement.test.ts`, e2e «Importazione» |
+| Revolut, estratto consolidato annuale in inglese | EU | sì | sì | `1,000.00`, date `Jan 02, 2026` | specifico | `consolidatedStatement.test.ts`, e2e «CSV annuale» |
+| Revolut, CSV dei movimenti (`Completed Date`, `State`) | EU | sì | no | segno nell'importo, stato | generico verificato | colonne riconosciute da `detectColumns`, righe non completate escluse con il motivo |
+| CSV italiano generico (`Data;Descrizione;Importo`) | IT | sì | no | `;`, `1.234,56`, giorno/mese | generico verificato | `bankNumbers.test.ts`, e2e «Fase 2E» |
+| CSV americano generico (`Date,Description,Amount`) | US | sì | no | `,`, `1,234.56`, mese/giorno | generico verificato | `bankNumbers.test.ts` |
+| CSV francese generico (`Date;Libellé;Montant`) | FR | sì | no | `;`, `1 234,56` | generico verificato | `bankNumbers.test.ts` |
+| CSV con Dare/Avere o Débit/Crédit separati | — | sì | sì | due colonne senza segno | generico verificato | `workbook.test.ts` (colonne scelte a mano), e2e «colonne» |
+| Excel generico, anche con più fogli | — | — | sì | date e numeri presi dalle celle | generico verificato | `workbook.test.ts`, e2e «Excel con due fogli» |
+| Qualunque CSV/XLSX con colonne non riconosciute | — | sì | sì | colonne indicate a mano, ricordate sul telefono | generico verificato | e2e «colonne sconosciute» |
+| N26, Wise, Intesa Sanpaolo, UniCredit, Fineco, ING, BBVA, PayPal, bunq, Monzo e gli altri | — | — | — | — | non verificato | nessun tracciato pubblico verificato in questa fase |
+
+## Scelta delle colonne ed Excel generico
+- **Colonne non riconosciute:** si indicano a mano. Servono:
+  - la data;
+  - la descrizione, più una facoltativa;
+  - l'importo con il segno, oppure le uscite (Dare) e le entrate (Avere);
+  - la valuta, facoltativa.
+  
+  Senza i campi obbligatori non si può continuare. La scelta è ricordata su questo telefono per i file con la stessa intestazione: si salvano solo i titoli e i numeri delle colonne, nessun importo, data o descrizione.
+- **Excel (`.xlsx`):**
+  - prima si prova l'estratto consolidato di Revolut;
+  - altrimenti ogni foglio non vuoto diventa un CSV, letto con lo stesso motore;
+  - con più fogli si parte da quello con le colonne riconosciute, se è uno solo; altrimenti si sceglie il foglio;
+  - date dalle celle data (ISO), numeri dalle celle numero, col punto decimale e senza migliaia; un numero con tre decimali resta riconoscibile come tale;
+  - le formule non si eseguono, e il valore salvato di una formula non si prende per certo (può essere vecchio): se la cella è in una colonna usata (data, descrizione, importi, valuta) la riga è esclusa con il motivo «valore calcolato da una formula»; in una colonna non usata si ignora. Le formule si riconoscono dai metadati delle celle (`f`, `F` di SheetJS, che non le esegue). Un testo che comincia con «=» non è una formula e resta testo. Nell'estratto consolidato di Revolut una formula fa leggere il file come Excel generico;
+  - limiti: 5 MB, 20 fogli, 20.000 righe e 60 colonne per foglio, 2.000 caratteri per cella, più i controlli esistenti sull'archivio ZIP.
+
+## Non ancora fatto
+- la ricerca documentata dei tracciati delle singole banche e il riconoscimento della banca;
+- l'identificativo originale delle transazioni per i doppioni;
+- la gestione esplicita dei movimenti in sospeso poi contabilizzati (oggi le righe non contabilizzate sono escluse con il motivo);
+- l'opzione «la prima riga contiene già dati», per i file senza intestazione;
+- l'XLS vecchio (`.xls`), che resta rifiutato con un messaggio.

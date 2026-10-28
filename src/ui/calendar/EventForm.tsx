@@ -75,7 +75,7 @@ export function EventForm({ event, settings, today, focusAmount, onSave, onDelet
     set({ repeat: p === 'once' ? null : p === 'custom' ? e.repeat ?? { every: 1, unit: 'week' } : { ...REPEAT_PRESETS[p] } })
   }
   function save() {
-    const value = parseAmount(amount)
+    const value = parseAmount(amount, lang)
     if (!e.title.trim()) return setErr(t('ev.errTitle'))
     if (!e.date) return setErr(t('ev.errDate'))
     if (side === 'out' && e.category && !(value && value > 0)) return setErr(t('ev.errAmount'))

@@ -42,6 +42,8 @@ export interface InboxItem {
   category: string | null   // proposta (modificabile)
   paidFrom: string | null
   source: string            // es. "csv"
+  // forse già importato: combacia solo con un'impronta delle versioni precedenti (senza valuta né tutte le cifre); decide l'utente
+  maybeImported?: true
 }
 
 export type Action =

@@ -34,7 +34,8 @@ async function step(name, action, check) {
   n++
   if (action) await action()
   for (let i = 0; i < 30; i++) { if (await js(check)) { console.log(`  ✓ ${n}. ${name}`); return } await sleep(200) }
-  console.error(`  ✗ ${n}. ${name}\n    condizione non vera: ${check}`)
+  const page = await js(`(document.body.innerText || '').replace(/\\s+/g, ' ').slice(0, 900)`).catch(() => '')
+  console.error(`  ✗ ${n}. ${name}\n    condizione non vera: ${check}\n    pagina: ${page}`)
   await done(1)
 }
 const click = sel => js(`(() => { const el = ${sel}; el?.click(); return !!el })()`)
@@ -42,7 +43,8 @@ const clickNative = async selector => {
   const root = await cdp('DOM.getDocument')
   const node = await cdp('DOM.querySelector', { nodeId: root.result.root.nodeId, selector })
   if (!node.result.nodeId) return false
-  await cdp('DOM.scrollIntoViewIfNeeded', { nodeId: node.result.nodeId })
+  // al centro dello schermo: appena dentro il bordo, il pulsante può stare sotto la barra in basso (fissa) e il clic la colpirebbe
+  await js(`document.querySelector(${JSON.stringify(selector)})?.scrollIntoView({ block: 'center' })`); await sleep(150)
   const box = await cdp('DOM.getBoxModel', { nodeId: node.result.nodeId })
   const q = box.result.model.content, x = (q[0] + q[2] + q[4] + q[6]) / 4, y = (q[1] + q[3] + q[5] + q[7]) / 4
   await cdp('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y })
@@ -89,6 +91,38 @@ await step('segno una spesa di 12,50 €', async () => {
 }, `/12,50/.test(document.querySelector('.w-today')?.innerText ?? '')`)
 // il salvataggio sul dispositivo parte appena la schermata si aggiorna: una persona non ricarica nello stesso istante
 await step('dopo aver ricaricato la pagina, la spesa c\'è ancora', async () => { await sleep(500); await cdp('Page.reload') }, `/12,50/.test(document.querySelector('.w-today')?.innerText ?? '')`)
+
+console.log('Importi incollati (P1.1)')
+// incolla vero: appunti del sistema e comando «incolla» di Chrome, nel campo importo del nuovo movimento
+await cdp('Browser.grantPermissions', { permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'], origin: new URL(URL_APP).origin })
+await cdp('Page.bringToFront')
+const pasteAmount = async text => {
+  await js(`navigator.clipboard.writeText(${JSON.stringify(text)})`)
+  await js(`(() => { const el = document.querySelector('.tx-sheet .amount-input'); el.focus(); el.select() })()`)
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'v', code: 'KeyV', modifiers: 4, commands: ['paste'] })
+  await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'v', code: 'KeyV', modifiers: 4 })
+  await sleep(250)
+}
+const amountField = `document.querySelector('.tx-sheet .amount-input')`
+await step('incollo «2.35» in italiano: diventa 2,35, non 235', async () => {
+  await click(`document.querySelector('.tab-add')`); await sleep(700)
+  await js(`navigator.clipboard.writeText('0')`); await sleep(100)                  // appunti pronti prima del primo incolla
+  await pasteAmount('2.35')
+}, `${amountField}?.value === '2,35' && ${amountField}?.getAttribute('aria-invalid') !== 'true'`)
+await step('incollo «1,234.56»: 1.234,56', () => pasteAmount('1,234.56'), `${amountField}?.value === '1.234,56'`)
+await step('incollo «0.123»: resta visibile, segnato come non valido, e non si salva', async () => {
+  await pasteAmount('0.123')
+  await click(`document.querySelector('.cat-pick button')`)
+  await click(`document.querySelector('.tx-sheet button[type=submit]')`); await sleep(300)
+}, `${amountField}?.value === '0.123' && ${amountField}?.getAttribute('aria-invalid') === 'true' && !!document.querySelector('.tx-sheet')`)
+await step('scrivo «2.35» tasto per tasto, dopo aver selezionato tutto: 2,35', async () => {
+  await js(`(() => { const el = ${amountField}; el.focus(); el.select() })()`)
+  for (const ch of '2.35') await cdp('Input.insertText', { text: ch })
+  await sleep(200)
+}, `${amountField}?.value === '2,35'`)
+await step('chiudo senza salvare: nessun movimento da 235', async () => {
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }); await sleep(500)
+}, `!document.querySelector('.tx-sheet') && !/235/.test(document.querySelector('.w-today')?.innerText ?? '')`)
 
 console.log('Le altre sezioni')
 await step('Analisi → Mese mostra come finisce il mese', () => js(`location.hash = '#/analysis/month'`), `!!document.querySelector('.outcome-amount')`)
@@ -253,10 +287,10 @@ const annualRows = ['Savings Accounts Summaries,,,,', 'Instant Access Savings (E
   '"Jan 06, 2026",QA-B-repeat,Other,-1.25,90.00', '"Jan 06, 2026",QA-B-repeat,Other,-1.25,88.75',
   'Total,,,,' ]
 const annualCsv = join(fixtureDir, 'synthetic-year.csv'); writeFileSync(annualCsv, annualRows.join('\n'))
-const selectCsv = async () => {
+const selectCsv = async (file = annualCsv) => {
   const root = await cdp('DOM.getDocument'), input = await cdp('DOM.querySelector', { nodeId: root.result.root.nodeId, selector: 'input[type=file]' })
   if (!input.result.nodeId) throw Error('input CSV non trovato')
-  await cdp('DOM.setFileInputFiles', { nodeId: input.result.nodeId, files: [annualCsv] })
+  await cdp('DOM.setFileInputFiles', { nodeId: input.result.nodeId, files: [file] })
 }
 await step('il CSV annuale mostra tutte le date e conserva le righe ripetute', async () => {
   await js(`location.hash = '#/analysis/transactions'`); await sleep(500); await selectCsv()
@@ -267,6 +301,78 @@ await step('la conferma inserisce tutte le date annuali nella casella globale', 
 await step('un secondo caricamento dello stesso CSV non crea duplicati', async () => {
   await selectCsv(); await sleep(250); await clickNative('[aria-label="Controlla l’importazione"] button')
 }, `/0 movimenti da confermare · 14 già importati/.test(document.body.innerText) && /15/.test(document.querySelector('h3')?.innerText ?? '')`)
+
+console.log('Importazione CSV generica (Fase 2E)')
+// «-1.234» e «-1,234» senza altri indizi: l'app chiede come sono scritti i numeri, poi esclude la riga incompatibile con il motivo
+const ambiguousCsv = join(fixtureDir, 'synthetic-ambiguous.csv')
+writeFileSync(ambiguousCsv, 'Data;Descrizione;Importo\n28/10/2026;QA Affitto 2E;-1.234\n29/10/2026;QA Caffè 2E;-1,234\n')
+const inSheet = re => `${re}.test(document.querySelector('.bs')?.innerText ?? '')`
+const chooseComma = async () => {
+  await click(`document.querySelector('.bs [role=radio]')`); await sleep(200)
+  await click(byText('/^Continua$/', '.bs button')); await sleep(400)
+}
+await step('un CSV ambiguo non si importa da solo: chiede come sono scritti i numeri, con l’esempio letto nei due modi', async () => {
+  await js(`location.hash = '#/analysis/transactions'`); await sleep(500); await selectCsv(ambiguousCsv); await sleep(600)
+}, inSheet(`/può voler dire due importi diversi/`) + ` && ` + inSheet(`/-1[.]234 → -1[.]234,00/`))
+await step('con la virgola per i decimali: −1.234,00 € e la riga «-1,234» esclusa con il motivo', chooseComma,
+  inSheet(`/Movimenti da importare[^0-9]*1[^0-9]/`) + ` && ` + inSheet(`/Riga 3 · più decimali di quelli della valuta/`))
+await step('confermato, entra nella casella con l’importo esatto', async () => {
+  await click(byText('/^Importa 1 movimento$/', '.bs button')); await sleep(600)
+}, `/QA Affitto 2E/.test(document.body.innerText) && /1[.]234,00/.test(document.body.innerText) && !/QA Caffè 2E/.test(document.body.innerText)`)
+await step('reimportare lo stesso file non crea doppioni', async () => {
+  await selectCsv(ambiguousCsv); await sleep(600); await chooseComma()
+}, inSheet(`/Già importati/`) + ` && !!document.querySelector('.bs .btn.primary')?.disabled`)
+await click(byText('/^Annulla$/', '.bs button'))
+
+// colonne sconosciute: si scelgono a mano (uscite ed entrate separate) e il telefono le ricorda per lo stesso tipo di file
+const columnsCsv = join(fixtureDir, 'synthetic-columns.csv')
+writeFileSync(columnsCsv, 'Quando;Cosa;Uscita;Entrata\n28/10/2026;QA Colonne Affitto;1.234,00;\n29/10/2026;QA Colonne Rimborso;;12,50\n')
+const pickColumn = (i, col) => js(`(() => { const s = document.querySelectorAll('.bs select')[${i}]
+  Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(s, '${col}'); s.dispatchEvent(new Event('change', { bubbles: true })) })()`)
+await step('un CSV con colonne sconosciute chiede quali usare', async () => {
+  await selectCsv(columnsCsv); await sleep(600)
+}, inSheet(`/Quali colonne usare/`))
+await step('scelte data, descrizione, uscite ed entrate: il riepilogo legge segni e importi esatti', async () => {
+  await pickColumn(0, 0); await pickColumn(1, 1); await pickColumn(3, 2); await pickColumn(4, 3); await sleep(200)
+  await click(byText('/^Continua$/', '.bs button')); await sleep(400)
+}, inSheet(`/Movimenti da importare[^0-9]*2[^0-9]/`) + ` && ` + inSheet(`/scelte a mano/`) + ` && ` + inSheet(`/1[.]234,00/`))
+await step('confermati, entrano nella casella', async () => {
+  await click(byText('/^Importa 2 movimenti$/', '.bs button')); await sleep(600)
+}, `/QA Colonne Affitto/.test(document.body.innerText) && /QA Colonne Rimborso/.test(document.body.innerText)`)
+await step('lo stesso tipo di file la volta dopo: colonne ricordate, nessun doppione', async () => {
+  await selectCsv(columnsCsv); await sleep(600)
+}, `!` + inSheet(`/Quali colonne usare/`) + ` && ` + inSheet(`/Già importati/`))
+await click(byText('/^Annulla$/', '.bs button'))
+
+// Excel generico con due fogli: si importa quello con le colonne riconosciute, date e numeri presi dalle celle
+const workbook = XLSX.utils.book_new()
+XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['Estratto sintetico QA'], ['nessun movimento qui']]), 'Info')
+XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['Data', 'Descrizione', 'Importo'], [new Date(2026, 9, 27), 'QA Excel Spesa', -42.5]], { cellDates: true }), 'Movimenti')
+const xlsxFile = join(fixtureDir, 'synthetic-two-sheets.xlsx'); writeFileSync(xlsxFile, XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }))
+await step('un Excel con due fogli: importa quello dei movimenti con l’importo della cella', async () => {
+  await selectCsv(xlsxFile); await sleep(900)
+}, inSheet(`/Movimenti da importare[^0-9]*1[^0-9]/`) + ` && ` + inSheet(`/42,50/`))
+await step('confermato, entra nella casella', async () => {
+  await click(byText('/^Importa 1 movimento$/', '.bs button')); await sleep(600)
+}, `/QA Excel Spesa/.test(document.body.innerText)`)
+
+// P2.3: una cella con formula ha un valore salvato che può essere vecchio: la riga si esclude con il motivo, non si importa
+const formulaBook = XLSX.utils.book_new()
+XLSX.utils.book_append_sheet(formulaBook, XLSX.utils.aoa_to_sheet([['Data', 'Descrizione', 'Importo'],
+  [new Date(2026, 9, 27), 'QA Excel Formula', { t: 'n', f: 'C3*100', v: -999 }], [new Date(2026, 9, 27), 'QA Excel Numero', -7.25]], { cellDates: true }), 'Movimenti')
+const formulaFile = join(fixtureDir, 'synthetic-formula.xlsx'); writeFileSync(formulaFile, XLSX.write(formulaBook, { type: 'buffer', bookType: 'xlsx' }))
+await step('un Excel con una formula nell’importo: quella riga è esclusa con il motivo', async () => {
+  await selectCsv(formulaFile); await sleep(900)
+}, inSheet(`/Movimenti da importare[^0-9]*1[^0-9]/`) + ` && ` + inSheet(`/Riga 2 · valore calcolato da una formula/`) + ` && !` + inSheet(`/999/`))
+await click(byText('/^Annulla$/', '.bs button')); await sleep(300)
+
+// P2.2: un CSV oltre i limiti non si legge: messaggio chiaro e nessun cambiamento nella casella
+const bigCsv = join(fixtureDir, 'synthetic-too-large.csv')
+writeFileSync(bigCsv, 'Data;Descrizione;Importo\n' + '28/10/2026;QA Grande;-1,00\n'.repeat(Math.ceil(5 * 1024 * 1024 / 28)))
+const inboxBefore = await js(`document.querySelector('.card-inbox h3')?.innerText ?? ''`)
+await step('un CSV troppo grande è rifiutato prima di leggerlo, e la casella non cambia', async () => {
+  await selectCsv(bigCsv); await sleep(600)
+}, `/File troppo grande/.test(document.body.innerText) && !document.querySelector('.bs') && (document.querySelector('.card-inbox h3')?.innerText ?? '') === ${JSON.stringify(inboxBefore)}`)
 
 if (errors.length) { console.error(`\nErrori nella pagina:\n  ${errors.join('\n  ')}`); await done(1) }
 console.log(`\nTutti i ${n} passi sono andati bene.`)
