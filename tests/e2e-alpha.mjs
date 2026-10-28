@@ -79,7 +79,9 @@ async function step(d, name, action, check, seconds = 8) {
     }
     throw Error(`condizione non vera: ${check}`)
   } catch (e) {
-    console.error(`  ✗ ${n}. ${d.name}: ${name}\n    ${e.message}\n    pagina: ${(await d.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 1200)}`)
+    // P1: distingue «nessun movimento» da «righe presenti ma non ancora disegnate» (content-visibility: auto fuori dal testo letto)
+    const rows = await d.js(`JSON.stringify({ righe: document.querySelectorAll('.tx-list > li').length, visibile: document.visibilityState })`).catch(() => '')
+    console.error(`  ✗ ${n}. ${d.name}: ${name}\n    ${e.message}\n    pagina: ${(await d.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 1200)}\n    movimenti nel DOM: ${rows}`)
     failed = true; await done(1)
   }
 }
@@ -114,7 +116,12 @@ async function addExpense(d, amount) {
   await d.click(`document.querySelector('.tx-sheet button[type=submit]')`)
   if (!await until(d, `!document.querySelector('.tx-sheet')`)) throw Error(`spesa non salvata: il foglio è rimasto aperto (${amount})`)
 }
-const toList = async d => { await d.js(`location.hash = '#/analysis/transactions'`); await until(d, `!!document.querySelector('.tabbar') && location.hash === '#/analysis/transactions'`); await sleep(500) }
+/** Due fotogrammi entro 1,5 s: senza, le righe con content-visibility: auto restano fuori da innerText (P1, non un elenco vuoto). */
+const rendered = d => d.js(`new Promise(r => { const t = setTimeout(() => r(false), 1500); requestAnimationFrame(() => requestAnimationFrame(() => { clearTimeout(t); r(true) })) })`)
+const toList = async d => {
+  await d.js(`location.hash = '#/analysis/transactions'`); await until(d, `!!document.querySelector('.tabbar') && location.hash === '#/analysis/transactions'`); await sleep(500)
+  if (!await rendered(d)) { await d.cdp('Page.bringToFront'); if (!await rendered(d)) throw Error('la pagina non disegna fotogrammi: il testo delle righe non è leggibile (P1)') }
+}
 const amounts = doc => (doc?.transactions ?? []).map(t => t.amount).sort((a, b) => a - b)
 
 console.log('Accesso')
