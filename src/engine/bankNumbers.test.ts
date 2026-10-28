@@ -141,3 +141,17 @@ describe('Fase 2E: importi scritti a mano', () => {
     expect(parseAmount(raw, lang)).toBe(expected)
   })
 })
+
+describe('Fase 2E: CSV dei movimenti in stile Revolut (sintetico)', () => {
+  const csv = ['Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance',
+    'CARD_PAYMENT,Current,2026-10-01 10:00:00,2026-10-02 09:00:00,QA Shop,-1234.50,1.00,EUR,COMPLETED,100.00',
+    'CARD_PAYMENT,Current,2026-10-03 10:00:00,,QA Pending,-5.00,0.00,EUR,PENDING,95.00',
+    'TOPUP,Current,2026-10-04 10:00:00,2026-10-04 10:00:00,QA Top-up,50.00,0.00,EUR,COMPLETED,145.00'].join('\n')
+  it('usa la data di contabilizzazione, sottrae la commissione e spiega la riga in sospeso', () => {
+    const res = readStatement(csv)
+    expect(res.rows).toEqual([
+      { date: '2026-10-02', description: 'QA Shop', amount: -1235.5, currency: 'EUR' },
+      { date: '2026-10-04', description: 'QA Top-up', amount: 50, currency: 'EUR' }])
+    expect(res.skipped).toEqual([{ line: 3, reason: 'pending' }])
+  })
+})
