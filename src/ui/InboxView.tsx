@@ -5,6 +5,8 @@ import { useStore } from '../store/context'
 import { duplicateCandidates, newId, planImport, type InboxItem } from '../store/state'
 import { track } from '../beta/telemetry'
 import { Icon } from './Icon'
+import { ImportReview } from './import/ImportReview'
+import { Sheet } from './kit/Sheet'
 import { bucketName, categoryName } from './names'
 import { parseConsolidated, readConsolidatedWorkbook, type ConsolidatedPreview } from '../engine/consolidatedStatement'
 import { todayIso, updateCapital } from '../engine'
@@ -41,15 +43,24 @@ export function InboxView({ settings }: { settings: Settings }) {
     const consolidated = parseConsolidated(text)
     if (consolidated) { setMsg(null); setPreview(consolidated); return }
     if (/(?:conto personale|personal account)\s*\(eur\)/i.test(text)) { setMsg({ text: t('imp.sections'), bad: true }); return }
-    const { rows, error } = readStatement(text)
+    const { map, error, rows, skipped, needs } = readStatement(text)
     if (error === 'multiple_sections') { setMsg({ text: t('imp.sections'), bad: true }); return }
-    if (!rows.length) { setMsg({ text: t('imp.none'), bad: true }); return }
-    const { items, duplicates } = planImport(state.data, rows)
+    if (!map || (!rows.length && !skipped.length && !needs)) { setMsg({ text: t('imp.none'), bad: true }); return }
+    // prima il riepilogo (e, se il file è ambiguo, la scelta dei formati): niente entra nella casella senza conferma
+    setMsg(null); setReview({ owner: lease, text })
+  }
+  const [reviewState, setReview] = useState<{ owner: typeof lease; text: string } | null>(null)
+  const review = reviewState && reviewState.owner === lease && (!lease || lease.current()) ? reviewState.text : null
+  const confirmReview = (items: InboxItem[], duplicates: number) => {
+    if (!state.data || (lease && !lease.current())) return
     items.forEach(i => suggested.set(i.id, i.category))
     dispatch({ type: 'addInbox', items })
     void track('import')
-    setMsg({ text: t('imp.result', { n: items.length, d: duplicates }) })
+    setMsg({ text: t('imp.result', { n: items.length, d: duplicates }) }); setReview(null)
   }
+  const reviewSheet = <Sheet open={!!review} onClose={() => setReview(null)} title={t('imp.previewTitle')}>
+    {review && state.data && <ImportReview text={review} data={state.data} onDone={confirmReview} onClose={() => setReview(null)} />}
+  </Sheet>
 
   const toTx = (i: InboxItem) => ({ id: newId(), date: i.date, description: i.description, category: i.category,
     amount: Math.abs(i.amount), currency: i.currency, fxRate: null, paidFrom: i.paidFrom })
@@ -92,7 +103,7 @@ export function InboxView({ settings }: { settings: Settings }) {
 
   // niente da confermare: una riga sola per importare (il file si sceglie toccandola)
   if (!inbox.length) return (
-    <div className="import-row">{importPreview}
+    <div className="import-row">{importPreview}{reviewSheet}
       <label className="row"><Icon name="upload" size={20} className="row-lead" />
         <span className="row-main"><span>{t('imp.import')}</span><small>{t('imp.short')}</small></span>
         <Icon name="chevron" size={18} className="row-chev" />
@@ -102,7 +113,7 @@ export function InboxView({ settings }: { settings: Settings }) {
   )
   return (
     <section className="card card-inbox">
-      {importPreview}
+      {importPreview}{reviewSheet}
       <div className="card-head">
         <h3 className="h-plain">{t('inbox.title', { n: inbox.length })}</h3>
         <label className="btn small-btn"><Icon name="upload" size={16} />{t('imp.import')}

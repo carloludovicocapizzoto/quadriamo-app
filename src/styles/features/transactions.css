@@ -112,3 +112,6 @@
 .txs-unit { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 0; }
 .txs-unit > input { flex: 1; min-width: 0; }
 .txs-unit > i { font-style: normal; color: var(--muted); }
+/* importazione: le righe escluse, una per riga con il motivo, sotto il riepilogo */
+.import-skipped { list-style: none; margin: var(--s2) 0 0; padding: 0; display: grid; gap: 2px; color: var(--muted); }
+.import-review .group:first-child { margin-top: 0; }
