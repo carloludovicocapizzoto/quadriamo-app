@@ -6,6 +6,7 @@ import type { Dict } from '../../i18n/en'
 import { useStore } from '../../store/context'
 import { newId } from '../../store/state'
 import { parseAmount } from '../kit/amount'
+import { parseDecimal } from '../kit/decimal'
 import { useSync } from '../../sync/context'
 import { sharedApi, type SBudget, type SFull } from '../../shared/api'
 import { Icon } from '../Icon'
@@ -192,9 +193,9 @@ function ExpenseForm({ d, me, initial, onClose, onSaved }: { d: SFull; me: strin
   const [mine, setMine] = useState(!initial && !!settings)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
-  const n = parseAmount(amount) ?? 0
+  const n = parseAmount(amount, lang) ?? 0
   const split: SExpense['split'] = mode === 'default' ? null
-    : mode === 'custom' ? { mode, shares: Object.fromEntries(Object.entries(custom).map(([k, v]) => [k, parseAmount(v) ?? 0])) } : { mode }
+    : mode === 'custom' ? { mode, shares: Object.fromEntries(Object.entries(custom).map(([k, v]) => [k, parseAmount(v, lang) ?? 0])) } : { mode }
   const preview = n > 0 ? sharesFor({ id: '', paid_by: paidBy, date, description: '', amount: n, category: null, split }, d.members, d.budget.split_mode) : null
 
   async function submit(e: FormEvent) {
@@ -255,7 +256,7 @@ function ExpenseForm({ d, me, initial, onClose, onSaved }: { d: SFull; me: strin
 
 function BudgetSettings({ d, me, onChange, onLeft }: { d: SFull; me: string; onChange: () => void; onLeft: () => void }) {
   const { updateBudget, updateMember, createInvite, leaveBudget } = useSharedApi()
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const [code, setCode] = useState('')
   const [copied, setCopied] = useState(false)
   const self = d.members.find(m => m.user_id === me)
@@ -274,14 +275,14 @@ function BudgetSettings({ d, me, onChange, onLeft }: { d: SFull; me: string; onC
       {self && d.budget.split_mode === 'income' && (
         <label className="field"><span>{t('sh.myIncome')}</span>
           <AmountInput defaultValue={self.income}
-            onBlur={async e => { await updateMember(d.budget.id, me, { income: parseAmount(e.target.value) }); onChange() }} />
+            onBlur={async e => { await updateMember(d.budget.id, me, { income: parseAmount(e.target.value, lang) }); onChange() }} />
           <small className="muted">{t('sh.incomeHint')}</small></label>
       )}
       {d.budget.split_mode === 'custom' && (
         <div className="share-grid">{d.members.map(m => (
           <label key={m.user_id} className="share-input"><span>{m.display_name}</span>
             <span className="pct-input"><input inputMode="decimal" defaultValue={m.share ?? ''}
-              onBlur={async e => { await updateMember(d.budget.id, m.user_id, { share: parseAmount(e.target.value) }); onChange() }} />%</span></label>))}</div>
+              onBlur={async e => { await updateMember(d.budget.id, m.user_id, { share: parseDecimal(e.target.value) }); onChange() }} />%</span></label>))}</div>
       )}
       <div className="sh-invite">
         <p><b>{t('sh.invite')}</b><br /><span className="small muted">{t('sh.inviteHint')}</span></p>
