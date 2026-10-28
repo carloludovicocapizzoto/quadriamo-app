@@ -4,7 +4,7 @@ import { parseAmount } from './amount'
 
 describe('importi mentre si scrivono', () => {
   it.each([
-    ['1200', '1.200'], ['1234567', '1.234.567'], ['1.2345', '12.345'], ['1200,5', '1.200,5'], ['1200,567', '1.200,567'],
+    ['1200', '1.200'], ['1234567', '1.234.567'], ['1.2345', '1.2345'], ['1200,5', '1.200,5'], ['1200,567', '1.200,567'],
     ['1200.', '1.200,'], ['0012', '12'], [',5', '0,5'], ['', ''], ['abc', ''],
   ])('it: %s -> %s', (raw, out) => { expect(groupTyping(raw, 'it')).toBe(out) })
   it('in inglese la virgola raggruppa e il punto è il decimale', () => {
@@ -17,6 +17,13 @@ describe('importi mentre si scrivono', () => {
     expect(groupTyping('12.345', 'en')).toBe('12.345')
     expect(parseAmount(groupTyping('12.345', 'en'), 'en')).toBeNull()
     expect(parseAmount(groupTyping('0,12', 'it'), 'it')).toBe(0.12)
+  })
+  it('incollando un punto decimale con due cifre non lo elimina in italiano', () => {
+    const text = groupTyping('2.35', 'it')
+    expect(text).toBe('2,35')
+    expect(parseAmount(text, 'it')).toBe(2.35)
+    expect(groupTyping('1.234', 'it')).toBe('1.234') // raggruppamento delle migliaia
+    expect(parseAmount(groupTyping('1.2345', 'it'), 'it')).toBeNull() // né troncamento né concatenazione
   })
   it('il testo scritto si rilegge come lo stesso numero', () => {
     for (const lang of ['it', 'en', 'fr', 'es']) for (const n of [0.5, 12, 1200, 1200.5, 1234567.89])

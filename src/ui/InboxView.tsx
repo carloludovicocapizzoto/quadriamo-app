@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from 'react'
-import { keywordFor, readStatement, type Settings, type Transaction } from '../engine'
+import { CSV_LIMITS, keywordFor, readStatement, type CsvParseErrorCode, type Settings, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
 import { duplicateCandidates, newId, planImport, type InboxItem } from '../store/state'
@@ -8,7 +8,7 @@ import { Icon } from './Icon'
 import { ImportReview } from './import/ImportReview'
 import { Sheet } from './kit/Sheet'
 import { bucketName, categoryName } from './names'
-import { parseConsolidated, readConsolidatedWorkbook, type ConsolidatedPreview } from '../engine/consolidatedStatement'
+import { parseConsolidated, readConsolidatedWorkbook, UnsafeWorkbookFormulaError, type ConsolidatedPreview } from '../engine/consolidatedStatement'
 import { readWorkbookSheets, type WorkbookSheet } from '../engine/workbook'
 import { todayIso, updateCapital } from '../engine'
 
@@ -23,6 +23,10 @@ export function InboxView({ settings }: { settings: Settings }) {
   const setPreview = (value: ConsolidatedPreview | null) => setPreviewState(value ? { owner: lease, value } : null)
   const [depositTarget, setDepositTarget] = useState('none')
   const [suggested] = useState(() => new Map(inbox.map(i => [i.id, i.category])))   // per capire se l'utente ha corretto
+  const csvErrors: Record<CsvParseErrorCode, string> = {
+    size: t('imp.csvTooLarge'), rows: t('imp.csvTooManyRows'), columns: t('imp.csvTooManyColumns'),
+    cell: t('imp.csvCellTooLong'), malformed: t('imp.csvMalformed'),
+  }
 
   async function onFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -40,17 +44,23 @@ export function InboxView({ settings }: { settings: Settings }) {
         if (!sheets) { setMsg({ text: t('imp.xlsx'), bad: true }); return }
         if (!sheets.length) { setMsg({ text: t('imp.none'), bad: true }); return }
         setMsg(null); setReview({ owner: lease, sheets })
-      } catch { setMsg({ text: t('imp.xlsx'), bad: true }) }
+      } catch (error) {
+        setMsg({ text: error instanceof UnsafeWorkbookFormulaError ? t('imp.xlsxFormula') : t('imp.xlsx'), bad: true })
+      }
       return
     }
     if (/\.xls$/i.test(file.name)) { setMsg({ text: t('imp.xlsx'), bad: true }); return }
-    const text = await file.text()
+    if (file.size > CSV_LIMITS.bytes) { setMsg({ text: t('imp.csvTooLarge'), bad: true }); return }
+    let text: string
+    try { text = await file.text() }
+    catch { setMsg({ text: t('imp.csvMalformed'), bad: true }); return }
     if (lease && !lease.current()) return
     const consolidated = parseConsolidated(text)
     if (consolidated) { setMsg(null); setPreview(consolidated); return }
     if (/(?:conto personale|personal account)\s*\(eur\)/i.test(text)) { setMsg({ text: t('imp.sections'), bad: true }); return }
     const { map, error, rows, skipped, needs, header } = readStatement(text)
     if (error === 'multiple_sections') { setMsg({ text: t('imp.sections'), bad: true }); return }
+    if (error) { setMsg({ text: csvErrors[error], bad: true }); return }
     // colonne non riconosciute: si scelgono a mano (serve almeno un'intestazione con due colonne)
     if (map ? !rows.length && !skipped.length && !needs : header.length < 2) { setMsg({ text: t('imp.none'), bad: true }); return }
     // prima il riepilogo (e, se serve, colonne e formati): niente entra nella casella senza conferma
@@ -72,7 +82,7 @@ export function InboxView({ settings }: { settings: Settings }) {
   const toTx = (i: InboxItem) => ({ id: newId(), date: i.date, description: i.description, category: i.category,
     amount: Math.abs(i.amount), currency: i.currency, fxRate: null, paidFrom: i.paidFrom })
   const dups = state.data ? duplicateCandidates(state.data) : new Map<string, Transaction>()
-  const ready = inbox.filter(i => i.category && !dups.has(i.id))      // "conferma tutti" salta i possibili doppioni
+  const ready = inbox.filter(i => i.category && !dups.has(i.id) && !i.legacyCandidate) // i candidati legacy richiedono scelta singola
 
   const confirmPreview = () => {
     if (!preview || !state.data || (lease && !lease.current())) return
@@ -159,7 +169,7 @@ function InboxRow({ item, settings, suggestedCategory, duplicateOf, onChange, on
   const income = item.amount > 0
   const cats = settings.categories.filter(c => (c.type === 'income') === income)
   return (
-    <li className={`inbox-item${duplicateOf ? ' dup' : item.category ? '' : ' needs'}`}>
+    <li className={`inbox-item${duplicateOf || item.legacyCandidate ? ' dup' : item.category ? '' : ' needs'}`}>
       <div className="inbox-top">
         <span className="tx-date">{date(item.date)}</span>
         <span className="tx-desc" title={item.description}>{item.description}</span>
@@ -187,8 +197,9 @@ function InboxRow({ item, settings, suggestedCategory, duplicateOf, onChange, on
         <p className="dup-note small" role="note"><Icon name="alert" size={15} />{t('inbox.dup', { desc: duplicateOf.description || '—',
           amount: money(duplicateOf.amount ?? 0, duplicateOf.currency || settings.currency), date: duplicateOf.date ? date(duplicateOf.date) : '—' })}</p>
       )}
+      {item.legacyCandidate && <p className="dup-note small" role="note"><Icon name="alert" size={15} />{t('inbox.legacyCandidate')}</p>}
       <div className="inbox-actions">
-        {duplicateOf ? (
+        {duplicateOf || item.legacyCandidate ? (
           <>
             <button className="btn small-btn" disabled={!item.category}
                     onClick={() => onConfirm(item)}>{t('inbox.addAnyway')}</button>

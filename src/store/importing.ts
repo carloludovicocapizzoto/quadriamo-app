@@ -4,26 +4,33 @@ import { newId } from './model'
 import type { AppData, InboxItem } from './types'
 
 /**
- * L'impronta di una riga: data, importo con tutte le cifre della sua valuta, descrizione; più la valuta, se non è quella di base.
- * Per la valuta di base con al massimo due decimali è identica a quella di sempre, così i movimenti già importati non tornano.
+ * L'impronta moderna include data, importo alla precisione della valuta, descrizione e valuta estera.
+ * Le chiavi storiche non specificavano la valuta, perciò restano possibili corrispondenze da confermare.
  */
 function fingerprints(r: { date: string; amount: number; description: string; currency: string | null }, base: string) {
   const currency = r.currency && r.currency !== base ? r.currency : null
   const text = normalize(r.description)
-  const exact = `${r.date}|${r.amount.toFixed(Math.max(2, minorDigits(currency ?? base)))}|${text}${currency ? `|${currency}` : ''}`
+  const current = `${r.date}|${r.amount.toFixed(Math.max(2, minorDigits(currency ?? base)))}|${text}${currency ? `|${currency}` : ''}`
   // la vecchia impronta (due decimali, senza valuta) vale solo per riconoscere ciò che era già stato importato
-  return { exact, legacy: `${r.date}|${r.amount.toFixed(2)}|${text}` }
+  const legacy = `${r.date}|${r.amount.toFixed(2)}|${text}`
+  // Le fingerprint base a due decimali coincidono con lo schema legacy: marca le nuove per distinguerle.
+  // Gli esatti esteri e a precisione maggiore restano compatibili con quelli già scritti dalla PR #11.
+  return { exact: current === legacy ? `v2|${current}` : current, current, legacy }
 }
 
 /** Prepara l'import: scarta le righe già viste (in casella, confermate o ignorate) e propone categoria e bucket. */
 export function planImport(d: AppData, rows: ImportRow[], source = 'csv'): { items: InboxItem[]; duplicates: number } {
   const before = new Set([...(d.inbox ?? []).map(i => i.fingerprint), ...Object.keys(d.importDone ?? {})])
+  // Una voce già in inbox porta anche valuta e precisione: se il suo fingerprint era legacy,
+  // ricalcolarlo evita di riproporre come candidato lo stesso movimento ancora da decidere.
+  const inboxExact = new Set((d.inbox ?? []).map(i => fingerprints(i, d.settings.currency).exact))
   const seen = new Set(before)
+  for (const fp of inboxExact) seen.add(fp)
   const occurrences = new Map<string, number>()
   const items: InboxItem[] = []
   let duplicates = 0
   for (const r of rows) {
-    const { exact, legacy } = fingerprints(r, d.settings.currency)
+    const { exact, current, legacy } = fingerprints(r, d.settings.currency)
     const occurrence = (occurrences.get(exact) ?? 0) + 1
     occurrences.set(exact, occurrence)
     // Preserve legitimate repeated-looking bank rows, while giving each occurrence
@@ -31,12 +38,13 @@ export function planImport(d: AppData, rows: ImportRow[], source = 'csv'): { ite
     const nth = (k: string) => (occurrence === 1 ? k : `${k}|occurrence:${occurrence}`)
     const fp = nth(exact)
     // la vecchia impronta si confronta solo con quanto c'era prima di questo import, mai con le righe dello stesso file
-    if (seen.has(fp) || (legacy !== exact && before.has(nth(legacy)))) { duplicates++; continue }
+    if (seen.has(fp) || (current !== legacy && before.has(nth(current)))) { duplicates++; continue }
     seen.add(fp)
     const sug = suggest(r.description, r.amount, d.settings)
+    const legacyCandidate = before.has(nth(legacy))
     items.push({ id: newId(), fingerprint: fp, date: r.date, description: r.description, amount: r.amount,
                  currency: r.currency && r.currency !== d.settings.currency ? r.currency : null,
-                 category: sug.category, paidFrom: sug.paidFrom, source })
+                 category: sug.category, paidFrom: sug.paidFrom, source, ...(legacyCandidate ? { legacyCandidate: true } : {}) })
   }
   return { items, duplicates }
 }

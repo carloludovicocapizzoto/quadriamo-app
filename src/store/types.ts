@@ -35,6 +35,7 @@ export interface PrivateProfile {
 export interface InboxItem {
   id: string
   fingerprint: string
+  legacyCandidate?: boolean    // legacy fingerprint can match different currency/precision; user must decide
   date: string
   description: string
   amount: number            // con segno: negativo = uscita

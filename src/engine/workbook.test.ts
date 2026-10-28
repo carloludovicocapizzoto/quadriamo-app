@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import * as XLSX from 'xlsx'
-import { readStatement } from './importCsv'
+import { CsvParseError, CSV_LIMITS, parseCsv, readStatement } from './importCsv'
 import { cellText, readWorkbookSheets, rowsToCsv, WORKBOOK_LIMITS } from './workbook'
+import { readConsolidatedWorkbook, UnsafeWorkbookFormulaError } from './consolidatedStatement'
 
 const book = (sheets: Record<string, unknown[][]>) => {
   const wb = XLSX.utils.book_new()
@@ -32,6 +33,46 @@ describe('Fase 2E: Excel generico', () => {
   it('un testo che comincia con «=» resta testo, non diventa una formula', () => {
     const res = readStatement(rowsToCsv([['Date', 'Description', 'Amount'], ['2026-10-28', '=HYPERLINK("x")', -1]]))
     expect(res.rows[0].description).toBe('=HYPERLINK("x")')
+  })
+  it('esclude i risultati in cache delle formule e distingue il testo letterale con =', async () => {
+    const wb = XLSX.utils.book_new()
+    const sheet = XLSX.utils.aoa_to_sheet([
+      ['Date', 'Description', 'Amount'],
+      ['2026-10-28', 'QA formula con cache', -99],
+      ['2026-10-29', '=HYPERLINK("x")', -2.5],
+      ['2026-10-30', 'QA formula senza cache', ''],
+      ['2026-10-31', 'QA numero normale', -3],
+    ])
+    sheet.C2 = { t: 'n', f: '1+1', v: -99 }
+    sheet.C4 = { t: 'n', f: '1+1' }
+    XLSX.utils.book_append_sheet(wb, sheet, 'Movimenti')
+    const file = new File([XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer], 'formule.xlsx')
+    const sheets = await readWorkbookSheets(file)
+    const parsed = readStatement(sheets![0].csv)
+    expect(parsed.rows).toEqual([
+      { date: '2026-10-29', description: '=HYPERLINK("x")', amount: -2.5, currency: null },
+      { date: '2026-10-31', description: 'QA numero normale', amount: -3, currency: null },
+    ])
+    expect(parsed.skipped).toEqual([{ line: 2, reason: 'formula' }, { line: 4, reason: 'formula' }])
+    expect(sheets![0].csv).not.toContain('-99')
+  })
+  it('rifiuta esplicitamente le formule anche nel foglio consolidato a colonna singola', async () => {
+    const wb = XLSX.utils.book_new()
+    const sheet = XLSX.utils.aoa_to_sheet([['Personal Account (EUR)'], ['2026-10-28 · QA · -99,00']])
+    sheet.A2 = { t: 's', f: '"2026-10-28 · QA · -99,00"', v: '2026-10-28 · QA · -99,00' }
+    XLSX.utils.book_append_sheet(wb, sheet, 'Statement')
+    const file = new File([XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer], 'consolidated-formula.xlsx')
+    await expect(readConsolidatedWorkbook(file)).rejects.toBeInstanceOf(UnsafeWorkbookFormulaError)
+  })
+  it('il parser CSV applica limiti interni a byte, righe, colonne e celle e rifiuta virgolette malformate', () => {
+    expect(() => parseCsv('abc', { ...CSV_LIMITS, bytes: 2 })).toThrow(CsvParseError)
+    expect(() => parseCsv('a;b\n1;2', { ...CSV_LIMITS, rows: 1 })).toThrow(CsvParseError)
+    expect(() => parseCsv('a;b;c', { ...CSV_LIMITS, columns: 2 })).toThrow(CsvParseError)
+    expect(() => parseCsv('abcdef', { ...CSV_LIMITS, cellChars: 5 })).toThrow(CsvParseError)
+    expect(() => parseCsv('é', { ...CSV_LIMITS, bytes: 1 })).toThrow(CsvParseError)
+    expect(() => parseCsv('a;b\n"bad"tail;x')).toThrow(CsvParseError)
+    expect(readStatement('Date;Description;Amount\n2026-10-28;"bad"tail;-1').error).toBe('malformed')
+    expect(parseCsv('a;b\n"line 1\nline 2";x')).toEqual([['a', 'b'], ['line 1\nline 2', 'x']])
   })
   it('rifiuta un file troppo grande o con troppi fogli', async () => {
     expect(await readWorkbookSheets(new File([new Uint8Array(WORKBOOK_LIMITS.bytes + 1)], 'grande.xlsx'))).toBeNull()

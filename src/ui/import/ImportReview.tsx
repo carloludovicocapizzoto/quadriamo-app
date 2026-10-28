@@ -58,6 +58,7 @@ function SheetReview({ csv, data, onDone, onClose }: { csv: string; data: AppDat
 
   const dates = res.rows.map(r => r.date).sort()
   const base = plan.items.filter(i => !i.currency)
+  const legacyCandidates = plan.items.filter(i => i.legacyCandidate).length
   const income = base.filter(i => i.amount > 0).reduce((a, i) => a + i.amount, 0)
   const spent = base.filter(i => i.amount < 0).reduce((a, i) => a - i.amount, 0)
   return <div className="import-review">
@@ -65,6 +66,7 @@ function SheetReview({ csv, data, onDone, onClose }: { csv: string; data: AppDat
       {dates.length > 0 && <Row label={t('imp.periodShort')} value={`${long(dates[0])} – ${long(dates.at(-1)!)}`} />}
       <Row label={t('imp.rowsNew')} value={String(plan.items.length)} />
       {plan.duplicates > 0 && <Row label={t('imp.rowsDup')} detail={t('imp.rowsDupHint')} value={String(plan.duplicates)} />}
+      {legacyCandidates > 0 && <Row label={t('imp.legacyCandidates')} detail={t('imp.legacyCandidatesHint')} value={String(legacyCandidates)} />}
       {res.skipped.length > 0 && <Row label={t('imp.rowsSkipped')} detail={t('imp.rowsSkippedHint')} value={String(res.skipped.length)} />}
       {income > 0 && <Row label={t('imp.totalIn')} value={money(income, cur)} />}
       {spent > 0 && <Row label={t('imp.totalOut')} value={money(-spent, cur)} />}

@@ -12,6 +12,10 @@ export interface ConsolidatedPreview {
   repeatedRows: number
 }
 
+export class UnsafeWorkbookFormulaError extends Error {
+  constructor() { super('Workbook contains a formula in a financial field'); this.name = 'UnsafeWorkbookFormulaError' }
+}
+
 const label = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ')
 /** I due tracciati hanno una convenzione nota (italiano «1.000,00€», inglese «1,000.00»): niente da indovinare. */
 const amountIn = (raw: string, mark: DecimalMark) => { const m = parseMoney(raw, mark); return m.ok ? m.value : null }
@@ -105,7 +109,8 @@ function extractItalianDepositBalance(all: string[][], before: number): number |
 /** Supports the existing Italian export and the multi-section English Revolut consolidated CSV.
  * Selects exactly one personal EUR transaction table and rejects partial or ambiguous statements. */
 export function parseConsolidated(text: string): ConsolidatedPreview | null {
-  const all = parseCsv(text)
+  let all: string[][]
+  try { all = parseCsv(text) } catch { return null }
   const markers = all.flatMap((r, i) => ['conto personale (eur)', 'personal account (eur)'].includes(label(r[0] ?? '')) ? [i] : [])
   const tables: StatementTable[] = []
   for (const marker of markers) {
@@ -152,12 +157,16 @@ export async function readConsolidatedWorkbook(file: File): Promise<Consolidated
   const buffer = await file.arrayBuffer()
   if (!safeXlsxEnvelope(buffer)) return null
   const XLSX = await import('xlsx')
-  const workbook = XLSX.read(buffer, { type: 'array', bookVBA: false })
+  const workbook = XLSX.read(buffer, { type: 'array', bookVBA: false, cellFormula: true })
   if (workbook.SheetNames.length !== 1) return null
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
   const ref = sheet['!ref']; if (!ref) return null
   const range = XLSX.utils.decode_range(ref)
   if (range.e.c !== 0 || range.e.r > 20000) return null
+  for (let r = range.s.r; r <= range.e.r; r++) {
+    const cell = sheet[XLSX.utils.encode_cell({ r, c: range.s.c })]
+    if (cell?.f !== undefined) throw new UnsafeWorkbookFormulaError()
+  }
   const cells = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, raw: false, defval: '' })
   return parseConsolidated(cells.map(r => String(r[0] ?? '')).join('\n'))
 }

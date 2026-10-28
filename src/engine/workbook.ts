@@ -2,6 +2,7 @@
 // Tutto nel telefono: il file non esce dal dispositivo. Le formule non si eseguono: si usano i valori salvati nel file,
 // e un testo che comincia con «=» resta testo. Limiti di dimensione per file ostili (ZIP gonfiati, fogli enormi).
 import { safeXlsxEnvelope } from './consolidatedStatement'
+import { FORMULA_CELL_MARKER } from './importCsv'
 
 export interface WorkbookSheet { name: string; csv: string }
 
@@ -29,7 +30,8 @@ export async function readWorkbookSheets(file: File): Promise<WorkbookSheet[] | 
   const buffer = await file.arrayBuffer()
   if (!safeXlsxEnvelope(buffer)) return null
   const XLSX = await import('xlsx')
-  const workbook = XLSX.read(buffer, { type: 'array', bookVBA: false, cellDates: true, cellFormula: false, cellHTML: false })
+  // SheetJS legge le formule come metadati, non le esegue. Il risultato in cache non è attendibile per l'import.
+  const workbook = XLSX.read(buffer, { type: 'array', bookVBA: false, cellDates: true, cellFormula: true, cellHTML: false })
   if (!workbook.SheetNames.length || workbook.SheetNames.length > WORKBOOK_LIMITS.sheets) return null
   const out: WorkbookSheet[] = []
   for (const name of workbook.SheetNames) {
@@ -37,8 +39,17 @@ export async function readWorkbookSheets(file: File): Promise<WorkbookSheet[] | 
     if (!ref) continue
     const range = XLSX.utils.decode_range(ref)
     if (range.e.r > WORKBOOK_LIMITS.rows || range.e.c >= WORKBOOK_LIMITS.columns) return null
-    const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true, defval: '', blankrows: false })
-    if (rows.some(r => r.some(c => cellText(c).trim()))) out.push({ name: name.slice(0, 100), csv: rowsToCsv(rows) })
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true, defval: '', blankrows: true })
+    let hasContent = false
+    for (let ri = 0; ri < rows.length; ri++) {
+      const row = rows[ri]
+      for (let ci = 0; ci < row.length; ci++) {
+        const addr = XLSX.utils.encode_cell({ r: range.s.r + ri, c: range.s.c + ci })
+        if (sheet[addr]?.f !== undefined) { row[ci] = FORMULA_CELL_MARKER; hasContent = true }
+        else if (cellText(row[ci]).trim()) hasContent = true
+      }
+    }
+    if (hasContent) out.push({ name: name.slice(0, 100), csv: rowsToCsv(rows) })
   }
   return out
 }

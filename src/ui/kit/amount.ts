@@ -27,7 +27,24 @@ export function groupTyping(raw: string, lang: string): string {
   const other = dec === ',' ? '.' : ','
   let s = raw.replace(/[\s  ']/g, '')
   const neg = s.startsWith('-')
-  if (!s.includes(dec) && s.endsWith(other)) s = s.slice(0, -1) + dec
+  const sign = neg ? '-' : ''
+  const unsigned = neg ? s.slice(1) : s
+  const validGrouping = (value: string) => {
+    const parts = value.split(other)
+    return parts.length > 1 && /^[0-9]{1,3}$/.test(parts[0]) && parts.slice(1).every(p => /^[0-9]{3}$/.test(p))
+  }
+  if (!unsigned.includes(dec) && unsigned.includes(other)) {
+    const parts = unsigned.split(other)
+    if (parts.length === 2 && parts[1] === '') s = sign + parts[0] + dec
+    else if (parts.length === 2 && /^[0-9]{1,2}$/.test(parts[1]) && (parts[0] === '' || /^\d+$/.test(parts[0])))
+      s = sign + parts[0] + dec + parts[1]
+    else if (validGrouping(unsigned)) s = sign + parts.join('')
+    else return s
+  } else if (unsigned.includes(dec)) {
+    const parts = unsigned.split(dec)
+    if (parts.length !== 2 || parts[1].includes(other) || (parts[0].includes(other) && !validGrouping(parts[0]))) return s
+    if (parts[0].includes(other)) s = sign + parts[0].split(other).join('') + dec + parts[1]
+  }
   const at = s.indexOf(dec)
   const int = (at < 0 ? s : s.slice(0, at)).replace(/\D/g, '').replace(/^0+(?=\d)/, '')
   const frac = at < 0 ? null : s.slice(at + 1).replace(/\D/g, '')

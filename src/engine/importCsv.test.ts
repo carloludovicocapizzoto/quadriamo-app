@@ -43,6 +43,26 @@ describe('CSV: dati e delimitatori validi', () => {
     expect(readStatement('Date;Description;"Amount (EUR, USD, GBP, CHF)"\r\n17/10/2026;Coffee;-2,50').rows)
       .toEqual([{ date: '2026-10-17', description: 'Coffee', amount: -2.5, currency: null }])
   })
+  it('esclude e spiega una riga con dare e avere entrambi non zero', () => {
+    const csv = 'Quando;Cosa;Uscita;Entrata;Commissione\n28/10/2026;QA Contraddittorio;10,00;20,00;1,00\n'
+    const res = readStatement(csv, { date: 0, description: [1], amount: null, debit: 2, credit: 3, currency: null, fee: 4, state: null })
+    expect(res.rows).toEqual([])
+    expect(res.skipped).toEqual([{ line: 2, reason: 'debit_credit_both' }])
+  })
+  it.each([
+    ['10,00;;1,00', -11], [';20,00;1,00', 19], ['-10,00;;1,00', -11], [';-20,00;1,00', 19],
+  ])('mantiene il segno e la commissione quando una sola colonna e non nulla (%s)', (values, amount) => {
+    const csv = `Quando;Cosa;Uscita;Entrata;Commissione\n28/10/2026;QA Riga;${values}\n`
+    const res = readStatement(csv, { date: 0, description: [1], amount: null, debit: 2, credit: 3, currency: null, fee: 4, state: null })
+    expect(res.rows.map(r => r.amount)).toEqual([amount])
+    expect(res.skipped).toEqual([])
+  })
+  it.each(['0,00;0,00;0,00', ';;'])('spiega le righe con solo zeri o campi vuoti (%s)', values => {
+    const csv = `Quando;Cosa;Uscita;Entrata;Commissione\n28/10/2026;QA Vuoto;${values}\n`
+    const res = readStatement(csv, { date: 0, description: [1], amount: null, debit: 2, credit: 3, currency: null, fee: 4, state: null })
+    expect(res.rows).toEqual([])
+    expect(res.skipped).toEqual([{ line: 2, reason: 'zero' }])
+  })
   it('esporta e rilegge virgole, virgolette e tutti i ritorni a capo', () => {
     for (const description of ['One\rTwo', 'One\nTwo', 'One\r\nTwo', 'One,"Two";Three']) {
       const csv = toCsv({ version: 1, settings: defaultSettings({ firstMonth: { year: 2026, month: 10 } }), transactions: [{ id: 'a', date: '2026-10-17', category: 'groceries', amount: -12.5, description }] }, { category: () => 'Food', bucket: () => '' })

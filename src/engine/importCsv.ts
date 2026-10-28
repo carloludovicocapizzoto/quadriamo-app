@@ -11,6 +11,29 @@ export interface ColumnMap { date: number; description: number[]; amount: number
 const SEPARATORS = [',', ';', '\t'] as const
 const SAMPLE_LINES = 50
 
+export const CSV_LIMITS = { bytes: 5 * 1024 * 1024, rows: 20_000, columns: 60, cellChars: 2_000 } as const
+export const FORMULA_CELL_MARKER = '\u0000QRM_FORMULA_CELL\u0000'
+export type CsvParseErrorCode = 'size' | 'rows' | 'columns' | 'cell' | 'malformed'
+export type CsvParseLimits = { bytes: number; rows: number; columns: number; cellChars: number }
+export class CsvParseError extends Error {
+  readonly code: CsvParseErrorCode
+  constructor(code: CsvParseErrorCode) { super(`CSV rejected: ${code}`); this.name = 'CsvParseError'; this.code = code }
+}
+
+function withinUtf8Limit(text: string, limit: number): boolean {
+  if (text.length > limit) return false
+  let bytes = 0
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i)
+    if (c <= 0x7f) bytes++
+    else if (c <= 0x7ff) bytes += 2
+    else if (c >= 0xd800 && c <= 0xdbff && i + 1 < text.length && text.charCodeAt(i + 1) >= 0xdc00 && text.charCodeAt(i + 1) <= 0xdfff) { bytes += 4; i++ }
+    else bytes += 3
+    if (bytes > limit) return false
+  }
+  return true
+}
+
 /**
  * Il separatore della tabella, non della prima riga: le banche mettono spesso prima delle intestazioni righe descrittive
  * (titolo, conto, periodo) con virgole o punti e virgola. Vince il separatore che dà più righe con lo stesso numero di celle.
@@ -37,30 +60,58 @@ function detectSeparator(text: string): string {
   return best
 }
 
-/** Divide un CSV in righe e celle, rispettando le virgolette. Riconosce il separatore (, ; o tab). */
-export function parseCsv(text: string): string[][] {
+/** Divide un CSV limitato in righe e celle. Rifiuta input malformati o eccessivi senza restituire risultati parziali. */
+export function parseCsv(text: string, requested?: Partial<CsvParseLimits>): string[][] {
+  const limits = {
+    bytes: Math.min(CSV_LIMITS.bytes, requested?.bytes ?? CSV_LIMITS.bytes),
+    rows: Math.min(CSV_LIMITS.rows, requested?.rows ?? CSV_LIMITS.rows),
+    columns: Math.min(CSV_LIMITS.columns, requested?.columns ?? CSV_LIMITS.columns),
+    cellChars: Math.min(CSV_LIMITS.cellChars, requested?.cellChars ?? CSV_LIMITS.cellChars),
+  }
+  if (!withinUtf8Limit(text, limits.bytes)) throw new CsvParseError('size')
   const clean = text.replace(/^\uFEFF/, '')
   const sep = detectSeparator(clean)
   const rows: string[][] = []
-  let row: string[] = [], cell = '', q = false
+  let row: string[] = [], cell = '', quoted = false, afterQuote = false, recordCount = 0
+  const append = (value: string) => {
+    cell += value
+    if (cell.length > limits.cellChars) throw new CsvParseError('cell')
+  }
+  const finishCell = () => {
+    if (row.length >= limits.columns) throw new CsvParseError('columns')
+    row.push(cell.trim()); cell = ''; afterQuote = false
+  }
+  const finishRow = () => {
+    finishCell()
+    recordCount++
+    if (recordCount > limits.rows) throw new CsvParseError('rows')
+    if (row.some(c => c.length > 0)) rows.push(row)
+    row = []
+  }
   for (let i = 0; i < clean.length; i++) {
     const ch = clean[i]
-    if (q) {
-      if (ch === '"' && clean[i + 1] === '"') { cell += '"'; i++ }
-      else if (ch === '"') q = false
-      else cell += ch
-    } else if (ch === '"') q = true
-    else if (ch === sep) { row.push(cell); cell = '' }
-    else if (ch === '\n' || ch === '\r') {
-      if (ch === '\r' && clean[i + 1] === '\n') i++
-      row.push(cell); cell = ''
-      if (row.some(c => c.trim())) rows.push(row.map(c => c.trim()))
-      row = []
-    } else cell += ch
+    if (quoted) {
+      if (ch === '"' && clean[i + 1] === '"') { append('"'); i++ }
+      else if (ch === '"') { quoted = false; afterQuote = true }
+      else append(ch)
+      continue
+    }
+    if (afterQuote) {
+      if (ch === sep) finishCell()
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && clean[i + 1] === '\n') i++; finishRow() }
+      else if (ch === ' ' || (ch === '\t' && sep !== '\t')) { /* whitespace after a quoted field */ }
+      else throw new CsvParseError('malformed')
+      continue
+    }
+    if (ch === '"') {
+      if (cell.trim().length) throw new CsvParseError('malformed')
+      cell = ''; quoted = true
+    } else if (ch === sep) finishCell()
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && clean[i + 1] === '\n') i++; finishRow() }
+    else append(ch)
   }
-  if (q) return []
-  row.push(cell)
-  if (row.some(c => c.trim())) rows.push(row.map(c => c.trim()))
+  if (quoted) throw new CsvParseError('malformed')
+  if (afterQuote || cell.length || row.length) finishRow()
   return rows
 }
 
@@ -121,7 +172,7 @@ export function parseBankAmount(s: string): number | null {
   return r.ok ? r.value : null
 }
 
-export type SkipReason = 'date' | 'amount' | 'precision' | 'grouping' | 'range' | 'summary' | 'pending' | 'zero'
+export type SkipReason = 'date' | 'amount' | 'precision' | 'grouping' | 'range' | 'summary' | 'pending' | 'zero' | 'debit_credit_both' | 'formula'
 /** Una riga non importata: il numero di record nel file (l'intestazione è 1) e il perché. Mai righe sparite in silenzio. */
 export interface SkippedRow { line: number; reason: SkipReason }
 /** Cosa serve sapere prima di importare: la convenzione dei numeri o l'ordine delle date, con qualche esempio dal file. */
@@ -142,10 +193,15 @@ const SUMMARY = /^(totale|total|totaux|totales|summe|saldo|balance|solde)\b/i
 
 /** Trasforma il CSV in righe pronte per la casella "Da confermare": convenzioni decise sull'intero file, righe escluse sempre spiegate. */
 export function readStatement(text: string, map?: ColumnMap, opts: StatementOptions = {}): {
-  rows: ImportRow[]; map: ColumnMap | null; header: string[]; error?: 'multiple_sections'
+  rows: ImportRow[]; map: ColumnMap | null; header: string[]; error?: 'multiple_sections' | CsvParseErrorCode
   skipped: SkippedRow[]; needs?: StatementNeeds; mark: DecimalMark | null; order: DateOrder | null
 } {
-  const all = parseCsv(text)
+  let all: string[][]
+  try { all = parseCsv(text) }
+  catch (error) {
+    const code = error instanceof CsvParseError ? error.code : 'malformed'
+    return { rows: [], map: null, header: [], error: code, skipped: [], mark: null, order: null }
+  }
   const headerIdx = all.findIndex(r => detectColumns(r) != null)
   const top = headerIdx >= 0 ? headerIdx : tableStart(all)
   const header = all[top] ?? []
@@ -173,6 +229,7 @@ export function readStatement(text: string, map?: ColumnMap, opts: StatementOpti
   body.forEach((r, i) => {
     const line = first + i + 1
     const skip = (reason: SkipReason) => { skipped.push({ line, reason }) }
+    if (r.includes(FORMULA_CELL_MARKER)) return skip('formula')
     if (cols.state != null && r[cols.state] && !/completed|completat|eseguit|booked|contabilizzat/i.test(r[cols.state])) return skip('pending')
     const date = parseDateWith(r[cols.date] ?? '', order)
     if (!date) return skip(SUMMARY.test(r[cols.date] ?? '') || r.some(c => SUMMARY.test(c)) && !/\d{1,4}[/.-]\d/.test(r[cols.date] ?? '') ? 'summary' : 'date')
@@ -188,6 +245,7 @@ export function readStatement(text: string, map?: ColumnMap, opts: StatementOpti
     } else {
       const d = read(cols.debit), c = read(cols.credit), why = bad(d) ?? bad(c)
       if (why) return skip(problem(why))
+      if (d?.ok && c?.ok && d.minor !== 0 && c.minor !== 0) return skip('debit_credit_both')
       minor = c?.ok && c.minor ? Math.abs(c.minor) : d?.ok && d.minor ? -Math.abs(d.minor) : null
       if (minor == null) return skip('zero')
     }

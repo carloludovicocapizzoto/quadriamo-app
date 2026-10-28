@@ -324,6 +324,75 @@ await step('confermato, entra nella casella', async () => {
   await click(byText('/^Importa 1 movimento$/', '.bs button')); await sleep(600)
 }, `/QA Excel Spesa/.test(document.body.innerText)`)
 
+console.log('Regressioni indipendenti della review')
+const localPayload = () => js(`new Promise(ok => { const r = indexedDB.open('keyval-store'); r.onsuccess = () => {
+  const s = r.result.transaction('keyval').objectStore('keyval'), keys = s.getAllKeys(); keys.onsuccess = () => {
+    const key = keys.result.find(k => typeof k === 'string' && k.startsWith('quadriamo.data.v2/') && JSON.parse(decodeURIComponent(k.slice('quadriamo.data.v2/'.length)))[2] === 'local')
+    const q = s.get(key); q.onsuccess = () => ok(q.result?.payload ?? null)
+  }
+} })`)
+await step('incollare 2.35 in italiano mantiene 2,35 nel campo React', async () => {
+  await click(`document.querySelector('.tab-add')`); await sleep(500)
+  await js(`document.querySelector('.tx-sheet .amount-input')?.focus()`)
+  await cdp('Input.insertText', { text: '2.35' }); await sleep(150)
+}, `document.querySelector('.tx-sheet .amount-input')?.value === '2,35' && document.querySelector('.tx-sheet .amount-input')?.getAttribute('aria-invalid') !== 'true'`)
+await step('il movimento incollato viene salvato esattamente a 2,35', async () => {
+  await setField('.tx-sheet .txs-row input:not([type=date])', 'QA-B-paste-235')
+  await click(`document.querySelector('.cat-pick button')`)
+  await click(`document.querySelector('.tx-sheet button[type=submit]')`); await sleep(700)
+}, `!document.querySelector('.tx-sheet') && (document.body.innerText.includes('2,35') || document.body.innerText.includes('2.35'))`)
+if (!(await localPayload())?.transactions?.some(t => t.description === 'QA-B-paste-235' && t.amount === 2.35))
+  throw Error('the pasted amount was not persisted exactly as 2.35')
+const seedLegacyFingerprint = () => js(`new Promise((ok, bad) => { const r = indexedDB.open('keyval-store'); r.onerror = () => bad(r.error); r.onsuccess = () => {
+  const db = r.result, read = db.transaction('keyval').objectStore('keyval'), keys = read.getAllKeys(); keys.onerror = () => bad(keys.error); keys.onsuccess = () => {
+    const key = keys.result.find(k => typeof k === 'string' && k.startsWith('quadriamo.data.v2/') && JSON.parse(decodeURIComponent(k.slice('quadriamo.data.v2/'.length)))[2] === 'local')
+    if (!key) return bad(Error('local test cache missing'))
+    const q = read.get(key); q.onerror = () => bad(q.error); q.onsuccess = async () => {
+      const env = q.result, payload = { ...env.payload, importDone: { ...env.payload.importDone, '2026-10-28|-5.00|qa legacy collision': new Date().toISOString() } }
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(payload)))
+      const checksum = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('')
+      const tx = db.transaction('keyval', 'readwrite'); tx.objectStore('keyval').put({ ...env, payload, checksum }, key); tx.oncomplete = ok; tx.onerror = () => bad(tx.error)
+    }
+  }
+} })`)
+
+const tooLargeCsv = join(fixtureDir, 'qa-too-large.csv')
+writeFileSync(tooLargeCsv, Buffer.alloc(5 * 1024 * 1024 + 1, 97))
+const inboxBeforeLarge = (await localPayload())?.inbox?.length ?? 0
+await step('il CSV oltre 5 MB viene rifiutato prima dell anteprima e non cambia la casella', async () => {
+  await selectCsv(tooLargeCsv); await sleep(150)
+}, `/CSV troppo grande/.test(document.body.innerText)`)
+if ((await localPayload())?.inbox?.length !== inboxBeforeLarge) throw Error('oversized CSV changed the inbox')
+
+const formulaWb = XLSX.utils.book_new()
+const formulaSheet = XLSX.utils.aoa_to_sheet([['Date', 'Description', 'Amount'],
+  ['2026-10-28', 'QA formula cache', -99], ['2026-10-29', 'QA valore normale', -3]])
+formulaSheet.C2 = { t: 'n', f: '1+1', v: -99 }
+XLSX.utils.book_append_sheet(formulaWb, formulaSheet, 'Movimenti')
+const formulaFile = join(fixtureDir, 'qa-formula.xlsx')
+writeFileSync(formulaFile, XLSX.write(formulaWb, { type: 'buffer', bookType: 'xlsx' }))
+await step('la formula non entra nella preview e il valore in cache viene segnalato', async () => {
+  await selectCsv(formulaFile); await sleep(700)
+}, inSheet(`/Movimenti da importare[^0-9]*1[^0-9]/`) + ` && ` + inSheet(`/valore calcolato da una formula Excel non verificabile/`))
+if ((await localPayload())?.inbox?.some(i => i.description === 'QA valore normale')) throw Error('formula preview wrote data before confirmation')
+await step('solo la riga non formula entra nella casella dopo conferma', async () => {
+  await click(byText('/^Importa 1 movimento$/', '.bs button')); await sleep(500)
+}, `/QA valore normale/.test(document.body.innerText) && !/QA formula cache/.test(document.body.innerText)`)
+
+const legacyCsv = join(fixtureDir, 'qa-legacy-collision.csv')
+writeFileSync(legacyCsv, 'Date,Description,Amount,Currency\n2026-10-28,QA Legacy Collision,-5.00,USD\n')
+await step('un fingerprint storico ambiguo viene mostrato come scelta esplicita', async () => {
+  await seedLegacyFingerprint(); await cdp('Page.reload'); await sleep(700); await selectCsv(legacyCsv); await sleep(700)
+}, inSheet(`/Possible matches to earlier imports|Possibili corrispondenze con vecchie importazioni/`) + ` && ` + inSheet(`/Movimenti da importare[^0-9]*1[^0-9]/`))
+await step('il candidato storico entra nella casella con azioni per tenerlo o ignorarlo', async () => {
+  await click(byText('/^Importa 1 movimento$/', '.bs button')); await sleep(500)
+}, `/QA Legacy Collision/.test(document.body.innerText) && /La vecchia impronta/.test(document.body.innerText) && !![...document.querySelectorAll('.inbox-item button')].find(b => /Aggiungi comunque/.test(b.textContent))`)
+await step('l’utente decide di tenerlo e il reimport è idempotente', async () => {
+  await click(byText('/^Aggiungi comunque$/', '.inbox-item button')); await sleep(500)
+  await selectCsv(legacyCsv); await sleep(700)
+}, inSheet(`/Già importati/`) + ` && !!document.querySelector('.bs .btn.primary')?.disabled`)
+await click(byText('/^Annulla$/', '.bs button'))
+
 if (errors.length) { console.error(`\nErrori nella pagina:\n  ${errors.join('\n  ')}`); await done(1) }
 console.log(`\nTutti i ${n} passi sono andati bene.`)
 await done(0)
