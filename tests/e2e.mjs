@@ -34,7 +34,8 @@ async function step(name, action, check) {
   n++
   if (action) await action()
   for (let i = 0; i < 30; i++) { if (await js(check)) { console.log(`  ✓ ${n}. ${name}`); return } await sleep(200) }
-  console.error(`  ✗ ${n}. ${name}\n    condizione non vera: ${check}`)
+  const page = await js(`(document.body.innerText || '').replace(/\\s+/g, ' ').slice(0, 900)`).catch(() => '')
+  console.error(`  ✗ ${n}. ${name}\n    condizione non vera: ${check}\n    pagina: ${page}`)
   await done(1)
 }
 const click = sel => js(`(() => { const el = ${sel}; el?.click(); return !!el })()`)
@@ -42,7 +43,8 @@ const clickNative = async selector => {
   const root = await cdp('DOM.getDocument')
   const node = await cdp('DOM.querySelector', { nodeId: root.result.root.nodeId, selector })
   if (!node.result.nodeId) return false
-  await cdp('DOM.scrollIntoViewIfNeeded', { nodeId: node.result.nodeId })
+  // al centro dello schermo: appena dentro il bordo, il pulsante può stare sotto la barra in basso (fissa) e il clic la colpirebbe
+  await js(`document.querySelector(${JSON.stringify(selector)})?.scrollIntoView({ block: 'center' })`); await sleep(150)
   const box = await cdp('DOM.getBoxModel', { nodeId: node.result.nodeId })
   const q = box.result.model.content, x = (q[0] + q[2] + q[4] + q[6]) / 4, y = (q[1] + q[3] + q[5] + q[7]) / 4
   await cdp('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y })
@@ -253,10 +255,10 @@ const annualRows = ['Savings Accounts Summaries,,,,', 'Instant Access Savings (E
   '"Jan 06, 2026",QA-B-repeat,Other,-1.25,90.00', '"Jan 06, 2026",QA-B-repeat,Other,-1.25,88.75',
   'Total,,,,' ]
 const annualCsv = join(fixtureDir, 'synthetic-year.csv'); writeFileSync(annualCsv, annualRows.join('\n'))
-const selectCsv = async () => {
+const selectCsv = async (file = annualCsv) => {
   const root = await cdp('DOM.getDocument'), input = await cdp('DOM.querySelector', { nodeId: root.result.root.nodeId, selector: 'input[type=file]' })
   if (!input.result.nodeId) throw Error('input CSV non trovato')
-  await cdp('DOM.setFileInputFiles', { nodeId: input.result.nodeId, files: [annualCsv] })
+  await cdp('DOM.setFileInputFiles', { nodeId: input.result.nodeId, files: [file] })
 }
 await step('il CSV annuale mostra tutte le date e conserva le righe ripetute', async () => {
   await js(`location.hash = '#/analysis/transactions'`); await sleep(500); await selectCsv()
@@ -267,6 +269,28 @@ await step('la conferma inserisce tutte le date annuali nella casella globale', 
 await step('un secondo caricamento dello stesso CSV non crea duplicati', async () => {
   await selectCsv(); await sleep(250); await clickNative('[aria-label="Controlla l’importazione"] button')
 }, `/0 movimenti da confermare · 14 già importati/.test(document.body.innerText) && /15/.test(document.querySelector('h3')?.innerText ?? '')`)
+
+console.log('Importazione CSV generica (Fase 2E)')
+// «-1.234» e «-1,234» senza altri indizi: l'app chiede come sono scritti i numeri, poi esclude la riga incompatibile con il motivo
+const ambiguousCsv = join(fixtureDir, 'synthetic-ambiguous.csv')
+writeFileSync(ambiguousCsv, 'Data;Descrizione;Importo\n28/10/2026;QA Affitto 2E;-1.234\n29/10/2026;QA Caffè 2E;-1,234\n')
+const inSheet = re => `${re}.test(document.querySelector('.bs')?.innerText ?? '')`
+const chooseComma = async () => {
+  await click(`document.querySelector('.bs [role=radio]')`); await sleep(200)
+  await click(byText('/^Continua$/', '.bs button')); await sleep(400)
+}
+await step('un CSV ambiguo non si importa da solo: chiede come sono scritti i numeri, con l’esempio letto nei due modi', async () => {
+  await js(`location.hash = '#/analysis/transactions'`); await sleep(500); await selectCsv(ambiguousCsv); await sleep(600)
+}, inSheet(`/può voler dire due importi diversi/`) + ` && ` + inSheet(`/-1[.]234 → -1[.]234,00/`))
+await step('con la virgola per i decimali: −1.234,00 € e la riga «-1,234» esclusa con il motivo', chooseComma,
+  inSheet(`/Movimenti da importare[^0-9]*1[^0-9]/`) + ` && ` + inSheet(`/Riga 3 · più decimali di quelli della valuta/`))
+await step('confermato, entra nella casella con l’importo esatto', async () => {
+  await click(byText('/^Importa 1 movimento$/', '.bs button')); await sleep(600)
+}, `/QA Affitto 2E/.test(document.body.innerText) && /1[.]234,00/.test(document.body.innerText) && !/QA Caffè 2E/.test(document.body.innerText)`)
+await step('reimportare lo stesso file non crea doppioni', async () => {
+  await selectCsv(ambiguousCsv); await sleep(600); await chooseComma()
+}, inSheet(`/Già importati/`) + ` && !!document.querySelector('.bs .btn.primary')?.disabled`)
+await click(byText('/^Annulla$/', '.bs button'))
 
 if (errors.length) { console.error(`\nErrori nella pagina:\n  ${errors.join('\n  ')}`); await done(1) }
 console.log(`\nTutti i ${n} passi sono andati bene.`)
