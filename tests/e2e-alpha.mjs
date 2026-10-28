@@ -94,7 +94,8 @@ async function signIn(d, who, password = USERS[who].password) {
 const appReady = `!!document.querySelector('.tabbar')`
 async function signOut(d) {
   await d.js(`location.hash = '#/profile/security'`); await sleep(900)
-  await d.click(`[...document.querySelectorAll('button, a, [role=button]')].find(b => /^Esci(?! dagli)/.test(b.textContent.trim()))`)
+  const clicked = await d.click(`[...document.querySelectorAll('button, a, [role=button]')].find(b => /^Esci(?! dagli)/.test(b.textContent.trim()))`)
+  if (!clicked || !await until(d, `!!document.querySelector('.gate.gate-welcome')`, 10000)) throw Error('logout sintetico non completato')
 }
 async function finishSetup(d) {
   await d.click(`document.querySelector('.onboarding .btn.primary')`); await sleep(700)
@@ -206,12 +207,47 @@ await step(A1, '429: l\'app aspetta il tempo indicato, tiene la modifica, poi si
   await addExpense(A1, '5,10')
 }, async () => amounts((await remote('A')).document).includes(5.1), 20)
 await step(A1, '413: documento troppo grande, messaggio chiaro e dati conservati sul telefono', async () => {
+  await api('fault', { route: 'rpc/qsync_write_v2', kind: 'tooLarge', persistent: true })
+  await addExpense(A1, '6,30')
+  await A1.js(`location.hash = '#/profile/sync'`)
+}, async () => {
+  const s = await remote('A'), body = await A1.text()
+  return s.write413.filter(x => x.httpStatus === 413).length >= 1
+    && !amounts(s.document).includes(6.3)
+    && /supera il limite del server/.test(body) && /restano salvate qui/.test(body)
+}, 15)
+await step(A1, 'il 413 persistente resta visibile dopo una richiesta manuale aggiuntiva', async () => {
+  await A1.click(byText('/Riprova la sincronizzazione/'))
+}, async () => {
+  const s = await remote('A'), body = await A1.text()
+  return s.write413.filter(x => x.httpStatus === 413).length >= 2
+    && !amounts(s.document).includes(6.3)
+    && /supera il limite del server/.test(body) && /restano salvate qui/.test(body)
+}, 10)
+await step(A1, 'dopo la correzione del 413 persistente la stessa spesa arriva una volta', async () => {
+  await api('clear-fault', { route: 'rpc/qsync_write_v2' })
+  await A1.click(byText('/Riprova la sincronizzazione/'))
+}, async () => amounts((await remote('A')).document).filter(x => x === 6.3).length === 1, 15)
+let transient413Start = 0
+await step(A1, 'rifiuto 413 una tantum registrato, senza scrittura cloud e con avviso persistente', async () => {
+  transient413Start = (await remote('A')).write413.length
   await api('fault', { route: 'rpc/qsync_write_v2', kind: 'tooLarge' })
-  await addExpense(A1, '6,30'); await sleep(2500)
-  await A1.js(`location.hash = '#/profile/sync'`); await sleep(600)
-}, `/supera il limite del server/.test(document.body.innerText) && /restano salvate qui/.test(document.body.innerText)`, 12)
-await step(A1, 'riprovando, la spesa da 6,30 € arriva', async () => { await A1.click(byText('/Riprova la sincronizzazione/')) },
-  async () => amounts((await remote('A')).document).includes(6.3), 15)
+  await A1.js(`location.hash = '#/'`)
+  await addExpense(A1, '6,31')
+}, async () => {
+  const s = await remote('A'), body = await A1.text()
+  return s.write413.length === transient413Start + 1
+    && !amounts(s.document).includes(6.31)
+    && /supera il limite del server/.test(body) && /restano salvate qui/.test(body)
+}, 10)
+await step(A1, 'retry dopo il 413 una tantum: cloud aggiornato una volta e avviso rimosso', async () => {
+  await A1.click(byText('/Riprova la sincronizzazione/'))
+}, async () => {
+  const s = await remote('A'), body = await A1.text()
+  return s.write413.length === transient413Start + 1
+    && amounts(s.document).filter(x => x === 6.31).length === 1
+    && !/supera il limite del server/.test(body)
+}, 15)
 await step(A1, 'risposta persa dopo il salvataggio: stessa operazione ripetuta, una revisione sola', async () => {
   await api('fault', { route: 'rpc/qsync_write_v2', kind: 'drop' }); await A1.js(`location.hash = '#/'`); await sleep(400); await addExpense(A1, '8,40')
 }, async () => { const s = await remote('A'); return amounts(s.document).filter(x => x === 8.4).length === 1 && s.log.filter(l => l.status === 'applied').length === s.revision }, 20)
@@ -225,9 +261,22 @@ await step(A2, 'entro come B: budget nuovo, niente dati di A', async () => { awa
 await step(A2, 'B configura il suo budget e lo sincronizza', () => finishSetup(A2), async () => (await A2.js(appReady)) && (await remote('B')).revision >= 1, 15)
 await step(A2, 'il cloud di B non contiene i dati di A', null, async () => { const b = (await remote('B')).document; return amounts(b).length === 0 && !b.settings.events.some(e => /Netflix/.test(e.title)) })
 await step(A2, 'esco da B e rientro come A: tornano i dati di A, nessuno di B', async () => {
-  await signOut(A2); await sleep(1500)
+  await A1.offline(true) // evita che il secondo dispositivo consumi la lettura ritardata del server finto
+  await signOut(A2)
+  if (!await until(A2, `!!document.querySelector('.gate.gate-welcome')`, 10000)) throw Error('logout da B non completato')
+  const readsBefore = server.state.reads.filter(x => x.user === USERS.A.id).length
+  await api('fault', { route: 'rpc/qsync_read', kind: 'delay', ms: 2000 })
   await signIn(A2, 'A')
-  await sleep(1500); await toList(A2)
+  const deadline = Date.now() + 5000
+  while (server.state.reads.filter(x => x.user === USERS.A.id).length <= readsBefore && Date.now() < deadline) await sleep(50)
+  if (server.state.reads.filter(x => x.user === USERS.A.id).length <= readsBefore) throw Error('lettura cloud ritardata non avviata')
+  await toList(A2)
+  const intermediate = await A2.text()
+  if (!await A2.js(appReady) || !/12,50/.test(intermediate) || /Prova-B|B-only/.test(intermediate))
+    throw Error('copia locale di A non visibile o dati di B visibili mentre il cloud è lento')
+  if (!await until(A2, appReady, 10000)) throw Error('ritorno da A non ha completato il caricamento dopo la risposta cloud')
+  await toList(A2)
+  await A1.offline(false)
 }, `${appReady} && /12,50/.test(document.body.innerText)`, 15)
 
 console.log('Sessione scaduta e rete assente')
@@ -240,6 +289,7 @@ await step(A1, 'la sessione finisce con l\'app aperta: l\'avviso compare subito 
 }, ended, 12)
 await step(A1, 'riaprendo l\'app l\'avviso è ancora lì', async () => { await A1.offline(false); await A1.reload() }, ended, 12)
 let rejectedRefreshesBefore = 0
+let refreshAttemptsBefore = 0
 let accessExpiresAt = 0
 await step(A1, 'revoca reale con app aperta: il rinnovo rifiutato mostra l\'avviso senza chiudere la pagina', async () => {
   // Un JWT breve permette di osservare il rinnovo fallito entro il timeout E2E;
@@ -259,20 +309,50 @@ await step(A1, 'revoca reale con app aperta: il rinnovo rifiutato mostra l\'avvi
   if (!session.owner || typeof session.remaining !== 'number' || session.remaining < 1 || session.remaining > 15) throw Error('sessione sintetica nuova non verificata')
   accessExpiresAt = session.expiresAt
   rejectedRefreshesBefore = server.state.rejectedRefreshes
+  refreshAttemptsBefore = server.state.refreshAttemptsByUser.get(USERS.A.id) ?? 0
   await api('revoke', { user: 'A' })
   if ([...server.state.refresh.values()].includes(USERS.A.id)) throw Error('refresh sintetico non revocato')
 }, async () => server.state.rejectedRefreshes > rejectedRefreshesBefore
-  && server.state.lastRejectedRefreshAt >= accessExpiresAt && await A1.js(ended), 150)
+  && server.state.lastRejectedRefreshAt >= accessExpiresAt && await A1.js(ended)
+  && (server.state.refreshAttemptsByUser.get(USERS.A.id) ?? 0) - refreshAttemptsBefore <= 5, 150)
+let closedRefreshAttemptsBefore = 0
+let closedRejectedRefreshesBefore = 0
+let closedReopenedAt = 0
 await step(A2, 'sessione finita ad app chiusa (rinnovo revocato): l\'avviso compare alla riapertura', async () => {
   // Profilo separato dal test di revoca con app aperta: evita che il suo stato Auth influenzi questo caso.
-  await api('tokens', { seconds: 3 }); await signOut(A2)
-  if (!await until(A2, `!!document.querySelector('input[type=email]') || !!document.querySelector('.gate-cta')`, 10000)) throw Error('logout sintetico non completato')
-  await signIn(A2, 'A'); await sleep(2500)
-  // prima si chiude l'app, poi si revoca: con l'app aperta la chiusura della sessione cadrebbe mentre la pagina si chiude
-  await A2.cdp('Page.navigate', { url: 'about:blank' }); await sleep(300)
-  await api('revoke', { user: 'A' }); await sleep(3500)                     // token scaduto ad app chiusa
+  closedRefreshAttemptsBefore = server.state.refreshAttemptsByUser.get(USERS.A.id) ?? 0
+  closedRejectedRefreshesBefore = server.state.rejectedRefreshes
+  await api('tokens', { seconds: 3600 }); await signOut(A2)
+  if (!await until(A2, `!!document.querySelector('.gate.gate-welcome')`, 10000)) throw Error('logout sintetico non completato')
+  await signIn(A2, 'A')
+  if (!await until(A2, appReady, 10000)) throw Error('login sintetico non completato prima della chiusura')
+  const session = await A2.js(`(() => {
+    const k = Object.keys(localStorage).find(x => x.startsWith('q.auth.v1/'))
+    const record = k && JSON.parse(localStorage.getItem(k)), v = record?.session ? JSON.parse(record.session) : null
+    if (!v || v.user?.id !== ${JSON.stringify(USERS.A.id)} || !v.refresh_token) return null
+    const expiresAt = Math.floor(Date.now() / 1000) + 2
+    v.expires_at = expiresAt; v.expires_in = 2; record.session = JSON.stringify(v)
+    localStorage.setItem(k, JSON.stringify(record))
+    return { expiresAt }
+  })()`)
+  if (!session || typeof session.expiresAt !== 'number') throw Error('sessione sintetica non valida')
+  // Simula la prossima scadenza solo nei metadati locali, poi chiude prima di avviare il rinnovo.
+  await A2.cdp('Page.navigate', { url: 'about:blank' })
+  await api('revoke', { user: 'A' })
+  if ([...server.state.refresh.values()].includes(USERS.A.id) || ![...server.state.revokedRefresh.values()].includes(USERS.A.id)) throw Error('refresh sintetico non revocato a pagina chiusa')
+  while (Date.now() <= session.expiresAt * 1000 + 100) await sleep(50)
+  closedReopenedAt = Date.now()
   await A2.open()
-}, ended, 30)
+  await A2.cdp('Page.bringToFront')
+  if (await A2.js(`document.visibilityState`) !== 'visible') throw Error('Chrome non mantiene visibile il contesto riaperto')
+}, async () => {
+  const endedNow = await A2.js(ended)
+  const rejected = server.state.rejectedRefreshes - closedRejectedRefreshesBefore
+  const attempts = (server.state.refreshAttemptsByUser.get(USERS.A.id) ?? 0) - closedRefreshAttemptsBefore
+  if (endedNow && Date.now() > closedReopenedAt + 10000 && rejected === 0)
+    throw Error(`session ended senza richiesta refresh rifiutata; attempts=${attempts}, revoked=${server.state.revokedRefresh.size}`)
+  return endedNow && rejected > 0 && server.state.lastRejectedRefreshAt >= closedReopenedAt && attempts <= 5
+}, 30)
 await api('tokens', { seconds: 3600 })
 await step(A1, 'server irraggiungibile durante l\'accesso: messaggio comprensibile', async () => {
   await api('down', { down: true }); await signIn(A1, 'A')
