@@ -98,7 +98,7 @@ export function ProfileScreen({ page, onPage, data, streak, today, onLogin, onAd
               if ('href' in i) return <Row key={n} label={label} href={i.href(ctx)} />
               if ('toggle' in i) return <Row key={n} label={label} toggle={i.toggle(ctx)} />
               if ('action' in i) return <Row key={n} label={label} onClick={() => i.action(ctx)} />
-              return <Row key={n} label={label} value={i.info(ctx)} />
+              return <Row key={n} label={label} value={i.info(ctx)} detail={i.detail?.(ctx)} />
             })}
           </Group>
         )

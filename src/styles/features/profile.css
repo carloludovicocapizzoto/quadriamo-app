@@ -105,3 +105,6 @@ label.row:has(> .row-cover) { position: relative; }
 .alpha-report ul { margin: 0; padding-left: 18px; display: grid; gap: var(--s1); }
 .alpha-details { white-space: pre-wrap; overflow-wrap: anywhere; font: var(--t-cap)/1.5 ui-monospace, "SF Mono", Menlo, monospace;
   background: var(--fill); border-radius: var(--r-md); padding: var(--s3); margin: 0; }
+/* Regole automatiche: la freccia ruota quando l'elenco è aperto */
+.row-chev-open { transform: rotate(90deg); }
+.group-list + .rules-list { margin-top: var(--s3); }

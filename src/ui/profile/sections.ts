@@ -5,6 +5,7 @@ import type { ProfilePage } from '../../profile/pages'
 import type { Dict } from '../../i18n/en'
 import type { Prefs } from '../../app/prefs'
 import { cloudFeature } from '../../features'
+import { ENV } from '../../env'
 
 export interface Ctx {
   signedIn: boolean
@@ -22,7 +23,7 @@ export interface Ctx {
   openAdmin: () => void
 }
 
-export type Item = { label: keyof Dict; when?: (c: Ctx) => boolean; danger?: boolean } & (
+export type Item = { label: keyof Dict; when?: (c: Ctx) => boolean; danger?: boolean; detail?: (c: Ctx) => string } & (
   | { page: ProfilePage; value?: (c: Ctx) => string | null }
   | { href: (c: Ctx) => string }
   | { toggle: (c: Ctx) => { on: boolean; onChange: (on: boolean) => void } }
@@ -34,7 +35,9 @@ export const SECTIONS: { title: keyof Dict; items: Item[] }[] = [
   { title: 'prof.sec.account', items: [
     { page: 'personal', label: 'prof.personal' },
     { page: 'security', label: 'prof.security', when: c => c.signedIn },
-    { page: 'plan', label: 'prof.plan' },
+    // nell'Alpha il pagamento non c'è: il piano è una riga sola, senza pagina
+    { page: 'plan', label: 'prof.plan', when: () => ENV.name !== 'alpha' },
+    { info: () => 'Free', label: 'prof.plan', detail: c => c.t('pro.notReady'), when: () => ENV.name === 'alpha' },
   ] },
   { title: 'prof.sec.budget', items: [
     { page: 'budget', label: 'prof.budget' },

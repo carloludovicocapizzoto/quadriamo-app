@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { seedRules } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import { newId } from '../../store/state'
+import { Icon } from '../Icon'
 import { categoryName } from '../names'
 import type { SettingsDraft } from './draft'
 
@@ -11,11 +12,18 @@ export function RulesSection({ d: { draft, edit } }: { d: SettingsDraft }) {
   const [showRules, setShowRules] = useState(false)
   const rules = draft.rules ?? seedRules()
   return (
-    <section className="card">
-      <h3 className="h-plain">{t('rules.title')}</h3>
-      <p className="muted small">{t('rules.hint')}</p>
-      <button className="link-btn" aria-expanded={showRules} onClick={() => setShowRules(!showRules)}>
-        {showRules ? t('rules.hide') : t('rules.show', { n: rules.length })}</button>
+    <section className="group">
+      {/* il titolo è già quello della pagina: qui solo la spiegazione e due righe */}
+      <p className="muted small group-intro">{t('rules.hint')}</p>
+      <ul className="group-list">
+        <li><button type="button" className="row" aria-expanded={showRules} onClick={() => setShowRules(!showRules)}>
+          <span className="row-main"><span>{showRules ? t('rules.hide') : t('rules.show', { n: rules.length })}</span></span>
+          <Icon name="chevron" size={18} className={`row-chev${showRules ? ' row-chev-open' : ''}`} />
+        </button></li>
+        <li><button type="button" className="row" onClick={() => { setShowRules(true); edit(s => {
+          s.rules = [{ id: newId(), keyword: '', category: draft.categories.find(c => c.type === 'expense')?.id ?? '', paidFrom: null, enabled: true }, ...rules]
+        }) }}><span className="row-main"><span className="add-row">+ {t('rules.add')}</span></span></button></li>
+      </ul>
       {showRules && (
         <ul className="edit-list rules-list">
           {rules.map((r, i) => (
@@ -34,9 +42,6 @@ export function RulesSection({ d: { draft, edit } }: { d: SettingsDraft }) {
         ))}
       </ul>
       )}
-      <button className="btn" onClick={() => { setShowRules(true); edit(s => {
-        s.rules = [{ id: newId(), keyword: '', category: draft.categories.find(c => c.type === 'expense')?.id ?? '', paidFrom: null, enabled: true }, ...rules]
-      }) }}>+ {t('rules.add')}</button>
       </section>
   )
 }
