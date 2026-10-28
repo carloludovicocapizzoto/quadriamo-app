@@ -1067,6 +1067,7 @@ const en = {
   'cap.adv.cover': "At this pace the month ends at −{deficit}: you can cover it with “{part}” ({available} available) without touching the protected part.",
   'cap.adv.protectedOnly': "At this pace the month ends at −{deficit} and the usable part ({usable}) is not enough: the rest is protected. Better slow down variable spending.",
   'cap.adv.emergencyLow': "Your emergency fund covers {months} months of essential spending: at least 3 is usually recommended.",
+  'cap.adv.emergencyLowOne': "Your emergency fund covers 1 month of essential spending: at least 3 is usually recommended.",
   'cap.adv.used': "You have used {pct}% of your starting capital.",
   'hw.capital': "Capital",
   'hw.capitalD': "What you have set aside, protected and usable",

@@ -52,6 +52,11 @@ a.btn { text-decoration: none; color: var(--text); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .chip { border: 0; background: var(--fill); color: var(--text); border-radius: var(--r-md); padding: 0 14px; min-height: 40px; cursor: pointer; font-size: 15px; }
 .chip.on { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+/* ---------- il simbolo della valuta: sempre secondario, una regola sola per tutta l'app ----------
+   nelle righe e nei blocchi: stessa altezza delle cifre, più chiaro e sottile; nei numeri protagonisti: metà altezza */
+.cur { color: var(--muted); font-weight: 400; margin: 0 .08em; }
+.hero-amount .cur, .outcome-amount .cur, .w-big .cur, .cs-hero .cur { font-size: .5em; font-weight: inherit; letter-spacing: -.02em; }
+
 .mini-chip { height: 30px; padding: 0 10px; border-radius: var(--r-md); border: 0; font: inherit; font-size: var(--t-sm); font-weight: 600; cursor: pointer;
   color: var(--muted); background: var(--fill); }
 .mini-chip.on { color: var(--on-accent); background: var(--accent); }

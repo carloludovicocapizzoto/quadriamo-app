@@ -14,6 +14,8 @@ export function Segmented<T extends string>({ options, value, onChange, label, r
   const item = role === 'tablist' ? 'tab' : 'radio'
   const box = useRef<HTMLDivElement>(null)
   const [pill, setPill] = useState<{ x: number; w: number } | null>(null)
+  // la prima posizione è immediata: la pillola scivola solo quando si cambia voce, non all'apertura
+  const [moving, setMoving] = useState(false)
   useLayoutEffect(() => {
     const el = box.current
     if (!el) return
@@ -22,11 +24,12 @@ export function Segmented<T extends string>({ options, value, onChange, label, r
       if (b) setPill(p => p?.x === b.offsetLeft && p.w === b.offsetWidth ? p : { x: b.offsetLeft, w: b.offsetWidth })
     }
     place()
+    const raf = requestAnimationFrame(() => setMoving(true))
     // la lingua, il carattere o lo schermo cambiano le larghezze: la pillola segue
-    if (typeof ResizeObserver === 'undefined') return
+    if (typeof ResizeObserver === 'undefined') return () => cancelAnimationFrame(raf)
     const ro = new ResizeObserver(place)
     ro.observe(el); el.querySelectorAll(':scope > button').forEach(b => ro.observe(b))
-    return () => ro.disconnect()
+    return () => { cancelAnimationFrame(raf); ro.disconnect() }
   }, [at, options.length])
   return (
     <div ref={box} className={`segmented ${className}`} role={role} aria-label={label} style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
@@ -36,7 +39,7 @@ export function Segmented<T extends string>({ options, value, onChange, label, r
           {o.label}{!!o.badge && <em className="seg-badge">{o.badge}</em>}
         </button>
       ))}
-      <span className="seg-pill" style={pill ? { left: 0, width: pill.w, transform: `translateX(${pill.x}px)` }
+      <span className="seg-pill" style={pill ? { left: 0, width: pill.w, transform: `translateX(${pill.x}px)`, ...(moving ? {} : { transition: 'none' }) }
         : { width: `calc((100% - 8px) / ${options.length})`, transform: `translateX(${at * 100}%)` }} />
     </div>
   )

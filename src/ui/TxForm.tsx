@@ -9,6 +9,7 @@ import { SplitEditor } from './SplitEditor'
 import { BUCKET_COLORS, CURRENCIES, bucketName, categoryName } from './names'
 import { AmountInput } from './kit/AmountInput'
 import { amountText } from './kit/amount'
+import { decimalText } from './kit/decimal'
 
 const GROUPS: CategoryType[] = ['expense', 'income', 'saving']
 
@@ -73,7 +74,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
     if (parsed == null || parsed <= 0) errs.push(t('tx.errAmount'))
     if (!category) errs.push(t('tx.errCategory'))
     if (!date) errs.push(t('tx.errDate'))
-    if (isIncome && incomeTo === CUSTOM && !splitOk(incomeSplit)) errs.push(t('split.err', { n: String(Math.round(splitTotal(incomeSplit) * 1000) / 10).replace('.', ',') }))
+    if (isIncome && incomeTo === CUSTOM && !splitOk(incomeSplit)) errs.push(t('split.err', { n: decimalText(Math.round(splitTotal(incomeSplit) * 1000) / 10, lang) }))
     setErrors(errs)
     if (errs.length) return
     onSave({
@@ -116,7 +117,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
         {parsed != null && parsed > 0 && foreign && (
           <p className={`txs-fx small ${rate == null ? 'bad-text' : 'muted'}`}>
             {rate == null ? t('tx.noRate', { cur: currency })
-              : t('tx.converted', { amount: money(parsed * rate, settings.currency), rate: String(rate).replace('.', ',') })}
+              : t('tx.converted', { amount: money(parsed * rate, settings.currency), rate: decimalText(rate, lang) })}
           </p>
         )}
 

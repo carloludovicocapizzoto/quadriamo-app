@@ -3,11 +3,11 @@ import { useState } from 'react'
 import { todayIso } from '../../engine'
 import { fetchRates, FX_SUPPORTED, neededCurrencies } from '../../fx'
 import { useI18n } from '../../i18n/core'
-import { parseAmount } from '../kit/amount'
+import { decimalText, parseDecimal } from '../kit/decimal'
 import type { SettingsDraft } from './draft'
 
 export function FxSection({ d: { data, draft, edit, flash } }: { d: SettingsDraft }) {
-  const { t, date } = useI18n()
+  const { t, date, lang } = useI18n()
   const [extraFx, setExtraFx] = useState<string[]>([])
   const [fxBusy, setFxBusy] = useState(false)
   async function updateRates(extra: string[] = []) {
@@ -27,11 +27,12 @@ export function FxSection({ d: { data, draft, edit, flash } }: { d: SettingsDraf
         {fxList.map(c => (
           <li key={c}><label className="row">
             <span className="row-main"><span className="fx-code">1 {c}</span>
-              <small>{t('settings.fxAuto')}: {data.settings.fxRates[c] != null ? String(data.settings.fxRates[c]).replace('.', ',') : '—'} {draft.currency}</small></span>
+              <small>{t('settings.fxAuto')}: {data.settings.fxRates[c] != null ? decimalText(data.settings.fxRates[c], lang) : '—'} {draft.currency}</small></span>
             <input className="row-input row-fx" aria-label={`${t('settings.fxManual')} ${c}`} placeholder={t('settings.fxManual')} inputMode="decimal"
-                   defaultValue={draft.fxManual?.[c] != null ? String(draft.fxManual[c]).replace('.', ',') : ''}
+                   defaultValue={draft.fxManual?.[c] != null ? decimalText(draft.fxManual[c], lang) : ''}
                    onChange={e => edit(s => {
-                     const v = parseAmount(e.target.value)
+                     // un cambio: un punto o una virgola soli sono sempre decimali (1.206 non è milleduecentosei)
+                     const v = parseDecimal(e.target.value)
                      const m = { ...(s.fxManual ?? {}) }
                      if (v && v > 0) m[c] = v; else delete m[c]
                      s.fxManual = m

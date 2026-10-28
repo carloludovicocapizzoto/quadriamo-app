@@ -1067,6 +1067,7 @@ const es: Dict = {
   'cap.adv.cover': "A este ritmo el mes acaba en −{deficit}: puedes cubrirlo con «{part}» ({available} disponibles) sin tocar la parte protegida.",
   'cap.adv.protectedOnly': "A este ritmo el mes acaba en −{deficit} y la parte utilizable ({usable}) no basta: el resto está protegido. Mejor frenar los gastos variables.",
   'cap.adv.emergencyLow': "El fondo de emergencia cubre {months} meses de gastos esenciales: suelen recomendarse al menos 3.",
+  'cap.adv.emergencyLowOne': "El fondo de emergencia cubre 1 mes de gastos esenciales: suelen recomendarse al menos 3.",
   'cap.adv.used': "Has usado el {pct}% de tu capital inicial.",
   'hw.capital': "Capital",
   'hw.capitalD': "Lo que tienes apartado, protegido y utilizable",

@@ -4,23 +4,25 @@ import { useI18n } from '../../i18n/core'
 import { Icon } from '../Icon'
 import { AmountInput } from '../kit/AmountInput'
 import { parseAmount } from '../kit/amount'
+import { decimalText } from '../kit/decimal'
 import { Money } from '../kit/Money'
 import { Sheet } from '../kit/Sheet'
 import { BUCKET_COLORS, bucketName } from '../names'
 import type { SettingsDraft } from './draft'
 
-const pct = (share: number) => String(Math.round(share * 1000) / 10).replace('.', ',')
+// la quota in percentuale, con i decimali della lingua
+const pct = (share: number, lang: string) => decimalText(Math.round(share * 1000) / 10, lang)
 
 export function RuleSection({ d: { draft, edit, errors } }: { d: SettingsDraft }) {
-  const { t } = useI18n()
-  const [shares, setShares] = useState(() => draft.buckets.map(b => pct(b.share)))
+  const { t, lang } = useI18n()
+  const [shares, setShares] = useState(() => draft.buckets.map(b => pct(b.share, lang)))
   const [open, setOpen] = useState<number | null>(null)
   const total = Math.round(draft.buckets.reduce((a, b) => a + b.share, 0) * 1000) / 10
   const bad = errors.includes('sharesNot100')
   const check = (
     <p className={`group-foot ${bad ? 'bad-text' : 'good-text'}`}>
       <Icon name={bad ? 'alert' : 'check'} size={15} className="inline-ico" />
-      {bad ? t('settings.ruleBad', { n: String(total).replace('.', ',') }) : t('settings.ruleOk')}
+      {bad ? t('settings.ruleBad', { n: decimalText(total, lang) }) : t('settings.ruleOk')}
     </p>
   )
   const b = open == null ? null : draft.buckets[open]

@@ -17,7 +17,9 @@ export function I18nProvider({ start, children }: { start: I18nStart; children: 
       return s
     },
     // separatore delle migliaia anche a 4 cifre (1.330,11 €), come nelle app delle banche
-    money: (n, currency) => new Intl.NumberFormat(lang, { style: 'currency', currency, useGrouping: 'always' as unknown as boolean }).format(n),
+    // il meno è quello tipografico (−), come nei movimenti e nei testi, non il trattino di Intl
+    money: (n, currency) => new Intl.NumberFormat(lang, { style: 'currency', currency, useGrouping: 'always' as unknown as boolean })
+      .formatToParts(n).map(p => p.type === 'minusSign' ? '−' : p.value).join(''),
     date: (iso, opts = { day: 'numeric', month: 'short' }) =>
       new Intl.DateTimeFormat(lang, { ...opts, timeZone: 'UTC' }).format(new Date(iso + 'T00:00:00Z')),
   }), [lang, dict])
