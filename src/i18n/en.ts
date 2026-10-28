@@ -321,6 +321,8 @@ const en = {
   'rules.add': 'Add rule',
   'rules.show': 'Show {n} rules',
   'rules.hide': 'Hide rules',
+  'rules.off': 'Off',
+  'rules.delete': 'Delete rule',
   'safe.perDay': '{amount} a day',
   'pay.title': 'Payday plan',
   'pay.first': "First of all: {amount} for {what}, outside the four parts.",

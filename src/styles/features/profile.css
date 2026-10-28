@@ -1,11 +1,4 @@
-.edit-list { list-style: none; padding: 0; margin: 8px 0 12px; display: grid; gap: 8px; }
-.edit-list li { display: grid; grid-template-columns: 1.4fr 1fr 1fr 44px; gap: 6px; align-items: center; }
-@media (max-width: 560px) {
-  .edit-list li { grid-template-columns: 1fr 1fr 44px; }
-  .edit-list li > :first-child { grid-column: 1 / -1; }
-  .edit-list li { padding-bottom: 8px; border-bottom: 1px solid var(--line); }
-}
-/* conferma dell'eliminazione di una categoria: occupa tutta la riga, sulla superficie (niente card) */
+/* conferma dell'eliminazione di una categoria, nel suo pannello */
 .cat-delete { grid-column: 1 / -1; display: grid; gap: var(--s2); padding: var(--s3) 0 var(--s2); border-top: 1px solid var(--line); }
 .cat-delete p { margin: 0; }
 .cat-uses { display: grid; gap: 2px; }
@@ -32,8 +25,6 @@ label.row:has(> .row-cover) { position: relative; }
 .cat-end { justify-content: space-between; }
 .cat-end .link-btn { color: var(--bad); }
 .wizard .settings > .group:first-child { margin-top: 0; }
-.edit-list.rules-list li { grid-template-columns: 1.2fr 1fr auto 44px; }
-@media (max-width: 560px) { .edit-list.rules-list li { grid-template-columns: 1fr 1fr 44px; } .edit-list.rules-list li > :first-child { grid-column: auto; } }
 .legal { margin-top: 14px; }
 .legal a { color: inherit; }
 .push-toggle { display: grid; gap: 6px; justify-items: start; margin-top: 8px; }
@@ -107,4 +98,6 @@ label.row:has(> .row-cover) { position: relative; }
   background: var(--fill); border-radius: var(--r-md); padding: var(--s3); margin: 0; }
 /* Regole automatiche: la freccia ruota quando l'elenco è aperto */
 .row-chev-open { transform: rotate(90deg); }
-.group-list + .rules-list { margin-top: var(--s3); }
+/* l'elenco continua le due righe sopra, senza una seconda linea */
+.group-list + .rules-list { border-top: 0; }
+.rule-off .row-main > span:first-child, .rule-off .row-value { color: var(--faint); }

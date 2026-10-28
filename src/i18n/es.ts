@@ -321,6 +321,8 @@ const es: Dict = {
   'rules.add': 'Añadir regla',
   'rules.show': 'Ver {n} reglas',
   'rules.hide': 'Ocultar reglas',
+  'rules.off': 'Desactivada',
+  'rules.delete': 'Eliminar regla',
   'safe.perDay': '{amount} al día',
   'pay.title': 'Plan del día de cobro',
   'pay.first': "Antes de nada: {amount} para {what}, fuera de las cuatro partes.",
