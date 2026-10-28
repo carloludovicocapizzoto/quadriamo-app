@@ -28,6 +28,7 @@ export function EventDetail({ event, date: day, currency, today, onToggle, onEdi
       <p className="eyebrow-small">{t(k(`ev.kind.${event.kind}`))}</p>
       <h2>{event.title}</h2>
       {event.amount != null && <Money className="outcome-amount" value={side === 'in' ? event.amount : -event.amount} currency={currency} />}
+      {event.kind === 'bill' && <p className="small muted">{t('ev.estimateHint')}</p>}
       <p className="outcome-label">{date(day, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
       <ul className="ed-facts">
         <li><span>{t('ev.repeat')}</span><b>{repeat}</b></li>

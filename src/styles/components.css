@@ -172,12 +172,12 @@ kbd { display: inline-block; min-width: 22px; padding: 2px 6px; margin-left: 4px
 .now-list { list-style: none; margin: 0; padding: 0; display: grid; }
 .now-list > li { animation: fade-up var(--d-spring) var(--spring-gentle) both; }
 .now-list > li + li .now-row { border-top: 1px solid var(--line); }
-.now-row { display: flex; align-items: center; gap: var(--s3); padding: 10px 0; cursor: pointer; border-radius: var(--r-md); outline-offset: 2px; }
+.now-row { display: flex; align-items: flex-start; gap: var(--s3); padding: 10px 0; cursor: pointer; border-radius: var(--r-md); outline-offset: 2px; min-width: 0; }
 .now-row:active { transform: scale(.99); transition: transform var(--d-fast) var(--ease); }
 .now-main { flex: 1; min-width: 0; display: grid; gap: 1px; }
-.now-main > span { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.now-main small { font-size: var(--t-sm); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.now-end { flex-shrink: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.now-main > span { font-weight: 500; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; }
+.now-main small { font-size: var(--t-sm); color: var(--muted); line-height: 1.4; white-space: normal; overflow-wrap: anywhere; }
+.now-end { flex-shrink: 1; min-width: 0; max-width: 40%; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .now-ico { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 9px; background: var(--fill); color: var(--text); }
 .now-ico.warn { background: var(--warn-bg); color: var(--warn); }
 .now-ico.bad { background: var(--bad-bg); color: var(--bad); }

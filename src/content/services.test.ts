@@ -11,6 +11,10 @@ describe('catalogo degli abbonamenti', () => {
     expect(searchServices('music').map(s => s.id)).toEqual(expect.arrayContaining(['apple-music', 'amazon-music']))
     expect(searchServices('DISNEY')[0].id).toBe('disney-plus')
     expect(searchServices('sole')[0].id).toBe('sole24ore')
+    expect(searchServices('google ai plus')[0].id).toBe('google-gemini')
+    expect(searchServices('GEMINI')[0].id).toBe('google-gemini')
+    expect(searchServices('apple care plus')[0].id).toBe('applecare-plus')
+    expect(searchServices('Github Copilot')[0].id).toBe('github-copilot')
     expect(searchServices('zzzz')).toEqual([])
   })
   it('senza testo: i più usati, o tutta la categoria', () => {
