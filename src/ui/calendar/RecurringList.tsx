@@ -40,6 +40,13 @@ export function RecurringList() {
     return n === 0 ? t('sub.renewToday') : n === 1 ? t('sub.renewTomorrow') : n <= 7 ? t('sub.renewIn', { n }) : t('rec.next', { date: date(next, { day: 'numeric', month: 'short' }) })
   }
   const cycle = (e: CalEvent) => t(k(`rp.${presetOf(e.repeat)}`))
+  const recurringMeta = (e: CalEvent, next: string | null, left: number | null) => [
+    cycle(e),
+    ...(e.kind === 'bill' ? [t('ev.estimateTag')] : []),
+    next ? t('rec.next', { date: date(next, { day: 'numeric', month: 'short' }) }) : t('rec.ended'),
+    ...(left != null && left > 0 ? [t('ev.left', { n: left })] : []),
+    ...(e.until ? [t('rec.last', { date: date(e.until, { day: 'numeric', month: 'short', year: 'numeric' }) })] : []),
+  ].join(' · ')
 
   return <>
     {subs.length > 0 && <section className="subs-head">
@@ -73,7 +80,8 @@ export function RecurringList() {
       <ul className="group-list">{others.map(({ e, next, left }) => (
         <li key={e.id}><button className={`row${e.active ? '' : ' muted'}`} onClick={() => { tap(); setEdit(e) }}>
           <span className="row-main"><span>{e.title}</span>
-            <small>{cycle(e)}{next ? ` · ${t('rec.next', { date: date(next, { day: 'numeric', month: 'short' }) })}` : ` · ${t('rec.ended')}`}{left != null && left > 0 ? ` · ${t('ev.left', { n: left })}` : ''}</small></span>
+            <small>{recurringMeta(e, next, left)}</small>
+            {e.kind === 'bill' && e.amount != null && e.amount > 0 && <small>{t('ev.estimateLine', { month: money(yearlyCost(e) / 12, cur), year: money(yearlyCost(e), cur) })}</small>}</span>
           {e.amount != null && <span className="row-value"><Money value={e.amount} currency={cur} /></span>}
           <Icon name="chevron" size={18} className="row-chev" />
         </button></li>))}
