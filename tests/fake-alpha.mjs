@@ -42,8 +42,9 @@ export function startFakeAlpha({ port = 4192, fixtures }) {
   const origin = `http://${HOST}:${port}`, controlToken = randomUUID()
   const state = {
     root: Object.values(roots)[0], tokenSeconds: 3600, down: false,
-    heads: new Map(), receipts: new Map(), refresh: new Map(), passwords: new Map(Object.values(USERS).map(u => [u.id, u.password])),
-    faults: [], denied: [], log: [],
+    heads: new Map(), receipts: new Map(), refresh: new Map(), rejectedRefreshes: 0, lastRejectedRefreshAt: 0,
+    refreshAttemptsByUser: new Map(), revokedRefresh: new Map(), passwords: new Map(Object.values(USERS).map(u => [u.id, u.password])),
+    faults: [], denied: [], log: [], write413: [], reads: [],
   }
   const user = id => { const u = Object.values(USERS).find(x => x.id === id); return u && { id: u.id, aud: 'authenticated', role: 'authenticated', email: u.email,
     email_confirmed_at: '2026-10-01T00:00:00Z', app_metadata: { provider: 'email', providers: ['email'] }, user_metadata: {}, identities: [{ id: u.id, provider: 'email' }],
@@ -60,7 +61,7 @@ export function startFakeAlpha({ port = 4192, fixtures }) {
   }
   const head = id => state.heads.get(id) ?? { revision: 0, document: null }
   /** Un guasto programmato per la prossima chiamata a `route` (una volta sola). */
-  const fault = route => { const i = state.faults.findIndex(f => f.route === route); return i < 0 ? null : state.faults.splice(i, 1)[0] }
+  const fault = route => { const i = state.faults.findIndex(f => f.route === route); if (i < 0) return null; return state.faults[i].persistent ? state.faults[i] : state.faults.splice(i, 1)[0] }
 
   async function body(req) { const chunks = []; for await (const c of req) chunks.push(c); return Buffer.concat(chunks).toString('utf8') }
   const send = (res, status, data, headers = {}) => {
@@ -81,8 +82,10 @@ export function startFakeAlpha({ port = 4192, fixtures }) {
           return send(res, 400, { code: 400, error_code: 'invalid_credentials', msg: 'Invalid login credentials' })
         return send(res, 200, session(u.id))
       }
+      const knownOwner = state.refresh.get(b.refresh_token) ?? state.revokedRefresh.get(b.refresh_token)
+      if (knownOwner) state.refreshAttemptsByUser.set(knownOwner, (state.refreshAttemptsByUser.get(knownOwner) ?? 0) + 1)
       const id = state.refresh.get(b.refresh_token)
-      if (!id) return send(res, 400, { code: 400, error_code: 'refresh_token_not_found', msg: 'Invalid Refresh Token: Refresh Token Not Found' })
+      if (!id) { state.rejectedRefreshes++; state.lastRejectedRefreshAt = Date.now(); return send(res, 400, { code: 400, error_code: 'refresh_token_not_found', msg: 'Invalid Refresh Token: Refresh Token Not Found' }) }
       state.refresh.delete(b.refresh_token)
       return send(res, 200, session(id))
     }
@@ -112,6 +115,8 @@ export function startFakeAlpha({ port = 4192, fixtures }) {
     if (f?.kind === 'gateway429') return gatewayError(res, 429, 'ALPHA_RATE_LIMITED', f.retryAfter ?? 2)
     if (f?.kind === '500') return gatewayError(res, 500, 'ALPHA_UPSTREAM_FAILED')
     if (route === 'rpc/qsync_read') {
+      state.reads.push({ user: id })
+      if (f?.kind === 'delay') await new Promise(resolve => setTimeout(resolve, Math.max(0, Math.min(5000, Number(f.ms) || 0))))
       const h = head(id)
       return send(res, 200, { protocol: 2, revision: String(h.revision), mode: 'protected', document: h.document, activationAllowed: false })
     }
@@ -125,8 +130,11 @@ export function startFakeAlpha({ port = 4192, fixtures }) {
       if (f?.kind === 'rate') return send(res, 200, { protocol: 2, status: 'rejected', operation: op, code: 'QSYNC_RATE_LIMITED', httpStatus: 429,
         details: { retry_after_seconds: f.retryAfter ?? 2, max_operations: 200, max_payload_bytes: 33554432 }, replay: false })
       const bytes = Buffer.byteLength(b.p_document_json ?? '')
-      if (f?.kind === 'tooLarge' || bytes > DOCUMENT_MAX_BYTES) return send(res, 200, { protocol: 2, status: 'rejected', operation: op,
-        code: 'QSYNC_DOCUMENT_TOO_LARGE', httpStatus: 413, details: { max_bytes: DOCUMENT_MAX_BYTES, document_bytes: bytes }, replay: false })
+      if (f?.kind === 'tooLarge' || bytes > DOCUMENT_MAX_BYTES) {
+        state.write413.push({ user: id, status: 'rejected', httpStatus: 413 })
+        return send(res, 200, { protocol: 2, status: 'rejected', operation: op,
+          code: 'QSYNC_DOCUMENT_TOO_LARGE', httpStatus: 413, details: { max_bytes: DOCUMENT_MAX_BYTES, document_bytes: bytes }, replay: false })
+      }
       const h = head(id)
       let response
       if (String(h.revision) !== b.p_expected_revision) response = { protocol: 2, status: 'conflict', revision: String(h.revision), operation: op, replay: false }
@@ -191,15 +199,16 @@ export function startFakeAlpha({ port = 4192, fixtures }) {
     const b = req.method === 'POST' ? JSON.parse(await body(req) || '{}') : {}
     switch (url.pathname) {
       case '/__e2e/fault': state.faults.push(b); return send(res, 200, { ok: true })
+      case '/__e2e/clear-fault': state.faults = state.faults.filter(f => f.route !== b.route); return send(res, 200, { ok: true })
       case '/__e2e/down': state.down = !!b.down; return send(res, 200, { ok: true })
       case '/__e2e/tokens': state.tokenSeconds = b.seconds ?? 3600; return send(res, 200, { ok: true })
-      case '/__e2e/revoke': for (const [k, v] of state.refresh) if (v === USERS[b.user].id) state.refresh.delete(k); return send(res, 200, { ok: true })
+      case '/__e2e/revoke': for (const [k, v] of state.refresh) if (v === USERS[b.user].id) { state.revokedRefresh.set(k, v); state.refresh.delete(k) } return send(res, 200, { ok: true })
       case '/__e2e/root': {                                   // solo una delle cartelle dichiarate all'avvio, per nome
         if (typeof b.fixture !== 'string' || !Object.hasOwn(roots, b.fixture)) return send(res, 400, { message: 'unknown fixture' })
         state.root = roots[b.fixture]; return send(res, 200, { ok: true })
       }
       case '/__e2e/state': { const id = USERS[url.searchParams.get('user')]?.id; const h = head(id)
-        return send(res, 200, { revision: h.revision, document: h.document, denied: state.denied, log: state.log.filter(x => x.user === id) }) }
+        return send(res, 200, { revision: h.revision, document: h.document, denied: state.denied, log: state.log.filter(x => x.user === id), write413: state.write413.filter(x => x.user === id), reads: state.reads.filter(x => x.user === id) }) }
       case '/__e2e/invite': { const id = USERS[b.user].id; return send(res, 200, session(id)) }
       default: return send(res, 404, {})
     }

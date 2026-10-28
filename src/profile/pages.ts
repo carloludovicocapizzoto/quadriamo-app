@@ -5,7 +5,7 @@ export const PROFILE_PAGES = [
   'personal', 'security', 'plan',
   'budget', 'capital', 'recurring', 'yearCost', 'goals', 'documents', 'rules', 'shared',
   'appearance', 'language', 'inbox', 'notifications', 'motion', 'accessibility',
-  'data', 'delete',
+  'legal', 'data', 'delete',
   'help', 'feedback', 'licenses',
 ] as const
 export type ProfilePage = typeof PROFILE_PAGES[number]

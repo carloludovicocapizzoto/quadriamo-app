@@ -198,3 +198,6 @@
 .doc-status { margin: var(--s1) 0 0; font-size: var(--t-h2); font-weight: 600; }
 .doc-ico { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--fill); flex-shrink: 0; }
 .doc-preset { padding-left: 12px; }
+/* le scelte delle notifiche in un fieldset: senza cornice; spente (attenuate) quando le notifiche sono sospese */
+.notif-set { border: 0; margin: 0; padding: 0; min-width: 0; }
+.notif-set:disabled .group-list { opacity: .45; }

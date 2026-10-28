@@ -28,6 +28,11 @@ type RowProps = {
    | { toggle: { on: boolean; onChange: (on: boolean) => void; disabled?: boolean }; onClick?: never; href?: never }
    | { onClick?: never; href?: never; toggle?: never })
 
+/** L'ultima riga di un elenco: «+ Aggiungi…». Anche da sola, quando l'elenco è vuoto: la spiegazione va sopra. */
+export function AddRow({ label, onClick }: { label: string; onClick: () => void }) {
+  return <li><button className="row" onClick={() => { tap(); onClick() }}><span className="row-main"><span className="add-row">+ {label}</span></span></button></li>
+}
+
 export function Row({ label, value, detail, danger, morph, ...kind }: RowProps) {
   const id = useId()
   const body = <>

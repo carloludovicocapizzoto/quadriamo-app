@@ -6,6 +6,8 @@ import { duplicateCandidates, newId, planImport, type InboxItem } from '../store
 import { track } from '../beta/telemetry'
 import { Icon } from './Icon'
 import { bucketName, categoryName } from './names'
+import { parseConsolidated, readConsolidatedWorkbook, type ConsolidatedPreview } from '../engine/consolidatedStatement'
+import { todayIso, updateCapital } from '../engine'
 
 /** Importa un estratto conto e mostra la casella "Da confermare": tutto si può cambiare prima di confermare. */
 export function InboxView({ settings }: { settings: Settings }) {
@@ -13,15 +15,34 @@ export function InboxView({ settings }: { settings: Settings }) {
   const { state, dispatch, lease } = useStore()
   const inbox = state.data?.inbox ?? []
   const [msg, setMsg] = useState<{ text: string; bad?: boolean } | null>(null)
+  const [previewState, setPreviewState] = useState<{ owner: typeof lease; value: ConsolidatedPreview } | null>(null)
+  const preview = previewState && previewState.owner === lease && (!lease || lease.current()) ? previewState.value : null
+  const setPreview = (value: ConsolidatedPreview | null) => setPreviewState(value ? { owner: lease, value } : null)
+  const [depositTarget, setDepositTarget] = useState('none')
   const [suggested] = useState(() => new Map(inbox.map(i => [i.id, i.category])))   // per capire se l'utente ha corretto
 
   async function onFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file || !state.data) return
+    setPreview(null); setDepositTarget('none')
+    if (/\.xlsx$/i.test(file.name)) {
+      try {
+        const result = await readConsolidatedWorkbook(file)
+        if (lease && !lease.current()) return
+        if (!result) { setMsg({ text: t('imp.xlsx'), bad: true }); return }
+        setMsg(null); setPreview(result)
+      } catch { setMsg({ text: t('imp.xlsx'), bad: true }) }
+      return
+    }
+    if (/\.xls$/i.test(file.name)) { setMsg({ text: t('imp.xlsx'), bad: true }); return }
     const text = await file.text()
     if (lease && !lease.current()) return
-    const { rows } = readStatement(text)
+    const consolidated = parseConsolidated(text)
+    if (consolidated) { setMsg(null); setPreview(consolidated); return }
+    if (/(?:conto personale|personal account)\s*\(eur\)/i.test(text)) { setMsg({ text: t('imp.sections'), bad: true }); return }
+    const { rows, error } = readStatement(text)
+    if (error === 'multiple_sections') { setMsg({ text: t('imp.sections'), bad: true }); return }
     if (!rows.length) { setMsg({ text: t('imp.none'), bad: true }); return }
     const { items, duplicates } = planImport(state.data, rows)
     items.forEach(i => suggested.set(i.id, i.category))
@@ -35,22 +56,57 @@ export function InboxView({ settings }: { settings: Settings }) {
   const dups = state.data ? duplicateCandidates(state.data) : new Map<string, Transaction>()
   const ready = inbox.filter(i => i.category && !dups.has(i.id))      // "conferma tutti" salta i possibili doppioni
 
+  const confirmPreview = () => {
+    if (!preview || !state.data || (lease && !lease.current())) return
+    if (depositTarget !== 'none' && settings.currency !== 'EUR') return
+    const { items, duplicates } = planImport(state.data, preview.rows)
+    if (depositTarget !== 'none' && preview.depositBalance != null) {
+      const day = todayIso(), existing = state.data.settings.capital ?? { date: day, parts: [], history: [] }
+      if (depositTarget !== 'new' && !existing.parts.some(p => p.id === depositTarget)) return
+      const parts = depositTarget === 'new'
+        ? [...existing.parts, { id: newId(), name: t('imp.depositName'), kind: 'liquid' as const, policy: 'never' as const, amount: preview.depositBalance }]
+        : existing.parts.map(p => p.id === depositTarget ? { ...p, amount: preview.depositBalance! } : p)
+      dispatch({ type: 'setSettings', settings: { ...state.data.settings, capital: updateCapital(existing, parts, day) } })
+    }
+    items.forEach(i => suggested.set(i.id, i.category)); dispatch({ type: 'addInbox', items })
+    setMsg({ text: t('imp.result', { n: items.length, d: duplicates }) }); setPreview(null)
+  }
+  const importPreview = preview && <section className="card" role="region" aria-label={t('imp.previewTitle')}>
+    <h3>{t('imp.previewTitle')}</h3>
+    <p>{t('imp.period', { from: date(preview.periodStart, { day: 'numeric', month: 'short', year: 'numeric' }), to: date(preview.periodEnd, { day: 'numeric', month: 'short', year: 'numeric' }) })}</p>
+    <p>{t('imp.previewSummary', { n: preview.rows.length, transfers: preview.transfersExcluded })}</p>
+    {preview.repeatedRows > 0 && <p role="note">{t('imp.repeatedRows', { n: preview.repeatedRows })}</p>}
+    {preview.depositBalance != null && <>
+      <p>{t('imp.depositBalance', { amount: money(preview.depositBalance, 'EUR') })}</p>
+      <p>{t('imp.depositWarning')}</p>
+      {settings.currency !== 'EUR' && <p role="note">{t('imp.depositCurrency')}</p>}
+      <label>{t('imp.depositChoice')} <select value={depositTarget} disabled={settings.currency !== 'EUR'} onChange={e => setDepositTarget(e.target.value)}>
+        <option value="none">{t('imp.depositNone')}</option>
+        <option value="new">{t('imp.depositNew')}</option>
+        {(state.data?.settings.capital?.parts ?? []).map(p => <option value={p.id} key={p.id}>{p.name}</option>)}
+      </select></label>
+    </>}
+    <button className="btn" onClick={confirmPreview}>{t('imp.previewConfirm')}</button>
+    <button className="btn" onClick={() => setPreview(null)}>{t('imp.previewCancel')}</button>
+  </section>
+
   // niente da confermare: una riga sola per importare (il file si sceglie toccandola)
   if (!inbox.length) return (
-    <div className="import-row">
+    <div className="import-row">{importPreview}
       <label className="row"><Icon name="upload" size={20} className="row-lead" />
         <span className="row-main"><span>{t('imp.import')}</span><small>{t('imp.short')}</small></span>
         <Icon name="chevron" size={18} className="row-chev" />
-        <input type="file" accept=".csv,text/csv,text/plain" hidden onChange={onFile} /></label>
+        <input type="file" accept=".csv,.xlsx,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden onChange={onFile} /></label>
       {msg && <p className={msg.bad ? 'bad-text small' : 'good-text small'} role="status">{msg.text}</p>}
     </div>
   )
   return (
     <section className="card card-inbox">
+      {importPreview}
       <div className="card-head">
         <h3 className="h-plain">{t('inbox.title', { n: inbox.length })}</h3>
         <label className="btn small-btn"><Icon name="upload" size={16} />{t('imp.import')}
-          <input type="file" accept=".csv,text/csv,text/plain" hidden onChange={onFile} /></label>
+          <input type="file" accept=".csv,.xlsx,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden onChange={onFile} /></label>
       </div>
       <p className="muted small">{t('inbox.hint')}</p>
       {msg && <p className={msg.bad ? 'bad-text small' : 'good-text small'} role="status">{msg.text}</p>}

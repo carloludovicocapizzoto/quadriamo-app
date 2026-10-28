@@ -5,6 +5,7 @@ import { useStore } from '../../store/context'
 import { newId } from '../../store/state'
 import { parseAmount } from '../kit/amount'
 import { Icon } from '../Icon'
+import { AddRow } from '../kit/List'
 import { Meter } from '../kit/Meter'
 import { Money } from '../kit/Money'
 import { Outcome } from '../Outcome'
@@ -32,6 +33,7 @@ export function GoalsStrip({ goals, today, currency, titled = true }: { goals: G
       {list.length > 0 && <Outcome value={saved} currency={currency} label={t('goal.savedTotal')}
         totals={[{ label: t('goal.targetTotal'), value: target }, { label: t('goal.toGo'), value: Math.max(0, target - saved) },
           { label: t('goal.count'), value: String(list.length) }]} />}
+      {!list.length && <p className="muted small group-intro">{t('goal.emptyHint')}</p>}
       <ul className="group-list goal-list">
         {all.map(({ g, s }) => (
           <li key={g.id}><button className="row" onClick={() => { tap(); setOpen(g.id) }}>
@@ -47,9 +49,8 @@ export function GoalsStrip({ goals, today, currency, titled = true }: { goals: G
             <Icon name="chevron" size={18} className="row-chev" />
           </button></li>
         ))}
+        <AddRow label={t('goal.new')} onClick={() => setOpen('new')} />
       </ul>
-      <button className="link-btn goal-add" onClick={() => { tap(); setOpen('new') }}>+ {t('goal.new')}</button>
-      {!list.length && <p className="group-foot">{t('goal.emptyHint')}</p>}
 
       <Sheet open={open === 'new'} onClose={() => setOpen(null)} title={t('goal.new')}>
         {open === 'new' && <GoalForm today={today} currency={currency} onDone={() => setOpen(null)} />}

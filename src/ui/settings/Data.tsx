@@ -1,5 +1,5 @@
-// I dati: copia di sicurezza, esportazione CSV, ripristino e azzeramento; installazione dell'app.
-import { useEffect, type ChangeEvent } from 'react'
+// I dati: copia di sicurezza, esportazione CSV, ripristino e azzeramento; installazione dell'app. Ogni azione è una riga.
+import type { ChangeEvent } from 'react'
 import { CUSTOM, FIRST, SPLIT } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import { useStore } from '../../store/context'
@@ -16,8 +16,6 @@ export function DataSection({ d: { data, flash, reset }, wizard }: { d: Settings
   const { t } = useI18n()
   const { dispatch, lease, storage } = useStore()
   const { showSyncDetails } = useSync()
-  // qui il pannello della sincronizzazione resta sempre visibile: stato, esportazione delle copie e archivio di recupero
-  useEffect(() => { if (wizard) return; showSyncDetails?.(true); return () => showSyncDetails?.(false) }, [wizard, showSyncDetails])
   const exportBackup = () => downloadFile('quadriamo-backup', 'json', JSON.stringify(data, null, 2), 'application/json')
   const exportCsv = () => downloadFile('quadriamo-transactions', 'csv', '\ufeff' + toCsv(data, {
     category: id => categoryName(data.settings.categories.find(c => c.id === id), t),
@@ -52,24 +50,35 @@ export function DataSection({ d: { data, flash, reset }, wizard }: { d: Settings
     flash(t('settings.importOk'))
   }
 
-  return (
-    <section className="card">
-      <h3 className="h-plain">{t('settings.data')}</h3>
-      <p className="muted small"><Icon name="lock" size={14} />{t('settings.dataHint')}</p>
-      {wizard && <p className="small">{t('setup.importHint')}</p>}
-      <div className="stack-row">
-        {!wizard && <button className="btn" onClick={exportBackup}>{t('settings.export')}</button>}
-        {!wizard && <button className="btn" onClick={exportCsv}>{t('settings.exportCsv')}</button>}
-        <label className="btn">{t('settings.import')}
-          <input type="file" accept="application/json,.json" hidden onChange={importBackup} /></label>
-        {!wizard && <button className="btn danger" disabled={lease?.scope.kind === 'account'} title={lease?.scope.kind === 'account' ? t('cloud.clearBlocked') : undefined}
+  const account = lease?.scope.kind === 'account'
+  const chev = <Icon name="chevron" size={18} className="row-chev" />
+  return (<>
+    {!wizard && account && <section className="group">
+      <h2 className="group-title">{t('cloud.title')}</h2>
+      {/* qui il pannello della sincronizzazione resta sempre visibile: stato, esportazione delle copie e archivio di recupero */}
+      <div ref={showSyncDetails} />
+    </section>}
+    <section className="group">
+      <h2 className="group-title">{t('settings.data')}</h2>
+      {wizard && <p className="small group-intro">{t('setup.importHint')}</p>}
+      <ul className="group-list">
+        {!wizard && <li><button className="row" onClick={exportBackup}><span className="row-main"><span>{t('settings.export')}</span></span>{chev}</button></li>}
+        {!wizard && <li><button className="row" onClick={exportCsv}><span className="row-main"><span>{t('settings.exportCsv')}</span></span>{chev}</button></li>}
+        <li><label className="row"><span className="row-main"><span>{t('settings.import')}</span></span>{chev}
+          <input type="file" accept="application/json,.json" hidden onChange={importBackup} /></label></li>
+      </ul>
+      {!wizard && <p className="group-foot"><Icon name="lock" size={14} className="inline-ico" />{t('settings.dataHint')}</p>}
+    </section>
+    {!wizard && <InstallButton rows />}
+    {!wizard && <section className="group">
+      <ul className="group-list">
+        {/* con l'account l'azzeramento non c'è ancora: la riga resta, spenta, e il perché è scritto sotto */}
+        <li><button className="row" disabled={account} title={account ? t('cloud.clearBlocked') : undefined}
           onClick={() => { if (confirm(t('settings.resetConfirm'))) dispatch({ type: 'replace', data: null }) }}>
-          {t('settings.reset')}</button>}
-      </div>
-      {!wizard && lease?.scope.kind === 'account' && <p className="small">{t('cloud.clearBlocked')}</p>}
-      <p className="muted small top-gap">{t('settings.install')}</p>
-      <InstallButton />
-      {!wizard && <LegalLinks />}
-      </section>
-  )
+          <span className="row-main"><span className="bad-text">{t('settings.reset')}</span></span></button></li>
+      </ul>
+      {account && <p className="group-foot">{t('cloud.clearBlockedShort')}</p>}
+      <LegalLinks />
+    </section>}
+  </>)
 }

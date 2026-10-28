@@ -1,12 +1,41 @@
-.cloud-notice{position:relative;z-index:31;width:min(100% - 24px,960px);margin:12px auto;overflow-wrap:anywhere;background:var(--bg,#fff)}
-.cloud-actions,.cloud-archive{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.cloud-notice details{margin-top:12px}.cloud-notice summary{cursor:pointer;font-weight:600}
-.cloud-conflict fieldset{min-width:0;margin:16px 0;padding:12px;border:1px solid var(--line,#888);border-radius:12px}
-.cloud-versions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.cloud-version{display:block;padding:12px;border:1px solid var(--line,#888);border-radius:8px;min-width:0}
-.cloud-version:has(input:checked){outline:2px solid currentColor;outline-offset:2px}
-.cloud-version input{width:18px;height:18px;vertical-align:middle}.cloud-version dl{margin-bottom:0}
-.cloud-version dt{font-size:.85em;opacity:.8}.cloud-version dd{margin:0 0 8px}
-.cloud-version ul{padding-left:18px}.cloud-archive{padding:12px 0}.cloud-notice button:focus-visible,.cloud-notice summary:focus-visible{outline:3px solid currentColor;outline-offset:3px}
-@media(max-width:600px){.cloud-versions{grid-template-columns:1fr}.cloud-notice .btn{min-height:44px}.cloud-conflict fieldset{padding:8px}}
-@media(min-width:1100px){.cloud-notice{width:calc(100% - 288px);max-width:1280px;margin-left:256px}}
+/* Avvisi e sincronizzazione, nel linguaggio del design system: sulla superficie (niente riquadri né sfondi pieni),
+   righe separate da linee, inchiostro per l'azione principale, rosso solo per gli errori, stessi margini delle pagine. */
+
+/* pannello della sincronizzazione: in cima solo quando serve una scelta o c'è un problema; dentro «Esporta e importa» sempre */
+.cloud-notice { position: relative; z-index: 31; box-sizing: border-box; max-width: calc(var(--column) + 2 * var(--gutter)); margin: 0 auto;
+  padding: var(--top-gap) var(--gutter) var(--s4); border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+@media (min-width: 1024px) { .cloud-notice:not(.inline) { margin-left: max(248px, calc((100% - var(--column)) / 2 - var(--gutter))); } }
+.cloud-notice.inline { padding: 0; border: 0; max-width: none; }
+.cloud-notice .cloud-rows { margin: var(--s3) 0 0; }
+.cloud-notice p { margin: 0 0 var(--s2); color: var(--muted); font-size: var(--t-sm); }
+.cloud-notice > p[role=status] { color: var(--text); font-size: 15px; font-weight: var(--w-strong); }
+.cloud-notice p[role=alert] { color: var(--bad); }
+.cloud-actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
+
+/* scelta tra due versioni: una domanda per campo, le versioni come righe separate da linee */
+.cloud-conflict { margin-top: var(--s6); }
+.cloud-conflict > summary { list-style: none; cursor: pointer; font-size: var(--t-h2); font-weight: var(--w-strong); letter-spacing: -.02em; margin-bottom: var(--s2); }
+.cloud-conflict > summary::-webkit-details-marker { display: none; }
+.cloud-conflict fieldset { min-width: 0; margin: var(--s6) 0 0; padding: 0; border: 0; }
+.cloud-conflict legend { padding: 0; margin-bottom: var(--s2); color: var(--muted); font-size: var(--t-sm); font-weight: var(--w-strong); }
+.cloud-versions { border-top: 1px solid var(--line); }
+.cloud-version { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 0 var(--s3); align-items: start; min-width: 0;
+  padding: var(--s3) 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.cloud-version input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--accent); }
+.cloud-version-body { display: grid; gap: var(--s1); min-width: 0; }
+.cloud-version-body p, .cloud-version-body ul { margin: 0; color: var(--muted); font-size: var(--t-sm); }
+.cloud-version-body ul { padding-left: 18px; }
+.cloud-version dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px var(--s3); margin: 0; font-size: var(--t-sm); }
+.cloud-version dl > div { display: contents; }
+.cloud-version dt { color: var(--muted); }
+.cloud-version dd { margin: 0; }
+.cloud-version details summary { cursor: pointer; color: var(--muted); font-size: var(--t-sm); }
+.cloud-conflict form > p { margin-top: var(--s4); }
+.cloud-conflict .btn.primary { margin-top: var(--s2); }
+.cloud-defer { color: var(--muted); font-size: var(--t-sm); }
+
+/* archivio di recupero: righe con la data e le esportazioni */
+.cloud-archives { margin-top: var(--s4); }
+.cloud-archives > summary { cursor: pointer; color: var(--muted); font-size: var(--t-sm); font-weight: var(--w-strong); }
+.cloud-archive { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); padding: var(--s3) 0; border-bottom: 1px solid var(--line); }
+.cloud-archive time { flex: 1; min-width: 140px; font-size: var(--t-sm); }
