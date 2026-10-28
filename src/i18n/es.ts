@@ -16,6 +16,7 @@ const es: Dict = {
   'cloud.changedAt': "Última modificación indicada por el dispositivo",
   'cloud.retry': "Reintentar la sincronización",
   'cloud.clearBlocked': "Todavía no está disponible el borrado completo del archivo en la nube. No se ha enviado ninguna eliminación. Exporta tus copias o elige la versión de la nube. Esta operación se está diseñando por separado.",
+  'cloud.clearBlockedShort': "Aún no disponible con una cuenta.",
   'cloud.configuration': "Configuración",
   'cloud.buckets': "Grupos del presupuesto",
   'cloud.categories': "Categorías",

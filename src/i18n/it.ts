@@ -16,6 +16,7 @@ const it: Dict = {
   'cloud.changedAt': "Ultima modifica indicata dal dispositivo",
   'cloud.retry': "Riprova la sincronizzazione",
   'cloud.clearBlocked': "L’azzeramento dell’intero archivio cloud non è ancora disponibile. Non è stata inviata alcuna cancellazione: esporta le copie o scegli la versione cloud. Il progetto di questa operazione è in revisione.",
+  'cloud.clearBlockedShort': "Con l’account non è ancora disponibile.",
   'cloud.configuration': "Configurazione",
   'cloud.buckets': "Gruppi del budget",
   'cloud.categories': "Categorie",

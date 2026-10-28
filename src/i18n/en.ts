@@ -16,6 +16,7 @@ const en = {
   'cloud.changedAt': "Last change reported by the device",
   'cloud.retry': "Retry synchronization",
   'cloud.clearBlocked': "Clearing the entire cloud archive is not available yet. No deletion has been sent. Export your copies or choose the cloud version. This operation is being designed separately.",
+  'cloud.clearBlockedShort': "Not available yet with an account.",
   'cloud.configuration': "Configuration",
   'cloud.buckets': "Budget buckets",
   'cloud.categories': "Categories",

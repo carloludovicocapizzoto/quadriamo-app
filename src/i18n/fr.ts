@@ -16,6 +16,7 @@ const fr: Dict = {
   'cloud.changedAt': "Dernière modification indiquée par l’appareil",
   'cloud.retry': "Réessayer la synchronisation",
   'cloud.clearBlocked': "La remise à zéro complète des archives cloud n’est pas encore disponible. Aucune suppression n’a été envoyée. Exportez vos copies ou choisissez la version cloud. Cette opération fait l’objet d’un projet séparé.",
+  'cloud.clearBlockedShort': "Pas encore disponible avec un compte.",
   'cloud.configuration': "Configuration",
   'cloud.buckets': "Enveloppes du budget",
   'cloud.categories': "Catégories",

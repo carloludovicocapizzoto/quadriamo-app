@@ -1,10 +1,12 @@
 // Profilo → Notifiche: acceso/spento su questo dispositivo (e come riattivarle se il sistema le blocca), quali categorie,
 // quando (orario preferito, ore di silenzio, giorni attivi), quante al massimo al giorno; email quando ci sarà il dominio.
+// Finché le notifiche personali sono sospese, le scelte restano visibili ma spente.
 // Le preferenze stanno nelle impostazioni (settings.notify): valgono su tutti i dispositivi dell'account.
 import { platform } from '../../beta/device'
-import { pushSupported } from '../../beta/push'
+import { PERSONAL_PUSH_PAUSED, pushSupported } from '../../beta/push'
 import { notifyPrefs } from '../../beta/reminders'
 import { type NotifyPrefs } from '../../engine'
+import { ENV } from '../../env'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import { useStore } from '../../store/context'
@@ -22,14 +24,18 @@ export function NotificationsPage() {
   const p = notifyPrefs(settings.notify)
   const set = (patch: Partial<NotifyPrefs>) => dispatch({ type: 'setSettings', settings: { ...settings, notify: { ...p, ...patch } } })
   const blocked = pushSupported() && Notification.permission === 'denied'
+  // notifiche personali sospese (vedi PushToggle): le scelte si vedono, attenuate, ma non si toccano finché non tornano
+  const paused = PERSONAL_PUSH_PAUSED && !!ENV.supabase
   const weekdays = Array.from({ length: 7 }, (_, i) => new Intl.DateTimeFormat(lang, { weekday: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(2026, 9, 5 + i))))
   return <>
     <section className="notif-page"><PushToggle /></section>
     {blocked && <p className="small notif-blocked">{t(platform() === 'ios' ? 'ask.howIos' : platform() === 'android' ? 'ask.howAndroid' : 'ask.howDesktop')}</p>}
 
+    <fieldset className="notif-set" disabled={paused}>
     <Group title={t('notif.which')} foot={t('notif.privacy')}>
       {CATEGORIES.map(c => <Row key={c} label={t(k(`notif.${c}`))} detail={t(k(`notif.${c}D`))} toggle={{ on: p[c], onChange: on => set({ [c]: on }) }} />)}
       <Row label={t('notif.feedback')} detail={t('notif.feedbackD')} />
+      <Row label={t('notif.email')} detail={t('notif.emailD')} toggle={{ on: false, onChange: () => {}, disabled: true }} />
     </Group>
 
     <Group title={t('notif.when')}>
@@ -53,9 +59,6 @@ export function NotificationsPage() {
         <select className="row-input" value={p.maxPerDay} onChange={e => set({ maxPerDay: Number(e.target.value) })}>
           {[1, 2, 3, 5, 10].map(n => <option key={n} value={n}>{n}</option>)}</select></label></li>
     </Group>
-
-    <Group foot={t('notif.emailD')}>
-      <Row label={t('notif.email')} toggle={{ on: false, onChange: () => {}, disabled: true }} />
-    </Group>
+    </fieldset>
   </>
 }
