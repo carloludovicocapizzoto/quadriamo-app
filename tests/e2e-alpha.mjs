@@ -238,13 +238,40 @@ await step(A1, 'la sessione finisce con l\'app aperta: l\'avviso compare subito 
     localStorage.setItem(k, JSON.stringify({ format: 1, generation: 'e2e-ended', session: null })); window.dispatchEvent(new StorageEvent('storage', { key: k })) })()`)
 }, ended, 12)
 await step(A1, 'riaprendo l\'app l\'avviso è ancora lì', async () => { await A1.offline(false); await A1.reload() }, ended, 12)
-await step(A1, 'sessione finita ad app chiusa (rinnovo revocato): l\'avviso compare alla riapertura', async () => {
-  await api('tokens', { seconds: 3 }); await signIn(A1, 'A'); await sleep(2500)
+let rejectedRefreshesBefore = 0
+let accessExpiresAt = 0
+await step(A1, 'revoca reale con app aperta: il rinnovo rifiutato mostra l\'avviso senza chiudere la pagina', async () => {
+  // Un JWT breve permette di osservare il rinnovo fallito entro il timeout E2E;
+  // la revoca avviene dopo un login nuovo mentre la pagina resta aperta.
+  await A1.cdp('Page.bringToFront')
+  if (await A1.js(`document.visibilityState`) !== 'visible') throw Error('Chrome non mantiene visibile il contesto di test')
+  await api('tokens', { seconds: 15 }); await A1.reload()
+  if (await A1.js(`!!document.querySelector('.tabbar')`)) {
+    await signOut(A1)
+    if (!await until(A1, `!!document.querySelector('input[type=email]') || !!document.querySelector('.gate-cta')`, 10000)) throw Error('logout sintetico non completato')
+  }
+  await signIn(A1, 'A')
+  let ready = false
+  for (let i = 0; i < 50; i++) { if (await A1.js(appReady)) { ready = true; break }; await sleep(200) }
+  if (!ready) throw Error('nuovo login sintetico non completato')
+  const session = await A1.js(`(() => { const k = Object.keys(localStorage).find(x => x.startsWith('q.auth.v1/')); const record = k && JSON.parse(localStorage.getItem(k)); const v = record?.session ? JSON.parse(record.session) : null; return { owner: v?.user?.id === ${JSON.stringify(USERS.A.id)}, remaining: v?.expires_at ? v.expires_at - Math.floor(Date.now()/1000) : null, expiresAt: v?.expires_at ? v.expires_at * 1000 : null } })()`)
+  if (!session.owner || typeof session.remaining !== 'number' || session.remaining < 1 || session.remaining > 15) throw Error('sessione sintetica nuova non verificata')
+  accessExpiresAt = session.expiresAt
+  rejectedRefreshesBefore = server.state.rejectedRefreshes
+  await api('revoke', { user: 'A' })
+  if ([...server.state.refresh.values()].includes(USERS.A.id)) throw Error('refresh sintetico non revocato')
+}, async () => server.state.rejectedRefreshes > rejectedRefreshesBefore
+  && server.state.lastRejectedRefreshAt >= accessExpiresAt && await A1.js(ended), 150)
+await step(A2, 'sessione finita ad app chiusa (rinnovo revocato): l\'avviso compare alla riapertura', async () => {
+  // Profilo separato dal test di revoca con app aperta: evita che il suo stato Auth influenzi questo caso.
+  await api('tokens', { seconds: 3 }); await signOut(A2)
+  if (!await until(A2, `!!document.querySelector('input[type=email]') || !!document.querySelector('.gate-cta')`, 10000)) throw Error('logout sintetico non completato')
+  await signIn(A2, 'A'); await sleep(2500)
   // prima si chiude l'app, poi si revoca: con l'app aperta la chiusura della sessione cadrebbe mentre la pagina si chiude
-  await A1.cdp('Page.navigate', { url: 'about:blank' }); await sleep(300)
+  await A2.cdp('Page.navigate', { url: 'about:blank' }); await sleep(300)
   await api('revoke', { user: 'A' }); await sleep(3500)                     // token scaduto ad app chiusa
-  await A1.open()
-}, ended, 15)
+  await A2.open()
+}, ended, 30)
 await api('tokens', { seconds: 3600 })
 await step(A1, 'server irraggiungibile durante l\'accesso: messaggio comprensibile', async () => {
   await api('down', { down: true }); await signIn(A1, 'A')

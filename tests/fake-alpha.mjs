@@ -42,7 +42,7 @@ export function startFakeAlpha({ port = 4192, fixtures }) {
   const origin = `http://${HOST}:${port}`, controlToken = randomUUID()
   const state = {
     root: Object.values(roots)[0], tokenSeconds: 3600, down: false,
-    heads: new Map(), receipts: new Map(), refresh: new Map(), passwords: new Map(Object.values(USERS).map(u => [u.id, u.password])),
+    heads: new Map(), receipts: new Map(), refresh: new Map(), rejectedRefreshes: 0, lastRejectedRefreshAt: 0, passwords: new Map(Object.values(USERS).map(u => [u.id, u.password])),
     faults: [], denied: [], log: [],
   }
   const user = id => { const u = Object.values(USERS).find(x => x.id === id); return u && { id: u.id, aud: 'authenticated', role: 'authenticated', email: u.email,
@@ -82,7 +82,7 @@ export function startFakeAlpha({ port = 4192, fixtures }) {
         return send(res, 200, session(u.id))
       }
       const id = state.refresh.get(b.refresh_token)
-      if (!id) return send(res, 400, { code: 400, error_code: 'refresh_token_not_found', msg: 'Invalid Refresh Token: Refresh Token Not Found' })
+      if (!id) { state.rejectedRefreshes++; state.lastRejectedRefreshAt = Date.now(); return send(res, 400, { code: 400, error_code: 'refresh_token_not_found', msg: 'Invalid Refresh Token: Refresh Token Not Found' }) }
       state.refresh.delete(b.refresh_token)
       return send(res, 200, session(id))
     }
