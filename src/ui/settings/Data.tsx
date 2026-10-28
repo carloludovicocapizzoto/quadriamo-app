@@ -1,5 +1,5 @@
 // I dati: copia di sicurezza, esportazione CSV, ripristino e azzeramento; installazione dell'app.
-import { useEffect, type ChangeEvent } from 'react'
+import type { ChangeEvent } from 'react'
 import { CUSTOM, FIRST, SPLIT } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import { useStore } from '../../store/context'
@@ -16,8 +16,6 @@ export function DataSection({ d: { data, flash, reset }, wizard }: { d: Settings
   const { t } = useI18n()
   const { dispatch, lease, storage } = useStore()
   const { showSyncDetails } = useSync()
-  // qui il pannello della sincronizzazione resta sempre visibile: stato, esportazione delle copie e archivio di recupero
-  useEffect(() => { if (wizard) return; showSyncDetails?.(true); return () => showSyncDetails?.(false) }, [wizard, showSyncDetails])
   const exportBackup = () => downloadFile('quadriamo-backup', 'json', JSON.stringify(data, null, 2), 'application/json')
   const exportCsv = () => downloadFile('quadriamo-transactions', 'csv', '\ufeff' + toCsv(data, {
     category: id => categoryName(data.settings.categories.find(c => c.id === id), t),
@@ -52,7 +50,12 @@ export function DataSection({ d: { data, flash, reset }, wizard }: { d: Settings
     flash(t('settings.importOk'))
   }
 
-  return (
+  return (<>
+    {!wizard && lease?.scope.kind === 'account' && <section className="card">
+      <h3 className="h-plain">{t('cloud.title')}</h3>
+      {/* qui il pannello della sincronizzazione resta sempre visibile: stato, esportazione delle copie e archivio di recupero */}
+      <div ref={showSyncDetails} />
+    </section>}
     <section className="card">
       <h3 className="h-plain">{t('settings.data')}</h3>
       <p className="muted small"><Icon name="lock" size={14} />{t('settings.dataHint')}</p>
@@ -71,5 +74,5 @@ export function DataSection({ d: { data, flash, reset }, wizard }: { d: Settings
       <InstallButton />
       {!wizard && <LegalLinks />}
       </section>
-  )
+  </>)
 }

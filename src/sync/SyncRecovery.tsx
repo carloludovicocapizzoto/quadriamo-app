@@ -14,8 +14,10 @@ import { useSession } from './sessionContext'
 
 type SyncFailureKey = 'cloud.documentTooLarge' | 'cloud.requestTooLarge' | 'cloud.documentInvalid' | 'cloud.operationRejected'
 
-export function SyncRecovery({ storage, lease, status, retry, activate, failureCode }: {
+export function SyncRecovery({ storage, lease, status, retry, activate, failureCode, inline = false }: {
   storage: AccountStore; lease: ScopeLease; status: SyncStatus; retry: () => Promise<void>; activate: () => Promise<void>; failureCode?: SyncFailureKey | null
+  /** dentro la pagina «Esporta e importa» invece che in cima allo schermo */
+  inline?: boolean
 }) {
   const { t } = useI18n(), snapshot = storage.getSnapshot(), cloud = snapshot.cloud
   const { localSession } = useSession()
@@ -39,7 +41,7 @@ export function SyncRecovery({ storage, lease, status, retry, activate, failureC
   }
   if (!lease.current()) return null
   const coolingDown = cooldownAt > now
-  return <section className="cloud-notice card" aria-label={t('cloud.title')} data-testid="cloud-status">
+  return <section className={`cloud-notice${inline ? ' inline' : ''}`} aria-label={t('cloud.title')} data-testid="cloud-status">
     {localSession && <p>{t('auth.localSession')}</p>}
     <p role="status" aria-live="polite">{status === 'ok' && cloud?.base ? t('cloud.confirmed', { revision: cloud.base.revision })
       : status === 'syncing' ? t('sync.syncing') : status === 'ok' ? t('cloud.idle') : t(`cloud.${status}`)}</p>
@@ -54,7 +56,7 @@ export function SyncRecovery({ storage, lease, status, retry, activate, failureC
     {failed && <p role="alert">{t('cloud.actionError')}</p>}
     {cloud?.conflict?.cause === 'expired-receipt' && <p role="alert">{t('cloud.expiredReceiptConflict')}</p>}
     {cloud?.conflict && <ConflictForm key={cloud.conflict.id} conflict={cloud.conflict} storage={storage} lease={lease} onResolved={retry} />}
-    {!!cloud?.recovery.length && <details><summary>{t('cloud.archive', { count: cloud.recovery.length })}</summary>
+    {!!cloud?.recovery.length && <details className="cloud-archives"><summary>{t('cloud.archive', { count: cloud.recovery.length })}</summary>
       <p>{t('cloud.archiveHint')}</p>
       {cloud.recovery.map(copy => <div className="cloud-archive" key={copy.id}>
         <time dateTime={copy.at}>{new Date(copy.at).toLocaleString()}</time>
@@ -109,17 +111,19 @@ function ConflictForm({ conflict, storage, lease, onResolved }: { conflict: Data
         {path === '/document' && <p>{t('cloud.wholeHint')}</p>}
         <div className="cloud-versions">{(['local', 'remote'] as const).map(side => {
           const document = side === 'local' ? conflict.local : conflict.remote.document
+          // una riga per versione, separate da linee: il pallino è la scelta (niente riquadri)
           return <label className="cloud-version" key={side}>
-            <span><input type="radio" name={conflict.id + path} value={side} checked={choices[path] === side}
+            <input type="radio" name={conflict.id + path} value={side} checked={choices[path] === side}
               disabled={saving || path === '/document' && document === null && conflict.remote.document !== null}
-              onChange={() => setChoices(old => ({ ...old, [path]: side }))} /> {t(side === 'local' ? 'cloud.local' : 'cloud.remote')}</span>
-            <Version document={document} other={side === 'local' ? conflict.remote.document : conflict.local} path={path} />
+              onChange={() => setChoices(old => ({ ...old, [path]: side }))} />
+            <span className="cloud-version-body"><b>{t(side === 'local' ? 'cloud.local' : 'cloud.remote')}</b>
+              <Version document={document} other={side === 'local' ? conflict.remote.document : conflict.local} path={path} /></span>
           </label>
         })}</div>
       </fieldset>)}
       <p>{t('cloud.resolveHint')}</p>
       <button className="btn primary" disabled={saving || conflict.paths.some(path => !choices[path]) || !!storage.getSnapshot().error}>{t('cloud.apply')}</button>
-      <p className="small">{t('cloud.defer')}</p>
+      <p className="cloud-defer">{t('cloud.defer')}</p>
       {error && <p role="alert">{t('cloud.actionError')}</p>}
     </form>
   </details>

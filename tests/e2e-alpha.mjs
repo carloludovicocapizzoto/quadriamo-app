@@ -240,7 +240,9 @@ await step(A1, 'la sessione finisce con l\'app aperta: l\'avviso compare subito 
 await step(A1, 'riaprendo l\'app l\'avviso è ancora lì', async () => { await A1.offline(false); await A1.reload() }, ended, 12)
 await step(A1, 'sessione finita ad app chiusa (rinnovo revocato): l\'avviso compare alla riapertura', async () => {
   await api('tokens', { seconds: 3 }); await signIn(A1, 'A'); await sleep(2500)
-  await api('revoke', { user: 'A' }); await A1.cdp('Page.navigate', { url: 'about:blank' }); await sleep(3500)   // app chiusa, token scaduto
+  // prima si chiude l'app, poi si revoca: con l'app aperta la chiusura della sessione cadrebbe mentre la pagina si chiude
+  await A1.cdp('Page.navigate', { url: 'about:blank' }); await sleep(300)
+  await api('revoke', { user: 'A' }); await sleep(3500)                     // token scaduto ad app chiusa
   await A1.open()
 }, ended, 15)
 await api('tokens', { seconds: 3600 })

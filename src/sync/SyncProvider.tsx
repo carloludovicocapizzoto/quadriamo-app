@@ -1,5 +1,6 @@
 // Ogni montaggio appartiene a un solo scope; la sessione viene risolta dal provider esterno.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useStore } from '../store/context'
 import { SyncContext, type SyncApi, type SyncStatus } from './context'
 import { useSession } from './sessionContext'
@@ -22,7 +23,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const [failureCode, setFailureCode] = useState<SyncFailureKey | null>(null)
   const [remoteReady, setRemoteReady] = useState(lease.scope.kind !== 'account' || !!state.data)
   const running = useRef(false), again = useRef(false)
-  const [details, setDetails] = useState(false)
+  const [details, setDetails] = useState<HTMLElement | null>(null)
   const snapshot = storage?.getSnapshot()
 
   useEffect(() => { if (session.user) void loadAvatar(session.user.id).catch(() => undefined) }, [session.user])
@@ -94,9 +95,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   // in cima allo schermo solo quando serve una tua azione o un'informazione: conflitto, errore, offline, attesa, aggiornamento.
   // Quando va tutto bene il pannello sta in Profilo → Esporta e importa (showSyncDetails), senza testo tecnico su ogni schermata.
   const cooling = !!snapshot?.cloud?.cooldownUntil                    // tolto dalla sincronizzazione appena l'attesa finisce
-  const attention = details || cooling || !!snapshot?.error || ['conflict', 'error', 'offline', 'upgrade', 'paused'].includes(visibleStatus)
+  const attention = cooling || !!snapshot?.error || ['conflict', 'error', 'offline', 'upgrade', 'paused'].includes(visibleStatus)
+  const recovery = (inline: boolean) => <SyncRecovery storage={storage!} lease={lease} status={visibleStatus} retry={syncNow} activate={activate} failureCode={failureCode} inline={inline} />
   return <SyncContext.Provider value={api}>
-    {lease.scope.kind === 'account' && storage && attention && <SyncRecovery storage={storage} lease={lease} status={visibleStatus} retry={syncNow} activate={activate} failureCode={failureCode} />}
+    {lease.scope.kind === 'account' && storage && (attention ? recovery(false) : details && createPortal(recovery(true), details))}
     {!remoteReady && (status === 'error' || status === 'offline')
       ? <div className="gate"><section className="card"><p role="alert">{t('storage.remoteWait')}</p>
           <button className="btn" onClick={() => void syncNow()}>{t('storage.retry')}</button>

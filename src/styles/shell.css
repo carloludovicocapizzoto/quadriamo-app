@@ -51,6 +51,9 @@
   padding: var(--s2) var(--s2) var(--s2) 0; cursor: pointer; margin-left: -6px; }
 .demo-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
   color: var(--muted); padding: 0 0 var(--s3); margin: 0 0 var(--s4); border-bottom: 1px solid var(--line); font-size: var(--t-sm); }
+/* avviso in cima (sessione terminata, uscita locale): come l'avviso dei dati di esempio */
+.notice { position: relative; z-index: 31; box-sizing: border-box; max-width: calc(var(--column) + 2 * var(--gutter)); margin: 0 auto;
+  padding: var(--top-gap) var(--gutter) var(--s3); border-bottom: 1px solid var(--line); color: var(--muted); font-size: var(--t-sm); overflow-wrap: anywhere; }
 .toast { position: fixed; left: 16px; right: 16px; bottom: calc(var(--bar-h) + 24px + env(safe-area-inset-bottom)); margin: 0 auto; max-width: 420px; background: var(--text);
   color: var(--bg); padding: 12px 16px; border-radius: var(--r-md); text-align: center; z-index: 20; font-size: var(--t-sm); animation: fade var(--d-fast) var(--ease); }
 
