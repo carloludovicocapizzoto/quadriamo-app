@@ -24,7 +24,7 @@ function italianDate(s: string): string | null {
 }
 
 /** Bound ZIP expansion before handing an untrusted workbook to SheetJS. Reject ZIP64/multi-disk/encrypted files. */
-function safeXlsxEnvelope(buffer: ArrayBuffer): boolean {
+export function safeXlsxEnvelope(buffer: ArrayBuffer): boolean {
   const bytes = new Uint8Array(buffer), view = new DataView(buffer)
   const min = Math.max(0, bytes.length - 65_557)
   let end = -1
