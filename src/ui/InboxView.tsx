@@ -9,6 +9,7 @@ import { ImportReview } from './import/ImportReview'
 import { Sheet } from './kit/Sheet'
 import { bucketName, categoryName } from './names'
 import { parseConsolidated, readConsolidatedWorkbook, type ConsolidatedPreview } from '../engine/consolidatedStatement'
+import { readWorkbookSheets, type WorkbookSheet } from '../engine/workbook'
 import { todayIso, updateCapital } from '../engine'
 
 /** Importa un estratto conto e mostra la casella "Da confermare": tutto si può cambiare prima di confermare. */
@@ -32,8 +33,13 @@ export function InboxView({ settings }: { settings: Settings }) {
       try {
         const result = await readConsolidatedWorkbook(file)
         if (lease && !lease.current()) return
-        if (!result) { setMsg({ text: t('imp.xlsx'), bad: true }); return }
-        setMsg(null); setPreview(result)
+        if (result) { setMsg(null); setPreview(result); return }
+        // non è l'estratto consolidato: Excel generico, un foglio alla volta con lo stesso motore dei CSV
+        const sheets = await readWorkbookSheets(file)
+        if (lease && !lease.current()) return
+        if (!sheets) { setMsg({ text: t('imp.xlsx'), bad: true }); return }
+        if (!sheets.length) { setMsg({ text: t('imp.none'), bad: true }); return }
+        setMsg(null); setReview({ owner: lease, sheets })
       } catch { setMsg({ text: t('imp.xlsx'), bad: true }) }
       return
     }
@@ -43,14 +49,15 @@ export function InboxView({ settings }: { settings: Settings }) {
     const consolidated = parseConsolidated(text)
     if (consolidated) { setMsg(null); setPreview(consolidated); return }
     if (/(?:conto personale|personal account)\s*\(eur\)/i.test(text)) { setMsg({ text: t('imp.sections'), bad: true }); return }
-    const { map, error, rows, skipped, needs } = readStatement(text)
+    const { map, error, rows, skipped, needs, header } = readStatement(text)
     if (error === 'multiple_sections') { setMsg({ text: t('imp.sections'), bad: true }); return }
-    if (!map || (!rows.length && !skipped.length && !needs)) { setMsg({ text: t('imp.none'), bad: true }); return }
-    // prima il riepilogo (e, se il file è ambiguo, la scelta dei formati): niente entra nella casella senza conferma
-    setMsg(null); setReview({ owner: lease, text })
+    // colonne non riconosciute: si scelgono a mano (serve almeno un'intestazione con due colonne)
+    if (map ? !rows.length && !skipped.length && !needs : header.length < 2) { setMsg({ text: t('imp.none'), bad: true }); return }
+    // prima il riepilogo (e, se serve, colonne e formati): niente entra nella casella senza conferma
+    setMsg(null); setReview({ owner: lease, sheets: [{ name: file.name, csv: text }] })
   }
-  const [reviewState, setReview] = useState<{ owner: typeof lease; text: string } | null>(null)
-  const review = reviewState && reviewState.owner === lease && (!lease || lease.current()) ? reviewState.text : null
+  const [reviewState, setReview] = useState<{ owner: typeof lease; sheets: WorkbookSheet[] } | null>(null)
+  const review = reviewState && reviewState.owner === lease && (!lease || lease.current()) ? reviewState.sheets : null
   const confirmReview = (items: InboxItem[], duplicates: number) => {
     if (!state.data || (lease && !lease.current())) return
     items.forEach(i => suggested.set(i.id, i.category))
@@ -59,7 +66,7 @@ export function InboxView({ settings }: { settings: Settings }) {
     setMsg({ text: t('imp.result', { n: items.length, d: duplicates }) }); setReview(null)
   }
   const reviewSheet = <Sheet open={!!review} onClose={() => setReview(null)} title={t('imp.previewTitle')}>
-    {review && state.data && <ImportReview text={review} data={state.data} onDone={confirmReview} onClose={() => setReview(null)} />}
+    {review && state.data && <ImportReview sheets={review} data={state.data} onDone={confirmReview} onClose={() => setReview(null)} />}
   </Sheet>
 
   const toTx = (i: InboxItem) => ({ id: newId(), date: i.date, description: i.description, category: i.category,
