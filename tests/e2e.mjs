@@ -3,6 +3,10 @@
 // Uso: npm run e2e   (costruisce l'app senza server in dist-e2e, la serve sulla porta 4180 e lancia i controlli)
 import { spawn } from 'node:child_process'
 import { openChrome, sleep } from '../tools/chrome.mjs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import * as XLSX from 'xlsx'
 
 const URL_APP = process.env.E2E_URL ?? 'http://localhost:4180/app/'
 
@@ -12,10 +16,12 @@ const server = process.env.E2E_URL ? null
 for (let i = 0; i < 120; i++) { try { if ((await fetch(URL_APP)).ok) break } catch { /* non ancora */ } await sleep(250) }
 
 const errors = []
+const fixtureDir = mkdtempSync(join(tmpdir(), 'quadriamo-xlsx-test-'))
 let chrome
 const done = async code => {
   await chrome?.close()
   if (server) try { process.kill(-server.pid) } catch { /* già chiuso */ }
+  rmSync(fixtureDir, { recursive: true, force: true })
   process.exit(code)
 }
 try { chrome = await openChrome({ port: 9444, args: ['--lang=it-IT'], waitMs: 45_000, onError: e => errors.push(e) }) } catch (e) { console.error(e.message); await done(1) }
@@ -32,6 +38,18 @@ async function step(name, action, check) {
   await done(1)
 }
 const click = sel => js(`(() => { const el = ${sel}; el?.click(); return !!el })()`)
+const clickNative = async selector => {
+  const root = await cdp('DOM.getDocument')
+  const node = await cdp('DOM.querySelector', { nodeId: root.result.root.nodeId, selector })
+  if (!node.result.nodeId) return false
+  await cdp('DOM.scrollIntoViewIfNeeded', { nodeId: node.result.nodeId })
+  const box = await cdp('DOM.getBoxModel', { nodeId: node.result.nodeId })
+  const q = box.result.model.content, x = (q[0] + q[2] + q[4] + q[6]) / 4, y = (q[1] + q[3] + q[5] + q[7]) / 4
+  await cdp('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y })
+  await cdp('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', clickCount: 1 })
+  await cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 })
+  return true
+}
 const byText = (re, scope = 'button') => `[...document.querySelectorAll('${scope}')].find(b => ${re}.test(b.textContent.trim()))`
 const has = (re, scope = 'body') => `${re}.test(document.querySelector('${scope}')?.innerText ?? '')`
 
@@ -198,6 +216,56 @@ await step('G poi N apre le Notizie', async () => { await js(`document.activeEle
 await step('N apre il nuovo movimento', () => press('n', 'KeyN'), `!!document.querySelector('.tx-sheet')`)
 await step('Esc lo chiude', () => cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }), `!document.body.classList.contains('sheet-open')`)
 await step('? mostra le scorciatoie', async () => { await sleep(600); await press('?', 'Slash') }, `!!document.querySelector('.kb-list')`)
+
+console.log('Importazione conto personale e deposito')
+const lines = ['Deposito senza vincoli (EUR),,,,,', 'Valore del deposito,,,,,', ',,Saldo di chiusura,"100,00€",,',
+  'Conto personale (EUR),,,,,', 'Riepilogo della transazione,,,,,', 'Data,Descrizione,Categoria,Denaro in entrata/uscita,Saldo,Costi',
+  '1 ott 2026,QA Spesa sintetica,Spesa,"-2,50€","100,00€",', '2 ott 2026,A EUR Conto deposito senza vincoli,Trasferimento,"-10,00€","90,00€",', 'Totale,,,,,']
+const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(lines.map(x => [x])), 'Statement')
+const fixture = join(fixtureDir, 'synthetic.xlsx'); writeFileSync(fixture, XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }))
+await step('il file Excel mostra solo movimenti e risparmi in anteprima', async () => {
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+  await js(`location.hash = '#/analysis/transactions'`); await sleep(800)
+  const root = await cdp('DOM.getDocument'); const input = await cdp('DOM.querySelector', { nodeId: root.result.root.nodeId, selector: 'input[type=file]' })
+  await cdp('DOM.setFileInputFiles', { nodeId: input.result.nodeId, files: [fixture] })
+}, `/Controlla l.importazione/.test(document.body.innerText) && /1 movimenti/.test(document.body.innerText) && /100,00/.test(document.body.innerText)`)
+let savingsChoiceEnabled = false
+await step('la conferma prepara il movimento senza importare il trasferimento', async () => {
+  savingsChoiceEnabled = !(await js(`document.querySelector('[aria-label="Controlla l’importazione"] select')?.disabled`))
+  const changed = savingsChoiceEnabled ? await setField('[aria-label="Controlla l’importazione"] select', 'new') : false
+  await sleep(150)
+  const selected = await js(`document.querySelector('[aria-label="Controlla l’importazione"] select')?.value`)
+  await js(`window.__qaConfirmClick = 0; document.querySelector('[aria-label="Controlla l’importazione"] button')?.addEventListener('click', () => window.__qaConfirmClick++, { once: true })`)
+  const clicked = await clickNative('[aria-label="Controlla l’importazione"] button')
+  await sleep(250)
+  console.log('  Esito sintetico:', JSON.stringify({ changed, selected, clicked, savingsChoiceEnabled, eventSeen: await js('window.__qaConfirmClick'), runtimeErrors: errors.length }))
+}, `/QA Spesa sintetica/.test(document.body.innerText) && !/A EUR Conto deposito senza vincoli/.test(document.body.innerText)`)
+await step('il capitale preesistente è conservato', () => js(`location.hash = '#/profile/capital'`), `/2[.]000,00/.test(document.body.innerText)`)
+if (savingsChoiceEnabled) await step('il saldo del deposito entra solo nella destinazione confermata', null,
+  `/Conto deposito/.test(document.body.innerText) && /100,00/.test(document.body.innerText) && /2[.]000,00/.test(document.body.innerText)`)
+
+console.log('Importazione CSV annuale')
+const annualRows = ['Savings Accounts Summaries,,,,', 'Instant Access Savings (EUR),,,,', 'Savings account details,,,,',
+  ',,Closing balance,123.45,', 'Personal Account (EUR),,,,', 'Summary,,,,', 'Date,Description,Category,Money in/out,Balance',
+  ...['Jan 02', 'Feb 03', 'Mar 04', 'Apr 05', 'May 06', 'Jun 07', 'Jul 08', 'Aug 09', 'Sep 10', 'Oct 11', 'Nov 12', 'Dec 31']
+    .map((d, i) => `"${d}, 2026",QA-B-${i + 1},Other,${i === 0 ? '-2.35' : '1.00'},100.00`),
+  '"Jan 06, 2026",QA-B-repeat,Other,-1.25,90.00', '"Jan 06, 2026",QA-B-repeat,Other,-1.25,88.75',
+  'Total,,,,' ]
+const annualCsv = join(fixtureDir, 'synthetic-year.csv'); writeFileSync(annualCsv, annualRows.join('\n'))
+const selectCsv = async () => {
+  const root = await cdp('DOM.getDocument'), input = await cdp('DOM.querySelector', { nodeId: root.result.root.nodeId, selector: 'input[type=file]' })
+  if (!input.result.nodeId) throw Error('input CSV non trovato')
+  await cdp('DOM.setFileInputFiles', { nodeId: input.result.nodeId, files: [annualCsv] })
+}
+await step('il CSV annuale mostra tutte le date e conserva le righe ripetute', async () => {
+  await js(`location.hash = '#/analysis/transactions'`); await sleep(500); await selectCsv()
+}, `/Periodo trovato nel file/.test(document.body.innerText) && /2026/.test(document.body.innerText) && /righe hanno data/.test(document.body.innerText)`)
+await step('la conferma inserisce tutte le date annuali nella casella globale', async () => {
+  await clickNative('[aria-label="Controlla l’importazione"] button'); await sleep(300)
+}, `/QA-B-12/.test(document.body.innerText) && /QA-B-repeat/.test(document.body.innerText) && /15/.test(document.querySelector('h3')?.innerText ?? '')`)
+await step('un secondo caricamento dello stesso CSV non crea duplicati', async () => {
+  await selectCsv(); await sleep(250); await clickNative('[aria-label="Controlla l’importazione"] button')
+}, `/0 movimenti da confermare · 14 già importati/.test(document.body.innerText) && /15/.test(document.querySelector('h3')?.innerText ?? '')`)
 
 if (errors.length) { console.error(`\nErrori nella pagina:\n  ${errors.join('\n  ')}`); await done(1) }
 console.log(`\nTutti i ${n} passi sono andati bene.`)

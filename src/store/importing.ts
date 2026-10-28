@@ -9,10 +9,16 @@ const fingerprintOf = (r: { date: string; amount: number; description: string })
 /** Prepara l'import: scarta le righe già viste (in casella, confermate o ignorate) e propone categoria e bucket. */
 export function planImport(d: AppData, rows: ImportRow[], source = 'csv'): { items: InboxItem[]; duplicates: number } {
   const seen = new Set([...(d.inbox ?? []).map(i => i.fingerprint), ...Object.keys(d.importDone ?? {})])
+  const occurrences = new Map<string, number>()
   const items: InboxItem[] = []
   let duplicates = 0
   for (const r of rows) {
-    const fp = fingerprintOf(r)
+    const base = fingerprintOf(r)
+    const occurrence = (occurrences.get(base) ?? 0) + 1
+    occurrences.set(base, occurrence)
+    // Preserve legitimate repeated-looking bank rows, while giving each occurrence
+    // a stable key so importing the same statement again remains idempotent.
+    const fp = occurrence === 1 ? base : `${base}|occurrence:${occurrence}`
     if (seen.has(fp)) { duplicates++; continue }
     seen.add(fp)
     const sug = suggest(r.description, r.amount, d.settings)
