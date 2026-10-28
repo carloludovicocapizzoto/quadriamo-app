@@ -1,6 +1,7 @@
 // Import degli estratti conto in CSV (Revolut, N26 e formati generici delle banche).
 // Restituisce righe "grezze": data, descrizione, importo con segno (negativo = uscita), valuta.
 import { isIsoDate } from './dates'
+import { amountClue, detectDateOrder, detectDecimalMark, minorDigits, parseDateWith, parseMoney, type AmountProblem, type DateOrder, type DecimalMark, type Money } from './bankNumbers'
 
 export interface ImportRow { date: string; description: string; amount: number; currency: string | null }
 
@@ -94,53 +95,85 @@ export function parseBankDate(s: string): string | null {
   return null
 }
 
-/** Importo bancario -> numero con segno ("-1.234,56", "1,234.56", "−12,00 €"). */
+/** Un importo da solo, senza conoscere il file ("-1.234,56", "1,234.56", "−12,00 €"). Se è ambiguo («1.234») non lo indovina: null. */
 export function parseBankAmount(s: string): number | null {
-  let t = s.replace(/â‚¬/g, '€').replace(/[\s€$£]|EUR|USD|GBP|CHF/g, '').replace('−', '-')
-  if (!t) return null
-  const neg = t.startsWith('-') || (t.startsWith('(') && t.endsWith(')'))
-  if (t.startsWith('(') && t.endsWith(')')) t = t.slice(1, -1)
-  else t = t.replace(/^[-+]/, '')
-  if (!/^[\d.,]+$/.test(t)) return null
-  const lc = t.lastIndexOf(','), ld = t.lastIndexOf('.')
-  if (lc > -1 && ld > -1) {
-    if (!(lc > ld ? /^\d{1,3}(\.\d{3})+,\d+$/ : /^\d{1,3}(,\d{3})+\.\d+$/).test(t)) return null
-    t = lc > ld ? t.replace(/\./g, '').replace(',', '.') : t.replace(/,/g, '')
-  }
-  else if (lc > -1) t = t.replace(',', '.')
-  if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(t)) return null
-  const n = Number(t)
-  return Number.isFinite(n) ? (neg ? -n : n) : null
+  const c = amountClue(s)
+  if (c.kind === 'invalid' || c.kind === 'ambiguous') return null
+  const r = parseMoney(s, c.kind === 'decimal' ? c.mark : '.')
+  return r.ok ? r.value : null
 }
 
-/** Trasforma il CSV in righe pronte per la casella "Da confermare". */
-export function readStatement(text: string, map?: ColumnMap): { rows: ImportRow[]; map: ColumnMap | null; header: string[]; error?: 'multiple_sections' } {
+export type SkipReason = 'date' | 'amount' | 'precision' | 'grouping' | 'range' | 'summary' | 'pending' | 'zero'
+/** Una riga non importata: il numero di record nel file (l'intestazione è 1) e il perché. Mai righe sparite in silenzio. */
+export interface SkippedRow { line: number; reason: SkipReason }
+/** Cosa serve sapere prima di importare: la convenzione dei numeri o l'ordine delle date, con qualche esempio dal file. */
+export interface StatementNeeds { number?: { samples: string[]; conflicting: boolean }; date?: { samples: string[]; conflicting: boolean } }
+export interface StatementOptions { mark?: DecimalMark; order?: DateOrder }
+
+// intestazioni non inglesi: in questi paesi le date sono sempre giorno/mese (in inglese possono essere USA o Regno Unito)
+const DAY_FIRST_HEADER = /^(data|descrizione|importo|causale|valuta|datum|betrag|buchungstag|libellé|libelle|montant|fecha|concepto|importe|débit|debit|crédit|dare|avere)\b/i
+const SUMMARY = /^(totale|total|totaux|totales|summe|saldo|balance|solde)\b/i
+
+/** Trasforma il CSV in righe pronte per la casella "Da confermare": convenzioni decise sull'intero file, righe escluse sempre spiegate. */
+export function readStatement(text: string, map?: ColumnMap, opts: StatementOptions = {}): {
+  rows: ImportRow[]; map: ColumnMap | null; header: string[]; error?: 'multiple_sections'
+  skipped: SkippedRow[]; needs?: StatementNeeds; mark: DecimalMark | null; order: DateOrder | null
+} {
   const all = parseCsv(text)
   const headerIdx = all.findIndex(r => detectColumns(r) != null)
   const header = all[headerIdx >= 0 ? headerIdx : 0] ?? []
   const cols = map ?? detectColumns(header)
-  if (!cols) return { rows: [], map: null, header }
+  const none = { rows: [], header, skipped: [], mark: null, order: null }
+  if (!cols) return { ...none, map: null }
   // Distinct sections may describe different accounts or repeat the same transfers.
   // Do not silently import a partial or duplicated consolidated statement.
   if (headerIdx >= 0 && all.slice(headerIdx + 1).some(r => detectColumns(r) !== null))
-    return { rows: [], map: null, header, error: 'multiple_sections' }
-  const rows: ImportRow[] = []
-  for (const r of all.slice((headerIdx >= 0 ? headerIdx : 0) + 1)) {
-    if (cols.state != null && r[cols.state] && !/completed|completat|eseguit|booked|contabilizzat/i.test(r[cols.state])) continue
-    const date = parseBankDate(r[cols.date] ?? '')
-    let amount: number | null = null
-    if (cols.amount != null) amount = parseBankAmount(r[cols.amount] ?? '')
-    else if (cols.debit != null && cols.debit === cols.credit) amount = parseBankAmount(r[cols.debit] ?? '')
-    else {
-      const d = cols.debit != null ? parseBankAmount(r[cols.debit] ?? '') : null
-      const c = cols.credit != null ? parseBankAmount(r[cols.credit] ?? '') : null
-      amount = c ? Math.abs(c) : d ? -Math.abs(d) : null
+    return { ...none, map: null, error: 'multiple_sections' }
+  const first = (headerIdx >= 0 ? headerIdx : 0) + 1
+  const body = all.slice(first)
+  const amountCells = body.flatMap(r => [cols.amount, cols.debit, cols.credit, cols.fee].flatMap(i => (i != null && r[i] ? [r[i]] : [])))
+  // la convenzione è quella del file; quella scelta da chi importa vale solo se il file non ne dichiara una diversa
+  const numbers = detectDecimalMark(amountCells), dates = detectDateOrder(body.map(r => r[cols.date] ?? ''))
+  const dayFirst = !dates.order && !dates.conflicting && header.some(h => DAY_FIRST_HEADER.test(h))
+  const mark = numbers.mark ?? opts.mark ?? null
+  const order = dates.order ?? (dayFirst ? 'dmy' : null) ?? opts.order ?? null
+  const needs: StatementNeeds = {}
+  if ((numbers.ambiguous || numbers.conflicting) && !opts.mark) needs.number = { samples: numbers.samples, conflicting: numbers.conflicting }
+  if ((dates.ambiguous && !dayFirst || dates.conflicting) && !opts.order) needs.date = { samples: dates.samples, conflicting: dates.conflicting }
+  if (needs.number || needs.date) return { ...none, map: cols, needs, mark, order }
+
+  const rows: ImportRow[] = [], skipped: SkippedRow[] = []
+  body.forEach((r, i) => {
+    const line = first + i + 1
+    const skip = (reason: SkipReason) => { skipped.push({ line, reason }) }
+    if (cols.state != null && r[cols.state] && !/completed|completat|eseguit|booked|contabilizzat/i.test(r[cols.state])) return skip('pending')
+    const date = parseDateWith(r[cols.date] ?? '', order)
+    if (!date) return skip(SUMMARY.test(r[cols.date] ?? '') || r.some(c => SUMMARY.test(c)) && !/\d{1,4}[/.-]\d/.test(r[cols.date] ?? '') ? 'summary' : 'date')
+    const currency = cols.currency != null ? (r[cols.currency] || null) : null
+    const digits = minorDigits(currency)
+    const read = (i: number | null) => (i == null || !(r[i] ?? '').trim() ? null : parseMoney(r[i], mark ?? '.', digits))
+    let minor: number | null = null
+    const bad = (m: Money | null) => (m && !m.ok ? m.reason : null)
+    if (cols.amount != null || (cols.debit != null && cols.debit === cols.credit)) {
+      const a = read(cols.amount ?? cols.debit)
+      if (!a || !a.ok) return skip(a ? problem(a.reason) : 'amount')
+      minor = a.minor
+    } else {
+      const d = read(cols.debit), c = read(cols.credit), why = bad(d) ?? bad(c)
+      if (why) return skip(problem(why))
+      minor = c?.ok && c.minor ? Math.abs(c.minor) : d?.ok && d.minor ? -Math.abs(d.minor) : null
+      if (minor == null) return skip('zero')
     }
-    if (cols.fee != null && amount != null) amount -= Math.abs(parseBankAmount(r[cols.fee] ?? '') ?? 0)
-    const description = cols.description.map(i => r[i] ?? '').filter(Boolean).join(' · ')
-    if (!date || amount == null || amount === 0) continue
-    rows.push({ date, description, amount: Math.round(amount * 100) / 100,
-                currency: cols.currency != null ? (r[cols.currency] || null) : null })
-  }
-  return { rows, map: cols, header }
+    if (cols.fee != null) {
+      const f = read(cols.fee)
+      if (f && !f.ok) return skip(problem(f.reason))
+      if (f?.ok) minor -= Math.abs(f.minor)
+    }
+    if (minor === 0) return skip('zero')
+    const description = cols.description.map(j => r[j] ?? '').filter(Boolean).join(' · ')
+    rows.push({ date, description, amount: minor / 10 ** digits, currency })
+  })
+  return { rows, map: cols, header, skipped, mark, order }
 }
+
+const problem = (r: AmountProblem): SkipReason => (r === 'format' ? 'amount' : r)

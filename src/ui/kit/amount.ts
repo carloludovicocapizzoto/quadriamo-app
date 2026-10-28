@@ -1,4 +1,5 @@
 // Importi scritti a mano: separatore delle migliaia e decimali come nella lingua dell'utente.
+import { amountClue, parseMoney, type DecimalMark } from '../../engine/bankNumbers'
 const sepsCache = new Map<string, { group: string; dec: string }>()
 function seps(lang: string) {
   let s = sepsCache.get(lang)
@@ -33,21 +34,19 @@ export function groupTyping(raw: string, lang: string): string {
   return (neg ? '-' : '') + (int || '0').replace(/\B(?=(\d{3})+(?!\d))/g, group) + (frac == null ? '' : dec + frac)
 }
 
-/** Parse di un importo scritto dall'utente: accetta "12,50", "12.50", "1.234,56", "1,234.56". */
-export function parseAmount(raw: string): number | null {
-  let s = raw.replace(/[\s€$£¥]/g, '').replace(/[^\d.,-]/g, '')
-  if (!s) return null
-  const lastComma = s.lastIndexOf(','), lastDot = s.lastIndexOf('.')
-  if (lastComma > -1 && lastDot > -1) {
-    const dec = lastComma > lastDot ? ',' : '.'
-    s = s.split(dec === ',' ? '.' : ',').join('').replace(dec, '.')
-  } else if (/^-?\d{1,3}(,\d{3})+$/.test(s)) {
-    s = s.split(',').join('')   // "1,200" (inglese): tre cifre dopo la virgola sono migliaia, non centesimi
-  } else if (lastComma > -1) {
-    s = s.replace(',', '.')
-  } else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) {
-    s = s.split('.').join('')   // "1.200" e "12.500.000": punti delle migliaia, non decimali
-  }
-  const n = Number(s)
-  return Number.isFinite(n) ? Math.round(n * 100) / 100 : null
+/**
+ * Parse di un importo scritto dall'utente ("12,50", "12.50", "1.234,56", "1,234.56").
+ * Con la lingua il separatore decimale è il suo («1.234» in italiano è milleduecentotrentaquattro, in inglese è rifiutato);
+ * senza lingua, tre cifre dopo un separatore solo sono migliaia. Più di due decimali, o «0,123», non diventano mai un altro
+ * importo: il valore è rifiutato (null), non arrotondato in silenzio.
+ */
+export function parseAmount(raw: string, lang?: string): number | null {
+  const c = amountClue(raw)
+  if (c.kind === 'invalid') return null
+  const single: DecimalMark = raw.includes('.') ? '.' : ','
+  const mark: DecimalMark = c.kind === 'decimal' ? c.mark
+    : c.kind === 'ambiguous' ? (lang ? (seps(lang).dec === '.' ? '.' : ',') : single === '.' ? ',' : '.')
+    : '.'
+  const r = parseMoney(raw, mark, 2)
+  return r.ok ? r.value : null
 }

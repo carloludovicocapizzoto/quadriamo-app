@@ -114,4 +114,10 @@ describe('estratto consolidato', () => {
     const second = 'Personal Account (EUR),,,,\nDate,Description,Category,Money in/out,Balance\n"Dec 31, 2026",QA-B-other,Other,-1,1\nTotal,,,,'
     expect(parseConsolidated(`${englishYear}\n${second}`)).toBeNull()
   })
+  it('Fase 2E: legge «-1,234» del tracciato inglese come −1.234, non lo arrotonda', () => {
+    expect(parseConsolidated(englishYear.replace('-2.35', '"-1,234"'))?.rows[0].amount).toBe(-1234)
+  })
+  it('Fase 2E: rifiuta un importo con più decimali di quelli dell’euro invece di arrotondarlo', () => {
+    expect(parseConsolidated(csv.replace('-2,50€', '-2,505€'))).toBeNull()
+  })
 })

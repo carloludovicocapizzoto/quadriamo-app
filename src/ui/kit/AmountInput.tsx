@@ -36,7 +36,7 @@ export function AmountInput({ value, defaultValue, onChange, onValue, ...rest }:
         const next = groupTyping(raw, lang)
         if (value == null) setOwn(next)
         onChange?.(next)
-        onValue?.(parseAmount(next))
+        onValue?.(parseAmount(next, lang))
       }} />
   )
 }

@@ -115,10 +115,13 @@ describe('Fase 2E: bug riprodotti nell’importazione CSV', () => {
     expect(readStatement(csv).rows.map(r => r.amount)).toEqual([-1234.56, -2.1])
   })
   it('chiede l’ordine delle date quando tutte sono ambigue, e non scarta in silenzio', () => {
-    const res = readStatement('Data;Descrizione;Importo\n03/04/2026;A;-1,50\n05/06/2026;B;-2,50\n')
+    // intestazione inglese: USA (mese/giorno) o Regno Unito (giorno/mese), non si sa
+    const res = readStatement('Date;Description;Amount\n03/04/2026;A;-1,50\n05/06/2026;B;-2,50\n')
     expect(res.rows).toEqual([])
     expect(res.needs?.date?.samples).toEqual(['03/04/2026', '05/06/2026'])
-    expect(readStatement('Data;Descrizione;Importo\n03/04/2026;A;-1,50\n', undefined, { order: 'mdy' }).rows[0].date).toBe('2026-03-04')
+    expect(readStatement('Date;Description;Amount\n03/04/2026;A;-1,50\n', undefined, { order: 'mdy' }).rows[0].date).toBe('2026-03-04')
+    // intestazione italiana (o francese, spagnola, tedesca): giorno/mese è certo
+    expect(readStatement('Data;Descrizione;Importo\n03/04/2026;A;-1,50\n').rows[0].date).toBe('2026-04-03')
   })
   it('riporta le righe escluse con riga e motivo, anche totali e date impossibili', () => {
     const csv = 'Data;Descrizione;Importo\n28/10/2026;A;-1,50\n31/02/2026;B;-2,00\n29/10/2026;C;abc\nTotale;;-3,50\n'
