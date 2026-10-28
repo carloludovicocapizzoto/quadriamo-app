@@ -103,6 +103,8 @@ const es: Dict = {
   'action.cancel': 'Cancelar',
   'action.delete': 'Eliminar',
   'action.close': 'Cerrar',
+  'action.done': 'Listo',
+  'settings.deleteCategory': 'Eliminar categoría',
 
   'month.prev': 'Mes anterior',
   'month.next': 'Mes siguiente',

@@ -103,6 +103,8 @@ const en = {
   'action.cancel': 'Cancel',
   'action.delete': 'Delete',
   'action.close': 'Close',
+  'action.done': 'Done',
+  'settings.deleteCategory': 'Delete category',
 
   'month.prev': 'Previous month',
   'month.next': 'Next month',
