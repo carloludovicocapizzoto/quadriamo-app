@@ -5,6 +5,7 @@ import type { ProfilePage } from '../../profile/pages'
 import type { Dict } from '../../i18n/en'
 import type { Prefs } from '../../app/prefs'
 import { cloudFeature } from '../../features'
+import { ENV } from '../../env'
 
 export interface Ctx {
   signedIn: boolean
@@ -13,16 +14,17 @@ export interface Ctx {
   contactEmail: string
   version: string
   unread: number                    // notifiche non lette nel centro notifiche
+  langName: string                  // la lingua dell'app, scritta nella sua lingua
+  notifyPaused: boolean             // notifiche personali sospese (Alpha)
+  rules: number                     // regole automatiche
   stats: boolean
-  privacyUrl: string
-  termsUrl: string
   t: (k: keyof Dict) => string
   setStats: (on: boolean) => void
   invite: () => void
   openAdmin: () => void
 }
 
-export type Item = { label: keyof Dict; when?: (c: Ctx) => boolean; danger?: boolean } & (
+export type Item = { label: keyof Dict; when?: (c: Ctx) => boolean; danger?: boolean; detail?: (c: Ctx) => string } & (
   | { page: ProfilePage; value?: (c: Ctx) => string | null }
   | { href: (c: Ctx) => string }
   | { toggle: (c: Ctx) => { on: boolean; onChange: (on: boolean) => void } }
@@ -30,11 +32,13 @@ export type Item = { label: keyof Dict; when?: (c: Ctx) => boolean; danger?: boo
   | { info: (c: Ctx) => string }
 )
 
-export const SECTIONS: { title: keyof Dict; items: Item[] }[] = [
+export const SECTIONS: { title: keyof Dict; items: Item[]; foot?: (c: Ctx) => string }[] = [
   { title: 'prof.sec.account', items: [
     { page: 'personal', label: 'prof.personal' },
     { page: 'security', label: 'prof.security', when: c => c.signedIn },
-    { page: 'plan', label: 'prof.plan' },
+    // nell'Alpha il pagamento non c'è: il piano è una riga sola, senza pagina
+    { page: 'plan', label: 'prof.plan', when: () => ENV.name !== 'alpha' },
+    { info: () => 'Free', label: 'prof.plan', detail: c => c.t('pro.notReady'), when: () => ENV.name === 'alpha' },
   ] },
   { title: 'prof.sec.budget', items: [
     { page: 'budget', label: 'prof.budget' },
@@ -43,20 +47,20 @@ export const SECTIONS: { title: keyof Dict; items: Item[] }[] = [
     { page: 'yearCost', label: 'yc.title', when: () => false },   // si apre da Abbonamenti
     { page: 'goals', label: 'prof.goalsPage' },
     { page: 'documents', label: 'prof.documents' },
-    { page: 'rules', label: 'prof.rules' },
+    { page: 'rules', label: 'prof.rules', value: c => String(c.rules) },
     { page: 'shared', label: 'prof.shared', when: () => cloudFeature('shared') },
   ] },
   { title: 'prof.sec.prefs', items: [
     { page: 'appearance', label: 'prof.appearance', value: c => c.t(`theme.${c.prefs.theme}`) },
-    { page: 'language', label: 'prof.language' },
+    { page: 'language', label: 'prof.language', value: c => c.langName },
     { page: 'inbox', label: 'prof.inbox', value: c => c.unread ? String(c.unread) : null },
-    { page: 'notifications', label: 'prof.notifications' },
-    { page: 'motion', label: 'prof.motion' },
-    { page: 'accessibility', label: 'prof.accessibility' },
+    { page: 'notifications', label: 'prof.notifications', value: c => c.notifyPaused ? c.t('prof.notifPaused') : null },
+    // vibrazione e movimento stanno nella pagina dell'accessibilità; l'indirizzo #/profile/motion resta valido
+    { page: 'motion', label: 'prof.motion', when: () => false },
+    { page: 'accessibility', label: 'prof.a11yMotion' },
   ] },
   { title: 'prof.sec.privacy', items: [
-    { href: c => c.privacyUrl, label: 'legal.privacy' },
-    { href: c => c.termsUrl, label: 'legal.terms' },
+    { page: 'legal', label: 'prof.legal' },
     { toggle: c => ({ on: c.stats, onChange: c.setStats }), label: 'beta.stats', when: () => cloudFeature('telemetry') },
     { page: 'data', label: 'prof.exportImport' },
     { page: 'delete', label: 'prof.delete', danger: true, when: c => c.signedIn },
@@ -69,8 +73,7 @@ export const SECTIONS: { title: keyof Dict; items: Item[] }[] = [
     { action: c => c.invite(), label: 'beta.invite', when: () => cloudFeature('invite') },
     { page: 'licenses', label: 'prof.licenses' },
     { action: c => c.openAdmin(), label: 'admin.open', when: c => c.isAdmin },
-    { info: c => c.version, label: 'prof.version' },
-  ] },
+  ], foot: c => `Quadriamo ${c.version}` },
 ]
 
 /** Titolo di una pagina: l'etichetta della voce che la apre (Progressi non è in elenco: si apre dalla testata). */

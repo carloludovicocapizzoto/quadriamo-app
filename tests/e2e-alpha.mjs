@@ -169,7 +169,8 @@ await step(A1, 'il telefono aggiunge l\'abbonamento Netflix', async () => {
 }, async () => ((await remote('A')).document?.settings.events ?? []).some(e => /Netflix/.test(e.title)), 12)
 await step(A2, 'il PC con la copia vecchia cambia un\'impostazione offline e torna online: Netflix resta ovunque', async () => {
   await A2.js(`location.hash = '#/profile/budget'`); await sleep(900)
-  await A2.js(`(() => { const el = [...document.querySelectorAll('.edit-list li input')].find(i => i.value === 'Svago e shopping'); el.focus(); el.select() })()`)
+  await A2.js(`[...document.querySelectorAll('.cat-list .row')].find(r => r.querySelector('.row-main')?.textContent === 'Svago e shopping').click()`); await sleep(600)
+  await A2.js(`(() => { const el = document.querySelector('.bs .cat-sheet input'); el.focus(); el.select() })()`)
   await A2.type('Svago'); await sleep(600)
   await A2.offline(false)
 }, async () => { const d = (await remote('A')).document; return d?.settings.events.some(e => /Netflix/.test(e.title)) && d.settings.categories.some(c => c.name === 'Svago') }, 15)

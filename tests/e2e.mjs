@@ -78,7 +78,7 @@ await step('Analisi → Movimenti elenca la spesa', () => js(`location.hash = '#
 await step('Notizie si apre senza errori', () => js(`location.hash = '#/news'`), `!!document.querySelector('.news2') && !document.querySelector('[role=status] .btn') || ${has('/Notizie/')}`)
 await step('Profilo → Capitale: inserisco 2.000 €', async () => {
   await js(`location.hash = '#/profile/capital'`); await sleep(800)
-  await click(`document.querySelector('.empty .btn')`); await sleep(400)
+  await click(byText('/Inserisci il saldo/', '.row')); await sleep(400)
   await js(`document.querySelector('.cap-parts input[inputmode]')?.focus() ?? [...document.querySelectorAll('.cap-parts input')][1]?.focus()`)
   await type('2000'); await sleep(200)
   await click(byText('/Salva il saldo/'))
@@ -179,12 +179,13 @@ await cdp('Network.emulateNetworkConditions', { offline: false, latency: 0, down
 
 console.log('Categorie')
 // eliminare una categoria usata non cancella niente: si sceglie dove spostare i movimenti, poi sparisce
-const catRow = name => `[...document.querySelectorAll('.edit-list li')].find(l => l.querySelector('input')?.value === '${name}')`
+const catRow = name => `[...document.querySelectorAll('.cat-list .row')].find(r => r.querySelector('.row-main')?.textContent === '${name}')`
 await step('Profilo → Budget: eliminare «Affitto» mostra chi la usa', async () => {
   await js(`document.querySelector('.kb-list') && document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`)
   await js(`location.hash = '#/profile/budget'`); await sleep(900)
-  await click(`${catRow('Affitto')}?.querySelector('button.icon-btn')`)
-}, `/Movimenti: 1/.test(${catRow('Affitto')}?.querySelector('.cat-delete')?.innerText ?? '')`)
+  await click(catRow('Affitto')); await sleep(500)
+  await click(byText('/Elimina categoria/', '.bs button'))
+}, `/Movimenti: 1/.test(document.querySelector('.bs .cat-delete')?.innerText ?? '')`)
 await step('«Sposta ed elimina» porta la spesa in «Spesa» e toglie la categoria', async () => {
   await setField('.cat-delete select', 'groceries'); await sleep(200)
   await click(byText('/Sposta ed elimina/', '.cat-delete button')); await sleep(600)

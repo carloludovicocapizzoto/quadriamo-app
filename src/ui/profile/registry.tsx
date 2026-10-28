@@ -11,7 +11,7 @@ import { SharedView } from '../shared/SharedView'
 import { cloudFeature } from '../../features'
 import { NotInAlpha } from '../NotInAlpha'
 import { CapitalPage } from '../capital/CapitalPage'
-import { Accessibility, Appearance, Delete, HelpCenter, Language, Licenses, Motion, Personal, Progress, Security } from './pages'
+import { Accessibility, Appearance, Delete, HelpCenter, Language, Legal, Licenses, Motion, Personal, Progress, Security } from './pages'
 import { RecurringList } from '../calendar/RecurringList'
 import { YearCost } from '../subs/YearCost'
 import { DocumentsPage } from '../docs/DocumentsPage'
@@ -41,7 +41,8 @@ export const PAGES: Record<ProfilePage, (p: PageProps) => ReactNode> = {
   inbox: p => <InboxPage today={p.today} onPage={p.onPage} />,
   notifications: () => <NotificationsPage />,
   motion: () => <Motion />,
-  accessibility: () => <Accessibility />,
+  accessibility: () => <><Accessibility /><Motion titled /></>,
+  legal: () => <Legal />,
   data: () => <SettingsView only={['data']} />,
   delete: p => <Delete onDone={p.onHome} />,
   help: p => <HelpCenter onReport={() => p.onPage('feedback')} />,

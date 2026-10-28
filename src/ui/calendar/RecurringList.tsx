@@ -8,6 +8,7 @@ import type { Dict } from '../../i18n/en'
 import { navigate } from '../../app/router'
 import { useStore } from '../../store/context'
 import { Icon } from '../Icon'
+import { AddRow } from '../kit/List'
 import { Monogram } from '../kit/Monogram'
 import { Money } from '../kit/Money'
 import { tap } from '../kit/motion'
@@ -50,7 +51,8 @@ export function RecurringList() {
 
     <section className="group">
       <h2 className="group-title">{t('sub.title')}</h2>
-      {subs.length > 0 ? <ul className="group-list subs-list">{subs.map(({ e, next }) => {
+      {!subs.length && <p className="muted small group-intro">{t('sub.empty')}</p>}
+      <ul className="group-list subs-list">{subs.map(({ e, next }) => {
         const up = recentIncrease(e, today)
         return <li key={e.id}><button className={`row${e.active ? '' : ' muted'}`} onClick={() => { tap(); setEdit(e) }}>
           <Monogram service={e.service} name={e.title} size={38} />
@@ -60,22 +62,23 @@ export function RecurringList() {
             {up != null && <small className="subs-up">+{up}%</small>}</span>
           <Icon name="chevron" size={18} className="row-chev" />
         </button></li>
-      })}</ul> : <p className="muted small">{t('sub.empty')}</p>}
-      <button className="link-btn" onClick={() => { tap(); setPicking(true) }}>+ {t('sub.add')}</button>
+      })}
+        <AddRow label={t('sub.add')} onClick={() => setPicking(true)} />
+      </ul>
     </section>
 
     <section className="group">
       <h2 className="group-title">{t('rec.others')}</h2>
-      <p className="muted small">{t('rec.hint')}</p>
-      {others.length > 0 && <ul className="group-list">{others.map(({ e, next, left }) => (
+      <p className="muted small group-intro">{t('rec.hint')}</p>
+      <ul className="group-list">{others.map(({ e, next, left }) => (
         <li key={e.id}><button className={`row${e.active ? '' : ' muted'}`} onClick={() => { tap(); setEdit(e) }}>
           <span className="row-main"><span>{e.title}</span>
             <small>{cycle(e)}{next ? ` · ${t('rec.next', { date: date(next, { day: 'numeric', month: 'short' }) })}` : ` · ${t('rec.ended')}`}{left != null && left > 0 ? ` · ${t('ev.left', { n: left })}` : ''}</small></span>
           {e.amount != null && <span className="row-value"><Money value={e.amount} currency={cur} /></span>}
           <Icon name="chevron" size={18} className="row-chev" />
         </button></li>))}
-      </ul>}
-      <button className="link-btn" onClick={() => { tap(); setEdit(blankEvent(today)) }}>+ {t('rec.add')}</button>
+        <AddRow label={t('rec.add')} onClick={() => setEdit(blankEvent(today))} />
+      </ul>
     </section>
 
     <Sheet open={picking} onClose={() => setPicking(false)} title={t('sub.add')}>

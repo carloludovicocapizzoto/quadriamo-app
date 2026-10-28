@@ -6,6 +6,7 @@
   padding: var(--top-gap) var(--gutter) var(--s4); border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
 @media (min-width: 1024px) { .cloud-notice:not(.inline) { margin-left: max(248px, calc((100% - var(--column)) / 2 - var(--gutter))); } }
 .cloud-notice.inline { padding: 0; border: 0; max-width: none; }
+.cloud-notice .cloud-rows { margin: var(--s3) 0 0; }
 .cloud-notice p { margin: 0 0 var(--s2); color: var(--muted); font-size: var(--t-sm); }
 .cloud-notice > p[role=status] { color: var(--text); font-size: 15px; font-weight: var(--w-strong); }
 .cloud-notice p[role=alert] { color: var(--bad); }

@@ -47,7 +47,7 @@ export function PlanCard({ onLogin }: { onLogin: () => void }) {
   const save = Math.round((1 - PRICE.year / (PRICE.month * 12)) * 100)
 
   if (ENV.name === 'alpha') return <section className="card plan" id="plan">
-    <div className="plan-head"><h3 className="h-plain">{t('pro.title')}</h3><span className="pro-badge free">Free</span></div>
+    <div className="plan-head"><span className="pro-badge free">Free</span></div>
     <p className="muted">{t('pro.notReady')}</p>
   </section>
 
@@ -57,7 +57,7 @@ export function PlanCard({ onLogin }: { onLogin: () => void }) {
   }
   return (
     <section className="card plan" id="plan">
-      <div className="plan-head"><h3 className="h-plain">{t('pro.title')}</h3>
+      <div className="plan-head">
         <span className={`pro-badge${plan.pro ? '' : ' free'}`}>{plan.pro ? 'Pro' : 'Free'}</span></div>
 
       {paid && plan.sub && <>

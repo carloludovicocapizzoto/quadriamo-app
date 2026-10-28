@@ -54,6 +54,24 @@ await A1.js(`document.querySelector('.onboarding .btn.primary').click()`); await
 await A1.js(`document.querySelector('.persona-row')?.click()`); await sleep(500)
 for (let i = 0; i < 14 && !(await A1.js(`!!document.querySelector('.tabbar')`)); i++) { await A1.js(`document.querySelector('.step-nav .btn.primary')?.click()`); await sleep(450) }
 await sleep(2500)
+// PAGES=1: pagine intere di tutti i menu (tema scuro), per controllare compattezza e chiarezza; poi si esce
+if (process.env.PAGES) {
+  const routes = ['#/', '#/analysis/month', '#/analysis/year', '#/analysis/calendar', '#/analysis/investments', '#/analysis/transactions', '#/news',
+    '#/profile', '#/profile/personal', '#/profile/security', '#/profile/plan', '#/profile/budget', '#/profile/capital', '#/profile/recurring',
+    '#/profile/goals', '#/profile/documents', '#/profile/rules', '#/profile/appearance', '#/profile/language', '#/profile/inbox',
+    '#/profile/notifications', '#/profile/motion', '#/profile/accessibility', '#/profile/data', '#/profile/help', '#/profile/feedback']
+  await A1.cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: process.env.SCHEME ?? 'dark' }, { name: 'prefers-reduced-motion', value: 'reduce' }] })
+  for (const route of routes) {
+    await A1.js(`location.hash = '${route}'`); await sleep(1400); await A1.js(`window.scrollTo(0, 0)`)
+    const height = Math.min(6000, await A1.js(`document.documentElement.scrollHeight`))
+    await A1.cdp('Emulation.setDeviceMetricsOverride', { width: 390, height, deviceScaleFactor: 1, mobile: true }); await sleep(500)
+    const shot = await A1.cdp('Page.captureScreenshot', { format: 'png' })
+    writeFileSync(join(out, `${route.replace(/[#/]+/g, '-').replace(/^-|-$/g, '') || 'home'}.png`), Buffer.from(shot.result.data, 'base64'))
+    await A1.cdp('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
+  }
+  for (const d of devices) await d.close()
+  await server.close(); console.log(`Pagine in ${out}`); process.exit(0)
+}
 const A2 = await device(9492)
 await signIn(A2, 'A'); await until(A2, `!!document.querySelector('.tabbar')`, 15000); await sleep(2000)
 
