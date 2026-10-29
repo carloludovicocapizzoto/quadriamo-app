@@ -7,16 +7,18 @@
     fr: {open:'Ouvrir Quadriamo', clipboard:'Lien copié', clipboardError:'Impossible de copier le lien. Sélectionnez-le et copiez-le manuellement.', qr:'Ouvrez ce lien sur votre téléphone pour utiliser Quadriamo :', native:'Cette version Alpha fonctionne dans votre navigateur. Ouvrez Quadriamo, puis choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil » dans le menu du navigateur.', devices:{android:'Android',mac:'Mac',windows:'Windows'}},
     es: {open:'Abrir Quadriamo', clipboard:'Enlace copiado', clipboardError:'No se pudo copiar el enlace. Selecciónalo y cópialo manualmente.', qr:'Abre este enlace en tu móvil para usar Quadriamo:', native:'Esta versión Alpha funciona en el navegador. Abre Quadriamo y elige «Instalar aplicación» o «Añadir a la pantalla de inicio» en el menú del navegador.', devices:{android:'Android',mac:'Mac',windows:'Windows'}},
   }
-  const textFor = element => copy[element?.closest('[data-lang]')?.getAttribute('data-lang')] || copy[language] || copy.en
-  const text = textFor(document.querySelector('[data-lang].on'))
+  const textFor = element => copy[element?.closest('[data-lang]')?.getAttribute('data-lang')]
+    || copy[document.documentElement.lang] || copy[language] || copy.en
   const appUrl = new URL('/app/', location.origin).href
   const addUrl = new URL('/app/?add=1', location.origin).href
   document.documentElement.setAttribute('data-qa2g-alpha-guides', 'true')
 
-  document.querySelectorAll('[data-qa2g-app-open]').forEach(link => {
+  const updateAppLinks = () => document.querySelectorAll('[data-qa2g-app-open]').forEach(link => {
     link.href = appUrl
-    link.textContent = text.open
+    link.textContent = textFor(link).open
   })
+  updateAppLinks()
+  new MutationObserver(updateAppLinks).observe(document.documentElement, {attributes:true, attributeFilter:['lang']})
   document.querySelectorAll('.app-link a[href="/app/"]').forEach(link => {
     link.href = appUrl
     link.textContent = `${location.host}/app/`
