@@ -1,7 +1,7 @@
 import { ISOLATION_WORKER, ISOLATION_PUSH_SCRIPT } from './src/pushProtocol.ts'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import { execSync } from 'node:child_process'
+import { execSync, spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { loadEnv } from 'vite'
 import { defineConfig, type Plugin } from 'vitest/config'
@@ -38,6 +38,28 @@ function contentSecurityPolicy(mode: string): Plugin {
   }
 }
 
+// Le guide Alpha viene corretto dopo che Vite ha scritto i file e prima che Workbox generi la cache offline.
+function alphaGuideBuild(mode: string): Plugin {
+  let prepared = false
+  return {
+    name: 'quadriamo-alpha-guides',
+    apply: 'build',
+    writeBundle: {
+      order: 'pre',
+      sequential: true,
+      handler() {
+        if (mode !== 'alpha' || prepared) return
+        prepared = true
+        const run = spawnSync(process.execPath, ['tools/alpha/prepare-guides.mjs', 'dist-alpha'], {
+          stdio: 'inherit', windowsHide: true,
+        })
+        if (run.error) throw run.error
+        if (run.status !== 0) throw new Error(`Alpha guide preparation failed (${run.status ?? 'unknown status'})`)
+      },
+    },
+  }
+}
+
 // Identità della build: versione da package.json, numero = quanti commit ci sono (sale sempre), commit corto.
 const git = (cmd: string, fallback: string) => { try { return execSync(`git ${cmd}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() } catch { return fallback } }
 const BUILD = { version: JSON.parse(readFileSync('package.json', 'utf8')).version as string, number: git('rev-list --count HEAD', '0'), commit: git('rev-parse --short HEAD', 'dev') }
@@ -52,6 +74,7 @@ export default defineConfig(({ mode }) => ({
     designSystemForSite(),
     contentSecurityPolicy(mode),
     react(),
+    ...(mode === 'alpha' ? [alphaGuideBuild(mode)] : []),
     VitePWA({
       registerType: 'autoUpdate', filename: ISOLATION_WORKER,
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png', 'fonts/DMSerifDisplay-Regular.ttf', 'fonts/*.woff2'],

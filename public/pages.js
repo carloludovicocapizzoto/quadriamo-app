@@ -52,6 +52,8 @@
 
 // "Copia link" nella pagina Scarica
 ;(function () {
+  // In Alpha l'helper specifico mostra l'esito reale della copia negli appunti.
+  if (document.documentElement.hasAttribute('data-qa2g-alpha-guides')) return
   document.querySelectorAll('.copy-link').forEach(function (b) {
     var label = b.textContent
     b.addEventListener('click', function () {
