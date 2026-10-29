@@ -2,6 +2,7 @@
 // le righe di model.ts. Sotto: condividi (immagine, menu del telefono), salva l'immagine, PDF (stampa del sistema,
 // "Salva come PDF"). L'immagine si crea sul telefono e non passa da nessun server.
 import { useMemo, useState, type CSSProperties } from 'react'
+import { shownAmount } from '../../engine/bankNumbers'
 import { makeDate, monthReceipt, prevMonth, todayIso, type YearMonth } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
@@ -22,7 +23,7 @@ export function Receipt({ ym }: { ym: YearMonth }) {
   const r = useMemo(() => monthReceipt(ym, data.transactions, s, today), [ym, data.transactions, s, today])
   const lines = useMemo(() => {
     const num = (n: number) => new Intl.NumberFormat(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
-    const money = (n: number) => new Intl.NumberFormat(lang, { style: 'currency', currency: s.currency }).format(n)
+    const money = (n: number) => new Intl.NumberFormat(lang, { style: 'currency', currency: s.currency }).format(shownAmount(n, s.currency))
     const monthName = (m: YearMonth) => date(makeDate(m.year, m.month, 1), { month: 'long', year: 'numeric' })
     return receiptLines(r, {
       t: (k, v) => t(k as keyof Dict, v), money, num, monthName: monthName(ym), prevName: r.prev ? date(makeDate(prevMonth(ym).year, prevMonth(ym).month, 1), { month: 'long' }) : null,
