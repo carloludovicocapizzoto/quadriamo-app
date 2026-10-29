@@ -4,7 +4,7 @@ import { budgetEvents, occurrences } from './calendar'
 import { minorDigits } from './bankNumbers'
 import {
   CUSTOM, FIRST, SPLIT,
-  type BucketRow, type CheckKind, type ClassifiedTx, type MonthResult, type Settings,
+  type BucketRow, type Divided, type CheckKind, type ClassifiedTx, type MonthResult, type Settings,
   type Transaction, type YearMonth,
 } from './types'
 
@@ -76,20 +76,32 @@ export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, t
  * Divide `amount` secondo i pesi (quote della regola o «a modo mio») senza perdere né creare centesimi: si lavora in unità
  * minime della valuta (`digits`: EUR 2, JPY 0, KWD 3), ogni parte prende la sua quota troncata e le unità che avanzano vanno
  * alle parti con la frazione più grande; a parità vince la parte che viene prima (regola dei resti maggiori, come paydayPlan).
- * La somma delle parti è l'importo arrotondato alla valuta moltiplicato per la somma dei pesi (1 per una regola valida).
+ * La somma delle parti è sempre l'importo arrotondato alla valuta: pesi che non fanno 100% (vecchi backup, dati non validi)
+ * si leggono in proporzione; pesi tutti nulli, negativi o non numerici mandano tutto alla prima parte, mai soldi che spariscono.
  */
 export function allocate(amount: number, weights: number[], digits = 2): number[] {
   const scale = 10 ** digits
   const sign = amount < 0 ? -1 : 1
   const units = Math.round(Math.abs(amount) * scale)
-  const total = weights.reduce((a, w) => a + (w > 0 ? w : 0), 0)
-  const target = Math.round(units * total)
-  const raw = weights.map(w => units * (w > 0 ? w : 0))
+  const clean = weights.map(w => Number.isFinite(w) && w > 0 ? w : 0)
+  const total = clean.reduce((a, w) => a + w, 0)
+  const w = total > 0 ? clean.map(x => x / total) : clean.map((_, i) => i === 0 ? 1 : 0)
+  const raw = w.map(x => units * x)
   const whole = raw.map(x => Math.floor(x + 1e-9))
   const order = raw.map((x, i) => ({ i, f: Math.round((x - whole[i]) * 1e6) })).sort((a, b) => b.f - a.f || a.i - b.i)
-  let left = target - whole.reduce((a, x) => a + x, 0)
+  let left = units - whole.reduce((a, x) => a + x, 0)
   for (let k = 0; left > 0 && order.length; k = (k + 1) % order.length, left--) whole[order[k].i]++
   return whole.map(x => sign * x / scale)
+}
+
+/**
+ * Le parti di questo mese dalla divisione cumulata: si divide il totale dal primo mese fino a qui e si toglie quello che era
+ * già stato diviso fino al mese prima. Così l'arrotondamento non si accumula (con 10,25 € ogni mese una parte perdeva
+ * mezzo centesimo al mese, 12 centesimi in due anni): ogni parte resta entro un'unità della sua quota esatta.
+ */
+const divideSince = (before: number, now: number, weights: number[], digits: number) => {
+  const a = allocate(before + now, weights, digits), b = allocate(before, weights, digits)
+  return a.map((x, i) => Math.round((x - b[i]) * 10 ** digits) / 10 ** digits)
 }
 
 /** Somma delle quote di un'entrata divisa a modo mio (1 = 100%), arrotondata per non sbagliare sui decimali. */
@@ -147,12 +159,15 @@ export function computeMonth(
   const txs = [...recurringOf(ym, manual, s, today), ...manual]
     .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
 
+  // quanto era già stato diviso fino al mese prima (zero dal primo mese, o con un riporto passato a mano)
+  let before: Divided = { ruled: 0, custom: {} }
   if (!carriedOver) {
     if (compareYm(ym, s.firstMonth) <= 0) {
       carriedOver = Object.fromEntries(s.buckets.map(b => [b.id, b.startingBalance]))
     } else {
       const prev = computeMonth(prevMonth(ym), all, s, today, undefined, cache)
       carriedOver = Object.fromEntries(prev.buckets.map(r => [r.bucket.id, r.remaining]))
+      before = prev.divided ?? before
     }
   }
 
@@ -169,8 +184,18 @@ export function computeMonth(
 
   // le quote al centesimo (all'unità minima della valuta): la somma delle parti è esattamente quella delle entrate divise
   const digits = minorDigits(s.currency)
-  const ruled = allocate(Math.max(0, base), s.buckets.map(b => b.share), digits)
-  const customParts = custom.map(t => allocate(t.amountIn ?? 0, s.buckets.map(b => t.split![b.id] ?? 0), digits))
+  const shares = s.buckets.map(b => b.share)
+  const ruled = divideSince(before.ruled, Math.max(0, base), shares, digits)
+  // «a modo mio»: ogni combinazione di quote ha il suo totale cumulato
+  const byWeights = new Map<string, { weights: number[]; amount: number }>()
+  for (const t of custom) {
+    const weights = s.buckets.map(b => t.split![b.id] ?? 0), key = weights.join(',')
+    const g = byWeights.get(key) ?? { weights, amount: 0 }
+    g.amount += t.amountIn ?? 0; byWeights.set(key, g)
+  }
+  const customParts = [...byWeights].map(([key, g]) => divideSince(before.custom[key] ?? 0, g.amount, g.weights, digits))
+  const divided: Divided = { ruled: before.ruled + Math.max(0, base), custom: { ...before.custom } }
+  for (const [key, g] of byWeights) divided.custom[key] = (divided.custom[key] ?? 0) + g.amount
   const buckets: BucketRow[] = s.buckets.map((b, i) => {
     const fromIncome = ruled[i] + (i === 0 ? Math.min(0, base) : 0) + sum(of('income').filter(t => t.bucket === b.id))
       + customParts.reduce((a, parts) => a + parts[i], 0)
@@ -197,7 +222,7 @@ export function computeMonth(
 
   const result: MonthResult = {
     ym, period: periodOf(ym, s.monthStartDay), transactions: txs,
-    income, spent, saved, leftOver: income - spent - saved, paidFirst,
+    income, spent, saved, leftOver: income - spent - saved, paidFirst, divided,
     buckets, byCategory, checks, spendingByBucket,
   }
   if (normal) cache.set(key, result)

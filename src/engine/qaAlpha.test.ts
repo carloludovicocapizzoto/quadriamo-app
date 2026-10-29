@@ -1,7 +1,7 @@
 // Difetti della QA reale sull'Alpha (ef7ff9f, 29/10): P2-002 quote al centesimo, P2-003 «già pagato» solo se confermato,
 // P3 niente «−0,00». Solo dati sintetici.
 import { describe, expect, it } from 'vitest'
-import { agenda, allocate, computeMonth, defaultSettings, paydayPlan, periodSummary, shownAmount, type CalEvent, type Settings, type Transaction } from '.'
+import { agenda, allocate, computeMonth, defaultSettings, nextMonth, paydayPlan, periodSummary, shownAmount, type CalEvent, type Settings, type Transaction } from '.'
 
 const oct = { year: 2026, month: 10 }
 const base = (x: Partial<Settings> = {}): Settings => ({ ...defaultSettings({ firstMonth: { year: 2026, month: 9 } }), ...x })
@@ -65,6 +65,57 @@ describe('P2-002: le quattro quote conservano esattamente l\'entrata', () => {
     const txs = [tx('a', '2026-10-01', 'salary', 4000), tx('b', '2026-10-05', 'extraIncome', 10.25)]
     const copy = JSON.parse(JSON.stringify({ txs, s: base() }))
     expect(parts(copy.txs, copy.s)).toEqual(parts(txs))
+  })
+})
+
+describe('P2-002: niente scarto che si accumula nei mesi (verifica chiesta da Federico)', () => {
+  // la stessa entrata ogni mese faceva cadere la parità sempre sulla stessa parte: 12 centesimi in 24 mesi con 10,25 €
+  const months = (n: number, make: (m: number, d: (day: number) => string) => Transaction[]) => {
+    const txs: Transaction[] = []; let ym = { year: 2024, month: 1 }
+    for (let m = 0; m < n; m++) {
+      const y = ym
+      txs.push(...make(m, day => `${y.year}-${String(y.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`)); ym = nextMonth(ym)
+    }
+    return txs
+  }
+  const s = defaultSettings({ firstMonth: { year: 2024, month: 1 } })
+  const check = (txs: Transaction[], exact: (b: number, m: number) => number) => {
+    let ym = { year: 2024, month: 1 }, worst = 0
+    const cum = [0, 0, 0, 0]
+    for (let m = 0; m < 24; m++) {
+      const r = computeMonth(ym, txs, s, '2026-10-29')
+      r.buckets.forEach((b, i) => { cum[i] += b.fromIncome; worst = Math.max(worst, Math.abs(cents(cum[i]) - exact(i, m))) })
+      ym = nextMonth(ym)
+    }
+    return worst
+  }
+  it('10,25 € ogni mese per 24 mesi: ogni parte resta entro un centesimo dalla sua quota esatta', () => {
+    const txs = months(24, (m, d) => [tx(`s${m}`, d(1), 'salary', 10.25)])
+    expect(check(txs, (i, m) => 1025 * (m + 1) * s.buckets[i].share)).toBeLessThanOrEqual(1)
+  })
+  // regola e «a modo mio» sono due divisioni cumulate separate: ognuna resta entro un centesimo, insieme meno di due
+  it('più entrate e quote personalizzate in 1/3, 24 mesi: meno di un centesimo per ciascuna divisione', () => {
+    const third = { essentials: 1 / 3, qualityOfLife: 1 / 3, investments: 1 / 3 }
+    const txs = months(24, (m, d) => [tx(`s${m}`, d(1), 'salary', 1543.37), tx(`c${m}`, d(10), 'extraIncome', 10, { paidFrom: 'custom', split: third })])
+    const w = (i: number) => [1 / 3, 1 / 3, 0, 1 / 3][i]
+    expect(check(txs, (i, m) => 154337 * (m + 1) * s.buckets[i].share + 1000 * (m + 1) * w(i))).toBeLessThan(2)
+  })
+})
+
+describe('P2-002: pesi che non fanno 100% (vecchi backup, dati non validi)', () => {
+  it('99,9% o 150%: si divide comunque tutto l\'importo, in proporzione', () => {
+    expect(total(allocate(100, [0.549, 0.2, 0.15, 0.1]))).toBe(10000)
+    expect(total(allocate(100, [0.75, 0.3, 0.3, 0.15]))).toBe(10000)
+    expect(allocate(100, [0.75, 0.3, 0.3, 0.15])).toEqual([50, 20, 20, 10])
+  })
+  it('pesi nulli, negativi o non numerici: tutto alla prima parte, niente che sparisce', () => {
+    expect(allocate(10.25, [0, 0, 0, 0])).toEqual([10.25, 0, 0, 0])
+    expect(allocate(10.25, [NaN, -1, 0, 0])).toEqual([10.25, 0, 0, 0])
+    expect(allocate(10, [NaN, 0.5, -1, 0.5])).toEqual([0, 5, 0, 5])
+  })
+  it('un\'entrata «a modo mio» con quote rotte in un vecchio backup: il totale delle parti è l\'entrata', () => {
+    const p = parts([tx('a', '2026-10-01', 'salary', 10.01, { paidFrom: 'custom', split: { essentials: 0.4, qualityOfLife: 0.4 } })])
+    expect(total(p)).toBe(1001)
   })
 })
 

@@ -95,6 +95,9 @@ export interface BucketRow {
   available: number
 }
 
+/** Totali cumulati delle entrate divise: con la regola, e «a modo mio» per ogni combinazione di quote. */
+export interface Divided { ruled: number; custom: Record<string, number> }
+
 export interface MonthResult {
   ym: YearMonth
   period: { start: string; end: string }
@@ -104,6 +107,7 @@ export interface MonthResult {
   saved: number
   leftOver: number
   paidFirst: number                 // spese "prima delle parti" del mese (quelle in arrivo contano già): si tolgono dalle entrate da dividere
+  divided?: Divided                 // entrate divise dal primo mese fino a questo compreso (month.ts): ogni mese prende la differenza
   buckets: BucketRow[]
   byCategory: { category: Category; amount: number; share: number }[]
   checks: Record<CheckKind, number>
