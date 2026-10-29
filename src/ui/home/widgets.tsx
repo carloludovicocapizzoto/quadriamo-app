@@ -1,7 +1,7 @@
 // I widget della Home: le cose che si guardano appena si apre l'app. Ognuno dice una cosa sola, con un mini grafico
 // o un indicatore che informa (non decora). L'utente sceglie quali vedere, in che ordine e di che dimensione.
 import type { ReactNode } from 'react'
-import { capitalAdvice, capitalSummary, dailySpending, forecastMonth, goalStatus, lastDays, missions, portfolioSummary,
+import { capitalAdvice, capitalSummary, dailySpending, forecastMonth, goalStatus, investmentsWithLive, lastDays, missions, portfolioSummary,
   type ClassifiedTx, type MonthResult, type Streak, KIND_SIDE, addDays, agenda, daysBetween } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
@@ -16,6 +16,8 @@ import type { WidgetId } from './catalog'
 import { Events, Markets } from './widgetsMore'
 import { CalendarMini, Documents, Subscriptions } from './widgetsPlan'
 import { Monogram } from '../kit/Monogram'
+import { quotesFor } from '../../quotes'
+import { readPrices } from '../livePrices'
 
 export interface WidgetCtx {
   data: AppData; r: MonthResult; today: string; streak: Streak | null
@@ -164,7 +166,9 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
     case 'capital': {
       if (!s.capital?.parts.length) return null
       const sum = capitalSummary(s.capital)
-      const inv = c.data.investments?.holdings.length ? portfolioSummary(c.data.investments, s, c.today).value : 0
+      // con i prezzi crypto già scaricati su questo dispositivo, come in Investi
+      const inv = c.data.investments?.holdings.length
+        ? portfolioSummary(investmentsWithLive(c.data.investments, quotesFor(c.data.investments.holdings, s.currency, readPrices().live)), s, c.today).value : 0
       return box(<>
         <p className="w-big"><Money value={sum.total} currency={cur} /> <TrendTag delta={sum.total - sum.start} base={sum.start} /></p>
         {s.capital.history.length > 1 && <Spark values={s.capital.history.map(h => h.total)} />}

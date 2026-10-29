@@ -1,7 +1,8 @@
 # Investimenti: le mie quote e come si muove il mercato
 
-Proposta del 29/10/2026, da approvare prima di scrivere codice. Branch: `feature/alpha-investments-tracking`
-(partita da `integration/alpha-phase2e-ux-rc`).
+Proposta del 29/10/2026. **Carlo ha scelto l'opzione C** (29/10). La parte sul telefono (A) è fatta sulla branch
+`feature/alpha-investments-tracking` (partita da `integration/alpha-phase2e-ux-rc`); la parte server di C è qui sotto
+come proposta, da decidere con Federico (§ «Parte server»).
 
 ## Cosa chiede Carlo
 
@@ -85,3 +86,36 @@ Nessun widget nuovo. Se preferisci tenere ferma la Home, si salta.
 - Prova end-to-end (`npm run e2e`): aggiungo un titolo crypto e un ETF con prezzo a mano, cambio il prezzo e vedo la
   variazione; la risposta di CoinGecko è finta (dati sintetici, nessuna rete vera nei test).
 - `tsc`, lint, test, e2e verdi; Draft PR, nessun merge; avviso a Federico per la branch e la PR.
+
+## Cosa è stato fatto (parte A dell'opzione C)
+
+- `src/engine/investments.ts`: `recordPrice` (prezzo a mano del giorno), `holdingMove` (24 ore o «dal giorno»),
+  `portfolioMove` (totale), `investmentsWithLive`.
+- `src/quotes.ts`: ticker → moneta CoinGecko, una richiesta sola, risposta letta con prudenza.
+- `src/ui/livePrices.ts`: memoria del dispositivo (`personal`, per account), una richiesta ogni 10 minuti al massimo,
+  solo con Investi aperto; senza rete restano gli ultimi prezzi.
+- Investi: riga del movimento sotto il valore, variazione su ogni titolo, ora dei prezzi. Il widget Capitale usa i
+  prezzi già scaricati. Nessun widget nuovo, la Home resta com'è.
+- CSP: aggiunto `https://api.coingecko.com`. Privacy: CoinGecko nell'elenco dei servizi (it, en).
+- Prove: test unitari (motore, CoinGecko, memoria) ed end-to-end con CoinGecko finto (nessuna rete vera).
+
+Da sapere: se il portafoglio mescola crypto e prezzi a mano, la riga in alto dice «Dal <giorno più vecchio>» e
+somma le 24 ore delle crypto con la variazione dei prezzi a mano.
+
+## Parte server (opzione C, da decidere: nulla è stato fatto)
+
+Serve una funzione che chieda i prezzi di ETF e azioni a un fornitore con la sua chiave segreta e li dia all'app.
+
+- **Dove**: una funzione `quotes` accanto alle altre (`supabase/functions/`) o una rotta della funzione Cloudflare
+  dell'Alpha (`functions/api/`). Riceve solo l'elenco dei ticker o ISIN, mai quote né importi, e risponde
+  `{ "VWCE.DE": { price, currency, change, at } }`. Tiene una cache di 15 minuti per ticker, così molti utenti
+  fanno poche richieste al fornitore.
+- **Fornitore** (da scegliere, leggendo i termini sull'uso in un'app): Twelve Data, Finnhub, Alpha Vantage, EOD
+  Historical Data, Marketstack. Per gli ETF europei (Xetra, Borsa Italiana) servono copertura e ISIN; i piani
+  gratuiti spesso coprono solo gli USA o pochi titoli al minuto. Yahoo Finance non è un servizio ufficiale: no.
+- **Chiave**: solo nei Secrets della funzione, mai nell'app.
+- **Alpha**: il gateway oggi accetta solo sincronizzazione, profili e abbonamenti; va aggiunta la rotta (come per le
+  notizie) e una voce `quotes` in `src/features.ts`.
+- **App**: `src/quotes.ts` riceve una seconda fonte; il campo «Ticker» accetta anche l'ISIN; il resto (variazioni,
+  memoria locale, schermata) è già pronto.
+- **Chi decide**: Carlo (fornitore e costo) e Federico (server, gateway, Cloudflare).
