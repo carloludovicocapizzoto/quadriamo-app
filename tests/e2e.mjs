@@ -3,12 +3,14 @@
 // Uso: npm run e2e   (costruisce l'app senza server in dist-e2e, la serve sulla porta 4180 e lancia i controlli)
 import { spawn } from 'node:child_process'
 import { openChrome, sleep } from '../tools/chrome.mjs'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import * as XLSX from 'xlsx'
 
 const URL_APP = process.env.E2E_URL ?? 'http://localhost:4180/app/'
+const screenshotDir = process.env.E2E_SCREENSHOT_DIR
+if (screenshotDir) mkdirSync(screenshotDir, { recursive: true })
 
 // il server con l'app costruita (npm run e2e la costruisce in dist-e2e), se non ne è stato indicato un altro
 const server = process.env.E2E_URL ? null
@@ -149,6 +151,49 @@ await step('Profilo → Abbonamenti: aggiungo Netflix dal catalogo', async () =>
   await setField('.event-form input[type=date]', inDays(5))   // non oggi: «Oggi» in Home resta quello che hai speso
   await click(byText('/Aggiungi al calendario/', '.event-form button'))
 }, `/Netflix/.test(document.querySelector('.subs-list')?.innerText ?? '') && /12,99/.test(document.querySelector('.subs-list')?.innerText ?? '')`)
+await step('Home offre un accesso diretto alla gestione delle ricorrenze', async () => {
+  await js(`location.hash = '#/'`); await sleep(700)
+}, `/Gestisci abbonamenti e ricorrenti/.test(document.querySelector('.w-upcoming')?.innerText ?? '')`)
+await step('il collegamento Home apre abbonamenti e ricorrenti', async () => {
+  await click(`document.querySelector('.w-upcoming .link-btn')`); await sleep(700)
+}, `location.hash === '#/profile/recurring' && !!document.querySelector('.subs-list')`)
+await step('una bolletta bimestrale finita mostra stima, rate previste e data finale', async () => {
+  await click(byText('/Aggiungi un pagamento/')); await sleep(500)
+  await click(byText('/^Bolletta$/', '.event-form [role=radio]'))
+  await setField('.event-form input:not([type])', 'QA-B-Bolletta variabile')
+  await setField('.event-form input[inputmode=decimal]', '100')
+  await setField('.event-form input[type=date]', inDays(3))
+  await click(byText('/^Ogni 2 mesi$/', '.event-form [role=radio]'))
+  await click(byText('/Dopo un numero di volte/', '.event-form [role=radio]'))
+  await setField('.event-form input[type=number]', '6')
+  await click(byText('/Aggiungi al calendario/', '.event-form button'))
+}, `/QA-B-Bolletta variabile/.test(document.querySelector('.group-list:not(.subs-list)')?.innerText ?? '') && /stima/.test(document.querySelector('.group-list:not(.subs-list)')?.innerText ?? '') && /50,00/.test(document.querySelector('.group-list:not(.subs-list)')?.innerText ?? '') && /600,00/.test(document.querySelector('.group-list:not(.subs-list)')?.innerText ?? '') && /6 rimaste/.test(document.querySelector('.group-list:not(.subs-list)')?.innerText ?? '') && /fino al/.test(document.querySelector('.group-list:not(.subs-list)')?.innerText ?? '')`)
+await step('la ricerca Google AI Pro riconosce un solo servizio Google Gemini', async () => {
+  await click(byText('/Aggiungi abbonamento/')); await sleep(500)
+  await click(byText('/^Intelligenza artificiale$/', '.sp-cats [role=tab]'))
+  await setField('.sp input[type=search]', 'Google AI Pro'); await sleep(300)
+}, `/Google Gemini/.test(document.querySelector('.sp-list li:first-child')?.innerText ?? '') && document.querySelectorAll('.sp-list li').length === 2`)
+await step('il modulo permette di personalizzare il nome del piano AI', async () => {
+  await click(`document.querySelector('.sp-list li:first-child .row')`); await sleep(500)
+}, `document.querySelector('.event-form input:not([type])')?.value === 'Google Gemini' && /personalizzare/.test(document.querySelector('.event-form')?.innerText ?? '')`)
+await step('il servizio AI generico si può personalizzare e salvare', async () => {
+  await js(`document.querySelector('.bs-root.open')?.click()`); await sleep(500)
+  await click(`document.querySelector('.subs-list > li:last-child button')`); await sleep(500)
+  await click(byText('/^Intelligenza artificiale$/', '.sp-cats [role=tab]'))
+  await click(`document.querySelector('.sp-grid li:first-child button')`); await sleep(500)
+  await setField('.event-form input:not([type])', 'QA-B-Assistente personale')
+  await setField('.event-form input[inputmode=decimal]', '1,50')
+  await setField('.event-form input[type=date]', inDays(10))
+  await click(byText('/Aggiungi al calendario/', '.event-form button'))
+}, `/QA-B-Assistente personale/.test(document.querySelector('.subs-list')?.innerText ?? '') && /1,50/.test(document.querySelector('.subs-list')?.innerText ?? '')`)
+await step('un servizio fuori catalogo resta aggiungibile con un nome scelto dall’utente', async () => {
+  await click(byText('/Aggiungi abbonamento/')); await sleep(500)
+  await setField('.sp input[type=search]', 'QA-B-Servizio personale'); await sleep(300)
+  await click(`document.querySelector('.sp-list li:last-child .row')`); await sleep(500)
+  await setField('.event-form input[inputmode=decimal]', '2')
+  await setField('.event-form input[type=date]', inDays(12))
+  await click(byText('/Aggiungi al calendario/', '.event-form button'))
+}, `/QA-B-Servizio personale/.test(document.querySelector('.subs-list')?.innerText ?? '')`)
 await step('cambiando il prezzo, l\'aumento resta nello storico', async () => {
   await sleep(600)
   await click(`[...document.querySelectorAll('.subs-list .row')].find(r => /Netflix/.test(r.textContent))`); await sleep(900)
@@ -245,6 +290,12 @@ await step('il capitale preesistente è conservato', () => js(`location.hash = '
 if (savingsChoiceEnabled) await step('il saldo del deposito entra solo nella destinazione confermata', null,
   `/Conto deposito/.test(document.body.innerText) && /100,00/.test(document.body.innerText) && /2[.]000,00/.test(document.body.innerText)`)
 
+await checkHomeForecast()
+if (process.env.E2E_UX_STOP_AFTER_VISUAL) {
+  console.log(`\nUX browser path passed through ${n} steps.`)
+  await done(0)
+}
+
 console.log('Importazione CSV annuale')
 const annualRows = ['Savings Accounts Summaries,,,,', 'Instant Access Savings (EUR),,,,', 'Savings account details,,,,',
   ',,Closing balance,123.45,', 'Personal Account (EUR),,,,', 'Summary,,,,', 'Date,Description,Category,Money in/out,Balance',
@@ -267,6 +318,65 @@ await step('la conferma inserisce tutte le date annuali nella casella globale', 
 await step('un secondo caricamento dello stesso CSV non crea duplicati', async () => {
   await selectCsv(); await sleep(250); await clickNative('[aria-label="Controlla l’importazione"] button')
 }, `/0 movimenti da confermare · 14 già importati/.test(document.body.innerText) && /15/.test(document.querySelector('h3')?.innerText ?? '')`)
+
+async function checkHomeForecast() {
+console.log('Home → Adesso: previsione negativa e leggibilità mobile')
+await step('creo un fixture sintetico che porta la previsione sotto zero', async () => {
+  await js(`location.hash = '#/'`); await sleep(500)
+  await click(`document.querySelector('.tab-add')`); await sleep(500)
+  await type('2500,00'); await sleep(150)
+  await click(`document.querySelector('.cat-pick button')`)
+  await click(`document.querySelector('.tx-sheet button[type=submit]')`); await sleep(600)
+  await js(`location.hash = '#/'`); await sleep(500)
+  await js(`if (!document.querySelector('.now')?.innerText.includes('Previsione:')) document.querySelector('.now-toggle')?.click()`)
+}, `/Previsione:/.test(document.querySelector('.now')?.innerText ?? '') && /spese variabili/.test(document.querySelector('.now')?.innerText ?? '')`)
+
+const initialTheme = await js(`document.documentElement.dataset.theme`)
+const forecastLayout = async () => js(`(() => {
+  const title = [...document.querySelectorAll('.now-main > span')].find(x => x.textContent.includes('Previsione:'))
+  const detail = title?.parentElement.querySelector('small')
+  if (!title || !detail) return null
+  const row = title.closest('.now-row')
+  const rowsFit = [...document.querySelectorAll('.now-row')].every(item => {
+    const box = item.getBoundingClientRect(), main = item.querySelector('.now-main'), end = item.querySelector('.now-end')
+    if (!main || main.getBoundingClientRect().left < box.left - 1 || main.getBoundingClientRect().right > box.right + 1) return false
+    const textsFit = [...main.children].every(el => el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1)
+    return textsFit && (!end || (end.scrollWidth <= end.clientWidth + 1 && main.getBoundingClientRect().right <= end.getBoundingClientRect().left + 1))
+  })
+  return { title: title.textContent, detail: detail.textContent,
+    titleFits: title.scrollWidth <= title.clientWidth + 1 && title.scrollHeight <= title.clientHeight + 1,
+    detailFits: detail.scrollWidth <= detail.clientWidth + 1 && detail.scrollHeight <= detail.clientHeight + 1,
+    wraps: title.clientHeight > parseFloat(getComputedStyle(title).lineHeight),
+    noEllipsis: getComputedStyle(title).whiteSpace !== 'nowrap' && getComputedStyle(title).textOverflow !== 'ellipsis',
+    rowContains: row.scrollHeight <= row.clientHeight + 1, rowsFit }
+})()`)
+for (const theme of ['light', 'dark']) for (const [width, height] of [[320, 568], [375, 667], [390, 844], [412, 915], [820, 1180], [1440, 900]]) {
+  await cdp('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 600 })
+  await js(`document.documentElement.dataset.theme = '${theme}'`)
+  await sleep(50)
+  const layout = await forecastLayout()
+  if (!layout?.titleFits || !layout?.detailFits || !layout?.rowContains || !layout?.rowsFit || !layout?.noEllipsis || (width === 320 && !layout.wraps))
+    throw Error(`Now forecast clipped at ${width}x${height} (${theme}): ${JSON.stringify(layout)}`)
+  console.log(`  ✓ ${width}×${height} ${theme}: titolo e descrizione completi${layout.wraps ? ', testo a capo' : ''}`)
+  if (screenshotDir) {
+    const shot = await cdp('Page.captureScreenshot', { format: 'png' })
+    writeFileSync(join(screenshotDir, `now-${theme}-${width}x${height}.png`), Buffer.from(shot.result.data, 'base64'))
+  }
+}
+await cdp('Emulation.setDeviceMetricsOverride', { width: 320, height: 568, deviceScaleFactor: 1, mobile: true })
+await js(`document.documentElement.dataset.theme = 'light'`)
+await js(`document.documentElement.style.setProperty('--t-h2', '40px'); document.documentElement.style.setProperty('--t-body', '32px'); document.documentElement.style.setProperty('--t-sm', '26px'); document.documentElement.style.setProperty('--t-cap', '22px')`)
+await sleep(50)
+const enlarged = await forecastLayout()
+if (!enlarged?.titleFits || !enlarged?.detailFits || !enlarged?.rowContains || !enlarged?.rowsFit) throw Error(`Now forecast clipped with 200% text: ${JSON.stringify(enlarged)}`)
+console.log('  ✓ 320×568 con caratteri portati al 200%: contenuto completo e senza clipping')
+if (screenshotDir) {
+  const shot = await cdp('Page.captureScreenshot', { format: 'png' })
+  writeFileSync(join(screenshotDir, 'now-light-320x568-text-200.png'), Buffer.from(shot.result.data, 'base64'))
+}
+await cdp('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
+await js(`document.documentElement.dataset.theme = '${initialTheme ?? 'light'}'; for (const key of ['--t-h2', '--t-body', '--t-sm', '--t-cap']) document.documentElement.style.removeProperty(key)`)
+}
 
 if (errors.length) { console.error(`\nErrori nella pagina:\n  ${errors.join('\n  ')}`); await done(1) }
 console.log(`\nTutti i ${n} passi sono andati bene.`)
