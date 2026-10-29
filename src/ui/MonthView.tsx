@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { FIRST, forecastMonth, paydayPlan, ymKey, type ClassifiedTx, type MonthResult, type Settings } from '../engine'
+import { FIRST, paydayPlan, ymKey, type ClassifiedTx, type MonthResult, type Settings } from '../engine'
 import { useStore } from '../store/context'
 import { useI18n } from '../i18n/core'
-import { usePlan } from '../billing/plan'
 import { ByCategory } from './ByCategory'
 import { Checks } from './Checks'
 import { Outcome } from './Outcome'
@@ -52,19 +51,15 @@ export function MonthView({ r, settings, onOpen, today }: { r: MonthResult; sett
   )
 }
 
-/** Come finisce il mese: per quello in corso, la previsione a questo ritmo; per gli altri, com'è andata davvero. */
+/** Com'è il mese: entrate meno uscite registrate finora (in corso) o com'è andata davvero (finito). Nessuna proiezione. */
 function MonthOutcome({ r, settings, today }: { r: MonthResult; settings: Settings; today: string }) {
-  const { t, money } = useI18n()
-  const plan = usePlan()
+  const { t } = useI18n()
   const cur = settings.currency
-  const f = plan.pro ? forecastMonth(r, today) : null
   const now = today >= r.period.start && today <= r.period.end
-  const value = f ? f.projectedLeftOver : r.leftOver
-  const label = f ? (value < 0 ? t('ana.endOver') : t('ana.endLeft'))
-    : now ? (value < 0 ? t('ana.overNow') : t('ana.leftNow')) : (value < 0 ? t('ana.overPast') : t('ana.leftPast'))
+  const value = r.leftOver
+  const label = now ? (value < 0 ? t('ana.overNow') : t('ana.leftNow')) : (value < 0 ? t('ana.overPast') : t('ana.leftPast'))
   return (
     <Outcome value={value} currency={cur} label={label}
-      detail={f && t(f.upcoming > 0 ? 'rep.detail' : 'rep.detailNoUp', { spent: money(f.spentSoFar, cur), upcoming: money(f.upcoming, cur), perDay: money(f.variablePerDay, cur) })}
       totals={[{ label: t('month.income'), value: r.income }, { label: t('month.spent'), value: r.spent }, { label: t('ana.saved'), value: r.saved }]}>
       <Checks checks={r.checks} />
     </Outcome>

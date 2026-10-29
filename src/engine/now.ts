@@ -1,6 +1,6 @@
 // "Adesso": cosa conta oggi, in ordine di urgenza. Solo regole (nessuna IA, scelta di Carlo): prima quello che va fatto
 // (pagamenti da seguire scaduti, scadenze di oggi, documenti scaduti), poi quello che arriva (prossima uscita, prossima
-// entrata, documenti in scadenza) e le anomalie (il mese finisce sotto zero, una categoria molto sopra il solito,
+// entrata, documenti in scadenza) e le anomalie (spese già oltre i soldi del mese, una categoria molto sopra il solito,
 // un abbonamento aumentato). Pochi elementi e utili: la Home ne mostra tre, gli altri a richiesta.
 import { addDays, daysBetween } from './dates'
 import { agenda, docStatus, KIND_SIDE, type CalEvent } from './calendar'
@@ -12,7 +12,7 @@ export type NowItem =
   | { type: 'late'; event: CalEvent; date: string; days: number }               // da seguire "finché non è fatto", già scaduto
   | { type: 'today'; events: CalEvent[]; amount: number }                       // pagamenti di oggi
   | { type: 'docExpired'; event: CalEvent; days: number }
-  | { type: 'pace'; leftOver: number }                                          // a questo ritmo il mese finisce sotto zero
+  | { type: 'over'; amount: number; planned: boolean }                          // le spese hanno già superato i soldi (o il previsto): un fatto
   | { type: 'doc'; event: CalEvent; days: number }                              // documento in scadenza
   | { type: 'nextOut'; event: CalEvent; date: string; days: number }
   | { type: 'price'; event: CalEvent; pct: number; yearly: number }             // abbonamento aumentato nell'ultimo mese
@@ -35,7 +35,7 @@ export interface NowInput {
   today: string
   hour: number                     // ora locale (per il promemoria serale)
   loggedToday: boolean
-  leftOver: number | null          // previsione di fine mese (null se non c'è un piano)
+  over?: { amount: number; planned: boolean } | null   // quanto le spese hanno già superato le parti di spesa (spend.overspent)
   changes?: CategoryChange[]       // categorie rispetto alla media (reports.categoryChanges)
   receipt?: YearMonth | null       // il mese appena finito, se ha movimenti e siamo nei primi giorni del nuovo
 }
@@ -56,7 +56,7 @@ export function nowItems(i: NowInput): NowItem[] {
     if (s.state === 'expired') out.push({ type: 'docExpired', event: e, days: -s.days })
     else if (s.days <= 30) out.push({ type: 'doc', event: e, days: s.days })
   }
-  if (i.leftOver != null && i.leftOver < 0) out.push({ type: 'pace', leftOver: i.leftOver })
+  if (i.over && i.over.amount > 0) out.push({ type: 'over', amount: i.over.amount, planned: i.over.planned })
 
   const next = outs(addDays(today, 1), addDays(today, 7))[0]
   if (next) out.push({ type: 'nextOut', event: next.event, date: next.date, days: daysBetween(today, next.date) })
@@ -87,7 +87,7 @@ export function nowItems(i: NowInput): NowItem[] {
 
   if (i.receipt) out.push({ type: 'receipt', ym: i.receipt })
 
-  const rank: Record<NowItem['type'], number> = { late: 0, today: 1, docExpired: 2, pace: 3, doc: 4, nextOut: 5, price: 6, receipt: 6.5, category: 7, nextIn: 8, log: 9, goal: 10 }
+  const rank: Record<NowItem['type'], number> = { late: 0, today: 1, docExpired: 2, over: 3, doc: 4, nextOut: 5, price: 6, receipt: 6.5, category: 7, nextIn: 8, log: 9, goal: 10 }
   // un documento a pochi giorni conta più della prossima uscita
   const score = (x: NowItem) => x.type === 'doc' && x.days > 14 ? 7.5 : rank[x.type]
   return out.sort((a, b) => score(a) - score(b))

@@ -1,4 +1,5 @@
-// Report: andamento degli ultimi mesi, categorie che crescono, previsione di fine mese.
+// Report: andamento degli ultimi mesi, categorie che crescono. Nessuna proiezione «a questo ritmo»: l'app parla di
+// quello che c'è (il consiglio del mese, basato sul reddito previsto, è in spend.ts).
 // Tutto calcolato sul dispositivo a partire dai movimenti, come il resto dell'app.
 import { daysBetween, prevMonth } from './dates'
 import { computeMonth, monthCache } from './month'
@@ -64,36 +65,4 @@ export function categoryChanges(ym: YearMonth, txs: Transaction[], s: Settings, 
     out.push({ category: c, now: n, before: b, diff, pct: b > 0 ? Math.round((diff / b) * 100) : null })
   }
   return out.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff))
-}
-
-export interface Forecast {
-  spentSoFar: number      // uscite già fatte
-  upcoming: number        // ricorrenti ancora da pagare questo mese
-  variablePerDay: number  // media al giorno delle spese non ricorrenti finora
-  projected: number       // spese previste a fine mese
-  projectedLeftOver: number
-  daysLeft: number
-}
-
-/** Previsione di fine mese: spese già fatte + ricorrenti in arrivo + ritmo attuale delle spese variabili per i giorni che restano. */
-export function forecastMonth(r: MonthResult, today: string): Forecast | null {
-  if (today < r.period.start || today > r.period.end) return null
-  const elapsed = daysBetween(r.period.start, today) + 1
-  const daysLeft = daysBetween(today, r.period.end)
-  let spentSoFar = 0, upcoming = 0, variable = 0
-  for (const t of r.transactions) {
-    if (t.type !== 'expense') continue
-    if (t.upcoming) { upcoming += t.amountIn ?? t.planned ?? 0; continue }
-    if (t.amountIn == null) continue
-    if (!t.date || t.date > today) continue
-    spentSoFar += t.amountIn
-    if (!t.recurring) variable += t.amountIn
-  }
-  const variablePerDay = variable / elapsed
-  const projected = Math.round((spentSoFar + upcoming + variablePerDay * daysLeft) * 100) / 100
-  return {
-    spentSoFar: Math.round(spentSoFar * 100) / 100, upcoming: Math.round(upcoming * 100) / 100,
-    variablePerDay: Math.round(variablePerDay * 100) / 100, projected,
-    projectedLeftOver: Math.round((r.income - r.saved - projected) * 100) / 100, daysLeft,
-  }
 }

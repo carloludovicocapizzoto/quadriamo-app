@@ -1,6 +1,7 @@
-// Impostazioni generali: valuta e giorno d'inizio del mese, una riga ciascuno (la lingua solo nella configurazione iniziale:
+// Impostazioni generali: valuta, giorno d'inizio del mese e quanto si prende al mese, una riga ciascuno (la lingua solo nella configurazione iniziale:
 // nel Profilo ha la sua pagina in Preferenze).
 import { LANGS, useI18n, type Lang } from '../../i18n/core'
+import { AmountInput } from '../kit/AmountInput'
 import { CURRENCIES } from '../names'
 import type { SettingsDraft } from './draft'
 
@@ -28,6 +29,12 @@ export function GeneralSection({ d: { draft, edit, errors }, wizard }: { d: Sett
                  aria-invalid={errors.includes('startDay')}
                  onChange={e => edit(s => { s.monthStartDay = Number(e.target.value) })} />
         </label></li>
+        {/* il reddito di ogni mese, più o meno: è la base del numero del giorno (non è un'entrata registrata) */}
+        {!wizard && <li><label className="row">
+          <span className="row-main"><span>{t('settings.expectedIncome')}</span><small>{t('settings.expectedIncomeHint')}</small></span>
+          <AmountInput className="row-input row-num row-amount" defaultValue={draft.expectedIncome ?? null} placeholder="0"
+                       onValue={n => edit(s => { s.expectedIncome = n && n > 0 ? n : null })} />
+        </label></li>}
       </ul>
     </section>
   )

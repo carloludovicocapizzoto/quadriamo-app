@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { daysBetween, todayBudget, type BucketRow, type ClassifiedTx, type MonthResult, type Streak } from '../../engine'
+import { daysBetween, expectedFor, monthBudget, todayBudget, type BucketRow, type ClassifiedTx, type MonthResult, type Streak } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { AppData } from '../../store/state'
 import { Icon } from '../Icon'
@@ -26,7 +26,7 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
   data: AppData; r: MonthResult; today: string; streak: Streak | null
   onAdd: (kind: 'expense' | 'income') => void; onOpen: (tx: ClassifiedTx) => void; onAll: () => void
 }) {
-  const { t, date } = useI18n()
+  const { t, date, money } = useI18n()
   const s = data.settings, cur = s.currency
   const budget = useMemo(() => todayBudget(r, s, today), [r, s, today])
   const [part, setPart] = useState<BucketRow | null>(null)
@@ -49,7 +49,9 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
   }
   const left = useCountUp(budget.left)
   const daysLeft = daysBetween(today, r.period.end) + 1
-  const hasPlan = budget.parts.length > 0 && r.income > 0
+  // c'è un piano quando ci sono soldi da dividere: entrate del mese, un saldo nelle parti o il reddito previsto
+  const hasPlan = budget.parts.length > 0 && (r.income > 0 || expectedFor(r, s) != null || r.buckets.some(b => b.available > 0))
+  const plan = useMemo(() => monthBudget(r, s, today), [r, s, today])
   const day = date(today, { weekday: 'long', day: 'numeric', month: 'long' })
 
   // i quattro blocchi: vivono qui perché aprono il dettaglio della parte
@@ -91,6 +93,8 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
       : <section className="hero" aria-live="polite">
         <Money className="hero-amount" value={left} currency={cur} />
         <p className="hero-sub">{daysLeft > 1 ? t('home.heroSub', { n: daysLeft }) : t('home.heroLast')}</p>
+        {/* il numero viene dal reddito previsto: se non è ancora arrivato tutto, si vede quanto */}
+        {plan && plan.missing > 0 && <p className="hero-note">{t('bm.arrived', { received: money(plan.received, cur), expected: money(plan.expected, cur) })}</p>}
       </section>}
 
       {/* Adesso: cosa conta oggi, prima dei widget */}

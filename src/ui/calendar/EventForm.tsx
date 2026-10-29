@@ -38,6 +38,8 @@ export function EventForm({ event, settings, today, focusAmount, onSave, onDelet
   const set = (p: Partial<CalEvent>) => setE(x => ({ ...x, ...p }))
   const side = KIND_SIDE[e.kind]
   const spending = settings.categories.filter(c => c.type !== 'income')
+  const isNew = !settings.events.some(x => x.id === event.id)
+  const inPlanNow = !e.planOffFrom || today < e.planOffFrom
   const { state } = useStore()
   const goals = (state.data?.goals ?? []).filter(g => !g.removed)
   const pacMonthly = state.data?.investments?.pac.monthly ?? 0
@@ -113,6 +115,10 @@ export function EventForm({ event, settings, today, focusAmount, onSave, onDelet
             {spending.map(c => <option key={c.id} value={c.id}>{categoryName(c, t)}</option>)}
             <option value="">{t('ev.noBudget')}</option>
           </select></label>}
+        {/* «Conta nel mese»: spento da oggi, le volte da qui in poi escono dal piano; quelle già contate e i pagamenti veri restano */}
+        {side === 'out' && e.category && <div className="txs-row"><span id="ev-in-plan">{t('ev.inPlan')}</span>
+          <span className="row-switch"><button type="button" role="switch" aria-checked={inPlanNow} aria-labelledby="ev-in-plan" className={`switch${inPlanNow ? ' on' : ''}`}
+            onClick={() => { tap(); set({ planOffFrom: inPlanNow ? (isNew && e.date < today ? e.date : today) : null }) }}><i /></button></span></div>}
         {e.kind === 'saving' && goals.length > 0 && <label className="txs-row"><span>{t('ev.goal')}</span>
           <select value={e.goalId ?? ''} onChange={x => set({ goalId: x.target.value || null })}>
             <option value="">{t('ev.goalEmergency')}</option>
@@ -124,7 +130,7 @@ export function EventForm({ event, settings, today, focusAmount, onSave, onDelet
       {e.kind === 'subscription' && e.service && serviceById(e.service)?.category === 'ai' &&
         <p className="small muted">{t('sub.planHint')}</p>}
       {e.kind === 'bill' && <p className="small muted">{t('ev.estimateHint')}</p>}
-      {side === 'out' && <p className="small muted">{e.category ? t('ev.inBudgetHint') : t('ev.noBudgetHint')}
+      {side === 'out' && <p className="small muted">{e.category ? t('ev.inPlanHint') : t('ev.noBudgetHint')}
         {e.kind === 'saving' && e.goalId ? ` ${t('ev.goalHint')}` : e.kind === 'pac' && pacMonthly > 0 ? ` ${t('ev.pacHint')}` : ''}</p>}
       {side === 'out' && <>
         <p className="small fb-q"><b>{t('pm.title')}</b></p>

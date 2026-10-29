@@ -1,7 +1,7 @@
 // I widget della Home: le cose che si guardano appena si apre l'app. Ognuno dice una cosa sola, con un mini grafico
 // o un indicatore che informa (non decora). L'utente sceglie quali vedere, in che ordine e di che dimensione.
 import type { ReactNode } from 'react'
-import { capitalAdvice, capitalSummary, dailySpending, forecastMonth, goalStatus, lastDays, missions, portfolioSummary,
+import { capitalAdvice, capitalSummary, goalStatus, lastDays, missions, monthBudget, overspent, portfolioSummary,
   type ClassifiedTx, type MonthResult, type Streak, KIND_SIDE, addDays, agenda, daysBetween } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
@@ -82,19 +82,26 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
     }
 
     case 'forecast': {
-      // come finisce il mese: la spesa fin qui (linea) e la proiezione a questo ritmo (tratteggio)
-      const f = forecastMonth(c.r, c.today)
-      if (!f || c.r.income <= 0) return null
-      const days = dailySpending(c.r), at = days.findIndex(d => d.day === c.today) + 1
-      const perDay = f.variablePerDay, cum = days.slice(0, at).map(d => d.cumulative)
-      const proj = days.slice(at).map((_, i) => (cum.at(-1) ?? 0) + perDay * (i + 1))
-      const left = f.projectedLeftOver
+      // il budget del mese: il reddito previsto, quanto è arrivato (e l'extra), le spese fisse, quanto spendere al giorno.
+      // Solo fatti: rosso soltanto se le spese hanno già superato il previsto, mai una proiezione
+      const settingsLink = () => navigate({ tab: 'profile', page: 'budget' })
+      const b = monthBudget(c.r, s, c.today)
+      if (!b) return box(<>
+        <p className="w-note">{t('bm.set')}</p>
+        <button className="link-btn" onClick={settingsLink}>{t('bm.setAction')} →</button>
+      </>)
       return box(<>
-        <p className={`w-big${left < 0 ? ' bad-text' : ''}`}><Money value={left} currency={cur} /></p>
-        <p className="w-note">{t(left < 0 ? 'ana.endOver' : 'ana.endLeft')}</p>
-        <Spark values={[...cum, ...proj]} dashedFrom={cum.length} />
-        <p className="w-legend"><span>{t('hw.spentSoFar', { amount: money(f.spentSoFar, cur) })}</span><span>{t('hw.perDay', { amount: money(perDay, cur) })}</span></p>
-      </>, () => navigate({ tab: 'analysis', view: 'month' }), left < 0)
+        <p className={`w-big${b.over > 0 ? ' bad-text' : ''}`}>{b.over > 0 ? <Money value={-b.over} currency={cur} /> : t('safe.perDay', { amount: money(b.perDay, cur) })}</p>
+        <p className="w-note">{b.over > 0 ? t('bm.over') : t('bm.perDayNote', { n: b.daysLeft })}</p>
+        <Meter value={b.expected > 0 ? Math.min(1, (b.received - b.extra) / b.expected) : 0} label={t('bm.received')} />
+        <dl className="w-budget">
+          <div><dt>{t('bm.expected')}</dt><dd><Money value={b.expected} currency={cur} /></dd></div>
+          <div><dt>{t('bm.received')}</dt><dd><Money value={b.received - b.extra} currency={cur} /></dd></div>
+          {b.extra > 0 && <div><dt>{t('bm.extra')}</dt><dd className="good-text"><Money value={b.extra} currency={cur} /></dd></div>}
+          {b.fixed > 0 && <div><dt>{t('bm.fixed')}</dt><dd><Money value={b.fixed} currency={cur} /></dd></div>}
+        </dl>
+        {b.extra > 0 && <p className="w-note">{t('bm.extraNote')}</p>}
+      </>, settingsLink, b.over > 0)
     }
 
     case 'week': {
@@ -133,7 +140,8 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
     }
 
     case 'tips': {
-      const end = forecastMonth(c.r, c.today)?.projectedLeftOver ?? null
+      const over = overspent(c.r, s, c.today).amount
+      const end = over > 0 ? -over : null
       const out: string[] = []
       if (s.capital?.parts.length) for (const a of capitalAdvice(s.capital, end, essentialsMonth(c))) {
         out.push(a.id === 'cover' ? t('cap.adv.cover', { deficit: money(a.deficit, cur), part: a.part, available: money(a.available, cur) })

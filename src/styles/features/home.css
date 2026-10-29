@@ -169,3 +169,11 @@
 .wg-fav.on { color: var(--b1); }
 .wg-fav.on svg { fill: currentColor; }
 .wg-fav:active { transform: scale(.85); transition: transform var(--d-fast) var(--ease); }
+/* il numero del giorno viene dal reddito previsto: quanto è arrivato, sotto, senza peso */
+.hero-note { margin: var(--s1) 0 0; color: var(--muted); font-size: var(--t-sm); }
+/* budget del mese: previsto, arrivati, extra, spese fisse come righe etichetta-valore */
+.w-budget { display: grid; gap: var(--s1); margin: var(--s3) 0 0; }
+.w-budget > div { display: flex; justify-content: space-between; gap: var(--s3); font-size: var(--t-sm); }
+.w-budget dt { color: var(--muted); }
+.w-budget dd { margin: 0; font-variant-numeric: tabular-nums; }
+.w-forecast .meter { margin-top: var(--s3); }

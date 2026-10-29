@@ -6,13 +6,13 @@ import type { PeriodSummary } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import { Money } from '../kit/Money'
 
-export function MonthSummary({ s, leftOver, currency }: { s: PeriodSummary; leftOver: number | null; currency: string }) {
+export function MonthSummary({ s, currency }: { s: PeriodSummary; currency: string }) {
   const { t, money } = useI18n()
   const paidShare = s.out > 0 ? s.paid / s.out : 0
   return (
     <section className="glass-card cal-summary" aria-label={t('cal.summary')}>
-      <p className="cs-label">{leftOver != null ? t('cal.endLeft') : t('cal.monthOut')}</p>
-      <Money className={`cs-hero${leftOver != null && leftOver < 0 ? ' bad-text' : ''}`} value={leftOver ?? s.out} currency={currency} />
+      <p className="cs-label">{t('cal.monthOut')}</p>
+      <Money className="cs-hero" value={s.out} currency={currency} />
       {s.out > 0 && <div className="cs-bar" role="img" aria-label={t('cal.paidShare', { pct: Math.round(paidShare * 100) })}>
         <i style={{ '--w': paidShare } as CSSProperties} /></div>}
       <dl className="cs-grid">

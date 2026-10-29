@@ -3,7 +3,7 @@
 // promemoria) e i giorni più pesanti in evidenza, poi la settimana del giorno scelto come timeline. Le altre viste
 // (giorno, settimana, agenda) usano la stessa timeline.
 import { useMemo, useState } from 'react'
-import { GOAL_EVENT, addDays, agenda, daysBetween, forecastMonth, goalEvents, goalStatus, makeDate, monthOf, parseDate, periodSummary, toneOf, type CalEvent, type MonthResult, type Settings } from '../../engine'
+import { GOAL_EVENT, addDays, agenda, daysBetween, goalEvents, goalStatus, makeDate, parseDate, periodSummary, toneOf, type CalEvent, type Settings } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import { navigate } from '../../app/router'
@@ -30,7 +30,7 @@ const AGENDA_DAYS = 60
 /** Il lunedì della settimana di `iso`. */
 const monday = (iso: string) => addDays(iso, -((new Date(iso + 'T00:00:00Z').getUTCDay() + 6) % 7))
 
-export function CalendarView({ settings, today, current }: { settings: Settings; today: string; current: MonthResult }) {
+export function CalendarView({ settings, today }: { settings: Settings; today: string }) {
   const { t, date, lang, money } = useI18n()
   const { events: own, save, remove, toggleDone } = useEvents()
   // con le scadenze degli obiettivi (si toccano per aprire l'obiettivo)
@@ -89,8 +89,6 @@ export function CalendarView({ settings, today, current }: { settings: Settings;
   // il mese di calendario mostrato: i suoi conti; quanto resta a fine mese solo se è il periodo di budget in corso
   const monthItems = items.filter(x => x.date.slice(0, 7) === day.slice(0, 7))
   const sum = periodSummary(mode === 'month' ? monthItems : items, today)
-  const viewed = monthOf(day, settings.monthStartDay)
-  const leftOver = viewed.year === current.ym.year && viewed.month === current.ym.month ? forecastMonth(current, today)?.projectedLeftOver ?? null : null
   const heavy = new Set(sum.heavy)
   return (
     <div className="calendar">
@@ -107,7 +105,7 @@ export function CalendarView({ settings, today, current }: { settings: Settings;
       </div>}
       {mode !== 'agenda' && day !== today && <button className="link-btn cal-today" onClick={() => { tap(); setDay(today) }}>{t('cal.today')}</button>}
 
-      {mode === 'month' ? <MonthSummary s={sum} leftOver={leftOver} currency={cur} />
+      {mode === 'month' ? <MonthSummary s={sum} currency={cur} />
         : (sum.toPay > 0 || sum.income > 0) && <dl className="cal-sum">
           {sum.toPay > 0 && <div><dt>{t('cal.out')}</dt><dd><Money value={sum.toPay} currency={cur} /></dd></div>}
           {sum.income > 0 && <div><dt>{t('cal.in')}</dt><dd><Money value={sum.income} currency={cur} /></dd></div>}

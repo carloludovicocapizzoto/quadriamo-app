@@ -122,3 +122,4 @@
 /* "Chi sei?": tre righe come nel Profilo; la scelta ha la spunta e il nome in grassetto */
 .persona-row.on .row-main > span:first-child { font-weight: 600; }
 .persona-row.on .row-chev { color: var(--text); }
+.salary-day-input { width: 88px; }
