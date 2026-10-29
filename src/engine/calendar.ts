@@ -45,7 +45,11 @@ export interface CalEvent {
   method?: string | null             // come si paga (solo un'etichetta: carta, conto, PayPal…)
   prices?: PriceChange[]             // storico dei prezzi: ogni volta che l'importo cambia
   doc?: DocInfo | null               // documento (kind 'document'): la data dell'evento è la scadenza
+  planOffFrom?: string | null        // «Conta nel mese» spento da questo giorno: le volte da qui in poi restano nel calendario ma fuori dal piano
 }
+
+/** «Conta nel mese»: la volta del `date` entra nel piano (pagamento automatico, soldi messi da parte, consiglio). */
+export const inPlan = (e: Pick<CalEvent, 'planOffFrom'>, date: string) => !e.planOffFrom || date < e.planOffFrom
 
 /** Documenti con scadenza: carta d'identità, patente, assicurazioni… Nessuna scansione e nessun numero (scelta di Carlo, 17/10). */
 export type DocCategory = 'personal' | 'car' | 'home' | 'health' | 'work' | 'other'

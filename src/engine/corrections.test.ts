@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { computeMonth, defaultSettings, emptyInvestments, forecastMonth, nth, occurrences, paydayPlan, portfolioSummary, splitOk, type CalEvent, type Transaction } from '.'
+import { computeMonth, defaultSettings, emptyInvestments, nth, occurrences, paydayPlan, portfolioSummary, safeToSpend, splitOk, type CalEvent, type Transaction } from '.'
 import { validateSettings } from '../store/validate'
 
 const ym = { year: 2026, month: 10 }
@@ -72,23 +72,19 @@ describe('ricorrenze e previsione', () => {
       .toEqual(['2026-01-31', '2026-03-31', '2026-05-31'])
     expect(occurrences(event(), '2026-02-01', '2026-03-31')).toEqual(['2026-02-28', '2026-03-31'])
   })
-  it('la previsione include la spesa futura senza registrarla come già pagata', () => {
+  it('la spesa futura è messa da parte senza registrarla come già pagata', () => {
     const s = { ...settings(), events: [event({ date: '2026-09-25' })] }
     const rows = [salary, { id: 'food', date: '2026-10-05', description: 'Food', category: 'groceries', amount: 50 }]
     const r = computeMonth(ym, rows, s, '2026-10-17')
     expect(r.spent).toBe(50)
-    const f = forecastMonth(r, '2026-10-17')!
-    expect(f).toMatchObject({ spentSoFar: 50, upcoming: 100, projected: 191.18 })
-    const higher = computeMonth(ym, rows, { ...s, events: [{ ...s.events[0], amount: 200 }] }, '2026-10-17')
-    expect(f.projectedLeftOver - forecastMonth(higher, '2026-10-17')!.projectedLeftOver).toBeCloseTo(100)
-    expect(forecastMonth(r, '2026-11-01')).toBeNull()
+    expect(safeToSpend(r, s, '2026-10-17').reduce((a, x) => a + x.reserved, 0)).toBe(100)
+    expect(safeToSpend(r, s, '2026-11-01')).toEqual([])
   })
   it('il giorno della scadenza conta una volta sola', () => {
     const s = { ...settings(), events: [event({ date: '2026-10-25' })] }
     for (const date of ['2026-10-24', '2026-10-25', '2026-10-26']) {
-      const f = forecastMonth(computeMonth(ym, [salary], s, date), date)!
-      expect(f.projected).toBe(100)
-      expect(f.spentSoFar + f.upcoming).toBe(100)
+      const r = computeMonth(ym, [salary], s, date)
+      expect(r.spent + safeToSpend(r, s, date).reduce((a, x) => a + x.reserved, 0)).toBe(100)
     }
   })
 })

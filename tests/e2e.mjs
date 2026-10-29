@@ -69,6 +69,8 @@ await step('Inizia porta alla configurazione', async () => {
   await click(byText('/browser/i'))
 }, has('/Chi sei/'))
 await step('scelgo «Studente fuori sede»', () => click(`document.querySelector('.persona-row')`), `!${has('/Chi sei/')}`)
+await step('dopo valuta e giorno, la configurazione chiede quanto prendi, quando arriva e quanto hai oggi', () => click(`document.querySelector('.step-nav .btn.primary')`),
+  `${has('/Che giorno arriva/')} && ${has('/Quanto hai oggi/')} && ${has('/già arrivato/')}`)
 // i passaggi della configurazione: avanti fino all'app (le scelte di partenza vanno bene)
 await step('completo la configurazione', async () => {
   for (let i = 0; i < 14 && !(await js(`!!document.querySelector('.tabbar')`)); i++) {
@@ -151,6 +153,33 @@ await step('Analisi → Calendario: creo una bolletta mensile', async () => {
 }, `/Luce e gas/.test(document.querySelector('.calendar')?.innerText ?? '')`)
 await step('l\'agenda la mostra anche il mese prossimo', () => click(byText('/^Agenda$/')),
   `(document.querySelector('.calendar')?.innerText.match(/Luce e gas/g) ?? []).length >= 2`)
+
+console.log('Piano del mese')
+const setAmount = sel => `(v => { const el = document.querySelector(${JSON.stringify(sel)}); el.focus(); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })) })`
+await step('Profilo → Budget: scrivo quanto prendo al mese (1.200 €), la Home mostra il budget del mese', async () => {
+  await js(`location.hash = '#/profile/budget'`); await sleep(800)
+  await js(`${setAmount('.row-amount')}('1200')`); await sleep(400)
+  await js(`location.hash = '#/'`); await sleep(900)
+}, `/Budget del mese/.test(document.querySelector('.w-forecast')?.innerText ?? '') && /1\\.200,00/.test(document.querySelector('.w-forecast')?.innerText ?? '') && !${has('/a questo ritmo/')}`)
+await step('un\'entrata oltre il previsto è un extra: lo dice e non alza il numero del giorno', async () => {
+  await js(`window.__day = document.querySelector('.hero-amount')?.textContent`)
+  await click(`document.querySelector('.tab-add')`); await sleep(700)
+  await click(byText('/^Entrate$/', '.txs-kind button')); await sleep(200)
+  await js(`${setAmount('.tx-sheet .amount-input')}('500')`)
+  await click(`document.querySelector('.cat-pick button')`); await sleep(300)
+  if (!(await js(`/extra/.test([...document.querySelectorAll('.tx-sheet .txs-note')].map(x => x.textContent).join(' '))`))) throw Error('manca l\'avviso dell\'extra')
+  await click(`document.querySelector('.tx-sheet button[type=submit]')`); await sleep(900)
+}, `!document.querySelector('.tx-sheet') && document.querySelector('.hero-amount')?.textContent === window.__day && /Extra/.test(document.querySelector('.w-forecast')?.innerText ?? '')`)
+await step('una spesa a mano nella categoria della bolletta propone «È “Luce e gas” del…?»', async () => {
+  await click(`document.querySelector('.tab-add')`); await sleep(700)
+  await js(`${setAmount('.tx-sheet .amount-input')}('45')`)
+  await click(byText('/Costi fissi/', '.cat-pick button')); await sleep(300)
+}, `/Luce e gas/.test(document.querySelector('.tx-sheet .txs-link')?.innerText ?? '')`)
+await step('collegata e salvata: la bolletta conta una volta sola, senza avviso di doppione', async () => {
+  await click(`document.querySelector('.tx-sheet .txs-link .link-btn')`); await sleep(200)
+  await click(`document.querySelector('.tx-sheet button[type=submit]')`); await sleep(900)
+  await js(`location.hash = '#/analysis/transactions'`); await sleep(1000)
+}, `([...document.querySelectorAll('.tx-list')].map(x => x.innerText).join(' ').match(/45,00/g) ?? []).length === 1 && !document.querySelector('.tx-list .tx-issue')`)
 await step('Profilo → Centro notifiche: una notifica arrivata si archivia', async () => {
   // Fixture nel namespace locale corrente; una vecchia notifica globale rimane esclusa.
   await js(`new Promise(ok => { const r = indexedDB.open('keyval-store'); r.onsuccess = () => { const tx = r.result.transaction('keyval', 'readwrite');
@@ -425,20 +454,20 @@ await step('un CSV troppo grande è rifiutato prima di leggerlo, e la casella no
   await selectCsv(bigCsv); await sleep(600)
 }, `/File troppo grande/.test(document.body.innerText) && !document.querySelector('.bs') && (document.querySelector('.card-inbox h3')?.innerText ?? '') === ${JSON.stringify(inboxBefore)}`)
 async function checkHomeForecast() {
-console.log('Home → Adesso: previsione negativa e leggibilità mobile')
-await step('creo un fixture sintetico che porta la previsione sotto zero', async () => {
+console.log('Home → Adesso: spese oltre il previsto (un fatto) e leggibilità mobile')
+await step('creo un fixture sintetico che porta le spese oltre il previsto', async () => {
   await js(`location.hash = '#/'`); await sleep(500)
   await click(`document.querySelector('.tab-add')`); await sleep(500)
   await type('2500,00'); await sleep(150)
   await click(`document.querySelector('.cat-pick button')`)
   await click(`document.querySelector('.tx-sheet button[type=submit]')`); await sleep(600)
   await js(`location.hash = '#/'`); await sleep(500)
-  await js(`if (!document.querySelector('.now')?.innerText.includes('Previsione:')) document.querySelector('.now-toggle')?.click()`)
-}, `/Previsione:/.test(document.querySelector('.now')?.innerText ?? '') && /spese variabili/.test(document.querySelector('.now')?.innerText ?? '')`)
+  await js(`if (!document.querySelector('.now')?.innerText.includes('più del previsto')) document.querySelector('.now-toggle')?.click()`)
+}, `/più del previsto/.test(document.querySelector('.now')?.innerText ?? '') && /Non è una stima/.test(document.querySelector('.now')?.innerText ?? '') && !/a questo ritmo/i.test(document.body.innerText)`)
 
 const initialTheme = await js(`document.documentElement.dataset.theme`)
 const forecastLayout = async () => js(`(() => {
-  const title = [...document.querySelectorAll('.now-main > span')].find(x => x.textContent.includes('Previsione:'))
+  const title = [...document.querySelectorAll('.now-main > span')].find(x => x.textContent.includes('più del previsto'))
   const detail = title?.parentElement.querySelector('small')
   if (!title || !detail) return null
   const row = title.closest('.now-row')

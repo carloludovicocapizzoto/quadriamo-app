@@ -1,6 +1,6 @@
 // Calcolo di un mese: è la traduzione delle formule dei fogli mese dell'Excel di Quadriamo.
 import { compareYm, monthOf, periodOf, prevMonth, ymKey } from './dates'
-import { budgetEvents, occurrences } from './calendar'
+import { budgetEvents, inPlan, occurrences } from './calendar'
 import {
   CUSTOM, FIRST, SPLIT,
   type BucketRow, type CheckKind, type ClassifiedTx, type MonthResult, type Settings,
@@ -55,20 +55,41 @@ function transactionsOf(ym: YearMonth, all: Transaction[], s: Settings): Transac
   return all.filter(t => t.date && ymKey(monthOf(t.date, s.monthStartDay)) === key)
 }
 
+/** La chiave di una volta di un evento: `id|data`. */
+export const occurrenceKey = (eventId: string, date: string) => `${eventId}|${date}`
+
+const linkedCache = new WeakMap<Transaction[], Set<string>>()
+/** Le volte delle spese fisse già pagate da un movimento collegato (transaction.occurrence): non generano il pagamento automatico. */
+export function linkedOccurrences(all: Transaction[]): Set<string> {
+  let hit = linkedCache.get(all)
+  if (!hit) {
+    hit = new Set(all.flatMap(t => t.occurrence ? [occurrenceKey(t.occurrence.eventId, t.occurrence.date)] : []))
+    linkedCache.set(all, hit)
+  }
+  return hit
+}
+
 /**
  * I pagamenti del calendario nel mese (engine/calendar: affitto, bollette, rate…): compaiono quando il mese è iniziato
- * (c'è almeno un movimento con importo) e contano solo dal loro giorno; prima sono "upcoming", con l'importo previsto a parte.
+ * (c'è almeno un movimento con importo, o è il primo mese con un saldo di partenza) e contano solo dal loro giorno;
+ * prima sono "upcoming", con l'importo previsto a parte. Ogni volta conta una sola volta: niente pagamento automatico
+ * se un movimento la paga (`linked`), se «Conta nel mese» era spento quel giorno, o se è prima del saldo di partenza
+ * (quei soldi erano già usciti, il saldo li ha già tolti).
  */
-export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, today: string): ClassifiedTx[] {
-  if (!manual.some(t => t.amount != null)) return []
+export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, today: string, linked: Set<string> = new Set()): ClassifiedTx[] {
+  const first = compareYm(ym, s.firstMonth) === 0
+  if (!manual.some(t => t.amount != null) && !(first && s.buckets.some(b => b.startingBalance))) return []
   const { start, end } = periodOf(ym, s.monthStartDay)
-  return budgetEvents(s).flatMap(e => occurrences(e, start, end).map(date => {
-    const due = date <= today
-    return {
-      ...classify({ id: `ev-${e.id}-${date}`, date, description: e.title, category: e.category, amount: due ? e.amount : null }, s),
-      recurring: true, upcoming: !due, planned: e.amount ?? 0, eventId: e.id,
-    }
-  })).sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+  const from = first && s.balanceDate && s.balanceDate > start ? s.balanceDate : start
+  return budgetEvents(s).flatMap(e => occurrences(e, from, end)
+    .filter(date => inPlan(e, date) && !linked.has(occurrenceKey(e.id, date)))
+    .map(date => {
+      const due = date <= today
+      return {
+        ...classify({ id: `ev-${e.id}-${date}`, date, description: e.title, category: e.category, amount: due ? e.amount : null }, s),
+        recurring: true, upcoming: !due, planned: e.amount ?? 0, eventId: e.id,
+      }
+    })).sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
 }
 
 /** Somma delle quote di un'entrata divisa a modo mio (1 = 100%), arrotondata per non sbagliare sui decimali. */
@@ -87,8 +108,9 @@ export function rowIssues(t: ClassifiedTx, s: Settings): CheckKind[] {
   if (t.amount != null && !t.category) out.push('missingCategory')
   if (t.type === 'unknown') out.push('unknownCategory')
   if (t.amount != null && t.amountIn == null) out.push('missingFx')
-  if (t.category && t.amount != null &&
-      budgetEvents(s).some(e => e.category === t.category && e.amount === t.amount)) out.push('recurringDuplicate')
+  // un movimento collegato a una volta è quella volta (non un doppione); una spesa fuori dal piano non ha doppioni automatici
+  if (t.category && t.amount != null && !t.occurrence &&
+      budgetEvents(s).some(e => e.category === t.category && e.amount === t.amount && (!t.date || inPlan(e, t.date)))) out.push('recurringDuplicate')
   return out
 }
 
@@ -123,7 +145,7 @@ export function computeMonth(
   if (hit && normal) return hit
 
   const manual = transactionsOf(ym, all, s).map(t => classify(t, s))
-  const txs = [...recurringOf(ym, manual, s, today), ...manual]
+  const txs = [...recurringOf(ym, manual, s, today, linkedOccurrences(all)), ...manual]
     .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
 
   if (!carriedOver) {

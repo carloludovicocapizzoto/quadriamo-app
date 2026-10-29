@@ -41,7 +41,7 @@ export function AnalysisScreen({ view, onView, data, result, current, homeResult
                     onOpenMonth={m => { onMonth(m); onView('month'); window.scrollTo(0, 0) }} />
           </Swipe>
         </>}
-        {view === 'calendar' && <CalendarView settings={data.settings} today={today} current={homeResult} />}
+        {view === 'calendar' && <CalendarView settings={data.settings} today={today} />}
         {view === 'investments' && <ProGate feature="investments">
           <InvestmentsView settings={data.settings} transactions={data.transactions} today={today} year={year} onYear={onYear} /></ProGate>}
       </div>

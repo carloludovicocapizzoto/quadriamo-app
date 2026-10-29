@@ -46,6 +46,9 @@ export interface Settings {
   homeFavs?: string[]               // widget preferiti: sempre in cima alla Home
   notify?: import('./reminders').NotifyPrefs   // preferenze delle notifiche (vuoto = quelle di partenza)
   homeWidgets?: string[]            // i widget della Home, in ordine (vuoto = quelli di partenza, vedi ui/home/widgets)
+  expectedIncome?: number | null    // quanto si prende al mese, più o meno: serve solo al consiglio (engine/spend, monthAdvice), mai ai saldi
+  expectedFrom?: string | null      // "YYYY-MM": il primo periodo in cui vale (lo stipendio di quello in corso era già nel saldo di partenza)
+  balanceDate?: string | null       // "YYYY-MM-DD": il giorno del saldo di partenza; le spese fisse del primo periodo prima di quel giorno sono già dentro
 }
 
 export const SPLIT = 'split' as const   // entrata divisa secondo la regola
@@ -65,7 +68,11 @@ export interface Transaction {
   split?: Record<string, number> | null   // quote per bucket quando paidFrom è CUSTOM (somma 1)
   updatedAt?: string                // ISO, ultima modifica: serve alla sincronizzazione tra dispositivi
   fxRate?: number | null            // cambio del giorno in cui è stato registrato (1 unità = fxRate della tua valuta)
+  occurrence?: Occurrence | null    // la volta di una spesa fissa che questo movimento paga: quella automatica non conta più
 }
+
+/** Una volta di un evento del calendario (la spesa fissa di un giorno). */
+export interface Occurrence { eventId: string; date: string }
 
 export interface YearMonth { year: number; month: number }   // month 1..12
 

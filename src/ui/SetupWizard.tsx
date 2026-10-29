@@ -1,9 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { SPLIT, applyPersona, daysBetween, defaultPolicy, mainIncome, monthOf, periodOf, todayIso, updateCapital, type CapitalKind, type Persona } from '../engine'
+import { applyPersona, computeMonth, splitBalance, defaultPolicy, monthOf, nextMonth, periodOf, todayBudget, todayIso, updateCapital, ymKey, type CapitalKind, type Persona, type Settings } from '../engine'
 import { useStore } from '../store/context'
 import { newId } from '../store/state'
 import { parseAmount } from './kit/amount'
-import { BUCKET_COLORS, bucketName } from './names'
 import { useI18n } from '../i18n/core'
 import type { Dict } from '../i18n/en'
 import { useSync } from '../sync/context'
@@ -38,11 +37,11 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
   const student = state.data?.settings.persona === 'student'
   const steps: Kind[] = [
     { kind: 'persona' },
-    // subito dopo valuta e giorno: lo stipendio, per vedere il proprio numero del giorno prima ancora di registrare una spesa
+    // l'ordine del piano del mese: quanto prendi e quando, quanto hai oggi; poi la regola, le spese fisse, il capitale
     ...STEPS.flatMap(([section, title]) => section === 'general'
-      ? [{ kind: 'settings', section, title } as Kind, { kind: 'salary' } as Kind, { kind: 'capital' } as Kind]
+      ? [{ kind: 'settings', section, title } as Kind, { kind: 'salary' } as Kind]
       // dopo le categorie, i pagamenti che si ripetono (affitto, bollette, abbonamenti): gli stessi del calendario
-      : section === 'categories' ? [{ kind: 'settings', section, title } as Kind, { kind: 'recurring' } as Kind]
+      : section === 'categories' ? [{ kind: 'settings', section, title } as Kind, { kind: 'recurring' } as Kind, { kind: 'capital' } as Kind]
       : [{ kind: 'settings', section, title } as Kind]),
     ...(sync.user ? [{ kind: 'profile' } as Kind] : []),
   ]
@@ -112,62 +111,82 @@ function PersonaStep({ onPick }: { onPick: () => void }) {
   )
 }
 
-/** "Il tuo stipendio": scrivi quanto ti entra e vedi subito le quattro parti e quanto puoi spendere al giorno. */
+/**
+ * Il piano del mese: quanto prendi di norma (la base del numero del giorno, non un'entrata), quando arriva (l'inizio del
+ * mese), se quello di questo periodo è già arrivato e quanto hai oggi (il saldo di partenza, diviso con la regola).
+ */
 function SalaryStep() {
   const { t, money, lang } = useI18n()
   const { state, dispatch } = useStore()
   const data = state.data!
+  const settings = data.settings
   const today = todayIso()
-  const period = periodOf(monthOf(today, data.settings.monthStartDay), data.settings.monthStartDay)
-  const income = mainIncome(data.settings)
-  const student = data.settings.persona === 'student'
-  const already = data.transactions.find(x => x.category === income && x.date && x.date >= period.start && x.date <= period.end)
+  const student = settings.persona === 'student'
+  const cur = settings.currency
+  const [raw, setRaw] = useState(settings.expectedIncome ? amountText(settings.expectedIncome, lang) : '')
+  const [day, setDay] = useState(settings.monthStartDay)
+  const ym = monthOf(today, settings.monthStartDay)
+  const [arrived, setArrived] = useState(!!settings.expectedFrom && settings.expectedFrom > ymKey(ym))
+  const [balanceRaw, setBalanceRaw] = useState(() => {
+    const n = settings.buckets.reduce((a, b) => a + b.startingBalance, 0)
+    return n ? amountText(Math.round(n * 100) / 100, lang) : ''
+  })
+  // ogni risposta ricalcola tutto il piano: periodo, da quando vale il previsto, saldo di partenza nelle parti
+  const apply = (next: { raw?: string; day?: number; arrived?: boolean; balanceRaw?: string }, base: Settings = settings) => {
+    const income = parseAmount(next.raw ?? raw, lang)
+    const startDay = Math.min(28, Math.max(1, next.day ?? day))
+    const period = monthOf(today, startDay)
+    const balance = Math.max(0, parseAmount(next.balanceRaw ?? balanceRaw, lang) ?? 0)
+    dispatch({ type: 'setSettings', settings: {
+      ...base, monthStartDay: startDay, firstMonth: period, balanceDate: balance > 0 ? today : null,
+      expectedIncome: income && income > 0 ? income : null,
+      expectedFrom: (next.arrived ?? arrived) ? ymKey(nextMonth(period)) : null,
+      buckets: splitBalance(base.buckets, balance),
+    } })
+  }
   const rentName = t('setup.rentName')
-  const rent = data.settings.events.find(x => x.id === 'setup-rent')
+  const rent = settings.events.find(x => x.id === 'setup-rent')
   const [rentRaw, setRentRaw] = useState(rent ? amountText(rent.amount, lang) : '')
   const saveRent = (v: string) => {
     setRentRaw(v)
     const n = parseAmount(v, lang)
-    const others = data.settings.events.filter(x => x !== rent)
+    const others = settings.events.filter(x => x !== rent)
+    const period = periodOf(ym, settings.monthStartDay)
     // l'affitto è un evento del calendario: ogni mese dal primo giorno del periodo, prima delle quattro parti
     const events = n && n > 0 ? [...others, { id: 'setup-rent', kind: 'rent' as const, title: rentName, amount: n, category: 'rent', date: period.start,
       repeat: { every: 1, unit: 'month' as const }, until: null, done: [], active: true }] : others
-    dispatch({ type: 'setSettings', settings: { ...data.settings, events } })
+    dispatch({ type: 'setSettings', settings: { ...settings, events } })
   }
-  const [raw, setRaw] = useState(already?.amount ? amountText(already.amount, lang) : '')
-  const amount = parseAmount(raw, lang) ?? 0
-  const days = Math.max(1, daysBetween(today, period.end) + 1)
-  const cur = data.settings.currency
-  const save = (v: string) => {
-    setRaw(v)
-    const n = parseAmount(v, lang)
-    if (!n || n <= 0) { if (already) dispatch({ type: 'deleteTx', id: already.id }); return }
-    const tx = { id: already?.id ?? newId(), date: already?.date ?? today, description: t(`c.${income}` as keyof Dict), category: income, amount: n, paidFrom: SPLIT }
-    dispatch({ type: already ? 'updateTx' : 'addTx', tx })
-  }
+  // l'anteprima con gli stessi conti dell'app: il numero del giorno di oggi
+  const preview = todayBudget(computeMonth(ym, data.transactions, settings, today), settings, today)
+  const ready = !!settings.expectedIncome || settings.buckets.some(b => b.startingBalance > 0)
   return (
     <div className="salary-step">
       <p>{t(student ? 'setup.studentText' : 'setup.salaryText')}</p>
       <label className="field"><span>{t(student ? 'setup.studentLabel' : 'setup.salaryLabel')} ({cur})</span>
-        <AmountInput className="salary-input" placeholder={student ? '900' : '1.600'} value={raw} onChange={save} autoFocus /></label>
+        <AmountInput className="salary-input" placeholder={student ? '900' : '1.600'} value={raw} onChange={v => { setRaw(v); apply({ raw: v }) }} autoFocus /></label>
+      <label className="field"><span>{t('setup.payday')}</span>
+        <input className="salary-day-input" type="number" inputMode="numeric" min={1} max={28} value={day}
+               onChange={e => { const n = Number(e.target.value); setDay(n); if (n >= 1 && n <= 28) apply({ day: n }) }} />
+        <small className="muted">{t('setup.paydayHint')}</small></label>
+      <div className="field"><span>{t('setup.arrived')}</span>
+        <div className="chips" role="radiogroup" aria-label={t('setup.arrived')}>
+          {[false, true].map(v => <button key={String(v)} type="button" role="radio" aria-checked={arrived === v} className={`chip${arrived === v ? ' on' : ''}`}
+            onClick={() => { setArrived(v); apply({ arrived: v }) }}>{t(v ? 'setup.arrivedYes' : 'setup.arrivedNo')}</button>)}
+        </div>
+        <small className="muted">{t(arrived ? 'setup.arrivedYesHint' : 'setup.arrivedNoHint')}</small></div>
+      <label className="field"><span>{t('setup.balance')} ({cur})</span>
+        <AmountInput className="setup-balance" placeholder="0" value={balanceRaw} onChange={v => { setBalanceRaw(v); apply({ balanceRaw: v }) }} />
+        <small className="muted">{t('setup.balanceHint')}</small></label>
       {student && <label className="field"><span>{t('setup.rentLabel')} ({cur})</span>
         <AmountInput placeholder="380" value={rentRaw} onChange={saveRent} />
         <small className="muted">{t('setup.rentHint')}</small></label>}
-      {amount > 0 && (
-        <div className="salary-preview" key={Math.round(amount)}>
-          <ul>
-            {data.settings.buckets.map((b, i) => (
-              <li key={b.id}><i style={{ background: BUCKET_COLORS[i] }} /><span>{bucketName(b, t)}</span>
-                <b>{money(amount * b.share, cur)}</b></li>
-            ))}
-          </ul>
+      {ready && (
+        <div className="salary-preview">
           <div className="salary-today">
             <span className="muted small">{t('setup.salaryToday')}</span>
-            {data.settings.buckets.slice(0, 2).map((b, i) => (
-              <div key={b.id} className="salary-day"><span className="small"><i style={{ background: BUCKET_COLORS[i] }} />{bucketName(b, t)}</span>
-                <strong>{t('safe.perDay', { amount: money((amount * b.share) / days, cur) })}</strong></div>
-            ))}
-            <span className="muted small">{t('setup.salaryHint', { days })}</span>
+            <strong>{t('safe.perDay', { amount: money(preview.left, cur) })}</strong>
+            <span className="muted small">{t('setup.salaryHint')}</span>
           </div>
         </div>
       )}
