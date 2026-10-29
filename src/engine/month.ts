@@ -1,6 +1,7 @@
 // Calcolo di un mese: è la traduzione delle formule dei fogli mese dell'Excel di Quadriamo.
 import { compareYm, monthOf, periodOf, prevMonth, ymKey } from './dates'
 import { budgetEvents, occurrences } from './calendar'
+import { minorDigits } from './bankNumbers'
 import {
   CUSTOM, FIRST, SPLIT,
   type BucketRow, type CheckKind, type ClassifiedTx, type MonthResult, type Settings,
@@ -69,6 +70,26 @@ export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, t
       recurring: true, upcoming: !due, planned: e.amount ?? 0, eventId: e.id,
     }
   })).sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+}
+
+/**
+ * Divide `amount` secondo i pesi (quote della regola o «a modo mio») senza perdere né creare centesimi: si lavora in unità
+ * minime della valuta (`digits`: EUR 2, JPY 0, KWD 3), ogni parte prende la sua quota troncata e le unità che avanzano vanno
+ * alle parti con la frazione più grande; a parità vince la parte che viene prima (regola dei resti maggiori, come paydayPlan).
+ * La somma delle parti è l'importo arrotondato alla valuta moltiplicato per la somma dei pesi (1 per una regola valida).
+ */
+export function allocate(amount: number, weights: number[], digits = 2): number[] {
+  const scale = 10 ** digits
+  const sign = amount < 0 ? -1 : 1
+  const units = Math.round(Math.abs(amount) * scale)
+  const total = weights.reduce((a, w) => a + (w > 0 ? w : 0), 0)
+  const target = Math.round(units * total)
+  const raw = weights.map(w => units * (w > 0 ? w : 0))
+  const whole = raw.map(x => Math.floor(x + 1e-9))
+  const order = raw.map((x, i) => ({ i, f: Math.round((x - whole[i]) * 1e6) })).sort((a, b) => b.f - a.f || a.i - b.i)
+  let left = target - whole.reduce((a, x) => a + x, 0)
+  for (let k = 0; left > 0 && order.length; k = (k + 1) % order.length, left--) whole[order[k].i]++
+  return whole.map(x => sign * x / scale)
 }
 
 /** Somma delle quote di un'entrata divisa a modo mio (1 = 100%), arrotondata per non sbagliare sui decimali. */
@@ -146,9 +167,13 @@ export function computeMonth(
     .reduce((a, t) => a + (t.amountIn ?? (t.upcoming ? t.planned ?? 0 : 0)), 0)
   const base = split - paidFirst   // se l'affitto supera le entrate, la differenza pesa sulla prima parte (non sparisce)
 
+  // le quote al centesimo (all'unità minima della valuta): la somma delle parti è esattamente quella delle entrate divise
+  const digits = minorDigits(s.currency)
+  const ruled = allocate(Math.max(0, base), s.buckets.map(b => b.share), digits)
+  const customParts = custom.map(t => allocate(t.amountIn ?? 0, s.buckets.map(b => t.split![b.id] ?? 0), digits))
   const buckets: BucketRow[] = s.buckets.map((b, i) => {
-    const fromIncome = Math.max(0, base) * b.share + (i === 0 ? Math.min(0, base) : 0) + sum(of('income').filter(t => t.bucket === b.id))
-      + custom.reduce((a, t) => a + (t.amountIn ?? 0) * (t.split![b.id] ?? 0), 0)
+    const fromIncome = ruled[i] + (i === 0 ? Math.min(0, base) : 0) + sum(of('income').filter(t => t.bucket === b.id))
+      + customParts.reduce((a, parts) => a + parts[i], 0)
     const out = sum(txs.filter(t => t.bucket === b.id && (t.type === 'expense' || t.type === 'saving')))
     const carried = carriedOver![b.id] ?? 0
     return { bucket: b, carriedOver: carried, fromIncome, spent: out,
