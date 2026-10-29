@@ -72,8 +72,9 @@ describe('riepilogo del mese nel calendario', () => {
     const pay = ev({ id: 's', kind: 'salary', title: 'Stipendio', amount: 1500, date: '2026-10-27' })
     const note = ev({ id: 'n', kind: 'reminder', title: 'Disdire', amount: null, date: '2026-10-05' })
     const s = periodSummary(agenda([rent, bill, gym, pac, pay, note], '2026-10-01', '2026-10-31'), '2026-10-15')
-    // la palestra è passata: pagata come nel budget; la luce va seguita finché non è fatta: in ritardo
-    expect(s).toMatchObject({ income: 1500, out: 590, paid: 430, toPay: 160, overdue: 60, heavy: ['2026-10-01', '2026-10-20'] })
+    // già pagato solo l'affitto segnato come fatto; palestra e luce hanno la data passata ma nessuna conferma (P2-003):
+    // restano da pagare, «da confermare»; la luce va seguita finché non è fatta: in ritardo
+    expect(s).toMatchObject({ income: 1500, out: 590, paid: 400, toPay: 190, toConfirm: 90, overdue: 60, heavy: ['2026-10-01', '2026-10-20'] })
     expect(s.load['2026-10-10']).toBe(60)
     expect([rent, pac, pay, note].map(e => toneOf(e.kind))).toEqual(['out', 'save', 'in', 'note'])
   })

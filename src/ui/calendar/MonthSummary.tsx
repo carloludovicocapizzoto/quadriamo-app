@@ -1,5 +1,6 @@
 // In cima al mese del calendario: un numero protagonista (quanto resta a fine mese, se è il mese in corso; altrimenti
-// quanto esce), la linea di quanto è già pagato, e quattro cifre: entrate, uscite, già pagato, da pagare.
+// quanto esce), la linea di quanto è già pagato (solo le volte segnate come fatte), e quattro cifre: entrate, uscite,
+// già pagato, da pagare; sotto, quanto è scaduto senza conferma.
 // Una delle poche superfici in vetro dell'app (Costituzione, 17/10): sta sopra lo sfondo della sezione come un foglio.
 import type { CSSProperties } from 'react'
 import type { PeriodSummary } from '../../engine'
@@ -22,6 +23,8 @@ export function MonthSummary({ s, leftOver, currency }: { s: PeriodSummary; left
         <div><dt>{t('cal.toPay')}</dt><dd><Money value={s.toPay} currency={currency} /></dd></div>
       </dl>
       {s.overdue > 0 && <p className="cs-late">{t('cal.overdueOf', { amount: money(s.overdue, currency) })}</p>}
+      {/* scadute senza conferma (non «da seguire»): non sono già pagate, si segnano come fatte quando lo sono */}
+      {s.toConfirm - s.overdue > 0.004 && <p className="cs-late">{t('cal.toConfirmOf', { amount: money(s.toConfirm - s.overdue, currency) })}</p>}
     </section>
   )
 }

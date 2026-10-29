@@ -188,8 +188,9 @@ export const toneOf = (k: EventKind): Tone =>
 export interface PeriodSummary {
   income: number          // entrate previste
   out: number             // uscite previste (pagamenti, risparmi e investimenti)
-  paid: number            // uscite fatte: segnate, o con la data passata (come le conta il budget)
-  toPay: number           // uscite ancora da fare
+  paid: number            // uscite confermate: solo le volte segnate come fatte (mai dedotte dalla data)
+  toPay: number           // uscite non ancora confermate: future e scadute
+  toConfirm: number       // di cui con la data già arrivata (oggi compreso) ma non segnate come fatte
   overdue: number         // di cui scadute e da seguire "finché non è fatto" (nag) ma non ancora segnate
   load: Record<string, number>   // uscite per giorno
   heavy: string[]         // i giorni più pesanti (al massimo 3, ognuno almeno il 15% delle uscite)
@@ -198,7 +199,7 @@ export interface PeriodSummary {
 /** I conti di un intervallo del calendario (di solito un mese) a partire dalle voci di agenda(). */
 export function periodSummary(items: { date: string; event: CalEvent; done: boolean }[], today: string): PeriodSummary {
   const r2 = (n: number) => Math.round(n * 100) / 100
-  const s: PeriodSummary = { income: 0, out: 0, paid: 0, toPay: 0, overdue: 0, load: {}, heavy: [] }
+  const s: PeriodSummary = { income: 0, out: 0, paid: 0, toPay: 0, toConfirm: 0, overdue: 0, load: {}, heavy: [] }
   for (const x of items) {
     const a = x.event.amount ?? 0
     if (!a) continue
@@ -207,13 +208,15 @@ export function periodSummary(items: { date: string; event: CalEvent; done: bool
     if (side !== 'out') continue
     s.out += a
     s.load[x.date] = (s.load[x.date] ?? 0) + a
-    // come nel budget, un pagamento è fatto dal suo giorno; solo quelli da seguire "finché non è fatto" aspettano la conferma
-    const late = !x.done && x.date < today && !!x.event.nag
-    if (x.done || (x.date <= today && !late)) s.paid += a
-    else { s.toPay += a; if (late) s.overdue += a }
+    // «già pagato» è solo ciò che è stato confermato: il budget conta l'uscita dal suo giorno (per non sembrare più ricco),
+    // ma il calendario non deve far credere pagata una rata o una bolletta che nessuno ha segnato come fatta
+    if (x.done) { s.paid += a; continue }
+    s.toPay += a
+    if (x.date <= today) s.toConfirm += a
+    if (x.date < today && x.event.nag) s.overdue += a
   }
   s.heavy = Object.entries(s.load).filter(([, v]) => v >= s.out * 0.15).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([d]) => d)
-  for (const k of ['income', 'out', 'paid', 'toPay', 'overdue'] as const) s[k] = r2(s[k])
+  for (const k of ['income', 'out', 'paid', 'toPay', 'toConfirm', 'overdue'] as const) s[k] = r2(s[k])
   return s
 }
 

@@ -747,6 +747,7 @@ const en = {
   'cal.paid': "Paid",
   'cal.toPay': "To pay",
   'cal.overdueOf': "of which {amount} overdue",
+  'cal.toConfirmOf': "of which {amount} past due: mark them done once paid",
   'cal.overdue': "Overdue",
   'cal.week': "Week {from} – {to}",
   'cal.heavy': "heaviest days",

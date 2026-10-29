@@ -747,6 +747,7 @@ const it: Dict = {
   'cal.paid': "Già pagato",
   'cal.toPay': "Da pagare",
   'cal.overdueOf': "di cui {amount} in ritardo",
+  'cal.toConfirmOf': "di cui {amount} con la scadenza passata: segnali come fatti quando li hai pagati",
   'cal.overdue': "In ritardo",
   'cal.week': "Settimana {from} – {to}",
   'cal.heavy': "giorni più pesanti",
