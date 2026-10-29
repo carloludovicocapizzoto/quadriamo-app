@@ -146,7 +146,11 @@ export function AppShell() {
       <Sheet open={composer.open} onClose={closeComposer} label={composer.value.tx ? t('tx.edit') : t('tx.new')}>
         <TxForm key={composer.key} settings={data.settings} initial={composer.value.tx} prefill={composer.value.prefill} defaultDate={defaultDate}
           onClose={closeComposer}
-          onSave={tx => { dispatch({ type: composer.value.tx ? 'updateTx' : 'addTx', tx }); closeComposer() }}
+          onSave={(tx, categories) => {
+            // le categorie create con «+» nel modulo entrano prima del movimento che le usa
+            if (categories.length) dispatch({ type: 'setSettings', settings: { ...data.settings, categories: [...data.settings.categories, ...categories] } })
+            dispatch({ type: composer.value.tx ? 'updateTx' : 'addTx', tx }); closeComposer()
+          }}
           onDelete={id => { dispatch({ type: 'deleteTx', id }); closeComposer() }} />
       </Sheet>
     </div>

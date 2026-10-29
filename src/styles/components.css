@@ -52,19 +52,33 @@ a.btn { text-decoration: none; color: var(--text); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .chip { border: 0; background: var(--fill); color: var(--text); border-radius: var(--r-md); padding: 0 14px; min-height: 40px; cursor: pointer; font-size: 15px; }
 .chip.on { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+/* ---------- il simbolo della valuta: sempre secondario, una regola sola per tutta l'app ----------
+   nelle righe e nei blocchi: stessa altezza delle cifre, più chiaro e sottile; nei numeri protagonisti: metà altezza */
+.cur { color: var(--muted); font-weight: 400; margin: 0 .08em; }
+.hero-amount .cur, .outcome-amount .cur, .w-big .cur, .cs-hero .cur { font-size: .5em; font-weight: inherit; letter-spacing: -.02em; }
+
+/* ---------- ricerca e filtri in una riga sola (Movimenti, Notizie): stesse misure in tutte e due ---------- */
+.tools { display: flex; gap: var(--s2); align-items: center; margin: 0 0 var(--s3); }
+.tools > :first-child { flex: 1; min-width: 0; margin: 0; }
+.filter-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 1.5px solid transparent;
+  border-radius: var(--r-md); background: var(--fill); color: var(--text); font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; }
+.filter-btn.on { background: var(--accent); color: var(--on-accent); }
+
 .mini-chip { height: 30px; padding: 0 10px; border-radius: var(--r-md); border: 0; font: inherit; font-size: var(--t-sm); font-weight: 600; cursor: pointer;
   color: var(--muted); background: var(--fill); }
 .mini-chip.on { color: var(--on-accent); background: var(--accent); }
 
-/* ---------- schede (segmented control): 3 o 4 voci, la pillola scorre sotto la scelta ---------- */
+/* ---------- schede (segmented control): 2-5 voci, la pillola scorre sotto la scelta e ne prende la larghezza ---------- */
 .segmented { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); padding: 4px; border-radius: var(--r-md); margin-bottom: var(--s4);
   background: var(--fill); }
 .segmented:has(> button:nth-of-type(4)) { grid-template-columns: repeat(4, 1fr); }
-.segmented button { position: relative; z-index: 1; height: 36px; padding: 0 2px; border: 0; background: none; font: inherit; font-size: var(--t-sm); font-weight: 600;
+.segmented button { position: relative; z-index: 1; height: 36px; padding: 0 8px; border: 0; background: none; font: inherit; font-size: var(--t-sm); font-weight: 600;
   color: var(--muted); cursor: pointer; white-space: nowrap; }
 .segmented button.on { color: var(--text); }
+/* sui telefoni più stretti (320 px) cinque voci lunghe non ci stanno: margini e carattere un poco più piccoli, mai fuori dallo schermo */
+@media (max-width: 359px) { .segmented button { padding: 0 4px; font-size: 12px; } }
 .seg-pill { position: absolute; top: 4px; left: 4px; width: calc((100% - 8px) / 3); height: 36px; border-radius: 7px; background: var(--bg);
-  transition: transform var(--d-spring) var(--spring-snappy); }
+  transition: transform var(--d-spring) var(--spring-snappy), width var(--d-spring) var(--spring-snappy); }
 .segmented:has(> button:nth-of-type(4)) .seg-pill { width: calc((100% - 8px) / 4); }
 .seg-badge { position: absolute; top: -6px; right: -2px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: var(--r-md); background: var(--bad); color: var(--on-accent);
   font-size: 10.5px; font-style: normal; font-weight: 600; display: grid; place-items: center; }

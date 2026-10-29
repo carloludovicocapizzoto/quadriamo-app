@@ -37,7 +37,6 @@
 .cal-summary { display: grid; gap: var(--s2); }
 .cs-label { margin: 0; font-size: var(--t-sm); color: var(--muted); }
 .cs-hero { font-size: 40px; font-weight: 600; letter-spacing: -.03em; line-height: 1.05; font-variant-numeric: tabular-nums; }
-.cs-hero .cur { font-size: .55em; margin-right: 2px; color: var(--muted); }
 .cs-bar { height: 3px; border-radius: 2px; background: var(--fill-2); overflow: hidden; margin: var(--s1) 0; }
 .cs-bar i { display: block; height: 100%; width: 100%; background: var(--good); transform-origin: left; transform: scaleX(var(--w));
   transition: transform var(--d-spring) var(--spring-gentle); animation: grow var(--d-spring) var(--spring-gentle) both; }

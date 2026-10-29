@@ -4,12 +4,11 @@
 /* il numero del giorno: il protagonista, senza riquadro */
 .hero { margin: var(--s8) 0 var(--s12); }
 .hero-amount { display: block; font-size: var(--t-hero); font-weight: 600; letter-spacing: -.045em; line-height: 1; }
-.hero-amount .cur { font-size: .5em; letter-spacing: -.02em; color: var(--muted); margin: 0 .08em; }
 .hero-sub { margin: var(--s3) 0 0; color: var(--muted); font-size: 15px; }
 
 /* i quattro blocchi: ognuno si svuota dall'alto mentre spendi; il colore è la parte */
 .blocks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); }
-.block { display: grid; gap: 2px; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+.block { display: grid; gap: 2px; min-width: 0; padding: 0; border: 0; container-type: inline-size; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
   -webkit-tap-highlight-color: transparent; }
 .block-shape { position: relative; height: 64px; border-radius: var(--r-sm); overflow: hidden; margin-bottom: var(--s2);
   background: color-mix(in srgb, var(--bc) 16%, transparent); transition: transform 120ms var(--ease); }
@@ -18,7 +17,8 @@
 .block:active .block-shape { transform: scale(.96); }
 .block.over .block-shape { background: none; box-shadow: inset 0 0 0 1.5px var(--bad); }
 .block-name { font-size: var(--t-cap); line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; hyphens: auto; }
-.block-amount { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+/* 15 px finché ci sta l'importo più lungo dei quattro (circa .6 em a carattere), poi più piccolo: mai fuori dalla colonna */
+.block-amount { font-size: min(15px, calc(100cqi / (var(--amount-len, 9) * .6))); font-weight: 600; letter-spacing: -.01em; white-space: nowrap; }
 .block.over .block-amount { color: var(--bad); }
 
 /* oggi */
@@ -74,11 +74,11 @@
 .w-more { display: grid; place-items: center; width: 28px; height: 28px; margin: -6px -6px -6px 0; border: 0; border-radius: var(--r-sm); background: none; color: var(--muted); cursor: pointer; }
 .w-more:hover { background: var(--fill); color: var(--text); }
 /* ciò che chiede attenzione (mese in rosso, consiglio importante): un segno arancione accanto all'etichetta */
-.widget.attention > .w-title::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--b1); margin-right: auto; order: -1; flex: none; }
+/* il segno sta accanto all'etichetta (lo spazio è il gap del titolo): l'etichetta resta a sinistra come in tutti i widget */
+.widget.attention > .w-title::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--b1); order: -1; flex: none; }
 .widget.attention > .w-title { justify-content: flex-start; }
 .widget.attention > .w-title .w-more { margin-left: auto; }
 .w-big { margin: 0 0 var(--s2); font-size: 26px; font-weight: 600; letter-spacing: -.03em; line-height: 1.15; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 6px; }
-.w-big .cur { font-size: .6em; color: var(--muted); }
 .w-big small { font-size: var(--t-sm); font-weight: 400; letter-spacing: 0; color: var(--muted); }
 .w-note { margin: var(--s2) 0 0; font-size: var(--t-sm); color: var(--muted); line-height: 1.5; }
 .w-legend { display: flex; justify-content: space-between; gap: var(--s3); margin: var(--s2) 0 0; font-size: var(--t-sm); color: var(--muted); }
@@ -101,8 +101,8 @@
 .w-rows li { display: grid; grid-template-columns: 1fr auto auto; gap: var(--s3); align-items: baseline; padding: 7px 0; border-top: 1px solid var(--line); font-size: 15px; }
 .w-rows small { color: var(--muted); font-size: var(--t-sm); }
 .w-tips { list-style: none; margin: 0; padding: 0; }
-.w-tips li { padding: var(--s2) 0; line-height: 1.5; }
-.w-tips li + li { border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; }
+.w-tips li { padding: var(--s2) 0; line-height: 1.5; font-size: 15px; }
+.w-tips li + li { border-top: 1px solid var(--line); color: var(--muted); }
 .w-missions { list-style: none; margin: var(--s3) 0 0; padding: 0; display: grid; gap: 8px; }
 .w-missions li { display: flex; align-items: center; gap: 10px; font-size: 15px; }
 .w-missions li.done { color: var(--muted); }

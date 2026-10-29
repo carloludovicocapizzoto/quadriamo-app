@@ -290,6 +290,38 @@ await step('«Sposta ed elimina» porta la spesa in «Spesa» e toglie la catego
 await step('la spesa da 12,50 € c\'è ancora, ora in «Spesa»', () => js(`location.hash = '#/analysis/transactions'`),
   `/12,50/.test(document.body.innerText) && /Spesa/.test([...document.querySelectorAll('li, .row')].find(r => /12,50/.test(r.textContent))?.textContent ?? '')`)
 
+// «+» nel nuovo movimento: una categoria creata sul momento, salvata solo insieme al movimento
+const chipOn = name => `document.querySelector('.cat-pick > button.on')?.textContent === '${name}'`
+await step('«+» nel nuovo movimento crea «Parrucchiere» in Qualità della vita e la sceglie', async () => {
+  await js(`location.hash = '#/'`); await sleep(500)
+  await click(`document.querySelector('.tab-add')`); await sleep(700)
+  await click(`document.querySelector('.cat-add')`); await sleep(300)
+  await type('Parrucchiere'); await setField('.cat-new select', 'qualityOfLife'); await sleep(200)
+  await click(byText('/^Aggiungi$/', '.cat-new button'))
+}, `${chipOn('Parrucchiere')} && !document.querySelector('.cat-new')`)
+await step('Esc chiude solo il campo della categoria, non il movimento', async () => {
+  await click(`document.querySelector('.cat-add')`); await sleep(300)
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }); await sleep(300)
+}, `!document.querySelector('.cat-new') && !!document.querySelector('.tx-sheet') && document.body.classList.contains('sheet-open')`)
+await step('lo stesso nome (anche in minuscolo) sceglie quella che c\'è, senza doppioni', async () => {
+  await click(`document.querySelector('.cat-pick > button')`)
+  await click(`document.querySelector('.cat-add')`); await sleep(300)
+  await type('parrucchiere'); await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }); await sleep(300)
+}, `${chipOn('Parrucchiere')} && [...document.querySelectorAll('.cat-pick > button')].filter(b => /parrucchiere/i.test(b.textContent)).length === 1`)
+await step('salvo 20 €: la categoria resta in Profilo → Budget, sotto Qualità della vita', async () => {
+  await js(`document.querySelector('.tx-sheet .amount-input').focus()`); await type('20'); await sleep(200)
+  await click(`document.querySelector('.tx-sheet button[type=submit]')`); await sleep(700)
+  await js(`location.hash = '#/profile/budget'`); await sleep(900)
+}, `/Qualità della vita/.test(${catRow('Parrucchiere')}?.textContent ?? '')`)
+await step('una categoria creata e poi abbandonata chiudendo il movimento non resta', async () => {
+  await js(`location.hash = '#/'`); await sleep(500)
+  await click(`document.querySelector('.tab-add')`); await sleep(700)
+  await click(`document.querySelector('.cat-add')`); await sleep(300)
+  await type('Prova abbandonata'); await click(byText('/^Aggiungi$/', '.cat-new button')); await sleep(200)
+  await click(`document.querySelector('.txs-head .icon-btn')`); await sleep(700)
+  await js(`location.hash = '#/profile/budget'`); await sleep(900)
+}, `!!${catRow('Parrucchiere')} && !${catRow('Prova abbandonata')}`)
+
 console.log('Tastiera')
 const press = (key, code) => cdp('Input.dispatchKeyEvent', { type: 'keyDown', key, code, text: key.length === 1 ? key : undefined, windowsVirtualKeyCode: key.toUpperCase().charCodeAt(0) })
 await step('G poi N apre le Notizie', async () => { await js(`document.activeElement?.blur()`); await press('g', 'KeyG'); await press('n', 'KeyN') }, `location.hash === '#/news'`)
@@ -364,7 +396,7 @@ const chooseComma = async () => {
 }
 await step('un CSV ambiguo non si importa da solo: chiede come sono scritti i numeri, con l’esempio letto nei due modi', async () => {
   await js(`location.hash = '#/analysis/transactions'`); await sleep(500); await selectCsv(ambiguousCsv); await sleep(600)
-}, inSheet(`/può voler dire due importi diversi/`) + ` && ` + inSheet(`/-1[.]234 → -1[.]234,00/`))
+}, inSheet(`/può voler dire due importi diversi/`) + ` && ` + inSheet(`/-1[.]234 → [-−]1[.]234,00/`))   // a sinistra il testo del file, a destra l'importo con il meno tipografico
 await step('con la virgola per i decimali: −1.234,00 € e la riga «-1,234» esclusa con il motivo', chooseComma,
   inSheet(`/Movimenti da importare[^0-9]*1[^0-9]/`) + ` && ` + inSheet(`/Riga 3 · più decimali di quelli della valuta/`))
 await step('confermato, entra nella casella con l’importo esatto', async () => {

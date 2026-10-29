@@ -12,6 +12,7 @@ import { Icon } from './Icon'
 import { StepHeader, StepNav } from './Steps'
 import { AmountInput } from './kit/AmountInput'
 import { amountText } from './kit/amount'
+import { decimalText } from './kit/decimal'
 
 const PRESETS = [[55, 20, 15, 10], [50, 25, 15, 10], [60, 15, 15, 10], [50, 20, 15, 15]]
 const num = (s: string) => { const n = Number(s.replace(/\./g, '').replace(',', '.')); return Number.isFinite(n) ? n : NaN }
@@ -135,7 +136,7 @@ export function ProfileForm({ onDone, withShares = true }: { onDone: () => void;
                 <span className="pct-input"><input inputMode="decimal" value={shares[i]} onChange={e => setShares(shares.map((x, j) => (j === i ? e.target.value.replace(/[^\d.,]/g, '') : x)))} />%</span></label>
             ))}
           </div>
-          <p className={`small ${total === 100 ? 'muted' : 'bad-text'}`}>{t('prof.sharesTotal', { n: String(total).replace('.', ',') })}</p>
+          <p className={`small ${total === 100 ? 'muted' : 'bad-text'}`}>{t('prof.sharesTotal', { n: decimalText(total, lang) })}</p>
           <label className="check"><input type="checkbox" checked={apply} onChange={e => setApply(e.target.checked)} /> {t('prof.apply')}</label>
         </>}
         {step === TOTAL && <>

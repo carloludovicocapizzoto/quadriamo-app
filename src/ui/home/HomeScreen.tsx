@@ -26,7 +26,7 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
   data: AppData; r: MonthResult; today: string; streak: Streak | null
   onAdd: (kind: 'expense' | 'income') => void; onOpen: (tx: ClassifiedTx) => void; onAll: () => void
 }) {
-  const { t, date } = useI18n()
+  const { t, date, money } = useI18n()
   const s = data.settings, cur = s.currency
   const budget = useMemo(() => todayBudget(r, s, today), [r, s, today])
   const [part, setPart] = useState<BucketRow | null>(null)
@@ -52,16 +52,18 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
   const hasPlan = budget.parts.length > 0 && r.income > 0
   const day = date(today, { weekday: 'long', day: 'numeric', month: 'long' })
 
-  // i quattro blocchi: vivono qui perché aprono il dettaglio della parte
+  // i quattro blocchi: vivono qui perché aprono il dettaglio della parte.
+  // Gli importi hanno tutti la stessa misura, decisa dal più lungo: se non ci sta, si rimpiccioliscono insieme
+  const longest = Math.max(...r.buckets.map(b => money(b.remaining, cur).length))
   const blocks = (
-    <div className="blocks">
+    <div className="blocks" style={{ ['--amount-len' as string]: longest }}>
         {r.buckets.map((b, i) => {
           const rest = b.available > 0 ? Math.max(0, Math.min(1, b.remaining / b.available)) : 0
           return (
             <button key={b.bucket.id} className={`block${b.remaining < 0 ? ' over' : ''}`} style={{ ['--bc' as string]: BUCKET_COLORS[i] }}
                     onClick={() => { tap(); setPart(b) }}>
               <span className="block-shape" aria-hidden="true"><span style={{ transform: `scaleY(${rest})` }} /></span>
-              <Money className="block-amount" value={b.remaining} currency={cur} bare />
+              <Money className="block-amount" value={b.remaining} currency={cur} />
               <span className="block-name">{bucketName(b.bucket, t)}</span>
             </button>
           )
