@@ -75,6 +75,8 @@ a.btn { text-decoration: none; color: var(--text); }
 .segmented button { position: relative; z-index: 1; height: 36px; padding: 0 8px; border: 0; background: none; font: inherit; font-size: var(--t-sm); font-weight: 600;
   color: var(--muted); cursor: pointer; white-space: nowrap; }
 .segmented button.on { color: var(--text); }
+/* sui telefoni più stretti (320 px) cinque voci lunghe non ci stanno: margini e carattere un poco più piccoli, mai fuori dallo schermo */
+@media (max-width: 359px) { .segmented button { padding: 0 4px; font-size: 12px; } }
 .seg-pill { position: absolute; top: 4px; left: 4px; width: calc((100% - 8px) / 3); height: 36px; border-radius: 7px; background: var(--bg);
   transition: transform var(--d-spring) var(--spring-snappy), width var(--d-spring) var(--spring-snappy); }
 .segmented:has(> button:nth-of-type(4)) .seg-pill { width: calc((100% - 8px) / 4); }

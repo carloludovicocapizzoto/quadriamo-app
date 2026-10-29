@@ -42,6 +42,8 @@
 .outcome-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); margin: var(--s6) 0 0; padding-top: var(--s4); border-top: 1px solid var(--line); }
 .outcome-row dt { font-size: var(--t-sm); color: var(--muted); }
 .outcome-row dd { margin: 2px 0 0; font-weight: 600; font-size: var(--t-body); }
+/* sui telefoni più stretti tre importi con la valuta in lettere («4.387,93 USD») non stanno in tre colonne: due per riga */
+@media (max-width: 359px) { .outcome-row:not(.n2) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* le quattro parti come righe: il blocco che si svuota, quanto resta */
 .part-rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
