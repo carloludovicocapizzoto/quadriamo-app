@@ -22,7 +22,8 @@ export function TxRow({ tx, settings, onOpen }: { tx: ClassifiedTx; settings: Se
             <span className="tx-date">{tx.date ? date(tx.date) : '—'}</span>{' · '}
             {tx.category ? categoryName(cat, t) : t('check.missingCategory')}
             {tx.bucket === SPLIT ? ` · ${t('tx.split')}` : ''}
-            {tx.recurring && <em className="tag">{tx.upcoming ? t('tx.upcoming') : t('tx.recurring')}</em>}
+            {/* spesa fissa: prevista (in arrivo), impegnata (dal suo giorno conta nel budget, ma nessuno l'ha confermata) o pagata */}
+            {tx.recurring && <em className="tag">{tx.upcoming ? t('tx.upcoming') : tx.confirmed ? t('tx.paidTag') : t('tx.committed')}</em>}
           </span>
           {issues.length > 0 && <span className="tx-issue">{issues.map(k => t(`check.${k}`)).join(' · ')}</span>}
         </span>

@@ -156,6 +156,8 @@ const fr: Dict = {
   'tx.errDate': 'Choisissez une date.',
   'tx.recurring': 'Récurrent',
   'tx.upcoming': 'À venir',
+  'tx.committed': "Engagée · à confirmer",
+  'tx.paidTag': "Payée",
   'tx.undated': 'Sans date',
   'tx.confirmDelete': 'Supprimer cette opération ?',
   'tx.empty': 'Aucune opération ce mois-ci.',

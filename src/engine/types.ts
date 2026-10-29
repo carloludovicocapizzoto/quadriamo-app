@@ -80,6 +80,7 @@ export interface ClassifiedTx extends Transaction {
   upcoming?: boolean                // non ancora arrivato al suo giorno: l'importo non conta ancora
   planned?: number                  // l'importo previsto dall'evento (anche quando è ancora in arrivo)
   eventId?: string                  // l'evento del calendario da cui viene
+  confirmed?: boolean               // la volta è segnata come fatta nel calendario: pagata davvero, non solo impegnata
 }
 
 export type CheckKind =

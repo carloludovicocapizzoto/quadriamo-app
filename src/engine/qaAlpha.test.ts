@@ -134,6 +134,12 @@ describe('P2-003: «già pagato» solo per quello che è stato confermato', () =
     const s = periodSummary(agenda([ev({ date: '2026-10-30' })], '2026-10-01', '2026-10-31'), '2026-10-29')
     expect(s).toMatchObject({ paid: 0, toPay: 84.99, toConfirm: 0 })
   })
+  it('nel budget la riga dice se è prevista, impegnata o pagata (confermata nel calendario)', () => {
+    const rows = (e: CalEvent, today: string) => computeMonth(oct, [tx('f', '2026-10-02', 'groceries', 1)], base({ events: [e] }), today).transactions.filter(t => t.recurring)
+    expect(rows(ev({}), '2026-10-28')[0]).toMatchObject({ upcoming: true, confirmed: false })
+    expect(rows(ev({}), '2026-10-29')[0]).toMatchObject({ upcoming: false, confirmed: false })
+    expect(rows(ev({ done: ['2026-10-29'] }), '2026-10-29')[0]).toMatchObject({ upcoming: false, confirmed: true })
+  })
   it('nel budget la spesa ricorrente conta una volta: futura è solo messa da parte, dal suo giorno è spesa (non due volte)', () => {
     const s = base({ events: [ev({})] })
     const before = computeMonth(oct, [tx('f', '2026-10-02', 'groceries', 1)], s, '2026-10-28')

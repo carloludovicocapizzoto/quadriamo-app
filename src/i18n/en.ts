@@ -156,6 +156,8 @@ const en = {
   'tx.errDate': 'Pick a date.',
   'tx.recurring': 'Recurring',
   'tx.upcoming': 'Upcoming',
+  'tx.committed': "Committed · to confirm",
+  'tx.paidTag': "Paid",
   'tx.undated': 'Without a date',
   'tx.confirmDelete': 'Delete this transaction?',
   'tx.empty': 'No transactions in this month.',

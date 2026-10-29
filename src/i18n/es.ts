@@ -156,6 +156,8 @@ const es: Dict = {
   'tx.errDate': 'Elige una fecha.',
   'tx.recurring': 'Recurrente',
   'tx.upcoming': 'Próximo',
+  'tx.committed': "Comprometido · por confirmar",
+  'tx.paidTag': "Pagado",
   'tx.undated': 'Sin fecha',
   'tx.confirmDelete': '¿Eliminar este movimiento?',
   'tx.empty': 'No hay movimientos en este mes.',

@@ -67,7 +67,7 @@ export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, t
     const due = date <= today
     return {
       ...classify({ id: `ev-${e.id}-${date}`, date, description: e.title, category: e.category, amount: due ? e.amount : null }, s),
-      recurring: true, upcoming: !due, planned: e.amount ?? 0, eventId: e.id,
+      recurring: true, upcoming: !due, planned: e.amount ?? 0, eventId: e.id, confirmed: e.done.includes(date),
     }
   })).sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
 }
