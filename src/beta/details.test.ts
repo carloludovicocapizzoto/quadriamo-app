@@ -16,3 +16,8 @@ it('in the Alpha the functions without a gateway route are switched off; elsewhe
     expect(cloudFeature(f, 'alpha')).toBe(false); expect(cloudFeature(f, 'production')).toBe(true); expect(cloudFeature(f, 'development')).toBe(true)
   }
 })
+it('an Alpha build can switch a function back on with a cloud:<name> flag, only that one', () => {
+  expect(cloudFeature('news', 'alpha', new Set(['news']))).toBe(true)
+  expect(cloudFeature('shared', 'alpha', new Set(['news']))).toBe(false)
+  expect(cloudFeature('news', 'alpha', new Set())).toBe(false)
+})

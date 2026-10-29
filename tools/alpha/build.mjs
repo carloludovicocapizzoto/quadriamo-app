@@ -27,8 +27,13 @@ if (!key.startsWith('sb_publishable_')) {
   } catch { throw Error('Alpha frontend key must be publishable or an anon JWT') }
 }
 
+// Funzioni del server riaccese nell'Alpha (src/features.ts), solo dopo che il server le serve: oggi solo le Notizie.
+const CLOUD = ['news']
+const cloud = (process.env.ALPHA_CLOUD_FEATURES ?? '').split(',').map(f => f.trim()).filter(Boolean)
+for (const f of cloud) if (!CLOUD.includes(f)) throw Error(`ALPHA_CLOUD_FEATURES: ${f} cannot be switched on in the Alpha`)
+
 const env = { ...process.env, BASE_PATH: '/', VITE_SUPABASE_URL: url.origin,
-  VITE_SUPABASE_PUBLISHABLE_KEY: key, VITE_SUPABASE_ANON_KEY: '', VITE_FLAGS: '', VITE_VAPID_PUBLIC_KEY: '' }
+  VITE_SUPABASE_PUBLISHABLE_KEY: key, VITE_SUPABASE_ANON_KEY: '', VITE_FLAGS: cloud.map(f => `cloud:${f}`).join(','), VITE_VAPID_PUBLIC_KEY: '' }
 for (const args of [
   ['node_modules/typescript/bin/tsc', '-b'],
   ['node_modules/vite/bin/vite.js', 'build', '--mode', 'alpha', '--outDir', 'dist-alpha'],
