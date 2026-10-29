@@ -435,7 +435,7 @@ await step(B, 'token in scadenza e cambio del nome subito dopo l\'apertura: ness
   authBefore = await authCounts()
   await B.cdp('Page.navigate', { url: `${ORIGIN}/app/#/profile/personal` })
   if (!await until(B, `${appReady} && !!document.querySelector('.txs-row input, form input')`, 12000)) throw Error('Dati personali non aperti')
-  await B.js(`(() => { const row = [...document.querySelectorAll('.txs-row, label')].find(r => /^\s*Nome/.test(r.textContent)); const el = row?.querySelector('input');
+  await B.js(`(() => { const row = [...document.querySelectorAll('.txs-row, label')].find(r => /^\\s*Nome/.test(r.textContent)); const el = row?.querySelector('input');
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, 'Bea'); el.dispatchEvent(new Event('input', { bubbles: true })) })()`)
   await B.click(byText('/^Salva$/')); await sleep(4000)
 }, async () => { const now = await authCounts(); console.log(`      rinnovo concorrente: ${JSON.stringify({ rifiutati: now.rejected - authBefore.rejected, rinnovi: now.attempts - authBefore.attempts })}`)
