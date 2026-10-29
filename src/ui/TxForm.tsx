@@ -1,7 +1,9 @@
-import { useState, type FormEvent } from 'react'
+import { useContext, useMemo, useState, type FormEvent } from 'react'
 import { Segmented } from './kit/Segmented'
-import { CUSTOM, FIRST, SPLIT, addDays, splitOk, splitTotal, fxRate, suggest, todayIso, type CategoryType, type Settings, type Transaction, partForPurchase } from '../engine'
+import { CUSTOM, FIRST, SPLIT, addDays, budgetEvents, daysBetween, linkedOccurrences, monthOf, occurrenceKey, occurrences, periodOf,
+  splitOk, splitTotal, fxRate, suggest, todayIso, type CategoryType, type Occurrence, type Settings, type Transaction, partForPurchase } from '../engine'
 import { useI18n } from '../i18n/core'
+import { StoreContext } from '../store/context'
 import { newId } from '../store/state'
 import { parseAmount } from './kit/amount'
 import { Icon } from './Icon'
@@ -25,7 +27,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   onDelete?: (id: string) => void
   onClose: () => void
 }) {
-  const { t, money, lang } = useI18n()
+  const { t, money, lang, date: dateText } = useI18n()
   const [amount, setAmount] = useState(initial?.amount != null ? amountText(initial.amount, lang) : (prefill?.amount ?? ''))
   const [category, setCategory] = useState<string | null>(() => {
     if (initial) return initial.category
@@ -53,6 +55,11 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   const [split, setSplit] = useState<Record<string, number> | null>(initial?.split ?? null)
   const [currency, setCurrency] = useState(initial?.currency || settings.currency)
   const [errors, setErrors] = useState<string[]>([])
+  // gli altri movimenti (senza quello che si modifica): servono a sapere quali volte delle spese fisse sono già pagate
+  const all = useContext(StoreContext)?.state.data?.transactions
+  const others = useMemo(() => (all ?? []).filter(x => x.id !== initial?.id), [all, initial?.id])
+  const [occurrence, setOccurrence] = useState<Occurrence | null>(initial?.occurrence ?? null)
+  const [declined, setDeclined] = useState<string | null>(null)
 
 
   const cat = settings.categories.find(c => c.id === category)
@@ -67,6 +74,20 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   const rate = foreign ? (initial?.currency === currency && initial?.fxRate ? initial.fxRate : fxRate(currency, settings)) : 1
   const currencies = [...new Set([settings.currency, ...CURRENCIES, ...Object.keys(settings.fxRates)])]
 
+  // la spesa fissa che questo movimento potrebbe pagare: stessa categoria, stesso periodo, la volta più vicina non già pagata
+  // da un altro movimento. Collegata, la volta automatica non conta più: resta questo movimento, con il suo importo vero
+  const events = category && !isIncome ? budgetEvents(settings).filter(e => e.category === category) : []
+  const linked = events.find(e => e.id === occurrence?.eventId) && occurrence
+  const candidate = (() => {
+    if (!events.length || !date || linked) return null
+    const { start, end } = periodOf(monthOf(date, settings.monthStartDay), settings.monthStartDay)
+    const taken = linkedOccurrences(others)
+    return events.flatMap(e => occurrences(e, start, end).filter(d => !taken.has(occurrenceKey(e.id, d))).map(d => ({ event: e, date: d })))
+      .sort((a, b) => Math.abs(daysBetween(date, a.date)) - Math.abs(daysBetween(date, b.date)))[0] ?? null
+  })()
+  const nameOf = (eventId: string) => settings.events.find(e => e.id === eventId)?.title ?? ''
+  const short = (d: string) => dateText(d, { day: 'numeric', month: 'short' })
+
   function submit(e: FormEvent) {
     e.preventDefault()
     const errs: string[] = []
@@ -80,6 +101,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
       id: initial?.id ?? newId(), date, description: description.trim(), category, amount: parsed,
       currency: foreign ? currency : null, fxRate: foreign ? rate : null,
       ...(isIncome ? { paidFrom: incomeTo, split: incomeTo === CUSTOM ? incomeSplit : null } : { paidFrom: paidFrom || null }),
+      ...(linked ? { occurrence: linked } : initial?.occurrence ? { occurrence: null } : {}),
     })
   }
 
@@ -137,6 +159,11 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
           return part && <p className="small muted txs-hint cap-hint">{t('cap.adv.purchase', { part: part.name, amount: money(part.amount, settings.currency) })}</p>
         })()}
         {fromRule && category && <p className="txs-note">{t('tx.fromRule')}</p>}
+        {linked ? <p className="txs-note txs-link">{t('tx.linked', { name: nameOf(linked.eventId), date: short(linked.date) })}{' '}
+            <button type="button" className="link-btn" onClick={() => { setOccurrence(null); setDeclined(occurrenceKey(linked.eventId, linked.date)) }}>{t('tx.unlink')}</button></p>
+          : candidate && declined !== occurrenceKey(candidate.event.id, candidate.date) && <p className="txs-note txs-link">
+            {t('tx.linkAsk', { name: candidate.event.title, date: short(candidate.date) })}{' '}
+            <button type="button" className="link-btn" onClick={() => setOccurrence({ eventId: candidate.event.id, date: candidate.date })}>{t('tx.linkYes')}</button></p>}
 
         <div className="txs-rows">
           <label className="txs-row">

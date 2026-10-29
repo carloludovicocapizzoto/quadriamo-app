@@ -2,7 +2,7 @@
 // gli abbonamenti (quanto costano in un anno, i primi per costo) e i documenti (la prossima scadenza). Ognuno porta
 // alla sua pagina; senza dati non compaiono.
 import type { ReactNode } from 'react'
-import { addDays, agenda, daysBetween, docStatus, makeDate, nextOccurrence, parseDate, periodSummary, recentIncrease, toneOf, yearlyCost } from '../../engine'
+import { addDays, agenda, daysBetween, linkedOccurrences, docStatus, makeDate, nextOccurrence, parseDate, periodSummary, recentIncrease, toneOf, yearlyCost } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import { navigate } from '../../app/router'
 import { Monogram } from '../kit/Monogram'
@@ -16,7 +16,7 @@ export function CalendarMini({ c, box }: { c: WidgetCtx; box: Box }) {
   const p = parseDate(c.today)
   const first = makeDate(p.year, p.month, 1), last = makeDate(p.year, p.month + 1, 0)
   const lead = (new Date(first + 'T00:00:00Z').getUTCDay() + 6) % 7
-  const items = agenda(c.data.settings.events, first, last)
+  const items = agenda(c.data.settings.events, first, last, linkedOccurrences(c.data.transactions))
   if (!items.length) return null
   const sum = periodSummary(items, c.today)
   const heavy = new Set(sum.heavy)

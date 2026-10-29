@@ -139,10 +139,16 @@ export function budgetEvents(s: Settings): CalEvent[] {
     s.categories.some(c => c.id === e.category && c.type !== 'income'))
 }
 
-/** Le volte di ogni evento attivo in un intervallo, in ordine di data: quello che il calendario mostra. */
-export function agenda(events: CalEvent[], from: string, to: string): { date: string; event: CalEvent; done: boolean }[] {
+/** La chiave di una volta di un evento: `id|data` (transaction.occurrence la usa per dire quale volta paga). */
+export const occurrenceKey = (eventId: string, date: string) => `${eventId}|${date}`
+
+/**
+ * Le volte di ogni evento attivo in un intervallo, in ordine di data. Una volta è fatta se è segnata come fatta o se un movimento
+ * registrato la paga (`paid`: le chiavi di month.linkedOccurrences): un pagamento documentato, non dedotto dalla data.
+ */
+export function agenda(events: CalEvent[], from: string, to: string, paid?: Set<string>): { date: string; event: CalEvent; done: boolean }[] {
   return events.filter(e => e.active)
-    .flatMap(e => occurrences(e, from, to).map(date => ({ date, event: e, done: e.done.includes(date) })))
+    .flatMap(e => occurrences(e, from, to).map(date => ({ date, event: e, done: e.done.includes(date) || !!paid?.has(occurrenceKey(e.id, date)) })))
     .sort((a, b) => a.date.localeCompare(b.date) || a.event.title.localeCompare(b.event.title))
 }
 

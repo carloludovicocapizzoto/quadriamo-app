@@ -1,6 +1,6 @@
 // Calcolo di un mese: è la traduzione delle formule dei fogli mese dell'Excel di Quadriamo.
 import { compareYm, monthOf, periodOf, prevMonth, ymKey } from './dates'
-import { budgetEvents, occurrences } from './calendar'
+import { budgetEvents, occurrenceKey, occurrences } from './calendar'
 import { minorDigits } from './bankNumbers'
 import {
   CUSTOM, FIRST, SPLIT,
@@ -56,14 +56,27 @@ function transactionsOf(ym: YearMonth, all: Transaction[], s: Settings): Transac
   return all.filter(t => t.date && ymKey(monthOf(t.date, s.monthStartDay)) === key)
 }
 
+const linkedCache = new WeakMap<Transaction[], Set<string>>()
+/** Le volte delle spese fisse già pagate da un movimento collegato (transaction.occurrence): non generano il pagamento automatico. */
+export function linkedOccurrences(all: Transaction[]): Set<string> {
+  let hit = linkedCache.get(all)
+  if (!hit) {
+    hit = new Set(all.flatMap(t => t.occurrence ? [occurrenceKey(t.occurrence.eventId, t.occurrence.date)] : []))
+    linkedCache.set(all, hit)
+  }
+  return hit
+}
+
 /**
  * I pagamenti del calendario nel mese (engine/calendar: affitto, bollette, rate…): compaiono quando il mese è iniziato
  * (c'è almeno un movimento con importo) e contano solo dal loro giorno; prima sono "upcoming", con l'importo previsto a parte.
+ * Ogni volta conta una sola volta: se un movimento la paga (`linked`, transaction.occurrence) il pagamento automatico non c'è,
+ * nemmeno prima della scadenza; resta il movimento, con il suo importo vero.
  */
-export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, today: string): ClassifiedTx[] {
+export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, today: string, linked: Set<string> = new Set()): ClassifiedTx[] {
   if (!manual.some(t => t.amount != null)) return []
   const { start, end } = periodOf(ym, s.monthStartDay)
-  return budgetEvents(s).flatMap(e => occurrences(e, start, end).map(date => {
+  return budgetEvents(s).flatMap(e => occurrences(e, start, end).filter(date => !linked.has(occurrenceKey(e.id, date))).map(date => {
     const due = date <= today
     return {
       ...classify({ id: `ev-${e.id}-${date}`, date, description: e.title, category: e.category, amount: due ? e.amount : null }, s),
@@ -120,7 +133,8 @@ export function rowIssues(t: ClassifiedTx, s: Settings): CheckKind[] {
   if (t.amount != null && !t.category) out.push('missingCategory')
   if (t.type === 'unknown') out.push('unknownCategory')
   if (t.amount != null && t.amountIn == null) out.push('missingFx')
-  if (t.category && t.amount != null &&
+  // un movimento collegato a una volta è quella volta, non un doppione
+  if (t.category && t.amount != null && !t.occurrence &&
       budgetEvents(s).some(e => e.category === t.category && e.amount === t.amount)) out.push('recurringDuplicate')
   return out
 }
@@ -156,7 +170,7 @@ export function computeMonth(
   if (hit && normal) return hit
 
   const manual = transactionsOf(ym, all, s).map(t => classify(t, s))
-  const txs = [...recurringOf(ym, manual, s, today), ...manual]
+  const txs = [...recurringOf(ym, manual, s, today, linkedOccurrences(all)), ...manual]
     .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
 
   // quanto era già stato diviso fino al mese prima (zero dal primo mese, o con un riporto passato a mano)

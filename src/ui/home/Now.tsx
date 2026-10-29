@@ -2,7 +2,7 @@
 // del giorno (una delle poche: Costituzione, 17/10), un titolo che dice quante cose chiedono un'azione, le prime tre voci
 // (engine/now, solo regole) e le altre a richiesta, che si aprono con un'espansione naturale. Ogni voce porta dove serve.
 import { useMemo, useState, type ReactNode } from 'react'
-import { categoryChanges, daysBetween, isActionable, periodOf, prevMonth, type YearMonth, forecastMonth, nowItems, type MonthResult, type NowItem } from '../../engine'
+import { categoryChanges, daysBetween, isActionable, periodOf, prevMonth, type YearMonth, forecastMonth, linkedOccurrences, nowItems, type MonthResult, type NowItem } from '../../engine'
 import { navigate } from '../../app/router'
 import { useI18n } from '../../i18n/core'
 import type { AppData } from '../../store/state'
@@ -27,7 +27,7 @@ export function Now({ data, r, today, hasPlan, onLog }: { data: AppData; r: Mont
   const s = data.settings, cur = s.currency
   const changes = useMemo(() => hasPlan ? categoryChanges(r.ym, data.transactions, s, today, 3, true) : [], [hasPlan, r.ym, data.transactions, s, today])
   const items = useMemo(() => nowItems({
-    events: s.events, goals: data.goals, today, hour, changes,
+    events: s.events, paid: linkedOccurrences(data.transactions), goals: data.goals, today, hour, changes,
     loggedToday: data.transactions.some(x => x.date === today),
     leftOver: hasPlan ? forecastMonth(r, today)?.projectedLeftOver ?? null : null,
     // nei primi 5 giorni del mese: la ricevuta di quello appena finito, se ha movimenti

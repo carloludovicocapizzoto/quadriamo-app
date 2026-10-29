@@ -65,7 +65,11 @@ export interface Transaction {
   split?: Record<string, number> | null   // quote per bucket quando paidFrom è CUSTOM (somma 1)
   updatedAt?: string                // ISO, ultima modifica: serve alla sincronizzazione tra dispositivi
   fxRate?: number | null            // cambio del giorno in cui è stato registrato (1 unità = fxRate della tua valuta)
+  occurrence?: Occurrence | null    // la volta di una spesa fissa che questo movimento paga: quella automatica non conta più
 }
+
+/** Una volta di un evento del calendario (la spesa fissa di un giorno). */
+export interface Occurrence { eventId: string; date: string }
 
 export interface YearMonth { year: number; month: number }   // month 1..12
 
