@@ -1,7 +1,7 @@
 // Difetti della QA reale sull'Alpha (ef7ff9f, 29/10): P2-002 quote al centesimo, P2-003 «già pagato» solo se confermato,
 // P3 niente «−0,00». Solo dati sintetici.
 import { describe, expect, it } from 'vitest'
-import { agenda, allocate, computeMonth, defaultSettings, nextMonth, paydayPlan, periodSummary, shownAmount, type CalEvent, type Settings, type Transaction } from '.'
+import { agenda, allocate, computeMonth, defaultSettings, linkedOccurrences, nextMonth, nowItems, paydayPlan, periodSummary, rowIssues, shownAmount, type CalEvent, type Settings, type Transaction } from '.'
 
 const oct = { year: 2026, month: 10 }
 const base = (x: Partial<Settings> = {}): Settings => ({ ...defaultSettings({ firstMonth: { year: 2026, month: 9 } }), ...x })
@@ -162,5 +162,53 @@ describe('P3: zero è zero', () => {
     const f = (n: number) => new Intl.NumberFormat('it', { style: 'currency', currency: 'EUR' }).format(shownAmount(n, 'EUR'))
     expect(f(165 - 164.999999)).not.toMatch(/[-−]/)
     expect(f(-0.004)).toBe(f(0))
+  })
+})
+
+describe('pagamento registrato collegato alla sua scadenza: la spesa fissa conta una volta sola (decisione 1 di Federico)', () => {
+  const rata: CalEvent = { id: 'rata', kind: 'loan', title: 'Rata', amount: 84.99, category: 'loans', date: '2026-01-29',
+    repeat: { every: 1, unit: 'month' }, until: null, done: [], active: true }
+  const s = base({ events: [rata] }), salary = tx('s', '2026-10-01', 'salary', 1000)
+  const pay = (amount: number, x: Partial<Transaction> = {}) => tx('p', '2026-10-29', 'loans', amount, { occurrence: { eventId: 'rata', date: '2026-10-29' }, ...x })
+  const month = (txs: Transaction[], today = '2026-10-29') => computeMonth(oct, txs, s, today)
+  it('prima: solo l\'automatica conta 84,99', () => {
+    expect(month([salary]).spent).toBe(84.99)
+  })
+  it('collegato con lo stesso importo: 84,99, non 169,98; nessun avviso di doppione', () => {
+    const r = month([salary, pay(84.99)])
+    expect(r.spent).toBe(84.99)
+    expect(r.transactions.filter(t => t.category === 'loans')).toHaveLength(1)
+    expect(rowIssues(r.transactions.find(t => t.id === 'p')!, s)).toEqual([])
+  })
+  it('collegato con l\'importo vero: conta l\'importo vero (85,40), non 170,39', () => {
+    expect(month([salary, pay(85.4)]).spent).toBe(85.4)
+  })
+  it('pagato prima della scadenza: non resta messo da parte nel numero del giorno', () => {
+    const early = pay(84.99, { date: '2026-10-20' })
+    const r = month([salary, early], '2026-10-20')
+    expect(r.transactions.some(t => t.recurring)).toBe(false)
+    expect(r.spent).toBe(84.99)
+  })
+  it('vecchi dati non collegati: conta due volte con l\'avviso, come prima; nessun collegamento automatico silenzioso', () => {
+    const r = month([salary, tx('p', '2026-10-29', 'loans', 84.99)])
+    expect(r.spent).toBe(169.98)
+    expect(r.checks.recurringDuplicate).toBe(1)
+  })
+  it('eliminato il movimento collegato, torna la volta automatica', () => {
+    expect(month([salary]).transactions.filter(t => t.recurring)).toHaveLength(1)
+  })
+  it('evento cancellato o volta inesistente: il movimento resta una spesa normale, nient\'altro cambia', () => {
+    const r = month([salary, pay(84.99, { occurrence: { eventId: 'sparito', date: '2026-10-29' } })])
+    expect(r.spent).toBe(169.98)
+  })
+  it('calendario e «Adesso»: la volta pagata da un movimento è «Già pagato», non «da confermare» né «da fare»', () => {
+    const paid = linkedOccurrences([salary, pay(84.99)])
+    expect(periodSummary(agenda([rata], '2026-10-01', '2026-10-31', paid), '2026-10-29')).toMatchObject({ paid: 84.99, toPay: 0, toConfirm: 0 })
+    expect(nowItems({ events: [rata], paid, today: '2026-10-29', hour: 10, loggedToday: true, leftOver: null }).some(x => x.type === 'today')).toBe(false)
+    expect(nowItems({ events: [rata], today: '2026-10-29', hour: 10, loggedToday: true, leftOver: null }).some(x => x.type === 'today')).toBe(true)
+  })
+  it('backup e sincronizzazione: il collegamento resta dopo la serializzazione', () => {
+    const copy = JSON.parse(JSON.stringify([salary, pay(84.99)]))
+    expect(month(copy).spent).toBe(84.99)
   })
 })
