@@ -91,3 +91,55 @@ export function pacTracker(months: MonthResult[], plan: PacPlan, values: Record<
              gain: value != null && total ? value - total : null }
   })
 }
+
+/** Prezzo automatico di un titolo, tenuto solo sul dispositivo: `change` è la variazione nelle 24 ore (0.012 = +1,2%). */
+export interface LiveQuote { price: number; change: number | null; at: string }
+/** Ultimi prezzi scritti a mano, uno per giorno, il più recente per ultimo (al massimo due). */
+export type PriceDays = { date: string; price: number }[]
+
+/**
+ * Ricorda il prezzo scritto a mano di oggi: nello stesso giorno l'ultimo vince (si scrive una cifra alla volta),
+ * in un giorno nuovo si aggiunge solo se il prezzo è cambiato, così «dal» resta il giorno dell'ultimo cambiamento.
+ */
+export function recordPrice(days: PriceDays, today: string, price: number): PriceDays {
+  const last = days[days.length - 1]
+  if (last?.date === today) return last.price === price ? days : [...days.slice(0, -1), { date: today, price }]
+  if (last?.price === price) return days
+  return [...days, { date: today, price }].slice(-2)
+}
+
+/**
+ * Quanto si è mosso un titolo, nella tua valuta: con il prezzo automatico nelle ultime 24 ore, con quello a mano
+ * dall'ultimo prezzo diverso scritto in un altro giorno. Null se non c'è un prezzo di confronto.
+ */
+export function holdingMove(h: Holding, s: Settings, live?: LiveQuote | null, days?: PriceDays | null) {
+  const rate = rateTo(h.currency, s)
+  if (h.units == null || rate == null) return null
+  let price: number, prev: number, since: string | null
+  if (h.manualPrice != null) {
+    const [before, now] = days ?? []
+    if (!now || now.price !== h.manualPrice || !before?.price) return null
+    price = now.price; prev = before.price; since = before.date
+  } else if (live && live.change != null && live.change > -1) {
+    price = live.price; prev = live.price / (1 + live.change); since = null
+  } else return null
+  return { amount: h.units * (price - prev) * rate, pct: price / prev - 1, since }
+}
+
+/** Movimento del portafoglio: somma dei titoli che hanno un confronto, in valore e in percentuale su quanto valevano prima. */
+export function portfolioMove(inv: Investments, s: Settings, live: Record<string, LiveQuote>, days: Record<string, PriceDays>) {
+  const moves = inv.holdings.map(h => ({ move: holdingMove(h, s, live[h.id], days[h.id]), value: valueHolding(withLive(h, live), s).value }))
+    .filter(x => x.move && x.value != null)
+  if (!moves.length) return null
+  const amount = moves.reduce((a, x) => a + x.move!.amount, 0)
+  const before = moves.reduce((a, x) => a + x.value!, 0) - amount
+  const sinces = moves.map(x => x.move!.since)
+  return { amount, pct: before > 0 ? amount / before : null, count: moves.length,
+           // tutti nelle 24 ore, o il giorno più vecchio da cui si confronta
+           since: sinces.every(x => x == null) ? null : sinces.filter((x): x is string => x != null).sort()[0] }
+}
+
+/** Il titolo con il prezzo automatico del dispositivo, per i calcoli di sempre (il prezzo a mano continua a vincere). */
+export const withLive = (h: Holding, live: Record<string, LiveQuote>): Holding => live[h.id] ? { ...h, livePrice: live[h.id].price } : h
+export const investmentsWithLive = (inv: Investments, live: Record<string, LiveQuote>): Investments =>
+  ({ ...inv, holdings: inv.holdings.map(h => withLive(h, live)) })
