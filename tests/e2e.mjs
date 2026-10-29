@@ -130,6 +130,47 @@ console.log('Le altre sezioni')
 await step('Analisi → Mese mostra come finisce il mese', () => js(`location.hash = '#/analysis/month'`), `!!document.querySelector('.outcome-amount')`)
 await step('Analisi → Movimenti elenca la spesa', () => js(`location.hash = '#/analysis/transactions'`), has('/12,50/'))
 await step('Notizie si apre senza errori', () => js(`location.hash = '#/news'`), `!!document.querySelector('.news2') && !document.querySelector('[role=status] .btn') || ${has('/Notizie/')}`)
+
+// Notizie complete (immagini, filtri, sezioni) con contenuti inventati, messi nella memoria del telefono come se li avesse
+// appena scaricati: senza server l'app usa quelli. Fonti, link e immagini sono di prova (example.test, immagini data:).
+const thumb = color => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120"><rect width="160" height="120" fill="${color}"/></svg>`)}`
+const hoursAgo = h => new Date(Date.now() - h * 3600e3).toISOString()
+const newsItem = (id, x) => ({ id, title: `Titolo di prova ${id}`, excerpt: `Estratto di prova ${id}.`, link: `https://example.test/${id}`, thumb: null,
+  published: hoursAgo(3), lang: 'it', format: 'article', categories: ['economy'], level: 'intermediate', minutes: 4, relevance: 0.7, cluster: null, crypto: false,
+  source: { name: `Fonte ${id}`, kind: 'press', paywall: false, trust: 4, country: 'IT' }, ...x })
+const hub = [
+  newsItem('oggi1', { title: 'Tassi BCE fermi: cosa cambia per il mutuo', thumb: thumb('#3a6'), categories: ['personal'] }),
+  newsItem('oggi2', { title: 'Inflazione di ottobre in calo', thumb: thumb('#36a'), published: hoursAgo(5) }),
+  newsItem('video1', { title: 'Video di prova sugli ETF', format: 'video', thumb: thumb('#a63'), categories: ['etf'], source: { name: 'Canale di prova', kind: 'video', paywall: false, trust: 4, country: 'IT' } }),
+  newsItem('pod1', { title: 'Podcast di prova sul risparmio', format: 'podcast', thumb: thumb('#a36'), categories: ['saving'], source: { name: 'Podcast di prova', kind: 'podcast', paywall: false, trust: 4, country: 'IT' } }),
+  newsItem('ric1', { title: 'Ricerca di prova sui consumi', format: 'research', published: hoursAgo(48), source: { name: 'Istituto di prova', kind: 'research', paywall: false, trust: 5, country: 'EU' } }),
+]
+const newsBtn = `document.querySelector('.news2 [aria-haspopup=dialog]')`
+const loadedThumbs = sel => `[...document.querySelectorAll('${sel}')].filter(i => i.complete && i.naturalWidth > 0).length`
+await step('Notizie: le sezioni (Oggi, Video, Podcast, Nuove ricerche)', async () => {
+  await js(`localStorage.setItem('q.hub', ${JSON.stringify(JSON.stringify({ lang: 'it', at: Date.now(), items: hub }))}); localStorage.removeItem('q.newsFilter'); location.hash = '#/'`)
+  await sleep(300); await js(`location.hash = '#/news'`)
+}, `(() => { const t = [...document.querySelectorAll('.news-section .sec-title')].map(h => h.textContent.trim()); return ['Oggi', 'Video', 'Podcast', 'Nuove ricerche'].every(x => t.includes(x)) })()`)
+await step('Notizie: le immagini delle fonti si vedono', null, `${loadedThumbs('.news2 img.story-thumb')} >= 4`)
+await step('Notizie: Filtri apre il pannello con tipo, argomenti, lingua, area, fonte e ordine', () => click(newsBtn),
+  `document.querySelectorAll('.news-filters-panel .nf-group').length === 6`)
+await step('Notizie: filtro «Video» → solo il video, e il pulsante conta il filtro', async () => {
+  await click(byText('/^Video$/', '.news-filters-panel button')); await sleep(150)
+  await click(byText('/Applica filtri/', '.news-filters-panel button'))
+}, `(() => { const t = [...document.querySelectorAll('.news2 .story-title')].map(x => x.textContent); return t.length === 1 && t[0] === 'Video di prova sugli ETF' && /1/.test(${newsBtn}?.textContent ?? '') })()`)
+await step('Notizie: Reimposta riporta le sezioni', async () => {
+  await click(newsBtn); await sleep(400)
+  await click(byText('/Reimposta/', '.news-filters-panel button')); await sleep(150)
+  await click(byText('/Applica filtri/', '.news-filters-panel button'))
+}, `document.querySelectorAll('.news2 .news-section').length >= 5 && !/\\d/.test(${newsBtn}?.textContent ?? '')`)
+await step('Notizie: una storia apre il dettaglio con immagine, estratto e link alla fonte', async () => {
+  await sleep(300); await click(byText('/Tassi BCE fermi/', '.news2 button.story'))
+}, `(() => { const d = document.querySelector('.story-detail'); return !!d && ${loadedThumbs('.story-detail img.story-hero')} === 1
+  && /Estratto di prova oggi1/.test(d.innerText) && d.querySelector('a.btn')?.getAttribute('href') === 'https://example.test/oggi1' })()`)
+await step('Notizie: chiudo il dettaglio e tolgo i contenuti di prova', async () => {
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }); await sleep(500)
+  await js(`['q.hub', 'q.newsFilter', 'q.interests'].forEach(k => localStorage.removeItem(k))`)
+}, `!document.querySelector('.story-detail')`)
 await step('Profilo → Capitale: inserisco 2.000 €', async () => {
   await js(`location.hash = '#/profile/capital'`); await sleep(800)
   await click(byText('/Inserisci il saldo/', '.row')); await sleep(400)

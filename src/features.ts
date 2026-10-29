@@ -19,4 +19,7 @@ const MISSING: Record<EnvName, readonly CloudFeature[]> = {
   alpha: ['shared', 'news', 'feedback', 'telemetry', 'research', 'errorReports', 'econEvents', 'invite'],
 }
 
-export const cloudFeature = (feature: CloudFeature, env: EnvName = ENV.name) => !MISSING[env].includes(feature)
+// Una funzione dell'elenco si riaccende con VITE_FLAGS=cloud:<nome> (es. cloud:news), senza toccare il codice: solo dopo
+// che il server dell'ambiente la serve davvero (tabelle, funzioni e rotta del gateway), o l'app chiamerebbe una rotta rifiutata.
+export const cloudFeature = (feature: CloudFeature, env: EnvName = ENV.name, on: ReadonlySet<string> = ENV.flags.cloud) =>
+  !MISSING[env].includes(feature) || on.has(feature)
