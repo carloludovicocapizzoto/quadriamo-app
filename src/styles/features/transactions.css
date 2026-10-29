@@ -63,6 +63,16 @@
 .cat-pick > button:active { transform: scale(.96); }
 .cat-pick > button.on { background: var(--accent); color: var(--on-accent); }
 .cat-pick > .on i { box-shadow: 0 0 0 1.5px var(--on-accent); }
+/* «+»: stessa misura delle categorie, senza fondo, così non si confonde con una scelta */
+.cat-pick > .cat-add { background: none; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); gap: 6px; padding: 0 14px 0 10px; }
+.cat-pick > .cat-add:hover { color: var(--text); }
+.cat-new { margin-top: var(--s3); }
+.cat-new-name { display: flex; align-items: center; gap: var(--s2); }
+.cat-new-name input { flex: 1; min-width: 0; height: 44px; min-height: 44px; padding: 0 12px; border-radius: var(--r-md); border: 1.5px solid transparent; background: var(--fill); }
+.cat-new-name input:focus-visible { border-color: var(--accent); }
+.cat-new-name .btn { flex: none; height: 44px; min-height: 44px; padding: 0 16px; }
+.cat-new-name .icon-btn { flex: none; }
+.cat-new .txs-row { border-bottom: 0; }
 .txs-note { margin: var(--s2) 0 0; font-size: var(--t-sm); color: var(--muted); }
 
 /* righe di dettaglio: etichetta a sinistra, valore a destra, una linea tra l'una e l'altra */
@@ -77,7 +87,13 @@
 .txs-hint { margin: var(--s2) 0 0; }
 .txs-actions { position: sticky; bottom: calc(-1 * (var(--s6) + env(safe-area-inset-bottom))); display: grid; justify-items: center; gap: var(--s1);
   padding: var(--s4) 0 calc(var(--s6) + env(safe-area-inset-bottom)); margin-top: var(--s4); background: var(--bg); }
-.txs-date input { width: auto; min-width: 0; max-width: 128px; font-size: 15px; padding: 0; min-height: 30px; }
+/* le righe che scorrono sotto «Salva» sfumano invece di essere tagliate di netto */
+.txs-actions::before { content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: var(--s5); pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--bg)); }
+/* la data si legge corta nella lingua («Oct 29»); il campo vero, trasparente, è sopra e apre il calendario */
+.txs-day { position: relative; flex: none; display: inline-flex; align-items: center; min-height: 30px; padding-left: 4px; font-size: 15px;
+  color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.txs-row .txs-day input { position: absolute; inset: 0; width: 100%; min-height: 0; padding: 0; opacity: 0; cursor: pointer; }
 .txs-date .mini-chip { flex: none; }
 .search { position: relative; display: flex; align-items: center; margin-bottom: var(--s3); }
 /* stesso campo della ricerca nelle Notizie: 44 px, fondo --fill, bordo che si accende */

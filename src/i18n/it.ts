@@ -140,6 +140,8 @@ const it: Dict = {
   'tx.description': 'Descrizione',
   'tx.descriptionPlaceholder': 'es. Supermercato',
   'tx.category': 'Categoria',
+  'tx.categoryName': 'Nome della categoria',
+  'tx.addCategory': 'Aggiungi',
   'tx.date': 'Data',
   'tx.paidFrom': 'Pagato da / Assegna a',
   'tx.paidFromDefault': 'Parte automatica',

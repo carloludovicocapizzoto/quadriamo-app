@@ -140,6 +140,8 @@ const en = {
   'tx.description': 'Description',
   'tx.descriptionPlaceholder': 'e.g. Supermarket',
   'tx.category': 'Category',
+  'tx.categoryName': 'Category name',
+  'tx.addCategory': 'Add',
   'tx.date': 'Date',
   'tx.paidFrom': 'Paid from / Allocate to',
   'tx.paidFromDefault': 'Default part',

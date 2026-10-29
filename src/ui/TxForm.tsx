@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Segmented } from './kit/Segmented'
 import { CUSTOM, FIRST, SPLIT, addDays, splitOk, splitTotal, fxRate, suggest, todayIso, type CategoryType, type Settings, type Transaction, partForPurchase } from '../engine'
 import { useI18n } from '../i18n/core'
@@ -12,6 +12,14 @@ import { amountText } from './kit/amount'
 import { decimalText } from './kit/decimal'
 
 const GROUPS: CategoryType[] = ['expense', 'income', 'saving']
+type Category = Settings['categories'][number]
+
+/** Lo zero di esempio nel campo importo: separatore della lingua, decimali della valuta (EUR «0.00» in inglese, JPY «0»). */
+const zeroText = (lang: string, currency: string) => {
+  let digits = 2
+  try { digits = new Intl.NumberFormat('en', { style: 'currency', currency }).resolvedOptions().maximumFractionDigits ?? 2 } catch { /* codice sconosciuto: due decimali */ }
+  return new Intl.NumberFormat(lang, { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(0)
+}
 
 /**
  * Nuovo movimento. L'importo è il protagonista; sotto, le categorie come nomi con il blocco della loro parte;
@@ -22,11 +30,15 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   initial?: Transaction
   prefill?: { amount?: string; description?: string; category?: string }
   defaultDate: string
-  onSave: (tx: Transaction) => void
+  /** `categories`: le categorie create qui con «+», da salvare insieme al movimento */
+  onSave: (tx: Transaction, categories: Category[]) => void
   onDelete?: (id: string) => void
   onClose: () => void
 }) {
-  const { t, money, lang } = useI18n()
+  const { t, money, lang, date: dateText } = useI18n()
+  // categorie create sul momento: entrano nelle impostazioni solo quando si salva il movimento
+  const [created, setCreated] = useState<Category[]>([])
+  const categories = [...settings.categories, ...created]
   const [amount, setAmount] = useState(initial?.amount != null ? amountText(initial.amount, lang) : (prefill?.amount ?? ''))
   const [category, setCategory] = useState<string | null>(() => {
     if (initial) return initial.category
@@ -56,7 +68,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   const [errors, setErrors] = useState<string[]>([])
 
 
-  const cat = settings.categories.find(c => c.id === category)
+  const cat = categories.find(c => c.id === category)
   const isIncome = cat?.type === 'income'
   // un'entrata mostra sempre dove va davvero: la scelta del movimento, altrimenti quella della categoria, altrimenti la regola
   const incomeTo = paidFrom || cat?.defaultBucket || SPLIT
@@ -81,7 +93,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
       id: initial?.id ?? newId(), date, description: description.trim(), category, amount: parsed,
       currency: foreign ? currency : null, fxRate: foreign ? rate : null,
       ...(isIncome ? { paidFrom: incomeTo, split: incomeTo === CUSTOM ? incomeSplit : null } : { paidFrom: paidFrom || null }),
-    })
+    }, created)
   }
 
   const kinds = GROUPS.filter(g => settings.categories.some(c => c.type === g))
@@ -89,8 +101,34 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   // il tipo segue la categoria scelta (anche quando la propone una regola)
   const kind: CategoryType = cat?.type ?? kindPick
   const yesterday = addDays(todayIso(), -1)
+  const pick = (c: Category) => {
+    if (c.id !== category && c.type === 'income') { setPaidFrom(''); setSplit(null) }
+    setCategory(c.id); setCatTouched(true); setFromRule(false)
+  }
+
+  // «+»: una categoria nuova del tipo scelto, col nome e (per spese e risparmi) la parte, come in Impostazioni
+  const [adding, setAdding] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newPart, setNewPart] = useState(settings.buckets[0]?.id ?? '')
+  const partChoices = [...settings.buckets.map(b => ({ id: b.id, label: bucketName(b, t) })), ...(kind === 'expense' ? [{ id: FIRST, label: t('bucket.first') }] : [])]
+  const closeAdding = () => { setAdding(false); setNewName('') }
+  const addCategory = () => {
+    const name = newName.trim()
+    if (!name) return
+    // lo stesso nome nello stesso tipo: si sceglie quella che c'è già, niente doppioni
+    const same = categories.find(c => c.type === kind && categoryName(c, t).trim().toLocaleLowerCase(lang) === name.toLocaleLowerCase(lang))
+    const part = partChoices.some(o => o.id === newPart) ? newPart : settings.buckets[0]?.id ?? null
+    const c: Category = same ?? { id: newId(), name, type: kind, defaultBucket: kind === 'income' ? null : part }
+    if (!same) setCreated(list => [...list, c])
+    pick(c)
+    closeAdding()
+  }
+  const onNewKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') { e.preventDefault(); addCategory() }
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeAdding() }
+  }
   // il blocco di una categoria: la parte da cui escono i soldi (inchiostro se pagata prima delle parti); le entrate non ne hanno
-  const blockOf = (c: Settings['categories'][number]) => c.type === 'income' ? null : c.defaultBucket === FIRST ? 'var(--text)'
+  const blockOf = (c: Category) => c.type === 'income' ? null : c.defaultBucket === FIRST ? 'var(--text)'
     : BUCKET_COLORS[settings.buckets.findIndex(b => b.id === c.defaultBucket)] ?? null
 
   return (
@@ -104,11 +142,11 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
 
         {kinds.length > 1 && (
           <Segmented className="txs-kind" value={kind} options={kinds.map(k => ({ id: k, label: t(`type.${k}`) }))}
-            onChange={k => { setKind(k); if (cat && cat.type !== k) { setCategory(null); setCatTouched(false) } }} />
+            onChange={k => { setKind(k); closeAdding(); if (cat && cat.type !== k) { setCategory(null); setCatTouched(false) } }} />
         )}
 
         <div className="txs-amount">
-          <AmountInput className="amount-input" placeholder="0,00" autoFocus={!initial} aria-label={t('tx.amount')}
+          <AmountInput className="amount-input" placeholder={zeroText(lang, currency)} autoFocus={!initial} aria-label={t('tx.amount')}
                  value={amount} onChange={setAmount} aria-invalid={errors.length > 0 && (parsed == null || parsed <= 0)} />
           <select className="txs-cur" value={currency} onChange={e => setCurrency(e.target.value)} aria-label={t('tx.currency')}>
             {currencies.map(c => <option key={c}>{c}</option>)}
@@ -122,16 +160,38 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
         )}
 
         <div className="cat-pick" role="radiogroup" aria-label={t('tx.category')}>
-          {settings.categories.filter(c => c.type === kind).map(c => {
+          {categories.filter(c => c.type === kind).map(c => {
             const block = blockOf(c)
             return (
-              <button type="button" key={c.id} role="radio" aria-checked={category === c.id} className={category === c.id ? 'on' : ''}
-                      onClick={() => { if (c.id !== category && c.type === 'income') { setPaidFrom(''); setSplit(null) } setCategory(c.id); setCatTouched(true); setFromRule(false) }}>
+              <button type="button" key={c.id} role="radio" aria-checked={category === c.id} className={category === c.id ? 'on' : ''} onClick={() => pick(c)}>
                 {block && <i style={{ background: block }} aria-hidden="true" />}{categoryName(c, t)}
               </button>
             )
           })}
+          {!adding && (
+            <button type="button" className="cat-add" onClick={() => { setNewPart(settings.buckets[0]?.id ?? ''); setAdding(true) }}>
+              <Icon name="plus" size={16} />{t('settings.newCategory')}
+            </button>
+          )}
         </div>
+        {adding && (
+          <div className="cat-new">
+            <div className="cat-new-name">
+              <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={onNewKey} autoFocus maxLength={40}
+                     placeholder={t('tx.categoryName')} aria-label={t('tx.categoryName')} enterKeyHint="done" />
+              <button type="button" className="btn primary" onClick={addCategory} disabled={!newName.trim()}>{t('tx.addCategory')}</button>
+              <button type="button" className="icon-btn ghost" onClick={closeAdding} aria-label={t('action.cancel')}><Icon name="close" size={18} /></button>
+            </div>
+            {kind !== 'income' && (
+              <label className="txs-row">
+                <span>{t('settings.bucket')}</span>
+                <select value={newPart} onChange={e => setNewPart(e.target.value)}>
+                  {partChoices.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                </select>
+              </label>
+            )}
+          </div>
+        )}
         {/* spesa grande in una categoria abbinata: da quale parte del capitale può venire (solo un'informazione) */}
         {kind === 'expense' && parsed != null && (() => {
           const part = partForPurchase(settings.capital, category ?? undefined, parsed)
@@ -149,7 +209,12 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
             <div className="txs-date">
               <button type="button" className={`mini-chip${date === todayIso() ? ' on' : ''}`} onClick={() => setDate(todayIso())}>{t('day.today')}</button>
               <button type="button" className={`mini-chip${date === yesterday ? ' on' : ''}`} onClick={() => setDate(yesterday)}>{t('day.yesterday')}</button>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} required aria-label={t('tx.date')} />
+              {/* la data scritta corta nella lingua; sopra c'è il campo vero, trasparente, che apre il calendario del sistema */}
+              <span className="txs-day">
+                {dateText(date, { day: 'numeric', month: 'short', ...(date.slice(0, 4) === todayIso().slice(0, 4) ? {} : { year: 'numeric' }) })}
+                <input type="date" value={date} onChange={e => e.target.value && setDate(e.target.value)} required aria-label={t('tx.date')}
+                       onClick={e => { try { e.currentTarget.showPicker?.() } catch { /* il browser apre il suo */ } }} />
+              </span>
             </div>
           </div>
           {isIncome ? <label className="txs-row">
