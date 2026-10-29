@@ -134,6 +134,19 @@ describe('import inbox', () => {
     st = reducer(st, { type: 'addInbox', items: p1.items })
     expect(planImport(st.data!, rows)).toMatchObject({ items: [], duplicates: 2 })
   })
+  it('preserves repeated-looking rows and skips the same occurrences on a second import', () => {
+    const st = base(), repeated = [rows[0], rows[0], rows[0]]
+    const first = planImport(st.data!, repeated)
+    expect(first.items).toHaveLength(3)
+    expect(new Set(first.items.map(i => i.fingerprint)).size).toBe(3)
+    const withInbox = reducer(st, { type: 'addInbox', items: first.items })
+    expect(planImport(withInbox.data!, repeated)).toMatchObject({ items: [], duplicates: 3 })
+  })
+  it('stores complete fingerprints for each occurrence', () => {
+    const st = base(), first = planImport(st.data!, [rows[0], rows[0]])
+    expect(first.items[0].fingerprint).toBe('2026-10-02|-52.30|pos esselunga|EUR')
+    expect(first.items[1].fingerprint).toBe('2026-10-02|-52.30|pos esselunga|EUR|occurrence:2')
+  })
   it('confirming creates the transaction and an optional rule; confirmed rows never come back', () => {
     let st = base()
     st = reducer(st, { type: 'addInbox', items: planImport(st.data!, rows).items })

@@ -3,8 +3,7 @@ import { useState } from 'react'
 import { useI18n } from '../../i18n/core'
 import { Icon } from '../Icon'
 import { AmountInput } from '../kit/AmountInput'
-import { parseAmount } from '../kit/amount'
-import { decimalText } from '../kit/decimal'
+import { decimalText, parseDecimal } from '../kit/decimal'
 import { Money } from '../kit/Money'
 import { Sheet } from '../kit/Sheet'
 import { BUCKET_COLORS, bucketName } from '../names'
@@ -51,7 +50,7 @@ export function RuleSection({ d: { draft, edit, errors } }: { d: SettingsDraft }
                    onChange={e => {
                      const v = e.target.value
                      setShares(prev => prev.map((x, j) => j === open ? v : x))
-                     edit(s => { s.buckets[open].share = (parseAmount(v) ?? 0) / 100 })
+                     edit(s => { s.buckets[open].share = (parseDecimal(v) ?? 0) / 100 })
                    }} /></label>
           <label className="field"><span>{t('settings.startingBalance')}</span>
             <AmountInput key={b.id} defaultValue={b.startingBalance || null} onValue={n => edit(s => { s.buckets[open].startingBalance = n ?? 0 })} /></label>

@@ -121,7 +121,7 @@ function FilterSheet({ value, pool, q, names, data, onApply }: {
   const [d, setD] = useState(value)
   const [min, setMin] = useState(value.min != null ? amountText(value.min, lang) : '')
   const [max, setMax] = useState(value.max != null ? amountText(value.max, lang) : '')
-  const draft: TxFilter = { ...d, min: min.trim() ? parseAmount(min) : null, max: max.trim() ? parseAmount(max) : null }
+  const draft: TxFilter = { ...d, min: min.trim() ? parseAmount(min, lang) : null, max: max.trim() ? parseAmount(max, lang) : null }
   const count = filterTransactions(pool, { ...draft, q }, names).length
   const toggle = <K extends 'types' | 'buckets' | 'categories'>(k: K, v: string) =>
     setD({ ...d, [k]: (d[k] as string[]).includes(v) ? (d[k] as string[]).filter(x => x !== v) : [...(d[k] as string[]), v] })

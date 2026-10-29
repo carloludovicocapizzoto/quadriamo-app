@@ -114,16 +114,21 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
     case 'upcoming': {
       // i prossimi 30 giorni dal calendario: affitto, bollette, rate, abbonamenti (quelli non ancora fatti)
       const list = agenda(s.events, c.today, addDays(c.today, 29)).filter(x => KIND_SIDE[x.event.kind] === 'out' && !x.done)
-      if (!list.length) return null
       const total = list.reduce((a, x) => a + (x.event.amount ?? 0), 0)
+      const manage = () => navigate({ tab: 'profile', page: 'recurring' })
+      if (!list.length) return box(<>
+        <p className="w-note">{t('hw.noUpcoming')}</p>
+        <button className="link-btn" onClick={manage}>{t('hw.manageRecurring')} →</button>
+      </>, () => navigate({ tab: 'analysis', view: 'calendar' }))
       return box(<>
         <p className="w-big"><Money value={total} currency={cur} /><small> {t('hw.upcomingCount', { n: list.length })}</small></p>
         <ul className="w-rows w-up">{list.slice(0, 3).map(x => {
           const n = daysBetween(c.today, x.date)
           return <li key={x.event.id + x.date}><Monogram service={x.event.service} name={x.event.title} size={26} /><span>{x.event.title}</span>
-            <small>{n === 0 ? t('now.today') : n === 1 ? t('now.tomorrow') : n <= 7 ? t('now.inDays', { n }) : date(x.date, { day: 'numeric', month: 'short' })}</small>
+            <small>{n === 0 ? t('now.today') : n === 1 ? t('now.tomorrow') : n <= 7 ? t('now.inDays', { n }) : date(x.date, { day: 'numeric', month: 'short' })}{x.event.kind === 'bill' ? ` · ${t('ev.estimateTag')}` : ''}</small>
             {x.event.amount != null ? <Money value={x.event.amount} currency={cur} /> : <span />}</li>
         })}</ul>
+        <button className="link-btn" onClick={manage}>{t('hw.manageRecurring')} →</button>
       </>, () => navigate({ tab: 'analysis', view: 'calendar' }))
     }
 

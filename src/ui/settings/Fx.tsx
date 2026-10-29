@@ -31,7 +31,7 @@ export function FxSection({ d: { data, draft, edit, flash } }: { d: SettingsDraf
             <input className="row-input row-fx" aria-label={`${t('settings.fxManual')} ${c}`} placeholder={t('settings.fxManual')} inputMode="decimal"
                    defaultValue={draft.fxManual?.[c] != null ? decimalText(draft.fxManual[c], lang) : ''}
                    onChange={e => edit(s => {
-                     // un cambio: un punto o una virgola soli sono sempre decimali (1.206 non è milleduecentosei)
+                     // un cambio: un punto o una virgola soli sono sempre decimali («1.206» non è milleduecentosei)
                      const v = parseDecimal(e.target.value)
                      const m = { ...(s.fxManual ?? {}) }
                      if (v && v > 0) m[c] = v; else delete m[c]

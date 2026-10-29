@@ -31,12 +31,22 @@ export function quarantinePersonalPush(): Promise<void> {
     const registrations = await navigator.serviceWorker.getRegistrations()
     let failed = false
     await Promise.all(registrations.filter(reg => reg.scope === scope).map(async reg => {
-      const unsafe = [reg.active, reg.waiting, reg.installing].some(worker => worker && worker.scriptURL !== safeWorker)
+      const workers = [reg.active, reg.waiting, reg.installing].filter((worker): worker is ServiceWorker => !!worker)
+      const unsafe = workers.some(worker => worker.scriptURL !== safeWorker)
+      const missingApiSafe = ENV.name === 'alpha' && !unsafe
       try {
-        const notifications = await reg.getNotifications()
-        notifications.forEach(n => n.close())
-        const sub = await reg.pushManager?.getSubscription()
-        if (sub && !await sub.unsubscribe()) failed = true
+        // In the Alpha the recognized worker cannot display personal push and subscriptions stay paused.
+        // Only the clean Alpha origin may tolerate missing APIs with no worker or its known-safe worker.
+        // Historical production and legacy/unknown workers still fail closed.
+        if (typeof reg.getNotifications === 'function') {
+          const notifications = await reg.getNotifications()
+          notifications.forEach(n => n.close())
+        } else if (!missingApiSafe) failed = true
+        const manager = reg.pushManager
+        if (typeof manager?.getSubscription === 'function') {
+          const sub = await manager.getSubscription()
+          if (sub && (typeof sub.unsubscribe !== 'function' || !await sub.unsubscribe())) failed = true
+        } else if (!missingApiSafe) failed = true
       } catch { failed = true }
       if (unsafe) {
         // Il vecchio script non può essere aggiornato offline. Rimuovere la registrazione interrompe i nuovi push.

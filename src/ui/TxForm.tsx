@@ -74,7 +74,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   const incomeTo = paidFrom || cat?.defaultBucket || SPLIT
   // le quote partono da quelle della categoria, altrimenti dalla regola: il totale è già 100% e si sposta solo ciò che serve
   const incomeSplit = split ?? (cat?.defaultBucket === CUSTOM ? cat.split : null) ?? Object.fromEntries(settings.buckets.map(b => [b.id, b.share]))
-  const parsed = parseAmount(amount)
+  const parsed = parseAmount(amount, lang)
   const foreign = currency !== settings.currency
   // un movimento già registrato tiene il suo cambio, a meno che non si cambi valuta
   const rate = foreign ? (initial?.currency === currency && initial?.fxRate ? initial.fxRate : fxRate(currency, settings)) : 1

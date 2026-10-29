@@ -9,6 +9,9 @@ import { startFakeAlpha, USERS } from './fake-alpha.mjs'
 
 const root = resolve(fileURLToPath(import.meta.url), '../..')
 const out = resolve(process.argv[2] ?? join(root, 'screens-alpha'))
+const screenWidth = Number(process.env.SCREEN_WIDTH ?? 390)
+const screenHeight = Number(process.env.SCREEN_HEIGHT ?? 844)
+const screenMobile = process.env.SCREEN_MOBILE !== 'false'
 mkdirSync(out, { recursive: true })
 const server = await startFakeAlpha({ fixtures: { v1: join(root, 'dist-alpha-e2e') } })
 const devices = []
@@ -17,7 +20,7 @@ const until = async (d, expr, ms = 10000) => { for (let i = 0; i < ms / 100; i++
 async function device(port) {
   const c = await openChrome({ port, args: ['--lang=it-IT'], waitMs: 45_000 })
   devices.push(c)
-  await c.cdp('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true })
+  await c.cdp('Emulation.setDeviceMetricsOverride', { width: screenWidth, height: screenHeight, deviceScaleFactor: 1, mobile: screenMobile })
   await c.cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
   await c.cdp('Network.enable')
   const d = { ...c, type: async t => { for (const ch of t) await c.cdp('Input.insertText', { text: ch }) },
@@ -56,18 +59,22 @@ for (let i = 0; i < 14 && !(await A1.js(`!!document.querySelector('.tabbar')`));
 await sleep(2500)
 // PAGES=1: pagine intere di tutti i menu (tema scuro), per controllare compattezza e chiarezza; poi si esce
 if (process.env.PAGES) {
-  const routes = ['#/', '#/analysis/month', '#/analysis/year', '#/analysis/calendar', '#/analysis/investments', '#/analysis/transactions', '#/news',
+  const allRoutes = ['#/', '#/analysis/month', '#/analysis/year', '#/analysis/calendar', '#/analysis/investments', '#/analysis/transactions', '#/news',
     '#/profile', '#/profile/personal', '#/profile/security', '#/profile/plan', '#/profile/budget', '#/profile/capital', '#/profile/recurring',
     '#/profile/goals', '#/profile/documents', '#/profile/rules', '#/profile/appearance', '#/profile/language', '#/profile/inbox',
     '#/profile/notifications', '#/profile/motion', '#/profile/accessibility', '#/profile/data', '#/profile/help', '#/profile/feedback']
+  const selected = process.env.SCREEN_ROUTES?.split(',').map(x => x.trim()).filter(Boolean)
+  const routes = selected?.length ? allRoutes.filter(x => selected.includes(x)) : allRoutes
+  if (selected?.some(x => !allRoutes.includes(x)) || !routes.length) throw Error('SCREEN_ROUTES must contain known route hashes')
   await A1.cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: process.env.SCHEME ?? 'dark' }, { name: 'prefers-reduced-motion', value: 'reduce' }] })
   for (const route of routes) {
     await A1.js(`location.hash = '${route}'`); await sleep(1400); await A1.js(`window.scrollTo(0, 0)`)
     const height = Math.min(6000, await A1.js(`document.documentElement.scrollHeight`))
-    await A1.cdp('Emulation.setDeviceMetricsOverride', { width: 390, height, deviceScaleFactor: 1, mobile: true }); await sleep(500)
-    const shot = await A1.cdp('Page.captureScreenshot', { format: 'png' })
+    await A1.cdp('Emulation.setDeviceMetricsOverride', { width: screenWidth, height: screenHeight, deviceScaleFactor: 1, mobile: screenMobile }); await sleep(500)
+    const shot = await A1.cdp('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true,
+      clip: { x: 0, y: 0, width: screenWidth, height, scale: 1 } })
     writeFileSync(join(out, `${route.replace(/[#/]+/g, '-').replace(/^-|-$/g, '') || 'home'}.png`), Buffer.from(shot.result.data, 'base64'))
-    await A1.cdp('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
+    await A1.cdp('Emulation.setDeviceMetricsOverride', { width: screenWidth, height: screenHeight, deviceScaleFactor: 1, mobile: screenMobile })
   }
   for (const d of devices) await d.close()
   await server.close(); console.log(`Pagine in ${out}`); process.exit(0)
