@@ -17,8 +17,10 @@ p { margin: 0 0 12px; }
 
 button { font: inherit; color: inherit; }
 button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-/* sui touch il contorno resta appeso dopo il tocco (es. il fuoco che torna da un pannello): solo con la tastiera */
-@media (pointer: coarse) { button:focus-visible, a:focus-visible { outline: none; } }
+/* dopo un tocco o un clic il contorno non resta appeso (es. il fuoco che torna da un pannello); con la tastiera sì, anche
+   sui dispositivi ibridi come l'iPad con la tastiera (app/inputMode: l'ultimo modo usato è su <html data-input>) */
+html[data-input="pointer"] body :focus-visible:not(input:not([type="checkbox"], [type="radio"]), textarea),
+html[data-input="pointer"] body label.row:has(> .row-cover:focus-visible) { outline: none; }
 input, select, textarea { font: inherit; font-size: max(16px, 1em); color: var(--text); background: var(--fill); border: 1px solid transparent;
   border-radius: var(--r-md); transition: border-color var(--d-fast); }
 input, select { padding: 10px 12px; min-height: 44px; width: 100%; }
@@ -26,8 +28,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 input[aria-invalid="true"] { border-color: var(--bad); }
 /* fuoco da tastiera dove il componente toglie bordo e contorno (P2-004): lo stesso contorno dell'accento dei pulsanti.
    Le caselle di testo senza bordo restano col solo cursore, che si vede; selezioni, numeri, caselle di spunta e ricerche no */
-html :is(select.row-input, input.row-input, .txs-row select, .txs-cur, input[type="date"], .search input, .news-search input):focus-visible,
-html input:is([type="checkbox"], [type="radio"]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+html :where(select.row-input, input.row-input, .txs-row select, .txs-cur, input[type="date"], .search input, .news-search input):focus-visible,
+html input:where([type="checkbox"], [type="radio"]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* un elenco a tendina invisibile che copre tutta la riga (es. «Aggiungi valuta»): il contorno va sulla riga */
 html label.row:has(> .row-cover:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--r-md); }
 select { -webkit-appearance: none; appearance: none; padding-right: 30px; text-overflow: ellipsis;
