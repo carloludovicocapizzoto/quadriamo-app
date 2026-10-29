@@ -5,7 +5,7 @@ import { activateScope, currentScope, personalKey, scopeKey } from '../store/sco
 import { accountStore, cachedAccountStore, flushScope } from '../store/accountStore'
 import { local } from '../storage'
 import { ENV } from '../env'
-import { supabase, AUTH_KEY, AUTH_NAMESPACE, ALPHA_INVITE_LINK, authRuntimeError, authRuntimeCurrent, isCurrentAuthSession, retryAuthRuntime, watchAuthRuntime } from './client'
+import { supabase, AUTH_KEY, AUTH_NAMESPACE, AUTH_SESSION_AT_BOOT, ALPHA_INVITE_LINK, authRuntimeError, authRuntimeCurrent, isCurrentAuthSession, retryAuthRuntime, watchAuthRuntime } from './client'
 import { scopedClient } from './scopedClient'
 import { SessionContext, type SessionApi } from './sessionContext'
 import type { SyncApi } from './context'
@@ -40,7 +40,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [localSession, setLocalSession] = useState(false), [localLogout, setLocalLogout] = useState(false)
   // la sessione è finita da sola (rinnovo rifiutato, uscita da un altro dispositivo): si dice perché si torna all'accesso
   // resta anche dopo una ricarica (sul dispositivo, senza dati personali) finché non si accede di nuovo o si esce volontariamente
-  const [sessionEnded, setEnded] = useState(() => local.get(SESSION_ENDED) === '1'), leaving = useRef(false), expected = useRef<string | null>(null)
+  const [sessionEnded, setEnded] = useState(() => local.get(SESSION_ENDED) === '1'), leaving = useRef(false), expected = useRef(AUTH_SESSION_AT_BOOT)
   const setSessionEnded = useCallback((on: boolean) => { local.set(SESSION_ENDED, on ? '1' : null); setEnded(on) }, [])
   const [authFailed, setAuthFailed] = useState(false)
   const recoveryOwner = useRef<string | null>(null)
@@ -57,7 +57,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     // anche all'avvio: c'era una sessione salvata (expected) ma il server non l'ha rinnovata
     else if (leaving.current) { setSessionEnded(false); leaving.current = false }
     else if (previous || expected.current) setSessionEnded(true)
-    expected.current = null
+    expected.current = false
     if (inviteArrival.current && next) {
       local.set(personalKey('q.alphaInvitePending', scope), '1')
       inviteArrival.current = false
@@ -82,7 +82,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (stored?.user.id !== authUser.current?.id) {
         stop(); observed = undefined
         if (!stored) { setLocalSession(false); installUser(null) }
-        else { expected.current = stored.user.id; setLease(activateScope(scopeFor(null))); setUser(null); setReady(false); setTransitioning(true) }
+        else { expected.current = true; setLease(activateScope(scopeFor(null))); setUser(null); setReady(false); setTransitioning(true) }
       }
       if (authRuntimeError) { stop(); observed = undefined; setAuthFailed(true); return }
       if (!authRuntimeCurrent() || !supabase || observed === supabase) return

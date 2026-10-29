@@ -79,6 +79,12 @@ async function step(d, name, action, check, seconds = 8) {
     }
     throw Error(`condizione non vera: ${check}`)
   } catch (e) {
+    if (name.startsWith('sessione finita ad app chiusa')) console.error('closed-session diagnostics', JSON.stringify({
+      rejected: server.state.rejectedRefreshes - closedRejectedRefreshesBefore,
+      attempts: (server.state.refreshAttemptsByUser.get(USERS.A.id) ?? 0) - closedRefreshAttemptsBefore,
+      rejectedAfterReopen: server.state.lastRejectedRefreshAt >= closedReopenedAt,
+      ui: await d.js(`({ ready: !!document.querySelector('.tabbar'), marker: localStorage.getItem('q.sessionEnded') === '1', visible: document.visibilityState })`),
+    }))
     console.error(`  ✗ ${n}. ${d.name}: ${name}\n    ${e.message}\n    pagina: ${(await d.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 1200)}`)
     failed = true; await done(1)
   }
@@ -342,7 +348,17 @@ await step(A2, 'sessione finita ad app chiusa (rinnovo revocato): l\'avviso comp
   if ([...server.state.refresh.values()].includes(USERS.A.id) || ![...server.state.revokedRefresh.values()].includes(USERS.A.id)) throw Error('refresh sintetico non revocato a pagina chiusa')
   while (Date.now() <= session.expiresAt * 1000 + 100) await sleep(50)
   closedReopenedAt = Date.now()
+  // Deterministically let SDK renewal finish before React mounts its session observer.
+  // Models a fast Auth response with a busy main thread; never changes Auth or data responses.
+  const delayedMount = await A2.cdp('Page.addScriptToEvaluateOnNewDocument', { source: `(() => {
+    const Native = window.MessageChannel
+    window.MessageChannel = class extends Native { constructor() { super()
+      const post = this.port2.postMessage.bind(this.port2)
+      this.port2.postMessage = (...args) => setTimeout(() => post(...args), 500)
+    } }
+  })()` })
   await A2.open()
+  await A2.cdp('Page.removeScriptToEvaluateOnNewDocument', { identifier: delayedMount.result.identifier })
   await A2.cdp('Page.bringToFront')
   if (await A2.js(`document.visibilityState`) !== 'visible') throw Error('Chrome non mantiene visibile il contesto riaperto')
 }, async () => {
@@ -351,7 +367,7 @@ await step(A2, 'sessione finita ad app chiusa (rinnovo revocato): l\'avviso comp
   const attempts = (server.state.refreshAttemptsByUser.get(USERS.A.id) ?? 0) - closedRefreshAttemptsBefore
   if (endedNow && Date.now() > closedReopenedAt + 10000 && rejected === 0)
     throw Error(`session ended senza richiesta refresh rifiutata; attempts=${attempts}, revoked=${server.state.revokedRefresh.size}`)
-  return endedNow && rejected > 0 && server.state.lastRejectedRefreshAt >= closedReopenedAt && attempts <= 5
+  return endedNow && !await A2.js(appReady) && rejected > 0 && server.state.lastRejectedRefreshAt >= closedReopenedAt && attempts <= 5
 }, 30)
 await api('tokens', { seconds: 3600 })
 await step(A1, 'server irraggiungibile durante l\'accesso: messaggio comprensibile', async () => {

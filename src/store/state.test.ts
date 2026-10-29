@@ -142,10 +142,10 @@ describe('import inbox', () => {
     const withInbox = reducer(st, { type: 'addInbox', items: first.items })
     expect(planImport(withInbox.data!, repeated)).toMatchObject({ items: [], duplicates: 3 })
   })
-  it('keeps the legacy fingerprint for the first occurrence', () => {
+  it('stores complete fingerprints for each occurrence', () => {
     const st = base(), first = planImport(st.data!, [rows[0], rows[0]])
-    expect(first.items[0].fingerprint).toBe('2026-10-02|-52.30|pos esselunga')
-    expect(first.items[1].fingerprint).toBe('2026-10-02|-52.30|pos esselunga|occurrence:2')
+    expect(first.items[0].fingerprint).toBe('2026-10-02|-52.30|pos esselunga|EUR')
+    expect(first.items[1].fingerprint).toBe('2026-10-02|-52.30|pos esselunga|EUR|occurrence:2')
   })
   it('confirming creates the transaction and an optional rule; confirmed rows never come back', () => {
     let st = base()
