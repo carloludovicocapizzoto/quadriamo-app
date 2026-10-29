@@ -13,6 +13,12 @@ export { alphaFetch }
 export const AUTH_KEY = ENV.supabase ? authStorageKey(ENV.supabase.url) : ''
 export const ALPHA_INVITE_LINK = ENV.name === 'alpha' && INVITE_LINK
 export const AUTH_NAMESPACE = ENV.supabase ? JSON.stringify([ENV.name, ENV.supabase.url.replace(/\/$/, '')]) : ''
+// The SDK can reject renewal and remove persistence before React mounts. Retain only
+// the fact that a session existed, so an involuntary sign-out still has an explanation.
+export const AUTH_SESSION_AT_BOOT = (() => {
+  try { return !!(ENV.supabase && storedAuthSession(AUTH_KEY, AUTH_NAMESPACE, ENV.supabase.url)) }
+  catch { return false } // malformed persistence follows the existing fail-closed runtime path
+})()
 export let supabase: SupabaseClient | null = null
 export let authRuntimeError = false
 let version = '', scheduled = false

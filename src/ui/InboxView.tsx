@@ -1,17 +1,20 @@
 import { useState, type ChangeEvent } from 'react'
-import { keywordFor, readStatement, type Settings, type Transaction } from '../engine'
+import { CSV_LIMITS, keywordFor, readStatement, type Settings, type Transaction } from '../engine'
 import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
 import { duplicateCandidates, newId, planImport, type InboxItem } from '../store/state'
 import { track } from '../beta/telemetry'
 import { Icon } from './Icon'
+import { ImportReview } from './import/ImportReview'
+import { Sheet } from './kit/Sheet'
 import { bucketName, categoryName } from './names'
 import { parseConsolidated, readConsolidatedWorkbook, type ConsolidatedPreview } from '../engine/consolidatedStatement'
+import { readWorkbookSheets, type WorkbookSheet } from '../engine/workbook'
 import { todayIso, updateCapital } from '../engine'
 
 /** Importa un estratto conto e mostra la casella "Da confermare": tutto si può cambiare prima di confermare. */
 export function InboxView({ settings }: { settings: Settings }) {
-  const { t, money, date } = useI18n()
+  const { t, money, date, lang } = useI18n()
   const { state, dispatch, lease } = useStore()
   const inbox = state.data?.inbox ?? []
   const [msg, setMsg] = useState<{ text: string; bad?: boolean } | null>(null)
@@ -26,12 +29,21 @@ export function InboxView({ settings }: { settings: Settings }) {
     e.target.value = ''
     if (!file || !state.data) return
     setPreview(null); setDepositTarget('none')
+    // oltre i limiti il file non si legge nemmeno: niente cambia
+    const tooLarge = () => setMsg({ text: t('imp.tooLarge', { mb: String(CSV_LIMITS.bytes / 1024 / 1024), rows: (CSV_LIMITS.records - 1).toLocaleString(lang),
+      cols: String(CSV_LIMITS.columns) }), bad: true })
+    if (file.size > CSV_LIMITS.bytes) { tooLarge(); return }
     if (/\.xlsx$/i.test(file.name)) {
       try {
         const result = await readConsolidatedWorkbook(file)
         if (lease && !lease.current()) return
-        if (!result) { setMsg({ text: t('imp.xlsx'), bad: true }); return }
-        setMsg(null); setPreview(result)
+        if (result) { setMsg(null); setPreview(result); return }
+        // non è l'estratto consolidato: Excel generico, un foglio alla volta con lo stesso motore dei CSV
+        const sheets = await readWorkbookSheets(file)
+        if (lease && !lease.current()) return
+        if (!sheets) { setMsg({ text: t('imp.xlsx'), bad: true }); return }
+        if (!sheets.length) { setMsg({ text: t('imp.none'), bad: true }); return }
+        setMsg(null); setReview({ owner: lease, sheets })
       } catch { setMsg({ text: t('imp.xlsx'), bad: true }) }
       return
     }
@@ -41,20 +53,31 @@ export function InboxView({ settings }: { settings: Settings }) {
     const consolidated = parseConsolidated(text)
     if (consolidated) { setMsg(null); setPreview(consolidated); return }
     if (/(?:conto personale|personal account)\s*\(eur\)/i.test(text)) { setMsg({ text: t('imp.sections'), bad: true }); return }
-    const { rows, error } = readStatement(text)
+    const { map, error, rows, skipped, needs, header } = readStatement(text)
+    if (error === 'too_large') { tooLarge(); return }
     if (error === 'multiple_sections') { setMsg({ text: t('imp.sections'), bad: true }); return }
-    if (!rows.length) { setMsg({ text: t('imp.none'), bad: true }); return }
-    const { items, duplicates } = planImport(state.data, rows)
+    // colonne non riconosciute: si scelgono a mano (serve almeno un'intestazione con due colonne)
+    if (map ? !rows.length && !skipped.length && !needs : header.length < 2) { setMsg({ text: t('imp.none'), bad: true }); return }
+    // prima il riepilogo (e, se serve, colonne e formati): niente entra nella casella senza conferma
+    setMsg(null); setReview({ owner: lease, sheets: [{ name: file.name, csv: text }] })
+  }
+  const [reviewState, setReview] = useState<{ owner: typeof lease; sheets: WorkbookSheet[] } | null>(null)
+  const review = reviewState && reviewState.owner === lease && (!lease || lease.current()) ? reviewState.sheets : null
+  const confirmReview = (items: InboxItem[], duplicates: number) => {
+    if (!state.data || (lease && !lease.current())) return
     items.forEach(i => suggested.set(i.id, i.category))
     dispatch({ type: 'addInbox', items })
     void track('import')
-    setMsg({ text: t('imp.result', { n: items.length, d: duplicates }) })
+    setMsg({ text: t('imp.result', { n: items.length, d: duplicates }) }); setReview(null)
   }
+  const reviewSheet = <Sheet open={!!review} onClose={() => setReview(null)} title={t('imp.previewTitle')}>
+    {review && state.data && <ImportReview sheets={review} data={state.data} onDone={confirmReview} onClose={() => setReview(null)} />}
+  </Sheet>
 
   const toTx = (i: InboxItem) => ({ id: newId(), date: i.date, description: i.description, category: i.category,
     amount: Math.abs(i.amount), currency: i.currency, fxRate: null, paidFrom: i.paidFrom })
   const dups = state.data ? duplicateCandidates(state.data) : new Map<string, Transaction>()
-  const ready = inbox.filter(i => i.category && !dups.has(i.id))      // "conferma tutti" salta i possibili doppioni
+  const ready = inbox.filter(i => i.category && !dups.has(i.id) && !i.maybeImported)      // "conferma tutti" salta i possibili doppioni
 
   const confirmPreview = () => {
     if (!preview || !state.data || (lease && !lease.current())) return
@@ -92,7 +115,7 @@ export function InboxView({ settings }: { settings: Settings }) {
 
   // niente da confermare: una riga sola per importare (il file si sceglie toccandola)
   if (!inbox.length) return (
-    <div className="import-row">{importPreview}
+    <div className="import-row">{importPreview}{reviewSheet}
       <label className="row"><Icon name="upload" size={20} className="row-lead" />
         <span className="row-main"><span>{t('imp.import')}</span><small>{t('imp.short')}</small></span>
         <Icon name="chevron" size={18} className="row-chev" />
@@ -102,7 +125,7 @@ export function InboxView({ settings }: { settings: Settings }) {
   )
   return (
     <section className="card card-inbox">
-      {importPreview}
+      {importPreview}{reviewSheet}
       <div className="card-head">
         <h3 className="h-plain">{t('inbox.title', { n: inbox.length })}</h3>
         <label className="btn small-btn"><Icon name="upload" size={16} />{t('imp.import')}
@@ -141,7 +164,7 @@ function InboxRow({ item, settings, suggestedCategory, duplicateOf, onChange, on
   const income = item.amount > 0
   const cats = settings.categories.filter(c => (c.type === 'income') === income)
   return (
-    <li className={`inbox-item${duplicateOf ? ' dup' : item.category ? '' : ' needs'}`}>
+    <li className={`inbox-item${duplicateOf || item.maybeImported ? ' dup' : item.category ? '' : ' needs'}`}>
       <div className="inbox-top">
         <span className="tx-date">{date(item.date)}</span>
         <span className="tx-desc" title={item.description}>{item.description}</span>
@@ -169,8 +192,9 @@ function InboxRow({ item, settings, suggestedCategory, duplicateOf, onChange, on
         <p className="dup-note small" role="note"><Icon name="alert" size={15} />{t('inbox.dup', { desc: duplicateOf.description || '—',
           amount: money(duplicateOf.amount ?? 0, duplicateOf.currency || settings.currency), date: duplicateOf.date ? date(duplicateOf.date) : '—' })}</p>
       )}
+      {item.maybeImported && !duplicateOf && <p className="dup-note small" role="note"><Icon name="alert" size={15} />{t('inbox.maybeImported')}</p>}
       <div className="inbox-actions">
-        {duplicateOf ? (
+        {duplicateOf || item.maybeImported ? (
           <>
             <button className="btn small-btn" disabled={!item.category}
                     onClick={() => onConfirm(item)}>{t('inbox.addAnyway')}</button>

@@ -73,6 +73,15 @@ describe('estratto consolidato', () => {
     const bytes = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
     expect((await readConsolidatedWorkbook(new File([bytes], 'test.xlsx')))?.rows.map(r => r.amount)).toEqual([-2.5, 1000])
   })
+  it('P2.3: una cella con formula nel consolidato non si legge come estratto certo', async () => {
+    const wb = XLSX.utils.book_new()
+    const rows: unknown[][] = csv.split('\n').map(row => [row])
+    const at = rows.findIndex(r => String(r[0]).includes('-2,50€'))
+    rows[at] = [{ t: 's', f: 'CONCAT("x")', v: String(rows[at][0]) }]
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Statement')
+    const bytes = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
+    expect(await readConsolidatedWorkbook(new File([bytes], 'formula.xlsx'))).toBeNull()
+  })
   it('rifiuta un workbook che dichiara un’espansione ZIP eccessiva', async () => {
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(csv.split('\n').map(row => [row])), 'Statement')
@@ -113,5 +122,11 @@ describe('estratto consolidato', () => {
   it('non importa più tabelle personali EUR ambigue', () => {
     const second = 'Personal Account (EUR),,,,\nDate,Description,Category,Money in/out,Balance\n"Dec 31, 2026",QA-B-other,Other,-1,1\nTotal,,,,'
     expect(parseConsolidated(`${englishYear}\n${second}`)).toBeNull()
+  })
+  it('Fase 2E: legge «-1,234» del tracciato inglese come −1.234, non lo arrotonda', () => {
+    expect(parseConsolidated(englishYear.replace('-2.35', '"-1,234"'))?.rows[0].amount).toBe(-1234)
+  })
+  it('Fase 2E: rifiuta un importo con più decimali di quelli dell’euro invece di arrotondarlo', () => {
+    expect(parseConsolidated(csv.replace('-2,50€', '-2,505€'))).toBeNull()
   })
 })

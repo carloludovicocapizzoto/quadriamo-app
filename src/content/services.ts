@@ -1,14 +1,15 @@
 // Catalogo degli abbonamenti più comuni in Italia e in Europa: nome, categoria e colore del marchio. Niente loghi
 // (sono marchi registrati: scelta di Carlo, 17/10): ogni servizio si riconosce da un monogramma nel suo colore
 // (ui/kit/Monogram). Niente prezzi di listino: cambiano spesso e un numero sbagliato varrebbe meno di un campo vuoto.
-export type ServiceCategory = 'video' | 'music' | 'cloud' | 'apps' | 'news' | 'gaming' | 'fitness' | 'phone' | 'learning' | 'other'
-export const SERVICE_CATEGORIES: ServiceCategory[] = ['video', 'music', 'cloud', 'apps', 'news', 'gaming', 'fitness', 'phone', 'learning', 'other']
+export type ServiceCategory = 'video' | 'music' | 'cloud' | 'apps' | 'ai' | 'news' | 'gaming' | 'fitness' | 'phone' | 'learning' | 'other'
+export const SERVICE_CATEGORIES: ServiceCategory[] = ['video', 'music', 'cloud', 'apps', 'ai', 'news', 'gaming', 'fitness', 'phone', 'learning', 'other']
 
 export interface Service {
   id: string
   name: string
   category: ServiceCategory
   color: string          // colore del marchio (sfondo del monogramma)
+  aliases?: string[]     // nomi alternativi e piani riconosciuti nella ricerca, senza creare voci duplicate
   mono?: string          // sigla, se non basta l'iniziale
   popular?: boolean      // tra i "più usati"
   yearly?: boolean       // di solito si paga ogni anno
@@ -47,8 +48,8 @@ export const SERVICES: Service[] = [
   S('adobe-cc', 'Adobe Creative Cloud', 'apps', '#DA1F26', { mono: 'Cc' }),
   S('canva', 'Canva Pro', 'apps', '#00C4CC'),
   S('notion', 'Notion', 'apps', '#191919'),
-  S('chatgpt', 'ChatGPT Plus', 'apps', '#10A37F', { mono: 'GPT', popular: true }),
-  S('claude', 'Claude Pro', 'apps', '#D97757'),
+  S('chatgpt', 'ChatGPT Plus', 'apps', '#10A37F', { mono: 'GPT', popular: true, aliases: ['ChatGPT', 'ChatGPT Pro'] }),
+  S('claude', 'Claude Pro', 'apps', '#D97757', { aliases: ['Claude', 'Claude Max'] }),
   S('1password', '1Password', 'apps', '#0572EC', { mono: '1P' }),
   S('bitwarden', 'Bitwarden', 'apps', '#175DDC', { yearly: true }),
   S('nordvpn', 'NordVPN', 'apps', '#4687FF', { yearly: true }),
@@ -96,6 +97,16 @@ export const SERVICES: Service[] = [
   S('udemy', 'Udemy', 'learning', '#A435F0'),
   S('masterclass', 'MasterClass', 'learning', '#1A1A1A', { mono: 'MC', yearly: true }),
   S('skillshare', 'Skillshare', 'learning', '#00FF84'),
+  // Nomi di prodotto, mai prezzi o piani precompilati. Il nome del piano si personalizza nel modulo.
+  S('google-gemini', 'Google Gemini', 'ai', '#4285F4', { mono: 'G', popular: true, aliases: ['Gemini', 'Google AI Premium', 'Google AI Plus', 'Google AI Pro', 'Google AI Ultra'] }),
+  S('microsoft-copilot', 'Microsoft Copilot', 'ai', '#5E5CE6', { mono: 'C', aliases: ['Copilot', 'Microsoft Copilot Pro'] }),
+  S('perplexity', 'Perplexity', 'ai', '#20808D', { mono: 'P', aliases: ['Perplexity Pro', 'Perplexity Max'] }),
+  S('grok', 'Grok', 'ai', '#111111', { mono: 'G', aliases: ['SuperGrok', 'SuperGrok Plus'] }),
+  S('poe', 'Poe', 'ai', '#6D4AFF'),
+  S('github-copilot', 'GitHub Copilot', 'ai', '#24292F', { mono: 'GH', aliases: ['GitHub Copilot Pro', 'GitHub Copilot Pro+'] }),
+  S('cursor', 'Cursor', 'ai', '#111111', { mono: 'Cu', aliases: ['Cursor Plus', 'Cursor Premium'] }),
+  S('midjourney', 'Midjourney', 'ai', '#000000', { mono: 'MJ' }),
+  S('applecare-plus', 'AppleCare+', 'other', '#1D1D1F', { mono: 'AC', aliases: ['AppleCare Plus', 'Apple Care+'] }),
 ]
 
 export const serviceById = (id: string | null | undefined) => (id ? SERVICES.find(s => s.id === id) : undefined)
@@ -111,11 +122,15 @@ export function searchServices(query: string, category: ServiceCategory | null =
   const pool = SERVICES.filter(s => !category || s.category === category)
   if (!q) return (category ? pool : pool.filter(s => s.popular)).slice(0, max)
   const score = (s: Service) => {
-    const n = norm(s.name), words = n.split(' ')
-    if (n.startsWith(q)) return 0
-    if (words.some(w => w.startsWith(q))) return 1
-    if (n.replace(/ /g, '').includes(q.replace(/ /g, ''))) return 2
-    return -1
+    const names = [s.name, ...(s.aliases ?? [])].map(norm)
+    const matches = names.map(n => {
+      const words = n.split(' ')
+      if (n.startsWith(q)) return 0
+      if (words.some(w => w.startsWith(q))) return 1
+      if (n.replace(/ /g, '').includes(q.replace(/ /g, ''))) return 2
+      return -1
+    }).filter(x => x >= 0)
+    return matches.length ? Math.min(...matches) : -1
   }
   return pool.map(s => ({ s, r: score(s) })).filter(x => x.r >= 0)
     .sort((a, b) => a.r - b.r || Number(!!b.s.popular) - Number(!!a.s.popular) || a.s.name.localeCompare(b.s.name))

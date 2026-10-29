@@ -1,6 +1,6 @@
 import { splitTotal, type Bucket } from '../engine'
 import { useI18n } from '../i18n/core'
-import { parseAmount } from './kit/amount'
+import { parseDecimal } from './kit/decimal'
 import { BUCKET_COLORS, bucketName } from './names'
 
 const pct = (x: number) => String(Math.round(x * 1000) / 10).replace('.', ',')
@@ -18,7 +18,7 @@ export function SplitEditor({ buckets, value, onChange }: {
         <label key={b.id} className="split-row">
           <span><i style={{ background: BUCKET_COLORS[i] }} />{bucketName(b, t)}</span>
           <span className="unit"><input inputMode="decimal" placeholder="0" defaultValue={v[b.id] ? pct(v[b.id]) : ''} aria-label={bucketName(b, t)}
-            onChange={e => onChange({ ...v, [b.id]: (parseAmount(e.target.value) ?? 0) / 100 })} /><span aria-hidden>%</span></span>
+            onChange={e => onChange({ ...v, [b.id]: (parseDecimal(e.target.value) ?? 0) / 100 })} /><span aria-hidden>%</span></span>
         </label>
       ))}
       <p className={`split-total${total === 1 ? '' : ' bad'}`}>{total === 1 ? t('split.total', { n: 100 }) : t('split.err', { n: pct(total) })}</p>

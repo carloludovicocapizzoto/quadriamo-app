@@ -75,7 +75,7 @@ export function EventForm({ event, settings, today, focusAmount, onSave, onDelet
     set({ repeat: p === 'once' ? null : p === 'custom' ? e.repeat ?? { every: 1, unit: 'week' } : { ...REPEAT_PRESETS[p] } })
   }
   function save() {
-    const value = parseAmount(amount)
+    const value = parseAmount(amount, lang)
     if (!e.title.trim()) return setErr(t('ev.errTitle'))
     if (!e.date) return setErr(t('ev.errDate'))
     if (side === 'out' && e.category && !(value && value > 0)) return setErr(t('ev.errAmount'))
@@ -121,6 +121,9 @@ export function EventForm({ event, settings, today, focusAmount, onSave, onDelet
         <label className="txs-row"><span>{e.repeat ? t('ev.first') : t('ev.date')}</span>
           <input type="date" value={e.date} onChange={x => set({ date: x.target.value || today })} /></label>
       </div>
+      {e.kind === 'subscription' && e.service && serviceById(e.service)?.category === 'ai' &&
+        <p className="small muted">{t('sub.planHint')}</p>}
+      {e.kind === 'bill' && <p className="small muted">{t('ev.estimateHint')}</p>}
       {side === 'out' && <p className="small muted">{e.category ? t('ev.inBudgetHint') : t('ev.noBudgetHint')}
         {e.kind === 'saving' && e.goalId ? ` ${t('ev.goalHint')}` : e.kind === 'pac' && pacMonthly > 0 ? ` ${t('ev.pacHint')}` : ''}</p>}
       {side === 'out' && <>

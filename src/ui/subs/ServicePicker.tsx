@@ -28,6 +28,9 @@ export function ServicePicker({ onPick }: { onPick: (s: Service | null, name: st
       </div>
 
       {browsing ? <ul className="sp-grid" key={cat ?? 'popular'}>
+        {cat === 'ai' && <li><button onClick={() => { tap(); onPick(null, t('sub.aiGeneric')) }}>
+          <Monogram name={t('sub.aiGeneric')} size={52} /><span>{t('sub.aiGeneric')}</span>
+        </button></li>}
         {list.map((s, i) => <li key={s.id} style={{ animationDelay: `${i * 18}ms` }}>
           <button onClick={() => { tap(); onPick(s, s.name) }}><Monogram service={s.id} name={s.name} size={52} /><span>{s.name}</span></button>
         </li>)}

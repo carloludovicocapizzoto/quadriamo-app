@@ -63,7 +63,7 @@ export function GoalsStrip({ goals, today, currency, titled = true }: { goals: G
 }
 
 function GoalDetail({ goal, today, currency, onClose }: { goal: Goal; today: string; currency: string; onClose: () => void }) {
-  const { t, money, date } = useI18n()
+  const { t, money, date, lang } = useI18n()
   const { dispatch } = useStore()
   const [edit, setEdit] = useState(false)
   const [raw, setRaw] = useState('')
@@ -79,7 +79,7 @@ function GoalDetail({ goal, today, currency, onClose }: { goal: Goal; today: str
     if (!before && s.saved + amount >= goal.target) { setParty(true); setTimeout(() => setParty(false), 3200) }
   }
   if (edit) return <GoalForm goal={goal} today={today} currency={currency} onDone={() => setEdit(false)} onDelete={() => { dispatch({ type: 'deleteGoal', id: goal.id }); onClose() }} />
-  const typed = parseAmount(raw)
+  const typed = parseAmount(raw, lang)
   return (
     <div className="goal-detail">
       <div className="gd-head">
@@ -127,7 +127,7 @@ function GoalForm({ goal, today, currency, onDone, onDelete }: { goal?: Goal; to
   const [target, setTarget] = useState(goal ? amountText(goal.target, lang) : '')
   const [deadline, setDeadline] = useState(goal?.deadline ?? '')
   const [err, setErr] = useState('')
-  const amount = parseAmount(target)
+  const amount = parseAmount(target, lang)
   function save() {
     if (!name.trim()) return setErr(t('goal.errName'))
     if (!amount || amount <= 0) return setErr(t('goal.errTarget'))

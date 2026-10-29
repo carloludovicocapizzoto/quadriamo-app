@@ -1,5 +1,6 @@
 import { isIsoDate } from './dates'
-import { parseBankAmount, parseBankDate, parseCsv, type ImportRow } from './importCsv'
+import { parseMoney, type DecimalMark } from './bankNumbers'
+import { parseBankDate, parseCsv, type ImportRow } from './importCsv'
 import { normalize } from './rules'
 
 export interface ConsolidatedPreview {
@@ -12,6 +13,8 @@ export interface ConsolidatedPreview {
 }
 
 const label = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ')
+/** I due tracciati hanno una convenzione nota (italiano «1.000,00€», inglese «1,000.00»): niente da indovinare. */
+const amountIn = (raw: string, mark: DecimalMark) => { const m = parseMoney(raw, mark); return m.ok ? m.value : null }
 const months: Record<string, string> = { gen:'01', feb:'02', mar:'03', apr:'04', mag:'05', giu:'06', lug:'07', ago:'08', set:'09', ott:'10', nov:'11', dic:'12' }
 function italianDate(s: string): string | null {
   const m = s.trim().toLowerCase().match(/^(\d{1,2})\s+([a-z]{3})\.?\s+(\d{4})$/)
@@ -21,7 +24,7 @@ function italianDate(s: string): string | null {
 }
 
 /** Bound ZIP expansion before handing an untrusted workbook to SheetJS. Reject ZIP64/multi-disk/encrypted files. */
-function safeXlsxEnvelope(buffer: ArrayBuffer): boolean {
+export function safeXlsxEnvelope(buffer: ArrayBuffer): boolean {
   const bytes = new Uint8Array(buffer), view = new DataView(buffer)
   const min = Math.max(0, bytes.length - 65_557)
   let end = -1
@@ -85,7 +88,7 @@ function extractDepositBalance(all: string[][], before: number): number | null {
   const products = all.flatMap((r, i) => i > summaries[0] && i < details[0] && /^instant access savings\s*\(eur\)$/.test(label(r[0] ?? '')) ? [i] : [])
   if (products.length !== 1) return null
   const balances = all.slice(details[0] + 1, before).filter(r => label(r[2] ?? '') === 'closing balance')
-    .map(r => parseBankAmount(r[3] ?? ''))
+    .map(r => amountIn(r[3] ?? '', '.'))
   return balances.length === 1 && balances[0] != null && balances[0] >= 0 ? balances[0] : null
 }
 
@@ -94,7 +97,7 @@ function extractItalianDepositBalance(all: string[][], before: number): number |
   const balances = deposits.flatMap(i => {
     const value = all.slice(i + 1, Math.min(before, i + 25)); const marker = value.findIndex(r => label(r[0] ?? '') === 'valore del deposito')
     if (marker < 0) return []
-    return value.slice(marker + 1).flatMap(r => label(r[2] ?? '') === 'saldo di chiusura' ? [parseBankAmount(r[3] ?? '')] : [])
+    return value.slice(marker + 1).flatMap(r => label(r[2] ?? '') === 'saldo di chiusura' ? [amountIn(r[3] ?? '', ',')] : [])
   })
   return balances.length === 1 && balances[0] != null && balances[0] >= 0 ? balances[0] : null
 }
@@ -118,14 +121,14 @@ export function parseConsolidated(text: string): ConsolidatedPreview | null {
     if (label(first) === 'totale' || label(first) === 'total') { finished = rows.length + transfersExcluded > 0; break }
     const date = table.format === 'italian' ? italianDate(first) : parseBankDate(first)
     if (!date) return null
-    const amount = parseBankAmount(r[3] ?? ''), description = (r[1] ?? '').trim()
+    const amount = amountIn(r[3] ?? '', table.format === 'italian' ? ',' : '.'), description = (r[1] ?? '').trim()
     if (amount == null || amount === 0 || !description) return null
     const transfer = internalTransfer(description, table.format)
     if (transfer) {
       if ((transfer === 'out' && amount >= 0) || (transfer === 'in' && amount <= 0)) return null
       transfersExcluded++; continue
     }
-    rows.push({ date, description, amount: Math.round(amount * 100) / 100, currency: 'EUR' })
+    rows.push({ date, description, amount, currency: 'EUR' })
   }
   if (!finished || !rows.length) return null
   const occurrenceCounts = new Map<string, number>()
@@ -149,12 +152,15 @@ export async function readConsolidatedWorkbook(file: File): Promise<Consolidated
   const buffer = await file.arrayBuffer()
   if (!safeXlsxEnvelope(buffer)) return null
   const XLSX = await import('xlsx')
-  const workbook = XLSX.read(buffer, { type: 'array', bookVBA: false })
+  // le formule si leggono solo per riconoscerle: il loro valore salvato può essere vecchio, quindi non è un estratto certo
+  const workbook = XLSX.read(buffer, { type: 'array', bookVBA: false, cellFormula: true })
   if (workbook.SheetNames.length !== 1) return null
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
   const ref = sheet['!ref']; if (!ref) return null
   const range = XLSX.utils.decode_range(ref)
   if (range.e.c !== 0 || range.e.r > 20000) return null
+  const formula = (c: unknown) => { const cell = c as { f?: string; F?: string }; return !!(cell.f || cell.F) }
+  if (Object.entries(sheet).some(([k, c]) => !k.startsWith('!') && formula(c))) return null
   const cells = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, raw: false, defval: '' })
   return parseConsolidated(cells.map(r => String(r[0] ?? '')).join('\n'))
 }

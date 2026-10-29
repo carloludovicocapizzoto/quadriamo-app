@@ -9,7 +9,6 @@ import {
 import { useI18n } from '../i18n/core'
 import { useStore } from '../store/context'
 import { newId } from '../store/state'
-import { parseAmount } from './kit/amount'
 import { decimalText, parseDecimal } from './kit/decimal'
 import { CURRENCIES } from './names'
 import { YearNav } from './YearView'
@@ -110,7 +109,7 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
                 <AmountInput defaultValue={d.amount} onValue={n => save(x => { x.deposits[i].amount = n ?? 0 })} /></label>
               <label className="field"><span>{t('inv.rate')}</span>
                 <input inputMode="decimal" defaultValue={num(Math.round(d.yearlyRate * 10000) / 100)}
-                       onChange={e => save(x => { x.deposits[i].yearlyRate = (parseAmount(e.target.value) ?? 0) / 100 })} /></label>
+                       onChange={e => save(x => { x.deposits[i].yearlyRate = (parseDecimal(e.target.value) ?? 0) / 100 })} /></label>
               <label className="field"><span>{t('inv.start')}</span>
                 <input type="date" defaultValue={d.start} onChange={e => save(x => { x.deposits[i].start = e.target.value })} /></label>
               <label className="field"><span>{t('inv.term')}</span>
@@ -133,7 +132,7 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
           <AmountInput defaultValue={inv.pac.monthly} onValue={n => save(x => { x.pac.monthly = n ?? 0 })} /></label>
         <label className="txs-row"><span>{t('inv.expected')}</span>
           <span className="txs-unit"><input inputMode="decimal" defaultValue={num(Math.round(inv.pac.yearlyReturn * 10000) / 100)}
-                 onChange={e => save(x => { x.pac.yearlyReturn = (parseAmount(e.target.value) ?? 0) / 100 })} /><i>%</i></span></label>
+                 onChange={e => save(x => { x.pac.yearlyReturn = (parseDecimal(e.target.value) ?? 0) / 100 })} /><i>%</i></span></label>
         <label className="txs-row"><span>{t('inv.years')}</span>
           <input inputMode="numeric" defaultValue={inv.pac.years}
                  onChange={e => save(x => { x.pac.years = Math.min(60, Math.max(0, Number(e.target.value) || 0)) })} /></label>

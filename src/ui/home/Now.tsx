@@ -64,7 +64,7 @@ export function Now({ data, r, today, hasPlan, onLog }: { data: AppData; r: Mont
         go = () => navigate({ tab: 'analysis', view: 'month' })
         break
       case 'nextOut':
-        lead = mono(x.event); title = x.event.title; detail = `${t('now.nextOut')} · ${when(x.days)}`
+        lead = mono(x.event); title = x.event.title; detail = `${t('now.nextOut')} · ${when(x.days)}${x.event.kind === 'bill' ? ` · ${t('ev.estimateTag')}` : ''}`
         end = x.event.amount != null ? <Money value={-x.event.amount} currency={cur} /> : null
         break
       case 'price':
