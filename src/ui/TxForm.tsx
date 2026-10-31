@@ -1,6 +1,6 @@
 import { useContext, useMemo, useState, type FormEvent } from 'react'
 import { Segmented } from './kit/Segmented'
-import { CUSTOM, FIRST, SPLIT, addDays, budgetEvents, daysBetween, linkedOccurrences, monthOf, occurrenceKey, occurrences, periodOf,
+import { CUSTOM, FIRST, SPLIT, addDays, budgetEvents, daysBetween, linkedOccurrences, monthOf, nextMonth, occurrenceKey, occurrences, periodOf, prevMonth, validLink,
   splitOk, splitTotal, fxRate, suggest, todayIso, type CategoryType, type Occurrence, type Settings, type Transaction, partForPurchase } from '../engine'
 import { useI18n } from '../i18n/core'
 import { StoreContext } from '../store/context'
@@ -74,14 +74,20 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   const rate = foreign ? (initial?.currency === currency && initial?.fxRate ? initial.fxRate : fxRate(currency, settings)) : 1
   const currencies = [...new Set([settings.currency, ...CURRENCIES, ...Object.keys(settings.fxRates)])]
 
-  // la spesa fissa che questo movimento potrebbe pagare: stessa categoria, stesso periodo, la volta più vicina non già pagata
-  // da un altro movimento. Collegata, la volta automatica non conta più: resta questo movimento, con il suo importo vero
+  // la spesa fissa che questo movimento potrebbe pagare: stessa categoria, la volta più vicina (nel periodo del movimento o in
+  // quelli accanto) non già pagata da un altro movimento. Collegata, la volta automatica non conta più: resta questo movimento,
+  // con il suo importo vero, nel periodo della scadenza (engine/month, validLink)
   const events = category && !isIncome ? budgetEvents(settings).filter(e => e.category === category) : []
-  const linked = events.find(e => e.id === occurrence?.eventId) && occurrence
+  // il collegamento vale finché la scadenza è della categoria scelta e nel periodo del movimento o in quello accanto: cambiando
+  // la data di molto il collegamento cade e si propone la volta più vicina alla data nuova (P1 #19: mai un collegamento stantio)
+  const linked = occurrence && events.some(e => e.id === occurrence.eventId) && date
+    && validLink({ id: '', date, description: '', category, amount: null, occurrence }, settings) ? occurrence : null
   const candidate = (() => {
     if (!events.length || !date || linked) return null
-    const { start, end } = periodOf(monthOf(date, settings.monthStartDay), settings.monthStartDay)
-    const taken = linkedOccurrences(others)
+    // il periodo del movimento e quelli accanto: un pagamento può essere in anticipo o in ritardo sulla sua scadenza
+    const here = monthOf(date, settings.monthStartDay)
+    const start = periodOf(prevMonth(here), settings.monthStartDay).start, end = periodOf(nextMonth(here), settings.monthStartDay).end
+    const taken = linkedOccurrences(others, settings)
     return events.flatMap(e => occurrences(e, start, end).filter(d => !taken.has(occurrenceKey(e.id, d))).map(d => ({ event: e, date: d })))
       .sort((a, b) => Math.abs(daysBetween(date, a.date)) - Math.abs(daysBetween(date, b.date)))[0] ?? null
   })()

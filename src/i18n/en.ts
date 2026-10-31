@@ -162,6 +162,7 @@ const en = {
   'tx.linkYes': "Yes, link it",
   'tx.linked': "Pays “{name}” of {date}: the automatic payment no longer counts.",
   'tx.unlink': "Unlink",
+  'tx.forDue': "for the {date} due date",
   'cloud.occurrence': "Fixed cost paid",
   'cloud.event': "Event",
   'tx.undated': 'Without a date',

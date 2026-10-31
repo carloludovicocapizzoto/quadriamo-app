@@ -37,7 +37,7 @@ export function CalendarView({ settings, today, current }: { settings: Settings;
   const store = useStore().state.data
   const goals = store?.goals
   // le volte pagate da un movimento collegato sono fatte: «Già pagato», niente «Segna come fatto»
-  const paid = useMemo(() => linkedOccurrences(store?.transactions ?? []), [store?.transactions])
+  const paid = useMemo(() => linkedOccurrences(store?.transactions ?? [], settings), [store?.transactions, settings])
   const events = useMemo(() => [...own, ...goalEvents(goals, today, name => t('cal.goalDue', { name }))], [own, goals, today, t])
   const [mode, setModeState] = useState<Mode>(() => (MODES as string[]).includes(local.get(MODE_KEY) ?? '') ? local.get(MODE_KEY) as Mode : 'month')
   const [day, setDay] = useState(today)

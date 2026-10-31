@@ -16,7 +16,7 @@ export function CalendarMini({ c, box }: { c: WidgetCtx; box: Box }) {
   const p = parseDate(c.today)
   const first = makeDate(p.year, p.month, 1), last = makeDate(p.year, p.month + 1, 0)
   const lead = (new Date(first + 'T00:00:00Z').getUTCDay() + 6) % 7
-  const items = agenda(c.data.settings.events, first, last, linkedOccurrences(c.data.transactions))
+  const items = agenda(c.data.settings.events, first, last, linkedOccurrences(c.data.transactions, c.data.settings))
   if (!items.length) return null
   const sum = periodSummary(items, c.today)
   const heavy = new Set(sum.heavy)

@@ -441,6 +441,25 @@ await step(B, 'token in scadenza e cambio del nome subito dopo l\'apertura: ness
 }, async () => { const now = await authCounts(); console.log(`      rinnovo concorrente: ${JSON.stringify({ rifiutati: now.rejected - authBefore.rejected, rinnovi: now.attempts - authBefore.attempts })}`)
   return now.rejected === authBefore.rejected && now.attempts - authBefore.attempts <= 3
     && (await B.js(`${appReady} && !/La sessione è terminata/.test(document.body.innerText)`)) && await B.js(`/Salvato/.test(document.body.innerText)`) }, 20)
+// RISULTATO NOTO (31/10, non corretto: in questa fase l'Auth non si modifica): due schede che si aprono insieme sulla sessione
+// in scadenza mandano lo stesso token di rinnovo due volte; questo finto server accetta il primo e rifiuta il secondo. Il vero
+// GoTrue accetta il riuso entro il suo intervallo (10 s di default), quindi l'effetto reale non è dimostrato qui. Il passo
+// controlla le garanzie che contano (nessuna disconnessione, sessione valida sul server, nessun ciclo) e tiene il rifiuto
+// a uno solo: se diventasse un ciclo o una disconnessione, fallisce.
+await step(B, 'due schede aperte insieme sulla sessione in scadenza: al più un rinnovo rifiutato, nessun ciclo, la sessione resta', async () => {
+  // due client principali (uno per scheda) con la stessa chiave
+  const ok = await B.js(`(() => { const k = Object.keys(localStorage).find(x => x.startsWith('q.auth.v1/')); const record = k && JSON.parse(localStorage.getItem(k))
+    const v = record?.session ? JSON.parse(record.session) : null; if (!v?.refresh_token) return false
+    v.expires_at = Math.floor(Date.now() / 1000) + 1; v.expires_in = 1; record.session = JSON.stringify(v); localStorage.setItem(k, JSON.stringify(record)); return true })()`)
+  if (!ok) throw Error('sessione sintetica di B non trovata')
+  await B.cdp('Page.navigate', { url: 'about:blank' }); await sleep(1500)
+  authBefore = await authCounts()
+  const other = await B.cdp('Target.createTarget', { url: `${ORIGIN}/app/` })
+  await B.cdp('Page.navigate', { url: `${ORIGIN}/app/` }); await sleep(8000)
+  await B.cdp('Target.closeTarget', { targetId: other.result.targetId })
+}, async () => { const now = await authCounts(); console.log(`      due schede: ${JSON.stringify({ rifiutati: now.rejected - authBefore.rejected, rinnovi: now.attempts - authBefore.attempts })}`)
+  return now.rejected - authBefore.rejected <= 1 && now.attempts - authBefore.attempts <= 2 && [...server.state.refresh.values()].includes(USERS.B.id)
+    && await B.js(`${appReady} && !/La sessione è terminata/.test(document.body.innerText)`) }, 20)
 await api('tokens', { seconds: 3600 })
 
 console.log('App installabile e aggiornamento')

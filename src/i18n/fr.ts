@@ -162,6 +162,7 @@ const fr: Dict = {
   'tx.linkYes': "Oui, relier",
   'tx.linked': "Paie « {name} » du {date} : le paiement automatique ne compte plus.",
   'tx.unlink': "Délier",
+  'tx.forDue': "pour l’échéance du {date}",
   'cloud.occurrence': "Dépense fixe payée",
   'cloud.event': "Événement",
   'tx.undated': 'Sans date',

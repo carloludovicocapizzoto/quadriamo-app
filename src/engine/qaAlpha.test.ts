@@ -202,7 +202,7 @@ describe('pagamento registrato collegato alla sua scadenza: la spesa fissa conta
     expect(r.spent).toBe(169.98)
   })
   it('calendario e «Adesso»: la volta pagata da un movimento è «Già pagato», non «da confermare» né «da fare»', () => {
-    const paid = linkedOccurrences([salary, pay(84.99)])
+    const paid = linkedOccurrences([salary, pay(84.99)], s)
     expect(periodSummary(agenda([rata], '2026-10-01', '2026-10-31', paid), '2026-10-29')).toMatchObject({ paid: 84.99, toPay: 0, toConfirm: 0 })
     expect(nowItems({ events: [rata], paid, today: '2026-10-29', hour: 10, loggedToday: true, leftOver: null }).some(x => x.type === 'today')).toBe(false)
     expect(nowItems({ events: [rata], today: '2026-10-29', hour: 10, loggedToday: true, leftOver: null }).some(x => x.type === 'today')).toBe(true)

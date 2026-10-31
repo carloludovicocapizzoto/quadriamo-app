@@ -4,7 +4,7 @@ import { budgetEvents, occurrenceKey, occurrences } from './calendar'
 import { minorDigits } from './bankNumbers'
 import {
   CUSTOM, FIRST, SPLIT,
-  type BucketRow, type Divided, type CheckKind, type ClassifiedTx, type MonthResult, type Settings,
+  type BucketRow, type Divided, type Occurrence, type CheckKind, type ClassifiedTx, type MonthResult, type Settings,
   type Transaction, type YearMonth,
 } from './types'
 
@@ -50,19 +50,44 @@ function withAmount(tx: Transaction, s: Settings, type: ClassifiedTx['type'], bu
   return { ...tx, type, bucket, amountIn }
 }
 
-/** Movimenti che appartengono al mese (per data). */
-function transactionsOf(ym: YearMonth, all: Transaction[], s: Settings): Transaction[] {
-  const key = ymKey(ym)
-  return all.filter(t => t.date && ymKey(monthOf(t.date, s.monthStartDay)) === key)
+/**
+ * Il collegamento di un movimento alla volta che paga (transaction.occurrence), se vale: l'evento è ancora una spesa del
+ * budget, quella data è davvero una sua volta, e il movimento è nello stesso periodo della scadenza o in quello accanto
+ * (pagamento anticipato o in ritardo). Altrimenti null: il movimento resta una spesa normale alla sua data e la scadenza
+ * automatica resta (un collegamento rotto non deve far sparire una spesa prevista).
+ */
+export function validLink(t: Transaction, s: Settings): Occurrence | null {
+  const o = t.occurrence
+  if (!o || !t.date) return null
+  const e = budgetEvents(s).find(x => x.id === o.eventId)
+  if (!e || !occurrences(e, o.date, o.date).includes(o.date)) return null
+  const index = (ym: YearMonth) => ym.year * 12 + ym.month
+  return Math.abs(index(monthOf(t.date, s.monthStartDay)) - index(monthOf(o.date, s.monthStartDay))) <= 1 ? o : null
 }
 
-const linkedCache = new WeakMap<Transaction[], Set<string>>()
-/** Le volte delle spese fisse già pagate da un movimento collegato (transaction.occurrence): non generano il pagamento automatico. */
-export function linkedOccurrences(all: Transaction[]): Set<string> {
-  let hit = linkedCache.get(all)
+/**
+ * Movimenti che appartengono al mese: per data; un pagamento collegato a una spesa fissa nel periodo della scadenza che paga,
+ * come la volta automatica che sostituisce (la spesa fissa appartiene al suo periodo, il pagamento ne dà l'importo vero).
+ * Così spostare la data del pagamento al mese dopo non toglie la spesa al mese della scadenza né la conta due volte (P1 #19).
+ */
+function transactionsOf(ym: YearMonth, all: Transaction[], s: Settings): Transaction[] {
+  const key = ymKey(ym)
+  return all.filter(t => {
+    const date = validLink(t, s)?.date ?? t.date
+    return date && ymKey(monthOf(date, s.monthStartDay)) === key
+  })
+}
+
+// per elenco di movimenti e impostazioni: ogni modifica crea un elenco nuovo (reducer, sincronizzazione), come per monthCache
+const linkedCache = new WeakMap<Transaction[], WeakMap<Settings, Set<string>>>()
+/** Le volte delle spese fisse già pagate da un movimento collegato valido: non generano il pagamento automatico. */
+export function linkedOccurrences(all: Transaction[], s: Settings): Set<string> {
+  let bySettings = linkedCache.get(all)
+  if (!bySettings) { bySettings = new WeakMap(); linkedCache.set(all, bySettings) }
+  let hit = bySettings.get(s)
   if (!hit) {
-    hit = new Set(all.flatMap(t => t.occurrence ? [occurrenceKey(t.occurrence.eventId, t.occurrence.date)] : []))
-    linkedCache.set(all, hit)
+    hit = new Set(all.flatMap(t => { const o = validLink(t, s); return o ? [occurrenceKey(o.eventId, o.date)] : [] }))
+    bySettings.set(s, hit)
   }
   return hit
 }
@@ -124,7 +149,7 @@ export const splitOk = (split: Record<string, number> | null | undefined) =>
   Object.values(split ?? {}).every(x => Number.isFinite(x) && x >= 0 && x <= 1) && splitTotal(split) === 1
 
 /** Problemi di una singola riga (le righe rosse dell'Excel). */
-export function rowIssues(t: ClassifiedTx, s: Settings): CheckKind[] {
+export function rowIssues(t: ClassifiedTx, s: Settings, all?: Transaction[]): CheckKind[] {
   if (t.recurring) return []
   const out: CheckKind[] = []
   const filled = !!(t.date || t.description || t.category)
@@ -133,9 +158,10 @@ export function rowIssues(t: ClassifiedTx, s: Settings): CheckKind[] {
   if (t.amount != null && !t.category) out.push('missingCategory')
   if (t.type === 'unknown') out.push('unknownCategory')
   if (t.amount != null && t.amountIn == null) out.push('missingFx')
-  // un movimento collegato a una volta è quella volta, non un doppione
-  if (t.category && t.amount != null && !t.occurrence &&
-      budgetEvents(s).some(e => e.category === t.category && e.amount === t.amount)) out.push('recurringDuplicate')
+  // un movimento collegato a una volta è quella volta, non un doppione; lo è il secondo collegato alla stessa volta
+  const link = validLink(t, s)
+  if (link ? !!all?.some(x => x.id !== t.id && x.id < t.id && validLink(x, s) && x.occurrence!.eventId === link.eventId && x.occurrence!.date === link.date)
+      : t.category && t.amount != null && budgetEvents(s).some(e => e.category === t.category && e.amount === t.amount)) out.push('recurringDuplicate')
   return out
 }
 
@@ -170,7 +196,7 @@ export function computeMonth(
   if (hit && normal) return hit
 
   const manual = transactionsOf(ym, all, s).map(t => classify(t, s))
-  const txs = [...recurringOf(ym, manual, s, today, linkedOccurrences(all)), ...manual]
+  const txs = [...recurringOf(ym, manual, s, today, linkedOccurrences(all, s)), ...manual]
     .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
 
   // quanto era già stato diviso fino al mese prima (zero dal primo mese, o con un riporto passato a mano)
@@ -229,7 +255,7 @@ export function computeMonth(
   const checks = Object.fromEntries(
     (['missingDate', 'missingAmount', 'missingCategory', 'unknownCategory', 'missingFx', 'recurringDuplicate'] as CheckKind[])
       .map(k => [k, 0])) as Record<CheckKind, number>
-  for (const t of txs) for (const k of rowIssues(t, s)) checks[k]++
+  for (const t of txs) for (const k of rowIssues(t, s, all)) checks[k]++
 
   const spendingByBucket = Object.fromEntries(s.buckets.map(b => [b.id,
     txs.filter(t => t.bucket === b.id && t.amount != null && (t.type === 'expense' || t.type === 'saving'))]))

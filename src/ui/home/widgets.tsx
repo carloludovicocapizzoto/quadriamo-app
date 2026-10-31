@@ -113,7 +113,7 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
 
     case 'upcoming': {
       // i prossimi 30 giorni dal calendario: affitto, bollette, rate, abbonamenti (quelli non ancora fatti)
-      const list = agenda(s.events, c.today, addDays(c.today, 29), linkedOccurrences(c.data.transactions)).filter(x => KIND_SIDE[x.event.kind] === 'out' && !x.done)
+      const list = agenda(s.events, c.today, addDays(c.today, 29), linkedOccurrences(c.data.transactions, s)).filter(x => KIND_SIDE[x.event.kind] === 'out' && !x.done)
       const total = list.reduce((a, x) => a + (x.event.amount ?? 0), 0)
       const manage = () => navigate({ tab: 'profile', page: 'recurring' })
       if (!list.length) return box(<>
