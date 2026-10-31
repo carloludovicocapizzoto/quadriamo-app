@@ -3,7 +3,7 @@
 // promemoria) e i giorni più pesanti in evidenza, poi la settimana del giorno scelto come timeline. Le altre viste
 // (giorno, settimana, agenda) usano la stessa timeline.
 import { useMemo, useState } from 'react'
-import { GOAL_EVENT, addDays, agenda, daysBetween, forecastMonth, goalEvents, goalStatus, makeDate, monthOf, parseDate, periodSummary, toneOf, type CalEvent, type MonthResult, type Settings } from '../../engine'
+import { GOAL_EVENT, addDays, agenda, daysBetween, linkedOccurrences, forecastMonth, goalEvents, goalStatus, makeDate, monthOf, parseDate, periodSummary, toneOf, type CalEvent, type MonthResult, type Settings } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import { navigate } from '../../app/router'
@@ -34,7 +34,10 @@ export function CalendarView({ settings, today, current }: { settings: Settings;
   const { t, date, lang, money } = useI18n()
   const { events: own, save, remove, toggleDone } = useEvents()
   // con le scadenze degli obiettivi (si toccano per aprire l'obiettivo)
-  const goals = useStore().state.data?.goals
+  const store = useStore().state.data
+  const goals = store?.goals
+  // le volte pagate da un movimento collegato sono fatte: «Già pagato», niente «Segna come fatto»
+  const paid = useMemo(() => linkedOccurrences(store?.transactions ?? [], settings), [store?.transactions, settings])
   const events = useMemo(() => [...own, ...goalEvents(goals, today, name => t('cal.goalDue', { name }))], [own, goals, today, t])
   const [mode, setModeState] = useState<Mode>(() => (MODES as string[]).includes(local.get(MODE_KEY) ?? '') ? local.get(MODE_KEY) as Mode : 'month')
   const [day, setDay] = useState(today)
@@ -54,7 +57,7 @@ export function CalendarView({ settings, today, current }: { settings: Settings;
     }
     return { from: today, to: addDays(today, AGENDA_DAYS - 1), title: t('cal.next', { n: AGENDA_DAYS }) }
   }, [mode, day, today, date, t])
-  const items = useMemo(() => agenda(events, from, to), [events, from, to])
+  const items = useMemo(() => agenda(events, from, to, paid), [events, from, to, paid])
   const byDay = useMemo(() => {
     const m = new Map<string, typeof items>()
     for (const x of items) m.set(x.date, [...(m.get(x.date) ?? []), x])

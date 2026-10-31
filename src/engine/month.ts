@@ -1,9 +1,10 @@
 // Calcolo di un mese: è la traduzione delle formule dei fogli mese dell'Excel di Quadriamo.
 import { compareYm, monthOf, periodOf, prevMonth, ymKey } from './dates'
-import { budgetEvents, occurrences } from './calendar'
+import { budgetEvents, occurrenceKey, occurrences } from './calendar'
+import { minorDigits } from './bankNumbers'
 import {
   CUSTOM, FIRST, SPLIT,
-  type BucketRow, type CheckKind, type ClassifiedTx, type MonthResult, type Settings,
+  type BucketRow, type Divided, type Occurrence, type CheckKind, type ClassifiedTx, type MonthResult, type Settings,
   type Transaction, type YearMonth,
 } from './types'
 
@@ -49,26 +50,96 @@ function withAmount(tx: Transaction, s: Settings, type: ClassifiedTx['type'], bu
   return { ...tx, type, bucket, amountIn }
 }
 
-/** Movimenti che appartengono al mese (per data). */
+/**
+ * Il collegamento di un movimento alla volta che paga (transaction.occurrence), se vale: l'evento è ancora una spesa del
+ * budget, quella data è davvero una sua volta, e il movimento è nello stesso periodo della scadenza o in quello accanto
+ * (pagamento anticipato o in ritardo). Altrimenti null: il movimento resta una spesa normale alla sua data e la scadenza
+ * automatica resta (un collegamento rotto non deve far sparire una spesa prevista).
+ */
+export function validLink(t: Transaction, s: Settings): Occurrence | null {
+  const o = t.occurrence
+  if (!o || !t.date) return null
+  const e = budgetEvents(s).find(x => x.id === o.eventId)
+  if (!e || !occurrences(e, o.date, o.date).includes(o.date)) return null
+  const index = (ym: YearMonth) => ym.year * 12 + ym.month
+  return Math.abs(index(monthOf(t.date, s.monthStartDay)) - index(monthOf(o.date, s.monthStartDay))) <= 1 ? o : null
+}
+
+/**
+ * Movimenti che appartengono al mese: per data; un pagamento collegato a una spesa fissa nel periodo della scadenza che paga,
+ * come la volta automatica che sostituisce (la spesa fissa appartiene al suo periodo, il pagamento ne dà l'importo vero).
+ * Così spostare la data del pagamento al mese dopo non toglie la spesa al mese della scadenza né la conta due volte (P1 #19).
+ */
 function transactionsOf(ym: YearMonth, all: Transaction[], s: Settings): Transaction[] {
   const key = ymKey(ym)
-  return all.filter(t => t.date && ymKey(monthOf(t.date, s.monthStartDay)) === key)
+  return all.filter(t => {
+    const date = validLink(t, s)?.date ?? t.date
+    return date && ymKey(monthOf(date, s.monthStartDay)) === key
+  })
+}
+
+// per elenco di movimenti e impostazioni: ogni modifica crea un elenco nuovo (reducer, sincronizzazione), come per monthCache
+const linkedCache = new WeakMap<Transaction[], WeakMap<Settings, Set<string>>>()
+/** Le volte delle spese fisse già pagate da un movimento collegato valido: non generano il pagamento automatico. */
+export function linkedOccurrences(all: Transaction[], s: Settings): Set<string> {
+  let bySettings = linkedCache.get(all)
+  if (!bySettings) { bySettings = new WeakMap(); linkedCache.set(all, bySettings) }
+  let hit = bySettings.get(s)
+  if (!hit) {
+    hit = new Set(all.flatMap(t => { const o = validLink(t, s); return o ? [occurrenceKey(o.eventId, o.date)] : [] }))
+    bySettings.set(s, hit)
+  }
+  return hit
 }
 
 /**
  * I pagamenti del calendario nel mese (engine/calendar: affitto, bollette, rate…): compaiono quando il mese è iniziato
  * (c'è almeno un movimento con importo) e contano solo dal loro giorno; prima sono "upcoming", con l'importo previsto a parte.
+ * Ogni volta conta una sola volta: se un movimento la paga (`linked`, transaction.occurrence) il pagamento automatico non c'è,
+ * nemmeno prima della scadenza; resta il movimento, con il suo importo vero.
  */
-export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, today: string): ClassifiedTx[] {
+export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, today: string, linked: Set<string> = new Set()): ClassifiedTx[] {
   if (!manual.some(t => t.amount != null)) return []
   const { start, end } = periodOf(ym, s.monthStartDay)
-  return budgetEvents(s).flatMap(e => occurrences(e, start, end).map(date => {
+  return budgetEvents(s).flatMap(e => occurrences(e, start, end).filter(date => !linked.has(occurrenceKey(e.id, date))).map(date => {
     const due = date <= today
     return {
       ...classify({ id: `ev-${e.id}-${date}`, date, description: e.title, category: e.category, amount: due ? e.amount : null }, s),
-      recurring: true, upcoming: !due, planned: e.amount ?? 0, eventId: e.id,
+      recurring: true, upcoming: !due, planned: e.amount ?? 0, eventId: e.id, confirmed: e.done.includes(date),
     }
   })).sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+}
+
+/**
+ * Divide `amount` secondo i pesi (quote della regola o «a modo mio») senza perdere né creare centesimi: si lavora in unità
+ * minime della valuta (`digits`: EUR 2, JPY 0, KWD 3), ogni parte prende la sua quota troncata e le unità che avanzano vanno
+ * alle parti con la frazione più grande; a parità vince la parte che viene prima (regola dei resti maggiori, come paydayPlan).
+ * La somma delle parti è sempre l'importo arrotondato alla valuta: pesi che non fanno 100% (vecchi backup, dati non validi)
+ * si leggono in proporzione; pesi tutti nulli, negativi o non numerici mandano tutto alla prima parte, mai soldi che spariscono.
+ */
+export function allocate(amount: number, weights: number[], digits = 2): number[] {
+  const scale = 10 ** digits
+  const sign = amount < 0 ? -1 : 1
+  const units = Math.round(Math.abs(amount) * scale)
+  const clean = weights.map(w => Number.isFinite(w) && w > 0 ? w : 0)
+  const total = clean.reduce((a, w) => a + w, 0)
+  const w = total > 0 ? clean.map(x => x / total) : clean.map((_, i) => i === 0 ? 1 : 0)
+  const raw = w.map(x => units * x)
+  const whole = raw.map(x => Math.floor(x + 1e-9))
+  const order = raw.map((x, i) => ({ i, f: Math.round((x - whole[i]) * 1e6) })).sort((a, b) => b.f - a.f || a.i - b.i)
+  let left = units - whole.reduce((a, x) => a + x, 0)
+  for (let k = 0; left > 0 && order.length; k = (k + 1) % order.length, left--) whole[order[k].i]++
+  return whole.map(x => sign * x / scale)
+}
+
+/**
+ * Le parti di questo mese dalla divisione cumulata: si divide il totale dal primo mese fino a qui e si toglie quello che era
+ * già stato diviso fino al mese prima. Così l'arrotondamento non si accumula (con 10,25 € ogni mese una parte perdeva
+ * mezzo centesimo al mese, 12 centesimi in due anni): ogni parte resta entro un'unità della sua quota esatta.
+ */
+const divideSince = (before: number, now: number, weights: number[], digits: number) => {
+  const a = allocate(before + now, weights, digits), b = allocate(before, weights, digits)
+  return a.map((x, i) => Math.round((x - b[i]) * 10 ** digits) / 10 ** digits)
 }
 
 /** Somma delle quote di un'entrata divisa a modo mio (1 = 100%), arrotondata per non sbagliare sui decimali. */
@@ -78,7 +149,7 @@ export const splitOk = (split: Record<string, number> | null | undefined) =>
   Object.values(split ?? {}).every(x => Number.isFinite(x) && x >= 0 && x <= 1) && splitTotal(split) === 1
 
 /** Problemi di una singola riga (le righe rosse dell'Excel). */
-export function rowIssues(t: ClassifiedTx, s: Settings): CheckKind[] {
+export function rowIssues(t: ClassifiedTx, s: Settings, all?: Transaction[]): CheckKind[] {
   if (t.recurring) return []
   const out: CheckKind[] = []
   const filled = !!(t.date || t.description || t.category)
@@ -87,8 +158,10 @@ export function rowIssues(t: ClassifiedTx, s: Settings): CheckKind[] {
   if (t.amount != null && !t.category) out.push('missingCategory')
   if (t.type === 'unknown') out.push('unknownCategory')
   if (t.amount != null && t.amountIn == null) out.push('missingFx')
-  if (t.category && t.amount != null &&
-      budgetEvents(s).some(e => e.category === t.category && e.amount === t.amount)) out.push('recurringDuplicate')
+  // un movimento collegato a una volta è quella volta, non un doppione; lo è il secondo collegato alla stessa volta
+  const link = validLink(t, s)
+  if (link ? !!all?.some(x => x.id !== t.id && x.id < t.id && validLink(x, s) && x.occurrence!.eventId === link.eventId && x.occurrence!.date === link.date)
+      : t.category && t.amount != null && budgetEvents(s).some(e => e.category === t.category && e.amount === t.amount)) out.push('recurringDuplicate')
   return out
 }
 
@@ -123,15 +196,18 @@ export function computeMonth(
   if (hit && normal) return hit
 
   const manual = transactionsOf(ym, all, s).map(t => classify(t, s))
-  const txs = [...recurringOf(ym, manual, s, today), ...manual]
+  const txs = [...recurringOf(ym, manual, s, today, linkedOccurrences(all, s)), ...manual]
     .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
 
+  // quanto era già stato diviso fino al mese prima (zero dal primo mese, o con un riporto passato a mano)
+  let before: Divided = { ruled: 0, custom: {} }
   if (!carriedOver) {
     if (compareYm(ym, s.firstMonth) <= 0) {
       carriedOver = Object.fromEntries(s.buckets.map(b => [b.id, b.startingBalance]))
     } else {
       const prev = computeMonth(prevMonth(ym), all, s, today, undefined, cache)
       carriedOver = Object.fromEntries(prev.buckets.map(r => [r.bucket.id, r.remaining]))
+      before = prev.divided ?? before
     }
   }
 
@@ -146,9 +222,23 @@ export function computeMonth(
     .reduce((a, t) => a + (t.amountIn ?? (t.upcoming ? t.planned ?? 0 : 0)), 0)
   const base = split - paidFirst   // se l'affitto supera le entrate, la differenza pesa sulla prima parte (non sparisce)
 
+  // le quote al centesimo (all'unità minima della valuta): la somma delle parti è esattamente quella delle entrate divise
+  const digits = minorDigits(s.currency)
+  const shares = s.buckets.map(b => b.share)
+  const ruled = divideSince(before.ruled, Math.max(0, base), shares, digits)
+  // «a modo mio»: ogni combinazione di quote ha il suo totale cumulato
+  const byWeights = new Map<string, { weights: number[]; amount: number }>()
+  for (const t of custom) {
+    const weights = s.buckets.map(b => t.split![b.id] ?? 0), key = weights.join(',')
+    const g = byWeights.get(key) ?? { weights, amount: 0 }
+    g.amount += t.amountIn ?? 0; byWeights.set(key, g)
+  }
+  const customParts = [...byWeights].map(([key, g]) => divideSince(before.custom[key] ?? 0, g.amount, g.weights, digits))
+  const divided: Divided = { ruled: before.ruled + Math.max(0, base), custom: { ...before.custom } }
+  for (const [key, g] of byWeights) divided.custom[key] = (divided.custom[key] ?? 0) + g.amount
   const buckets: BucketRow[] = s.buckets.map((b, i) => {
-    const fromIncome = Math.max(0, base) * b.share + (i === 0 ? Math.min(0, base) : 0) + sum(of('income').filter(t => t.bucket === b.id))
-      + custom.reduce((a, t) => a + (t.amountIn ?? 0) * (t.split![b.id] ?? 0), 0)
+    const fromIncome = ruled[i] + (i === 0 ? Math.min(0, base) : 0) + sum(of('income').filter(t => t.bucket === b.id))
+      + customParts.reduce((a, parts) => a + parts[i], 0)
     const out = sum(txs.filter(t => t.bucket === b.id && (t.type === 'expense' || t.type === 'saving')))
     const carried = carriedOver![b.id] ?? 0
     return { bucket: b, carriedOver: carried, fromIncome, spent: out,
@@ -165,14 +255,14 @@ export function computeMonth(
   const checks = Object.fromEntries(
     (['missingDate', 'missingAmount', 'missingCategory', 'unknownCategory', 'missingFx', 'recurringDuplicate'] as CheckKind[])
       .map(k => [k, 0])) as Record<CheckKind, number>
-  for (const t of txs) for (const k of rowIssues(t, s)) checks[k]++
+  for (const t of txs) for (const k of rowIssues(t, s, all)) checks[k]++
 
   const spendingByBucket = Object.fromEntries(s.buckets.map(b => [b.id,
     txs.filter(t => t.bucket === b.id && t.amount != null && (t.type === 'expense' || t.type === 'saving'))]))
 
   const result: MonthResult = {
     ym, period: periodOf(ym, s.monthStartDay), transactions: txs,
-    income, spent, saved, leftOver: income - spent - saved, paidFirst,
+    income, spent, saved, leftOver: income - spent - saved, paidFirst, divided,
     buckets, byCategory, checks, spendingByBucket,
   }
   if (normal) cache.set(key, result)

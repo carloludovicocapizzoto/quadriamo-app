@@ -151,6 +151,22 @@ await step('Analisi → Calendario: creo una bolletta mensile', async () => {
 }, `/Luce e gas/.test(document.querySelector('.calendar')?.innerText ?? '')`)
 await step('l\'agenda la mostra anche il mese prossimo', () => click(byText('/^Agenda$/')),
   `(document.querySelector('.calendar')?.innerText.match(/Luce e gas/g) ?? []).length >= 2`)
+
+console.log('Pagamento collegato alla sua scadenza')
+const setAmount = sel => `(v => { const el = document.querySelector(${JSON.stringify(sel)}); el.focus(); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })) })`
+await step('una spesa a mano nella categoria della bolletta propone «È “Luce e gas” del…?»', async () => {
+  await click(`document.querySelector('.tab-add')`); await sleep(700)
+  await js(`${setAmount('.tx-sheet .amount-input')}('45')`)
+  await click(byText('/Costi fissi/', '.cat-pick button')); await sleep(300)
+}, `/Luce e gas/.test(document.querySelector('.tx-sheet .txs-link')?.innerText ?? '')`)
+await step('collegata e salvata: la bolletta conta una volta sola, senza avviso di doppione', async () => {
+  await click(`document.querySelector('.tx-sheet .txs-link .link-btn')`); await sleep(200)
+  await click(`document.querySelector('.tx-sheet button[type=submit]')`); await sleep(900)
+  await js(`location.hash = '#/analysis/transactions'`); await sleep(1000)
+}, `([...document.querySelectorAll('.tx-list')].map(x => x.innerText).join(' ').match(/45,00/g) ?? []).length === 1 && !document.querySelector('.tx-list .tx-issue')`)
+await step('nel calendario la bolletta pagata è «Già pagato», non più da confermare', async () => {
+  await js(`location.hash = '#/analysis/calendar'`); await sleep(900); await click(byText('/^Mese$/', '.cal-modes button')); await sleep(500)
+}, `/45,00/.test([...document.querySelectorAll('.cs-grid div')].find(d => /già pagato/i.test(d.innerText))?.innerText ?? '') && /0,00/.test([...document.querySelectorAll('.cs-grid div')].find(d => /da pagare/i.test(d.innerText))?.innerText ?? '') && !/scadenza passata/i.test(document.querySelector('.cal-summary')?.innerText ?? '')`)
 await step('Profilo → Centro notifiche: una notifica arrivata si archivia', async () => {
   // Fixture nel namespace locale corrente; una vecchia notifica globale rimane esclusa.
   await js(`new Promise(ok => { const r = indexedDB.open('keyval-store'); r.onsuccess = () => { const tx = r.result.transaction('keyval', 'readwrite');
