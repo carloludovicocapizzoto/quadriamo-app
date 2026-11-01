@@ -271,6 +271,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
             </select>
           </label>}
         </div>
+        {settings.planVersion===1 && settings.balanceDate && date && date<settings.balanceDate && <p className="small muted">{t('plan.beforeSnapshot')}</p>}
         {ENV.flags.monthlyPlan && isIncome && <p className="small muted">{t('plan.extraHint')}</p>}
         {isIncome && incomeTo === CUSTOM && <SplitEditor key={category} buckets={settings.buckets} value={incomeSplit} onChange={setSplit} />}
 

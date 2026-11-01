@@ -1,6 +1,7 @@
 import type { Dict } from './en'
 
 const es: Dict = {
+  'plan.history': "Historial anterior al saldo inicial",
   'plan.beforeSnapshot': "Ya incluido en el saldo inicial: no se vuelve a contar en el presupuesto.",
   'plan.payday': "Inicio de período / cobro",
   'plan.already': "Cobro ya incluido en el saldo",

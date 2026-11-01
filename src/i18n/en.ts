@@ -1,6 +1,7 @@
 // Dizionario di riferimento: le altre lingue devono avere esattamente le stesse chiavi (lo controllano TypeScript e i test).
 // {n}, {name}… sono segnaposto sostituiti da t(key, { n: 3 }).
 const en = {
+  'plan.history': "History before the opening balance",
   'plan.beforeSnapshot': "Already included in the opening balance: not counted again in the budget.",
   'plan.payday': "Period start / payday",
   'plan.already': "Pay already included in the balance",

@@ -1,6 +1,7 @@
 import type { Dict } from './en'
 
 const it: Dict = {
+  'plan.history': "Cronologia precedente al saldo iniziale",
   'plan.beforeSnapshot': "Già compreso nel saldo iniziale: non si conta di nuovo nel budget.",
   'plan.payday': "Inizio periodo / stipendio",
   'plan.already': "Stipendio già incluso nel saldo",

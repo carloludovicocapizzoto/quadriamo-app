@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { activeFilters, daysBetween, nextMonth, prevMonth, filterTransactions, monthsBetween, periodStart, signedTotal, transactionsInMonths, undated, EMPTY_FILTER,
+import { SnapshotHistory } from '../SnapshotHistory'
+import { classify, ymKey, activeFilters, daysBetween, nextMonth, prevMonth, filterTransactions, monthsBetween, periodStart, signedTotal, transactionsInMonths, undated, EMPTY_FILTER,
   type ClassifiedTx, type MonthResult, type Period, type TxFilter, type TxType, type YearMonth } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
@@ -41,6 +42,7 @@ export function TransactionsScreen({ data, current, result, today, onMonth, onOp
   }), [s, t])
   const pool = useMemo(() => searching ? transactionsInMonths(monthsBetween(periodStart(eff, current, s), current, s), data.transactions, s, today) : [],
     [searching, eff, current, s, data.transactions, today])
+  const history = useMemo(()=>s.planVersion===1 && s.balanceDate && (period==='all'||q.trim()||ymKey(current)===ymKey(s.firstMonth)) ? filterTransactions(data.transactions.filter(t=>t.date&&t.date<s.balanceDate!).map(t=>classify(t,s)),{...f,q},names):[],[s,period,q,current,data.transactions,f,names])
   const list = useMemo(() => filterTransactions(pool, { ...f, q }, names), [pool, f, q, names])
 
   const label = (d: string) => d === today ? t('day.today') : daysBetween(d, today) === 1 ? t('day.yesterday') : date(d, { weekday: 'short', day: 'numeric', month: 'long', year: d.slice(0, 4) === today.slice(0, 4) ? undefined : 'numeric' })
@@ -104,6 +106,7 @@ export function TransactionsScreen({ data, current, result, today, onMonth, onOp
         )}
       </>}
 
+      <SnapshotHistory rows={history} settings={s} onOpen={onOpen}/>
       <Sheet open={open} onClose={() => setOpen(false)} title={t('srch.filters')}>
         <FilterSheet value={f} pool={searching ? pool : transactionsInMonths(monthsBetween(periodStart(period, current, s), current, s), data.transactions, s, today)}
                      q={q} names={names} data={data} onApply={v => { setF(v); setOpen(false) }} />
