@@ -27,5 +27,8 @@ export const ENV = {
   flags: {
     /** Strumenti per chi prova l'app: segnalazioni con allegati e diagnostica, avviso a ogni nuova build. */
     tester: flags.has('tester'),
+    monthlyPlan: name === 'alpha' && flags.has('monthly-plan'),
+    /** Funzioni del server riaccese in un ambiente che di solito non le ha (es. `cloud:news` nell'Alpha), solo quando il servizio c'è. */
+    cloud: new Set([...flags].filter(f => f.startsWith('cloud:')).map(f => f.slice('cloud:'.length))),
   },
 }

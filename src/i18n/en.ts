@@ -1,6 +1,12 @@
 // Dizionario di riferimento: le altre lingue devono avere esattamente le stesse chiavi (lo controllano TypeScript e i test).
 // {n}, {name}… sono segnaposto sostituiti da t(key, { n: 3 }).
 const en = {
+  'plan.title': "Monthly budget",
+  'plan.expected': "Expected income",
+  'plan.actual': "Actual daily availability",
+  'plan.target': "Planned daily target",
+  'plan.received': "Income received",
+  'plan.warning': "Planning includes income not yet received. The main number remains based on actual funds.",
   'cloud.pilotWait': 'Secure synchronization is not yet enabled for this account. Your changes stay on this device and can be exported. Contact support to join the pilot.',
   'auth.localSession': 'Your session has expired. You are using only this device’s copy. Renew your session before synchronizing.',
   'auth.localLogout': 'You have signed out on this device. Your offline archives are preserved. Remote sessions have not been revoked.',
@@ -279,7 +285,7 @@ const en = {
   'inv.gain': 'Gain / loss',
   'inv.return': 'Return',
   'inv.holdings': 'Portfolio: ETFs, stocks, funds, crypto',
-  'inv.holdingsHint': 'Prices are in the currency of each holding; values are converted to your currency. Update the current price when you check your broker.',
+  'inv.holdingsHint': "Prices are in the currency of each holding; values are converted to your currency. For crypto the price comes in by itself if you enter the ticker (BTC, ETH…); for ETFs and stocks update it when you check your broker.",
   'inv.addHolding': 'Add holding',
   'inv.name': 'Name',
   'inv.type': 'Type',
@@ -316,6 +322,11 @@ const en = {
   'inv.t.crypto': 'Crypto',
   'inv.t.other': 'Other',
   'inv.disclaimer': 'Quadriamo is a budgeting tool, not financial advice.',
+  'inv.moveToday': "Last 24 hours {amount} ({pct})",
+  'inv.moveSince': "Since {date} {amount} ({pct})",
+  'inv.rowToday': "24 hours {pct}",
+  'inv.rowSince': "since {date} {pct}",
+  'inv.liveAt': "Crypto prices from CoinGecko, updated at {time}. For other holdings the change starts from the last price you entered on another day.",
 
   'imp.import': 'Import bank statement',
   'imp.short': "CSV from your bank: only your phone reads it",

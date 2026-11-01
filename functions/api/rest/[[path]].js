@@ -50,7 +50,8 @@ function userIdFromJwt(authorization) {
 export async function onRequest({ request, env }) {
   const incoming = new URL(request.url)
   const route = incoming.pathname.startsWith('/api/rest/') ? incoming.pathname.slice('/api/rest/'.length) : ''
-  if (!Object.hasOwn(METHODS, route) || !METHODS[route].includes(request.method) || incoming.search.length > 4096) {
+  const newsRead = env.ALPHA_NEWS_ENABLED === '1' && ['news_items', 'news_sources'].includes(route) && ['GET', 'HEAD'].includes(request.method)
+  if ((!newsRead && (!Object.hasOwn(METHODS, route) || !METHODS[route].includes(request.method))) || incoming.search.length > 4096) {
     return response(404, 'ALPHA_ROUTE_DENIED')
   }
   const userId = userIdFromJwt(request.headers.get('authorization'))

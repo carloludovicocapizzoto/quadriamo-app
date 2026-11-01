@@ -1,5 +1,7 @@
 // Impostazioni generali: valuta e giorno d'inizio del mese, una riga ciascuno (la lingua solo nella configurazione iniziale:
 // nel Profilo ha la sua pagina in Preferenze).
+import { ENV } from '../../env'
+import { AmountInput } from '../kit/AmountInput'
 import { LANGS, useI18n, type Lang } from '../../i18n/core'
 import { CURRENCIES } from '../names'
 import type { SettingsDraft } from './draft'
@@ -28,6 +30,7 @@ export function GeneralSection({ d: { draft, edit, errors }, wizard }: { d: Sett
                  aria-invalid={errors.includes('startDay')}
                  onChange={e => edit(s => { s.monthStartDay = Number(e.target.value) })} />
         </label></li>
+        {ENV.flags.monthlyPlan && <li><label className="row"><span className="row-main"><span>{t('plan.expected')}</span><small>{t('plan.warning')}</small></span><AmountInput className="row-input row-num" defaultValue={draft.expectedIncome} onValue={n => { if (n == null || (Number.isFinite(n) && n >= 0)) edit(s=>{s.expectedIncome=n}) }} /></label></li>}
       </ul>
     </section>
   )

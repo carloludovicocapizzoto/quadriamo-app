@@ -1,6 +1,12 @@
 import type { Dict } from './en'
 
 const es: Dict = {
+  'plan.title': "Presupuesto mensual",
+  'plan.expected': "Ingresos previstos",
+  'plan.actual': "Disponibilidad diaria efectiva",
+  'plan.target': "Objetivo diario planificado",
+  'plan.received': "Ingresos recibidos",
+  'plan.warning': "La planificación incluye ingresos aún no recibidos. La cifra principal se basa en fondos reales.",
   'cloud.pilotWait': 'La sincronización segura aún no está habilitada para esta cuenta. Los cambios se conservan en este dispositivo y puedes exportarlos. Contacta con soporte para participar en la prueba piloto.',
   'auth.localSession': 'Tu sesión ha caducado. Estás usando solo la copia de este dispositivo. Renueva la sesión antes de sincronizar.',
   'auth.localLogout': 'Has cerrado la sesión en este dispositivo. Tus archivos sin conexión se conservan. Las sesiones remotas no se han revocado.',
@@ -279,7 +285,7 @@ const es: Dict = {
   'inv.gain': 'Ganancia / pérdida',
   'inv.return': 'Rentabilidad',
   'inv.holdings': 'Cartera: ETF, acciones, fondos, cripto',
-  'inv.holdingsHint': 'Los precios están en la moneda de cada activo; los valores se convierten a tu moneda. Actualiza el precio actual cuando mires tu bróker.',
+  'inv.holdingsHint': "Los precios están en la moneda de cada activo; los valores se convierten a tu moneda. Para las cripto el precio llega solo si escribes el ticker (BTC, ETH…); para ETF y acciones actualízalo cuando mires tu bróker.",
   'inv.addHolding': 'Añadir activo',
   'inv.name': 'Nombre',
   'inv.type': 'Tipo',
@@ -316,6 +322,11 @@ const es: Dict = {
   'inv.t.crypto': 'Cripto',
   'inv.t.other': 'Otro',
   'inv.disclaimer': 'Quadriamo es una herramienta de presupuesto, no asesoramiento financiero.',
+  'inv.moveToday': "Últimas 24 horas {amount} ({pct})",
+  'inv.moveSince': "Desde el {date} {amount} ({pct})",
+  'inv.rowToday': "24 horas {pct}",
+  'inv.rowSince': "desde el {date} {pct}",
+  'inv.liveAt': "Precios cripto de CoinGecko, actualizados a las {time}. Para los demás activos la variación parte del último precio que escribiste otro día.",
 
   'imp.import': 'Importar extracto',
   'imp.short': "CSV de tu banco: solo lo lee el teléfono",

@@ -1,6 +1,12 @@
 import type { Dict } from './en'
 
 const fr: Dict = {
+  'plan.title': "Budget du mois",
+  'plan.expected': "Revenu prévu",
+  'plan.actual': "Disponibilité quotidienne effective",
+  'plan.target': "Objectif quotidien prévu",
+  'plan.received': "Revenu reçu",
+  'plan.warning': "La planification inclut des revenus pas encore reçus. Le chiffre principal repose sur les fonds réels.",
   'cloud.pilotWait': 'La synchronisation sécurisée n’est pas encore activée pour ce compte. Vos modifications restent sur cet appareil et peuvent être exportées. Contactez l’assistance pour participer au pilote.',
   'auth.localSession': 'Votre session a expiré. Vous utilisez uniquement la copie de cet appareil. Renouvelez votre session avant de synchroniser.',
   'auth.localLogout': 'Vous êtes déconnecté sur cet appareil. Vos archives hors ligne sont conservées. Les sessions distantes n’ont pas été révoquées.',
@@ -279,7 +285,7 @@ const fr: Dict = {
   'inv.gain': 'Gain / perte',
   'inv.return': 'Rendement',
   'inv.holdings': 'Portefeuille : ETF, actions, fonds, crypto',
-  'inv.holdingsHint': 'Les prix sont dans la devise de chaque titre ; les valeurs sont converties dans votre devise. Mettez à jour le prix actuel quand vous consultez votre courtier.',
+  'inv.holdingsHint': "Les prix sont dans la devise de chaque titre ; les valeurs sont converties dans votre devise. Pour les cryptos, le prix arrive tout seul si vous indiquez le ticker (BTC, ETH…) ; pour les ETF et les actions, mettez-le à jour quand vous consultez votre courtier.",
   'inv.addHolding': 'Ajouter un titre',
   'inv.name': 'Nom',
   'inv.type': 'Type',
@@ -316,6 +322,11 @@ const fr: Dict = {
   'inv.t.crypto': 'Crypto',
   'inv.t.other': 'Autre',
   'inv.disclaimer': 'Quadriamo est un outil de budget, pas un conseil financier.',
+  'inv.moveToday': "Dernières 24 heures {amount} ({pct})",
+  'inv.moveSince': "Depuis le {date} {amount} ({pct})",
+  'inv.rowToday': "24 heures {pct}",
+  'inv.rowSince': "depuis le {date} {pct}",
+  'inv.liveAt': "Prix des cryptos de CoinGecko, mis à jour à {time}. Pour les autres titres, la variation part du dernier prix saisi un autre jour.",
 
   'imp.import': 'Importer un relevé',
   'imp.short': "CSV de votre banque : seul le téléphone le lit",

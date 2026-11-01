@@ -1,6 +1,12 @@
 import type { Dict } from './en'
 
 const it: Dict = {
+  'plan.title': "Budget del mese",
+  'plan.expected': "Reddito previsto",
+  'plan.actual': "Disponibilità giornaliera effettiva",
+  'plan.target': "Obiettivo giornaliero pianificato",
+  'plan.received': "Reddito ricevuto",
+  'plan.warning': "La pianificazione include reddito non ancora ricevuto. Il numero principale resta basato sui fondi effettivi.",
   'cloud.pilotWait': 'La sincronizzazione sicura non è ancora abilitata per questo account. Le modifiche restano su questo dispositivo e puoi esportarle. Contatta l’assistenza per partecipare al pilota.',
   'auth.localSession': 'La sessione è scaduta. Stai usando soltanto la copia di questo dispositivo. Prima di sincronizzare occorre rinnovare l’accesso.',
   'auth.localLogout': 'Sei uscito da questo dispositivo. Gli archivi offline sono conservati. Le sessioni remote non sono state revocate.',
@@ -279,7 +285,7 @@ const it: Dict = {
   'inv.gain': 'Guadagno / perdita',
   'inv.return': 'Rendimento',
   'inv.holdings': 'Portafoglio: ETF, azioni, fondi, crypto',
-  'inv.holdingsHint': 'I prezzi sono nella valuta di ogni titolo; i valori sono convertiti nella tua valuta. Aggiorna il prezzo attuale quando controlli il tuo broker.',
+  'inv.holdingsHint': "I prezzi sono nella valuta di ogni titolo; i valori sono convertiti nella tua valuta. Per le crypto il prezzo arriva da solo se scrivi il ticker (BTC, ETH…); per ETF e azioni aggiornalo quando controlli il tuo broker.",
   'inv.addHolding': 'Aggiungi titolo',
   'inv.name': 'Nome',
   'inv.type': 'Tipo',
@@ -316,6 +322,11 @@ const it: Dict = {
   'inv.t.crypto': 'Crypto',
   'inv.t.other': 'Altro',
   'inv.disclaimer': 'Quadriamo è uno strumento per il budget, non una consulenza finanziaria.',
+  'inv.moveToday': "Nelle ultime 24 ore {amount} ({pct})",
+  'inv.moveSince': "Dal {date} {amount} ({pct})",
+  'inv.rowToday': "24 ore {pct}",
+  'inv.rowSince': "dal {date} {pct}",
+  'inv.liveAt': "Prezzi crypto da CoinGecko, aggiornati alle {time}. La variazione degli altri titoli parte dall’ultimo prezzo che hai scritto in un altro giorno.",
 
   'imp.import': 'Importa estratto conto',
   'imp.short': "CSV della tua banca: lo legge solo il telefono",

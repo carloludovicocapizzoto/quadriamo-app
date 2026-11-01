@@ -25,6 +25,9 @@ un file `.env.<nome>` e un passo nella GitHub Action.
 
 `VITE_FLAGS` nei file `.env.<ambiente>`, separati da virgola. Oggi:
 - `tester` — strumenti per chi prova l'app (segnalazioni con allegati e diagnostica, avviso a ogni nuova build). Acceso in sviluppo e produzione.
+- `cloud:<funzione>` — riaccende una funzione che `src/features.ts` spegne in un ambiente perché il server non la serve
+  (es. `cloud:news` nell'Alpha). Nella build Alpha si passa con `ALPHA_CLOUD_FEATURES=news` a `tools/alpha/build.mjs`.
+  Solo dopo che il server dell'ambiente ha tabelle, funzioni e rotta del gateway: altrimenti l'app chiamerebbe una rotta rifiutata.
 
 ## Versioni
 

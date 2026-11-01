@@ -14,7 +14,7 @@ if (screenshotDir) mkdirSync(screenshotDir, { recursive: true })
 
 // il server con l'app costruita (npm run e2e la costruisce in dist-e2e), se non ne è stato indicato un altro
 const server = process.env.E2E_URL ? null
-  : spawn('npx', ['vite', 'preview', '--outDir', 'dist-e2e', '--port', '4180', '--strictPort'], { stdio: 'ignore', detached: true })
+  : spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--outDir', 'dist-e2e', '--port', '4180', '--strictPort'], { stdio: 'ignore', detached: true })
 for (let i = 0; i < 120; i++) { try { if ((await fetch(URL_APP)).ok) break } catch { /* non ancora */ } await sleep(250) }
 
 const errors = []
@@ -22,12 +22,24 @@ const fixtureDir = mkdtempSync(join(tmpdir(), 'quadriamo-xlsx-test-'))
 let chrome
 const done = async code => {
   await chrome?.close()
-  if (server) try { process.kill(-server.pid) } catch { /* già chiuso */ }
+  if (server) try { if (process.platform === 'win32') server.kill(); else process.kill(-server.pid) } catch { /* già chiuso */ }
   rmSync(fixtureDir, { recursive: true, force: true })
   process.exit(code)
 }
-try { chrome = await openChrome({ port: 9444, args: ['--lang=it-IT'], waitMs: 45_000, onError: e => errors.push(e) }) } catch (e) { console.error(e.message); await done(1) }
+// i prezzi crypto non vanno sulla rete vera: CoinGecko risponde con un prezzo sintetico, e si ricorda cosa è stato chiesto
+const quoteRequests = []
+const onEvent = m => {
+  if (m.method !== 'Fetch.requestPaused') return
+  quoteRequests.push(m.params.request.url)
+  // lo stesso prezzo in ogni valuta chiesta (la valuta dipende dalla configurazione scelta)
+  const vs = new URL(m.params.request.url).searchParams.get('vs_currencies')?.split(',') ?? []
+  const body = Buffer.from(JSON.stringify({ bitcoin: { ...Object.fromEntries(vs.flatMap(v => [[v, 60000], [`${v}_24h_change`, 2.5]])), last_updated_at: Math.floor(Date.now()/1000) } })).toString('base64')
+  void chrome.cdp('Fetch.fulfillRequest', { requestId: m.params.requestId, responseCode: 200, body,
+    responseHeaders: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Access-Control-Allow-Origin', value: '*' }] })
+}
+try { chrome = await openChrome({ port: 9444, args: ['--lang=it-IT'], waitMs: 45_000, onError: e => errors.push(e), onEvent }) } catch (e) { console.error(e.message); await done(1) }
 const { cdp, js } = chrome
+await cdp('Fetch.enable', { patterns: [{ urlPattern: 'https://api.coingecko.com/*' }] })
 const type = async text => { for (const ch of text) await cdp('Input.insertText', { text: ch }) }
 
 // un passo del percorso: fa qualcosa e aspetta che la condizione diventi vera (al massimo 6 secondi)
@@ -130,6 +142,47 @@ console.log('Le altre sezioni')
 await step('Analisi → Mese mostra come finisce il mese', () => js(`location.hash = '#/analysis/month'`), `!!document.querySelector('.outcome-amount')`)
 await step('Analisi → Movimenti elenca la spesa', () => js(`location.hash = '#/analysis/transactions'`), has('/12,50/'))
 await step('Notizie si apre senza errori', () => js(`location.hash = '#/news'`), `!!document.querySelector('.news2') && !document.querySelector('[role=status] .btn') || ${has('/Notizie/')}`)
+
+// Notizie complete (immagini, filtri, sezioni) con contenuti inventati, messi nella memoria del telefono come se li avesse
+// appena scaricati: senza server l'app usa quelli. Fonti, link e immagini sono di prova (example.test, immagini data:).
+const thumb = color => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120"><rect width="160" height="120" fill="${color}"/></svg>`)}`
+const hoursAgo = h => new Date(Date.now() - h * 3600e3).toISOString()
+const newsItem = (id, x) => ({ id, title: `Titolo di prova ${id}`, excerpt: `Estratto di prova ${id}.`, link: `https://example.test/${id}`, thumb: null,
+  published: hoursAgo(3), lang: 'it', format: 'article', categories: ['economy'], level: 'intermediate', minutes: 4, relevance: 0.7, cluster: null, crypto: false,
+  source: { name: `Fonte ${id}`, kind: 'press', paywall: false, trust: 4, country: 'IT' }, ...x })
+const hub = [
+  newsItem('oggi1', { title: 'Tassi BCE fermi: cosa cambia per il mutuo', thumb: thumb('#3a6'), categories: ['personal'] }),
+  newsItem('oggi2', { title: 'Inflazione di ottobre in calo', thumb: thumb('#36a'), published: hoursAgo(5) }),
+  newsItem('video1', { title: 'Video di prova sugli ETF', format: 'video', thumb: thumb('#a63'), categories: ['etf'], source: { name: 'Canale di prova', kind: 'video', paywall: false, trust: 4, country: 'IT' } }),
+  newsItem('pod1', { title: 'Podcast di prova sul risparmio', format: 'podcast', thumb: thumb('#a36'), categories: ['saving'], source: { name: 'Podcast di prova', kind: 'podcast', paywall: false, trust: 4, country: 'IT' } }),
+  newsItem('ric1', { title: 'Ricerca di prova sui consumi', format: 'research', published: hoursAgo(48), source: { name: 'Istituto di prova', kind: 'research', paywall: false, trust: 5, country: 'EU' } }),
+]
+const newsBtn = `document.querySelector('.news2 [aria-haspopup=dialog]')`
+const loadedThumbs = sel => `[...document.querySelectorAll('${sel}')].filter(i => i.complete && i.naturalWidth > 0).length`
+await step('Notizie: le sezioni (Oggi, Video, Podcast, Nuove ricerche)', async () => {
+  await js(`localStorage.setItem('q.v2/' + encodeURIComponent(JSON.stringify(['production', location.origin + '/', 'local', null])) + '/q.hub', ${JSON.stringify(JSON.stringify({ lang: 'it', at: Date.now(), items: hub }))}); localStorage.removeItem('q.newsFilter'); location.hash = '#/'`)
+  await sleep(300); await js(`location.hash = '#/news'`)
+}, `(() => { const t = [...document.querySelectorAll('.news-section .sec-title')].map(h => h.textContent.trim()); return ['Oggi', 'Video', 'Podcast', 'Nuove ricerche'].every(x => t.includes(x)) })()`)
+await step('Notizie: le immagini delle fonti si vedono', null, `${loadedThumbs('.news2 img.story-thumb')} >= 4`)
+await step('Notizie: Filtri apre il pannello con tipo, argomenti, lingua, area, fonte e ordine', () => click(newsBtn),
+  `document.querySelectorAll('.news-filters-panel .nf-group').length === 6`)
+await step('Notizie: filtro «Video» → solo il video, e il pulsante conta il filtro', async () => {
+  await click(byText('/^Video$/', '.news-filters-panel button')); await sleep(150)
+  await click(byText('/Applica filtri/', '.news-filters-panel button'))
+}, `(() => { const t = [...document.querySelectorAll('.news2 .story-title')].map(x => x.textContent); return t.length === 1 && t[0] === 'Video di prova sugli ETF' && /1/.test(${newsBtn}?.textContent ?? '') })()`)
+await step('Notizie: Reimposta riporta le sezioni', async () => {
+  await click(newsBtn); await sleep(400)
+  await click(byText('/Reimposta/', '.news-filters-panel button')); await sleep(150)
+  await click(byText('/Applica filtri/', '.news-filters-panel button'))
+}, `document.querySelectorAll('.news2 .news-section').length >= 5 && !/\\d/.test(${newsBtn}?.textContent ?? '')`)
+await step('Notizie: una storia apre il dettaglio con immagine, estratto e link alla fonte', async () => {
+  await sleep(300); await click(byText('/Tassi BCE fermi/', '.news2 button.story'))
+}, `(() => { const d = document.querySelector('.story-detail'); return !!d && ${loadedThumbs('.story-detail img.story-hero')} === 1
+  && /Estratto di prova oggi1/.test(d.innerText) && d.querySelector('a.btn')?.getAttribute('href') === 'https://example.test/oggi1' })()`)
+await step('Notizie: chiudo il dettaglio e tolgo i contenuti di prova', async () => {
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }); await sleep(500)
+  await js(`['q.v2/' + encodeURIComponent(JSON.stringify(['production', location.origin + '/', 'local', null])) + '/q.hub', 'q.newsFilter', 'q.interests'].forEach(k => localStorage.removeItem(k))`)
+}, `!document.querySelector('.story-detail')`)
 await step('Profilo → Capitale: inserisco 2.000 €', async () => {
   await js(`location.hash = '#/profile/capital'`); await sleep(800)
   await click(byText('/Inserisci il saldo/', '.row')); await sleep(400)
@@ -138,6 +191,41 @@ await step('Profilo → Capitale: inserisco 2.000 €', async () => {
   await click(byText('/Salva il saldo/'))
 }, has('/2\\.000,00/', '.outcome'))
 await step('il capitale compare in Analisi → Investi', () => js(`location.hash = '#/analysis/investments'`), `/2\\.000,00/.test(document.querySelector('.cap-line')?.innerText ?? '')`)
+// un titolo appena aggiunto: i campi in ordine (nome, tipo, ticker, valuta, quote, prezzo medio, prezzo attuale)
+const newHolding = `[...document.querySelectorAll('.inv-items details[open] .inv-grid')].at(-1)`
+const fillHolding = async (name, kind, ticker, units, avg, price) => {
+  await click(byText('/Aggiungi titolo/')); await sleep(400)
+  const field = i => `${newHolding}?.querySelectorAll('input, select')[${i}]`
+  const write = async (i, text) => { await js(`${field(i)}?.focus()`); await type(text); await sleep(100) }
+  await js(`(() => { const s = ${field(1)}; Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(s, '${kind}'); s.dispatchEvent(new Event('change', { bubbles: true })) })()`)
+  await sleep(100)
+  await write(2, ticker); await write(4, units); await write(5, avg); if (price) await write(6, price)
+  // il nome per ultimo e tutto insieme: con il nome la riga si chiude
+  await js(`${field(0)}?.focus()`); await cdp('Input.insertText', { text: name }); await sleep(300)
+}
+await step('aggiungo 0,5 Bitcoin: il prezzo arriva da solo, con la variazione delle 24 ore', () => fillHolding('Bitcoin di prova', 'crypto', 'BTC', '0,5', '40000'),
+  `/30\\.000,00/.test(document.querySelector('.inv-items')?.innerText ?? '') && /24 ore \\+2,5/.test(document.querySelector('.inv-items')?.innerText ?? '')
+   && /Nelle ultime 24 ore \\+731,71/.test(document.querySelector('[data-testid=inv-move]')?.innerText ?? '') && !!document.querySelector('[data-testid=inv-live-at]')`)
+n++
+if (quoteRequests.length && quoteRequests.every(u => /^https:\/\/api\.coingecko\.com\/api\/v3\/simple\/price\?ids=bitcoin&vs_currencies=[a-z]{3}&include_24hr_change=true&include_last_updated_at=true$/.test(u))) {
+  console.log(`  ✓ ${n}. a CoinGecko arrivano solo moneta e valuta, mai le quote`)
+} else { console.error(`  ✗ ${n}. richieste a CoinGecko inattese: ${JSON.stringify(quoteRequests)}`); await done(1) }
+await step('un ETF con il prezzo scritto a mano: valore subito, nessuna variazione inventata', () => fillHolding('ETF di prova', 'etf', 'TEST', '10', '100', '100'),
+  `/1\\.000,00/.test(document.querySelector('.inv-items')?.innerText ?? '') && !/dal /.test(document.querySelector('.inv-items')?.innerText ?? '')`)
+await step('il giorno dopo cambio il prezzo dell’ETF: vedo la variazione da quel giorno', async () => {
+  // il prezzo di ieri: si sposta indietro la data nella memoria del dispositivo, poi si riapre Investi
+  await js(`(() => { const k = Object.keys(localStorage).find(k => k.includes('quadriamo.prices')); const p = JSON.parse(localStorage.getItem(k))
+    for (const d of Object.values(p.days)) for (const x of d) x.date = '2026-01-05'; localStorage.setItem(k, JSON.stringify(p)) })()`)
+  await js(`location.hash = '#/analysis/month'`); await sleep(500); await js(`location.hash = '#/analysis/investments'`); await sleep(800)
+  await click(`[...document.querySelectorAll('.inv-items summary')].find(s => /ETF di prova/.test(s.textContent))`); await sleep(300)
+  const price = `[...document.querySelectorAll('.inv-items details[open] .inv-grid')].find(g => g.querySelector('input')?.value === 'ETF di prova')?.querySelectorAll('input, select')[6]`
+  await js(`(() => { const i = ${price}; i.focus(); i.select() })()`); await type('110')
+}, `/dal 5 gen \\+10/.test(document.querySelector('.inv-items')?.innerText ?? '') && /Dal 5 gen \\+831,71/.test(document.querySelector('[data-testid=inv-move]')?.innerText ?? '')`)
+if (screenshotDir) {
+  await js(`window.scrollTo(0, 0)`); await sleep(300)
+  const shot = await cdp('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
+  writeFileSync(join(screenshotDir, 'investments-moves.png'), Buffer.from(shot.result.data, 'base64'))
+}
 
 console.log('Calendario')
 await step('Analisi → Calendario: creo una bolletta mensile', async () => {

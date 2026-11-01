@@ -1,7 +1,8 @@
 // Knowledge Hub: i contenuti raccolti dal server (tabella news_items, sola lettura) con la loro fonte.
 // Tenuti 20 minuti sul telefono, e anche offline. Se la raccolta non è ancora attiva, null: la schermata usa i titoli di prima.
 import { supabase } from '../sync/client'
-import { local } from '../storage'
+import { personal as local } from '../storage'
+import { currentScope } from '../store/scope'
 
 export type Format = 'article' | 'research' | 'video' | 'podcast'
 export type Level = 'beginner' | 'intermediate' | 'advanced'
@@ -14,6 +15,7 @@ const KEY = 'q.hub'
 const FRESH_MS = 20 * 60e3
 
 export async function loadHub(lang: string, force = false): Promise<HubItem[] | null> {
+  const lease = currentScope()
   const cached = local.json<{ lang: string; at: number; items: HubItem[] } | null>(KEY, null)
   if (!force && cached?.lang === lang && Date.now() - cached.at < FRESH_MS) return cached.items
   if (!supabase || !navigator.onLine) return cached?.lang === lang ? cached.items : null
@@ -25,6 +27,7 @@ export async function loadHub(lang: string, force = false): Promise<HubItem[] | 
       .gte('published', since).order('published', { ascending: false }).limit(1200)
     if (error || !data?.length) return cached?.lang === lang ? cached.items : null
     const items = data as unknown as HubItem[]
+    if (!lease.current()) return null
     local.setJson(KEY, { lang, at: Date.now(), items })
     return items
   } catch { return cached?.lang === lang ? cached.items : null }
