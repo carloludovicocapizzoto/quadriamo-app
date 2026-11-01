@@ -163,6 +163,7 @@ const fr: Dict = {
   'tx.linkAsk': "Est-ce « {name} » du {date} ?",
   'tx.linkYes': "Oui, relier",
   'tx.linked': "Paie « {name} » du {date} : le paiement automatique ne compte plus.",
+  'tx.linkedPending': "Relié à « {name} » du {date} : tant que le montant et le taux de change ne sont pas valides, le paiement automatique reste.",
   'tx.unlink': "Délier",
   'tx.forDue': "pour l’échéance du {date}",
   'cloud.occurrence': "Dépense fixe payée",

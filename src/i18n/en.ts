@@ -163,6 +163,7 @@ const en = {
   'tx.linkAsk': "Is this “{name}” of {date}?",
   'tx.linkYes': "Yes, link it",
   'tx.linked': "Pays “{name}” of {date}: the automatic payment no longer counts.",
+  'tx.linkedPending': "Linked to “{name}” of {date}: until the amount and exchange rate are valid, the automatic payment stays.",
   'tx.unlink': "Unlink",
   'tx.forDue': "for the {date} due date",
   'cloud.occurrence': "Fixed cost paid",

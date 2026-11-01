@@ -1,6 +1,6 @@
 import { useContext, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Segmented } from './kit/Segmented'
-import { CUSTOM, FIRST, SPLIT, addDays, budgetEvents, daysBetween, linkedOccurrences, monthOf, nextMonth, occurrenceKey, occurrences, periodOf, prevMonth, linkTarget,
+import { CUSTOM, FIRST, SPLIT, addDays, budgetEvents, daysBetween, linkedOccurrences, monthOf, nextMonth, occurrenceKey, occurrences, periodOf, prevMonth, linkTarget, validLink,
   splitOk, splitTotal, fxRate, suggest, todayIso, type CategoryType, type Occurrence, type Settings, type Transaction, partForPurchase } from '../engine'
 import { useI18n } from '../i18n/core'
 import { StoreContext } from '../store/context'
@@ -95,6 +95,10 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   // la data di molto il collegamento cade e si propone la volta più vicina alla data nuova (P1 #19: mai un collegamento stantio)
   // (la proposta guarda scadenza, categoria e data; se l'importo o il cambio non sono validi il motore ignora il collegamento)
   const linked = isIncome ? null : linkTarget(occurrence, date, category, settings)
+  // P2 (review 6c6db0f): il collegamento scelto conta solo con un importo valido e convertibile (validLink, come il motore);
+  // finché manca, il testo non promette che il pagamento automatico è sparito
+  const linkCounts = !!linked && !!validLink({ id: initial?.id ?? '', date, description, category, amount: parsed,
+    currency: foreign ? currency : null, fxRate: foreign ? rate : null, occurrence: linked }, settings)
   const candidate = (() => {
     if (!events.length || !date || linked) return null
     // il periodo del movimento e quelli accanto: un pagamento può essere in anticipo o in ritardo sulla sua scadenza
@@ -227,7 +231,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
           return part && <p className="small muted txs-hint cap-hint">{t('cap.adv.purchase', { part: part.name, amount: money(part.amount, settings.currency) })}</p>
         })()}
         {fromRule && category && <p className="txs-note">{t('tx.fromRule')}</p>}
-        {linked ? <p className="txs-note txs-link">{t('tx.linked', { name: nameOf(linked.eventId), date: short(linked.date) })}{' '}
+        {linked ? <p className="txs-note txs-link">{t(linkCounts ? 'tx.linked' : 'tx.linkedPending', { name: nameOf(linked.eventId), date: short(linked.date) })}{' '}
             <button type="button" className="link-btn" onClick={() => { setOccurrence(null); setDeclined(occurrenceKey(linked.eventId, linked.date)) }}>{t('tx.unlink')}</button></p>
           : candidate && declined !== occurrenceKey(candidate.event.id, candidate.date) && <p className="txs-note txs-link">
             {t('tx.linkAsk', { name: candidate.event.title, date: short(candidate.date) })}{' '}

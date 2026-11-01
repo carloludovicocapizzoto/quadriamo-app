@@ -36,3 +36,27 @@ describe('nuovo movimento: lo zero di esempio, la data e il «+»', () => {
     expect(render('en', 'EUR', '2025-12-31')).toContain('Dec 31, 2025')
   })
 })
+
+describe('collegamento a una scadenza: il testo dice la verità sui conti (P2, review 6c6db0f)', () => {
+  const event = { id: 'aff', kind: 'rent' as const, title: 'Affitto', amount: 400, category: 'fixedCosts', date: '2026-01-30',
+    repeat: { every: 1, unit: 'month' as const }, until: null, done: [], active: true }
+  const linkedTx = (x: Record<string, unknown> = {}) => ({ id: 'p', date: '2026-10-30', description: '', category: 'fixedCosts', amount: 400,
+    occurrence: { eventId: 'aff', date: '2026-10-30' }, ...x })
+  const show = (tx: ReturnType<typeof linkedTx>, fxRates: Record<string, number> = {}) => {
+    const settings = { ...defaultSettings({ firstMonth: { year: 2026, month: 10 } }), events: [event], fxRates }
+    return renderToStaticMarkup(<I18nProvider start={{ lang: 'it', dict: itDict }}>
+      <TxForm settings={settings} initial={tx} defaultDate="2026-10-30" onSave={() => {}} onClose={() => {}} />
+    </I18nProvider>)
+  }
+  it('importo valido nella valuta del budget: «il pagamento automatico non conta più»', () => {
+    expect(show(linkedTx())).toContain('il pagamento automatico non conta più')
+  })
+  it('valuta senza cambio: dice che il pagamento automatico resta, non che è sparito', () => {
+    const html = show(linkedTx({ currency: 'XYZ' }))
+    expect(html).toContain('il pagamento automatico resta')
+    expect(html).not.toContain('non conta più')
+  })
+  it('valuta con cambio valido: torna «non conta più»', () => {
+    expect(show(linkedTx({ currency: 'USD', amount: 440 }), { USD: 0.9 })).toContain('il pagamento automatico non conta più')
+  })
+})

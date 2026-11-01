@@ -163,6 +163,7 @@ const it: Dict = {
   'tx.linkAsk': "È «{name}» del {date}?",
   'tx.linkYes': "Sì, collega",
   'tx.linked': "Paga «{name}» del {date}: il pagamento automatico non conta più.",
+  'tx.linkedPending': "Collegato a «{name}» del {date}: finché importo e cambio non sono validi, il pagamento automatico resta.",
   'tx.unlink': "Scollega",
   'tx.forDue': "per la scadenza del {date}",
   'cloud.occurrence': "Spesa fissa pagata",
