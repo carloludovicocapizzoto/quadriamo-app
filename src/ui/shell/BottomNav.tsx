@@ -2,6 +2,7 @@ import { useI18n } from '../../i18n/core'
 import type { Dict } from '../../i18n/en'
 import { Icon, type IconName } from '../Icon'
 import { tap } from '../kit/motion'
+import { cloudFeature } from '../../features'
 
 import type { Tab as MainTab } from '../../app/router'
 import { ENV } from '../../env'
@@ -18,16 +19,18 @@ export function BottomNav({ tab, onTab, onAdd, badge }: { tab: string; onTab: (t
       <span className="nav-label">{t(`nav.${it.id}` as keyof Dict)}</span>
     </button>
   )
+  const items = ITEMS.filter(it => it.id !== 'news' || cloudFeature('news'))
+  const addAt = items.findIndex(it => it.id === 'analysis')
   return (
     <nav className="tabbar" aria-label="Quadriamo">
       {/* il marchio compare solo quando la barra diventa laterale (tablet orizzontale e computer) */}
       <a className="nav-brand" href={ENV.base} aria-hidden="true" tabIndex={-1}>Quadriamo<span>.</span></a>
-      {ITEMS.slice(0, 2).map(btn)}
+      {items.slice(0, addAt).map(btn)}
       {/* stessa struttura delle altre voci (forma + nome): così il + sta sulla loro riga, centrato su ogni dispositivo */}
       <button className="tab-add" onClick={() => { tap(); onAdd() }} aria-label={t('action.add')}>
         <span className="nav-ico"><Icon name="plus" size={20} /></span><span className="nav-label" aria-hidden="true">{t('nav.add')}</span>
       </button>
-      {ITEMS.slice(2).map(btn)}
+      {items.slice(addAt).map(btn)}
     </nav>
   )
 }
