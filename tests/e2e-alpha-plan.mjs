@@ -78,6 +78,39 @@ try{
   const layout=await c.js("({overflow:document.documentElement.scrollWidth>innerWidth+1,widgetOverflow:document.querySelector('.w-forecast')?.scrollWidth>document.querySelector('.w-forecast')?.clientWidth+1,font:parseFloat(getComputedStyle(document.querySelector('.plan-availability-line')).fontSize)})")
   if(layout.overflow||layout.widgetOverflow||layout.font<12)throw Error('Home localization check '+lang+' '+JSON.stringify(layout))
  }
+ const budgetLayout=async selector=>c.js(`(()=>{const w=document.querySelector('${selector}');if(!w)return null;const rect=e=>{const r=e.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}};const textRects=e=>{const r=document.createRange();r.selectNodeContents(e);return [...r.getClientRects()].filter(x=>x.width&&x.height).map(x=>({left:x.left,right:x.right,top:x.top,bottom:x.bottom}))};const overlaps=(a,b)=>a.some(x=>b.some(y=>x.left<y.right&&x.right>y.left&&x.top<y.bottom&&x.bottom>y.top));const wr=rect(w);return {width:w.clientWidth,widget:wr,overflow:document.documentElement.scrollWidth>innerWidth+1||w.scrollWidth>w.clientWidth+1,rows:[...w.querySelectorAll('.plan-budget-row')].map(r=>{const dt=r.querySelector('dt'),dd=r.querySelector('dd'),a=textRects(dt),b=textRects(dd);return {label:dt.innerText,value:dd.innerText,labelFont:parseFloat(getComputedStyle(dt).fontSize),valueFont:parseFloat(getComputedStyle(dd).fontSize),columns:getComputedStyle(r).gridTemplateColumns.trim().split(/\\s+/).length,labelBox:rect(dt),valueBox:rect(dd),labelRects:a,valueRects:b,overlap:overlaps(a,b),outside:[...a,...b].some(x=>x.left<wr.left-1||x.right>wr.right+1||x.top<wr.top-1||x.bottom>wr.bottom+1)}})}})()`)
+ const setDisplayFixture=async({lang,currency,amount,size})=>{
+  const h=server.state.heads.get(USERS.B.id),document=structuredClone(original),s=document.settings
+  s.currency=currency;s.expectedIncome=amount;s.openingIncomeReceived=amount
+  s.incomePlans=(s.incomePlans??[]).map(x=>({...x,amount}))
+  if(size)s.homeWidgetSizes={...s.homeWidgetSizes,forecast:size}
+  if(!s.incomePlans.length)throw Error('display fixture has no plan interval')
+  document.transactions=[];server.state.heads.set(USERS.B.id,{revision:h.revision+1,document})
+  await c.js(`localStorage.setItem('quadriamo.lang','${lang}')`);await c.cdp('Page.reload');await until(()=>c.js("document.querySelectorAll('.home-grid .w-forecast .plan-budget-row').length===4"));await sleep(250)
+ }
+ const viewports=[320,375,390,768,1440],themes=['light','dark']
+ const displayCases=[['en','KWD',123456789.123],['it','EUR',123456789.12],['fr','JPY',123456789],['es','USD',123456789.12],['en','KWD',0]]
+ for(const [lang,currency,amount] of displayCases){
+  await setDisplayFixture({lang,currency,amount})
+  for(const theme of themes)for(const width of viewports){
+   await c.cdp('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width<600});await c.js(`document.documentElement.dataset.theme='${theme}'`);await sleep(70)
+   const layout=await budgetLayout('.home-grid .w-forecast'),containerWidth=layout?.width??0
+   if(!layout||layout.rows.length!==4||layout.overflow||layout.rows.some(x=>x.overlap||x.outside||x.labelFont<13||x.valueFont<13))throw Error('Budget widget text collision/clip '+lang+'/'+currency+'/'+width+'/'+theme+' '+JSON.stringify(layout))
+   if(containerWidth<=416&&layout.rows.some(x=>x.columns!==1))throw Error('Budget widget did not stack at narrow container '+width+' '+JSON.stringify(layout))
+   if(containerWidth>416&&layout.rows.some(x=>x.columns!==2))throw Error('Budget widget lost two-column layout at wide container '+width+' '+JSON.stringify(layout))
+  }
+ }
+ await setDisplayFixture({lang:'en',currency:'KWD',amount:123456789.123})
+ const negativeSign=await c.js("(()=>{const d=document.querySelector('.home-grid .w-forecast .plan-budget-row:last-child dd'),parts=new Intl.NumberFormat('en',{style:'currency',currency:'KWD'}).formatToParts(-123456789.123),f=document.createDocumentFragment();for(const p of parts){const x=document.createElement('span');if(p.type==='currency')x.className='cur';x.textContent=p.type==='minusSign'?String.fromCharCode(0x2212):p.value;f.append(x)}d.replaceChildren(f);return d.innerText.charCodeAt(0)===0x2212})()")
+ if(!negativeSign)throw Error('negative Money sign fixture was not rendered')
+ for(const width of [320,390]){await c.cdp('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:true});await sleep(70);const layout=await budgetLayout('.home-grid .w-forecast');if(!layout||layout.overflow||layout.rows.some(x=>x.overlap||x.outside||x.labelFont<13||x.valueFont<13))throw Error('negative Money sign clipped/overlapped '+width+' '+JSON.stringify(layout))}
+ await setDisplayFixture({lang:'en',currency:'KWD',amount:123456789.123,size:'l'});await c.cdp('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});await sleep(100)
+ const wideBudget=await budgetLayout('.home-grid .w-forecast')
+ if(!wideBudget||wideBudget.width<=416||wideBudget.rows.length!==4||wideBudget.overflow||wideBudget.rows.some(x=>x.overlap||x.outside||x.labelFont<13||x.valueFont<13||x.columns!==2))throw Error('Budget widget wide layout '+JSON.stringify(wideBudget))
+ await setDisplayFixture({lang:'en',currency:'KWD',amount:123456789.123});await c.cdp('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});await c.js("document.documentElement.dataset.theme='light';document.querySelector('.home-edit')?.click()");await until(()=>c.js("!!document.querySelector('.wg-preview .w-forecast')"));await sleep(150)
+ const gallery=await budgetLayout('.wg-preview .w-forecast')
+ const galleryClip=await c.js("(()=>{const w=document.querySelector('.wg-preview .w-forecast'),p=w.closest('.wg-preview').getBoundingClientRect(),offenders=[];for(const e of w.querySelectorAll('.plan-budget-row dt,.plan-budget-row dd')){const r=document.createRange();r.selectNodeContents(e);for(const x of r.getClientRects())if(x.width&&x.height&&(x.left<p.left-1||x.right>p.right+1||x.top<p.top-1||x.bottom>p.bottom+1))offenders.push({text:e.innerText,rect:{left:x.left,right:x.right,top:x.top,bottom:x.bottom}})}return {preview:{left:p.left,right:p.right,top:p.top,bottom:p.bottom},count:offenders.length,first:offenders[0]??null}})()")
+ if(!gallery||gallery.rows.length!==4||gallery.overflow||galleryClip.count||gallery.rows.some(x=>x.overlap||x.outside||x.labelFont<13||x.valueFont<13||x.columns!==1))throw Error('Budget widget gallery layout '+JSON.stringify({gallery,galleryClip}))
  await c.js("localStorage.setItem('quadriamo.lang','it')");await c.cdp('Page.reload');await until(()=>c.js("document.body.innerText.includes('Disponibilità registrata')"))
  await c.js("location.hash='#/news'")
  const visible=()=>c.js("document.body.innerText.includes('notizia sintetica QA-2H')")
@@ -101,5 +134,5 @@ try{
  const allStories=await c.js("document.querySelectorAll('.story').length")
  if(allStories<covers.stories)throw Error('news reload/filter reset lost synthetic stories')
  if(externalImageAttempts.length)throw Error('external cover/redirect was requested: '+JSON.stringify(externalImageAttempts))
- console.log(JSON.stringify({classification:'SIMULATED',passed:['complete planned onboarding -> snapshot without fictitious income -> CAS persistence','B target stable across balances, future income, tranches and extras; shortfall alert positive/negative; 320/390/768/1440 light/dark; IT/EN/FR/ES','authenticated Alpha frontend -> news gateway -> synthetic backend','month budget widget has one heading and four aligned facts','news filter, sections, detail, reload and fallback for good/missing/redirect/denied/no-rights covers','no image element, image credit for fallback, external request or redirect; title-rights attribution retained','no legacy Edge Function call'],cloudWrites:0,realAccounts:0,externalImageAttempts}))
+ console.log(JSON.stringify({classification:'SIMULATED',passed:['complete planned onboarding -> snapshot without fictitious income -> CAS persistence','B target stable across balances, future income, tranches and extras; shortfall alert positive/negative; 320/375/390/768/1440 light/dark; IT/EN/FR/ES','Budget widget browser bounds/no overlap/no clipping for EUR/USD/JPY/KWD and zero/large values; narrow Home/gallery containers','authenticated Alpha frontend -> news gateway -> synthetic backend','month budget widget has one heading and four aligned facts','news filter, sections, detail, reload and fallback for good/missing/redirect/denied/no-rights covers','no image element, image credit for fallback, external request or redirect; title-rights attribution retained','no legacy Edge Function call'],cloudWrites:0,realAccounts:0,externalImageAttempts}))
 }catch(e){console.log('Diagnostic UI:',(await c?.js('document.body.innerText'))?.slice(0,800));throw e}finally{await c?.close();await server.close()}
