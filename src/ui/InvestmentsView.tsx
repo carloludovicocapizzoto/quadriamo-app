@@ -107,7 +107,7 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
         x.holdings.push({ id: newId(), name: '', type: 'etf', currency: null, units: null, avgPrice: null, manualPrice: null })
       })}>+ {t('inv.addHolding')}</button>
       <p className="group-foot">{t('inv.holdingsHint')}</p>
-      {liveAt && <p className="group-foot" data-testid="inv-live-at">{t('inv.liveAt', { time: liveAt })}</p>}
+      {liveAt && <p className="group-foot" data-testid="inv-live-at">{t('inv.liveAt', { time: liveAt })} · <a href="https://www.coingecko.com/en/api" target="_blank" rel="noreferrer">Data provided by CoinGecko</a></p>}
 
       <h2 className="sec-title">{t('inv.deposits')}</h2>
       <ul className="group-list inv-items">

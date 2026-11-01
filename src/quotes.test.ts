@@ -54,3 +54,5 @@ describe('richiesta', () => {
     await expect(fetchCryptoQuotes([h('a', 'BTC')], 'EUR')).rejects.toThrow('quotes 429')
   })
 })
+
+it('nonfinite remote prices are never treated as market values',()=>{expect(parseQuotes({bitcoin:{eur:Infinity}},['bitcoin'],['eur'],'2026-11-01')).toEqual({})})
