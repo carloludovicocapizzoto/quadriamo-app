@@ -59,4 +59,7 @@ alter table public.news_sources add column images boolean not null default false
 alter table public.news_sources add column last_attempt timestamptz;
 revoke all on public.news_items, public.news_sources from anon;
 grant all on public.news_items, public.news_sources to service_role;
+alter table public.news_sources add column rights_reference text;
+alter table public.news_sources add column approved_by text;
+alter table public.news_sources add constraint active_source_approval check (not active or (length(trim(coalesce(rights_reference,'')))>0 and length(trim(coalesce(approved_by,'')))>0));
 commit;

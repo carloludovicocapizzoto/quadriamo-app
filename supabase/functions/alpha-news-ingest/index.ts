@@ -2,6 +2,7 @@
 // (tabella news_sources), toglie doppioni e titoli senza sostanza, classifica con regole, riconosce la stessa notizia
 // raccontata da più fonti e salva in news_items solo titolo, estratto del feed, link, data e l'indirizzo dell'immagine del feed.
 // Alpha opzionale: solo metadati, nessuna fonte attivata automaticamente, retention 14 giorni.
+import { approvedUrl, validFeedXml } from '../_shared/alpha-news-policy.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { parse, type Raw } from '../_shared/news-feed.ts'
 import { canonical, keywords } from '../_shared/news-rules.ts'
@@ -21,11 +22,14 @@ async function read(src: Source): Promise<{ src: Source; raw: Raw[]; error?: str
   try {
     const target = new URL(url)
     const allowed = env('NEWS_ALLOWED_HOSTS').split(',').map(host => host.trim())
-    if (target.protocol !== 'https:' || target.username || target.password || (target.port && target.port !== '443') || !allowed.includes(target.hostname)) throw Error('source host not approved')
+    if (!approvedUrl(url,allowed)) throw Error('source host not approved')
     const res = await fetch(url, { headers: { 'User-Agent': 'QuadriamoAlphaNews/1.0 (+https://quadriamo-alpha.pages.dev)' },
       redirect: 'error', signal: AbortSignal.timeout(9000) })
     if (!res.ok) return { src, raw: [], error: `HTTP ${res.status}` }
-    return { src, raw: parse(await readFeed(res)).slice(0,25) }
+    const xml=await readFeed(res)
+    if(!validFeedXml(xml))throw Error('invalid or unsafe feed XML')
+    const raw=parse(xml).filter(item=>approvedUrl(item.link,allowed)).slice(0,25)
+    return {src,raw}
   } catch (e) { return { src, raw: [], error: (e as Error).message.slice(0, 120) } }
 }
 

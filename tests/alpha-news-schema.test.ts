@@ -13,7 +13,7 @@ beforeAll(async()=>{
  await db.exec(base.slice(base.indexOf('create schema alpha_http;'),base.indexOf('-- PostgREST calls')))
  await db.exec("create function alpha_http.check_request() returns void language sql as 'select'; create function public.alpha_admit_request(text,text) returns jsonb language sql as $$select '{}'::jsonb$$;")
  await db.exec(readFileSync('supabase/alpha-news/002_gateway.sql','utf8'))
- await db.exec("insert into public.news_sources(id,name,kind,feed,lang,trust,active) values ('a','Synthetic','press','https://synthetic.invalid','en',3,true),('b','Hidden','press','https://synthetic.invalid','en',3,false); insert into public.news_items(id,source_id,title,link,published,lang,format) values ('a','a','Synthetic','https://synthetic.invalid',now(),'en','article'),('b','b','Hidden','https://synthetic.invalid',now(),'en','article');")
+ await db.exec("insert into public.news_sources(id,name,kind,feed,lang,trust,active,rights_reference,approved_by) values ('a','Synthetic','press','https://synthetic.invalid','en',3,true,'synthetic-rights','synthetic-editor'),('b','Hidden','press','https://synthetic.invalid','en',3,false,null,null); insert into public.news_items(id,source_id,title,link,published,lang,format) values ('a','a','Synthetic','https://synthetic.invalid',now(),'en','article'),('b','b','Hidden','https://synthetic.invalid',now(),'en','article');")
 },30000)
 afterAll(async()=>db?.close())
 async function as(role:string,sql:string){await db.exec('set role '+role);try{return await db.query(sql)}finally{await db.exec('reset role')}}
@@ -36,3 +36,5 @@ it('the optional gateway keeps signed user reads and restricts the private inges
  await db.exec("set request.path='/profiles'")
  await expect(db.exec('select alpha_http.check_request()')).rejects.toThrow('ALPHA_AUTH_REQUIRED')
 })
+
+it('activating a source without approval provenance is rejected by the database',async()=>{await expect(db.exec("update public.news_sources set active=true where id='b'")).rejects.toThrow()})
