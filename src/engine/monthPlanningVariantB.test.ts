@@ -39,6 +39,41 @@ it('B: warning compares residual monetary funding, includes FIRST recovery and n
  const deficit=monthPlanning(computeMonth(ym,[...tx,diverted],s,today),s,today)!;expect(deficit.shortfall).toBeGreaterThan(0);expect(deficit.missing).toBe(0)
  const withExtra=monthPlanning(computeMonth(ym,[...tx,{...pay(300,'extra','extraIncome'),paidFrom:'investments'}],s,today),s,today)!;expect(withExtra.shortfall).toBe(0);expect(withExtra.missing).toBe(1400)
 })
+it.each(['EUR','JPY','KWD'])('B: availability alert distinguishes current cash from future income (%s)',currency=>{
+ const make=(balance:number,received:boolean)=>initializePlan({...base(currency),events:[]},{today:'2026-11-01',expected:1500,payday:1,received,balance})
+ const calculate=(settings:ReturnType<typeof make>,transactions:ReturnType<typeof pay>[]=[] ,date=today)=>{
+  const r=computeMonth(ym,transactions,settings,date),p=monthPlanning(r,settings,date)!
+  return {r,p}
+ }
+ const low=calculate(make(100,true)),high=calculate(make(10000,true))
+ expect(low.p.shortfall).toBeGreaterThan(0);expect(high.p.shortfall).toBe(0)
+ expect(low.p.plannedDaily).toBe(high.p.plannedDaily);expect(low.p.actualAvailable).toBeLessThan(high.p.actualAvailable)
+ const future=calculate(make(100,false))
+ expect(future.p).toMatchObject({expected:1500,received:0,missing:1500,shortfall:0})
+ expect(future.p.cashGap).toBeGreaterThan(0);expect(future.p.pendingSpendingIncome).toBeGreaterThan(0)
+ for(const transactions of [
+  [pay(100,'first')],
+  [pay(100,'first'),pay(500,'second')],
+  [pay(100,'first'),pay(500,'second'),pay(300,'extra','extraIncome')],
+  [pay(100,'late')].map(t=>({...t,date:'2026-11-30'})),
+ ]){
+  const {r,p}=calculate(make(100,false),transactions)
+  expect(p.plannedDaily).toBe(future.p.plannedDaily)
+  expect(p.shortfall).toBe(0)
+  expect(r.income).toBe(transactions.reduce((n,t)=>n+t.amount,0))
+ }
+ const extra=calculate(make(100,false),[pay(100,'salary'),pay(300,'extra','extraIncome')]).p
+ expect(extra).toMatchObject({received:100,missing:1400,extra:300})
+ expect(extra.plannedDaily).toBe(future.p.plannedDaily)
+ const s={...make(100,false),events:[{id:'rent',title:'Synthetic rent',kind:'payment' as const,category:'rent',amount:400,date:'2026-11-25',repeat:null,until:null,done:[],active:true}]}
+ const before=calculate(s)
+ expect(before.p).toMatchObject({plannedExpenses:400,recordedExpenses:0,shortfall:0})
+ const linked={...pay(400,'rent-paid','rent'),date:'2026-11-27',occurrence:{eventId:'rent',date:'2026-11-25'}}
+ const after=calculate(s,[linked],'2026-11-28')
+ expect(after.p.plannedExpenses).toBe(400);expect(after.p.recordedExpenses).toBe(400);expect(after.r.spent).toBe(400)
+ expect(after.p.shortfall).toBe(0)
+ expect(after.r.transactions.filter(t=>t.upcoming&&t.occurrence?.eventId==='rent')).toHaveLength(0)
+})
 it.each(['EUR','JPY','KWD'])('B: boundaries, received snapshot, zero budget and legacy recovery (%s)',currency=>{
  const s=initializePlan({...base(currency),events:[]},{today:'2026-12-27',expected:1500,payday:27,received:true,balance:100})
  for(const day of ['2026-12-27','2027-01-26']){

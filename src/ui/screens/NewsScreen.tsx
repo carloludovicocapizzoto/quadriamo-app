@@ -11,7 +11,7 @@ import { Icon } from '../Icon'
 import { tap } from '../kit/motion'
 import { Sheet } from '../kit/Sheet'
 import { ENV } from '../../env'
-import { approvedImage, publicHttps } from '../../../supabase/functions/_shared/alpha-news-policy'
+import { publicHttps } from '../../../supabase/functions/_shared/alpha-news-policy'
 import { NewsCover } from '../NewsCover'
 import { cloudFeature } from '../../features'
 
@@ -191,7 +191,6 @@ function StoryDetail({ story, now }: { story: Story; now: number }) {
       <Meta s={story} now={now} />
       <h2>{it.title}</h2>
       <NewsCover key={it.thumb} item={it} className={`story-hero ${it.format}`} />
-      {ENV.name==='alpha' && approvedImage(it.thumb,it.source) && <p className="small muted news-credit">{it.source.image_attribution} · <a href={it.source.image_rights_reference!} target="_blank" rel="noopener noreferrer">{t('news.imageRights')}</a></p>}
       {ENV.name==='alpha' && publicHttps(it.source.rights_reference??'') && <p className="small muted"><a href={it.source.rights_reference!} target="_blank" rel="noopener noreferrer">{it.source.name} · {t('news.titleRights')}</a></p>}
       {it.excerpt && <><p className="group-title">{t('news.fromSource')}</p><p className="story-excerpt">{it.excerpt}</p></>}
       <a className="btn primary wide" href={it.link} target="_blank" rel="noopener noreferrer" onClick={() => tap()}>{cta}<Icon name="external" size={16} /></a>

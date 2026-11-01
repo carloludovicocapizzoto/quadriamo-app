@@ -113,8 +113,12 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
       : <section className="hero" aria-live="polite" style={{ ['--amount-len' as string]: amountChars(left, cur, lang).full }}>
         {plan && <p className="hero-sub">{t('plan.target')}</p>}
         <Money className="hero-amount" value={left} currency={cur} />
-        <p className="hero-sub">{daysLeft > 1 ? t('home.heroSub', { n: daysLeft }) : t('home.heroLast')}</p>
-        {plan && <div className="plan-availability" data-testid="plan-availability"><p>{t('plan.available')} <Money value={plan.actualAvailable} currency={cur}/></p><p className="small muted">{t('plan.notBank')}</p>{plan.shortfall>0?<p role="alert" className="bad-text">{t('plan.shortfall')} <Money value={plan.shortfall} currency={cur}/></p>:plan.cashGap>0&&plan.missing>0?<p className="small">{t('plan.awaiting')}</p>:null}</div>}
+        {plan
+          ? <div className="plan-availability" data-testid="plan-availability">
+              <p className="plan-availability-line"><span>{t('plan.availableShort')}</span> <Money value={plan.actualAvailable} currency={cur}/></p>
+              {plan.shortfall > 0 && <p role="alert" data-testid="plan-alert" className="bad-text">{t('plan.shortfall')} <Money value={plan.shortfall} currency={cur}/></p>}
+            </div>
+          : <p className="hero-sub">{daysLeft > 1 ? t('home.heroSub', { n: daysLeft }) : t('home.heroLast')}</p>}
       </section>}
 
       {/* Adesso: cosa conta oggi, prima dei widget */}

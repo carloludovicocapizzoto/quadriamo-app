@@ -174,5 +174,10 @@
 .wg-fav.on svg { fill: currentColor; }
 .wg-fav:active { transform: scale(.85); transition: transform var(--d-fast) var(--ease); }
 
-.plan-availability { max-width: 38rem; margin: var(--s4) auto 0; font-size: 1rem; line-height: 1.5; }
-.plan-availability [role="alert"] { padding: var(--s3); border: 2px solid currentColor; border-radius: var(--r-sm); font-weight: 600; }
+.plan-availability { max-width: 38rem; margin: var(--s3) auto 0; font-size: 1rem; line-height: 1.45; }
+.plan-availability-line { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 6px; margin: 0; }
+.plan-availability [role="alert"] { max-width: 42rem; margin: var(--s3) auto 0; padding: var(--s2) var(--s3); border: 2px solid currentColor; border-radius: var(--r-sm); font-size: var(--t-sm); font-weight: 600; }
+.plan-budget { display: grid; gap: var(--s2); margin: 0; font-size: var(--t-sm); line-height: 1.4; }
+.plan-budget-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto); align-items: baseline; gap: var(--s3); min-width: 0; }
+.plan-budget-row dt { min-width: 0; color: var(--muted); }
+.plan-budget-row dd { min-width: 0; margin: 0; text-align: right; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
