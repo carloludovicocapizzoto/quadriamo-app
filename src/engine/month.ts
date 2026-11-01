@@ -51,18 +51,32 @@ function withAmount(tx: Transaction, s: Settings, type: ClassifiedTx['type'], bu
 }
 
 /**
- * Il collegamento di un movimento alla volta che paga (transaction.occurrence), se vale: l'evento è ancora una spesa del
- * budget, quella data è davvero una sua volta, e il movimento è nello stesso periodo della scadenza o in quello accanto
- * (pagamento anticipato o in ritardo). Altrimenti null: il movimento resta una spesa normale alla sua data e la scadenza
- * automatica resta (un collegamento rotto non deve far sparire una spesa prevista).
+ * La scadenza a cui un movimento di questa data e categoria può collegarsi (transaction.occurrence): l'evento è ancora una
+ * spesa del budget della stessa categoria, quella data è davvero una sua volta, il movimento è nello stesso periodo o in quello
+ * accanto (anticipo o ritardo) e la scadenza non è prima del primo mese contabile (P1-02: prima di settings.firstMonth il
+ * pagamento finirebbe fuori dai saldi). È la regola della proposta nel nuovo movimento; validLink aggiunge l'importo.
+ */
+export function linkTarget(o: Occurrence | null | undefined, date: string | null, category: string | null, s: Settings): Occurrence | null {
+  if (!o || !date || !category) return null
+  const e = budgetEvents(s).find(x => x.id === o.eventId)
+  if (!e || e.category !== category || !occurrences(e, o.date, o.date).includes(o.date)) return null
+  const due = monthOf(o.date, s.monthStartDay)
+  if (compareYm(due, s.firstMonth) < 0) return null
+  const index = (ym: YearMonth) => ym.year * 12 + ym.month
+  return Math.abs(index(monthOf(date, s.monthStartDay)) - index(due)) <= 1 ? o : null
+}
+
+/**
+ * Il collegamento che vale per i conti: quello di linkTarget, e il movimento è una spesa vera, con un importo positivo e finito
+ * convertibile nella valuta del budget (P1-01: un importo mancante, un cambio mancante o una categoria diventata entrata non
+ * possono togliere la spesa automatica né far risultare pagata la scadenza). Altrimenti null: il movimento resta alla sua data,
+ * con i suoi avvisi, la scadenza automatica resta e i dati salvati non cambiano.
  */
 export function validLink(t: Transaction, s: Settings): Occurrence | null {
-  const o = t.occurrence
-  if (!o || !t.date) return null
-  const e = budgetEvents(s).find(x => x.id === o.eventId)
-  if (!e || !occurrences(e, o.date, o.date).includes(o.date)) return null
-  const index = (ym: YearMonth) => ym.year * 12 + ym.month
-  return Math.abs(index(monthOf(t.date, s.monthStartDay)) - index(monthOf(o.date, s.monthStartDay))) <= 1 ? o : null
+  const o = linkTarget(t.occurrence, t.date, t.category, s)
+  if (!o || typeof t.amount !== 'number' || !Number.isFinite(t.amount) || t.amount <= 0) return null
+  const c = classify(t, s)
+  return c.type !== 'income' && c.type !== 'unknown' && c.type != null && c.amountIn != null && Number.isFinite(c.amountIn) && c.amountIn > 0 ? o : null
 }
 
 /**

@@ -1,6 +1,6 @@
 import { useContext, useMemo, useState, type FormEvent } from 'react'
 import { Segmented } from './kit/Segmented'
-import { CUSTOM, FIRST, SPLIT, addDays, budgetEvents, daysBetween, linkedOccurrences, monthOf, nextMonth, occurrenceKey, occurrences, periodOf, prevMonth, validLink,
+import { CUSTOM, FIRST, SPLIT, addDays, budgetEvents, daysBetween, linkedOccurrences, monthOf, nextMonth, occurrenceKey, occurrences, periodOf, prevMonth, linkTarget,
   splitOk, splitTotal, fxRate, suggest, todayIso, type CategoryType, type Occurrence, type Settings, type Transaction, partForPurchase } from '../engine'
 import { useI18n } from '../i18n/core'
 import { StoreContext } from '../store/context'
@@ -80,15 +80,16 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
   const events = category && !isIncome ? budgetEvents(settings).filter(e => e.category === category) : []
   // il collegamento vale finché la scadenza è della categoria scelta e nel periodo del movimento o in quello accanto: cambiando
   // la data di molto il collegamento cade e si propone la volta più vicina alla data nuova (P1 #19: mai un collegamento stantio)
-  const linked = occurrence && events.some(e => e.id === occurrence.eventId) && date
-    && validLink({ id: '', date, description: '', category, amount: null, occurrence }, settings) ? occurrence : null
+  // (la proposta guarda scadenza, categoria e data; se l'importo o il cambio non sono validi il motore ignora il collegamento)
+  const linked = isIncome ? null : linkTarget(occurrence, date, category, settings)
   const candidate = (() => {
     if (!events.length || !date || linked) return null
     // il periodo del movimento e quelli accanto: un pagamento può essere in anticipo o in ritardo sulla sua scadenza
     const here = monthOf(date, settings.monthStartDay)
     const start = periodOf(prevMonth(here), settings.monthStartDay).start, end = periodOf(nextMonth(here), settings.monthStartDay).end
     const taken = linkedOccurrences(others, settings)
-    return events.flatMap(e => occurrences(e, start, end).filter(d => !taken.has(occurrenceKey(e.id, d))).map(d => ({ event: e, date: d })))
+    return events.flatMap(e => occurrences(e, start, end).filter(d => !taken.has(occurrenceKey(e.id, d))
+        && linkTarget({ eventId: e.id, date: d }, date, category, settings)).map(d => ({ event: e, date: d })))
       .sort((a, b) => Math.abs(daysBetween(date, a.date)) - Math.abs(daysBetween(date, b.date)))[0] ?? null
   })()
   const nameOf = (eventId: string) => settings.events.find(e => e.id === eventId)?.title ?? ''

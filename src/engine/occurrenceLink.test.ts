@@ -2,7 +2,7 @@
 // (30/10) e regressioni richieste. Una spesa fissa appartiene al periodo della sua scadenza, come quella automatica: il
 // pagamento collegato la conferma con il suo importo vero, senza spostarla di mese e senza contarla due volte. Solo dati sintetici.
 import { describe, expect, it } from 'vitest'
-import { computeMonth, defaultSettings, linkedOccurrences, nextMonth, rowIssues, type CalEvent, type Settings, type Transaction, type YearMonth } from '.'
+import { agenda, computeMonth, defaultSettings, linkedOccurrences, nextMonth, periodSummary, rowIssues, type CalEvent, type Settings, type Transaction, type YearMonth } from '.'
 
 const affitto: CalEvent = { id: 'aff', kind: 'rent', title: 'Affitto', amount: 400, category: 'fixedCosts', date: '2026-01-30',
   repeat: { every: 1, unit: 'month' }, until: null, done: [], active: true }
@@ -135,5 +135,71 @@ describe('allocate: nessun valore creato o perso (verifica richiesta dalla revie
       // ricalcolare non cambia nulla
       expect(allocate(units / scale, weights, digits)).toEqual(parts)
     }
+  })
+})
+
+describe('P1-01 (review 1f6c616): un collegamento vale solo per una spesa vera, convertibile e della stessa categoria', () => {
+  const paidIn = (txs: Transaction[], set = s) => periodSummary(agenda(set.events, '2026-10-01', '2026-10-31', linkedOccurrences(txs, set)), today)
+  const bad: [string, Partial<Transaction>][] = [
+    ['importo nullo', { amount: null }], ['importo zero', { amount: 0 }], ['importo negativo', { amount: -400 }],
+    ['importo non finito', { amount: Infinity }], ['importo NaN', { amount: NaN }],
+    ['valuta senza cambio', { currency: 'XYZ' }], ['cambio salvato a zero', { currency: 'USD', fxRate: 0 }],
+    ['cambio salvato negativo', { currency: 'USD', fxRate: -1 }], ['cambio salvato non numerico', { currency: 'USD', fxRate: NaN }],
+    ['categoria diventata entrata', { category: 'salary' }], ['categoria di spesa diversa da quella della scadenza', { category: 'groceries' }],
+  ]
+  it.each(bad)('%s: la scadenza resta, non è pagata, il movimento resta alla sua data', (_, x) => {
+    const p = { ...pay('2026-11-02', '2026-10-30'), ...x }
+    const txs = [...base, p]
+    expect(fixed(txs, oct)).toBe(400)                                         // la spesa automatica non sparisce
+    expect(computeMonth(oct, txs, s, today).transactions.some(t => t.id === 'p')).toBe(false)
+    expect(computeMonth(nov, txs, s, today).transactions.some(t => t.id === 'p')).toBe(true)   // alla sua data reale
+    expect(paidIn(txs)).toMatchObject({ paid: 0 })                            // il calendario non la considera pagata
+    expect(p.occurrence).toEqual({ eventId: 'aff', date: '2026-10-30' })    // i dati originali non cambiano
+  })
+  it('un\'entrata collegata (dati ripristinati e riclassificati) non viene spostata a ottobre', () => {
+    const txs = [...base, { ...pay('2026-11-02', '2026-10-30'), category: 'salary', amount: 50 }]
+    expect(computeMonth(oct, txs, s, today).income).toBe(1000)
+    expect(computeMonth(nov, txs, s, today).income).toBe(1050)
+  })
+  it('avvisi conservati: l\'importo mancante e il cambio mancante restano segnalati', () => {
+    const txs = [...base, { ...pay('2026-11-02', '2026-10-30'), amount: null }, { ...pay('2026-11-03', '2026-10-30', 400, 'q'), currency: 'XYZ' }]
+    const r = computeMonth(nov, txs, s, today)
+    expect(rowIssues(r.transactions.find(t => t.id === 'p')!, s, txs)).toContain('missingAmount')
+    expect(rowIssues(r.transactions.find(t => t.id === 'q')!, s, txs)).toContain('missingFx')
+  })
+  it('valuta estera con cambio valido: il collegamento vale', () => {
+    const usd = { ...s, fxRates: { USD: 0.9 } }
+    const txs = [...base, { ...pay('2026-11-02', '2026-10-30', 440), currency: 'USD' }]
+    expect(Math.round(computeMonth(oct, txs, usd, today).transactions.filter(t => t.category === 'fixedCosts').reduce((a, t) => a + (t.amountIn ?? 0), 0) * 100) / 100).toBe(396)
+  })
+  it('evento disattivato o cancellato: il collegamento non vale, il movimento resta alla sua data', () => {
+    const txs = [...base, pay('2026-11-02', '2026-10-30')]
+    for (const set of [{ ...s, events: [{ ...affitto, active: false }] }, { ...s, events: [] }]) {
+      expect(computeMonth(nov, txs, set, today).transactions.some(t => t.id === 'p')).toBe(true)
+      expect(linkedOccurrences(txs, set).size).toBe(0)
+    }
+  })
+  it('evento modificato (importo cambiato): il collegamento resta valido', () => {
+    const set = { ...s, events: [{ ...affitto, amount: 450 }] }
+    expect(linkedOccurrences([...base, pay('2026-11-02', '2026-10-30')], set).size).toBe(1)
+  })
+  it('la data reale del movimento resta nella riga (ricerca, CSV, backup leggono i dati originali)', () => {
+    const txs = [...base, pay('2026-11-02', '2026-10-30')]
+    expect(computeMonth(oct, txs, s, today).transactions.find(t => t.id === 'p')?.date).toBe('2026-11-02')
+  })
+})
+
+describe('P1-02 (review 1f6c616): nessun collegamento a una scadenza prima del primo mese', () => {
+  const fromNov: Settings = { ...s, firstMonth: nov, buckets: s.buckets.map((b, i) => ({ ...b, startingBalance: i === 0 ? 1000 : 0 })) }
+  const left = (txs: Transaction[], t = '2026-11-15') => Math.round(computeMonth(nov, txs, fromNov, t).buckets.reduce((a, b) => a + b.remaining, 0) * 100) / 100
+  it('archivio da novembre, saldo 1.000 €, scadenza 30 ottobre, pagamento 2 novembre: il saldo scende a 600 €', () => {
+    const txs = [pay('2026-11-02', '2026-10-30')]
+    expect(left(txs)).toBe(600)
+    expect(linkedOccurrences(txs, fromNov).size).toBe(0)
+  })
+  it('la scadenza di novembre si collega normalmente', () => {
+    const txs = [pay('2026-11-30', '2026-11-30')]
+    expect(linkedOccurrences(txs, fromNov).size).toBe(1)
+    expect(left(txs, '2026-12-01')).toBe(600)
   })
 })
