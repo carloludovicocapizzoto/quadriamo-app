@@ -1,0 +1,38 @@
+# Alpha 2I — completamento locale, funzioni non approvate per il rilascio
+
+Base immutabile: 65640e328f1dd9c0fd86a6de1d421c1a001ad006, pubblicata sul branch integration/alpha-complete-candidate. DraftPR richiesta tramite integrazione GitHub:403 Resource not accessible by integration; nessun secondo tentativo. Target richiesto claude/alpha-details@0d24afd. Federico può aprirla dal confronto GitHub oppure concedere al connettore il permesso Pull requests write. Il corpo preparato deve mantenere la distinzione LOCAL/SIMULATED/CLOUD e gli stati disattivati2H.
+
+## Contratto Piano (proposta A, conferma Federico+Carlo ancora necessaria)
+
+Numero principale invariato: disponibilità del budget con entrate ricevute, saldi iniziali e impegni della #19; non certifica il saldo bancario per cassa. Obiettivo pianificato separato sul previsto, chiaramente etichettato. Extra aggiornano la disponibilità nelle parti assegnate, non l'obiettivo. Nessuna entrata fittizia.
+
+Settings: planVersion=1 identifica l'apertura per fotografia di cassa; balanceDate è una data ISO dentro firstMonth; incomePlans è una sequenza ordinata senza duplicati (from YYYY-MM,amount finito>=0). expectedIncome/expectedFrom rimangono leggibili per backup2H. Revisioni del previsto da un periodo in poi preservano i periodi precedenti e sostituiscono le programmazioni future. Nessun calcolo del saldo legge reddito previsto. CalEvent.planExclusions è un elenco ordinato e non sovrapposto di intervalli [from,until), until=null aperto. planOffFrom legacy letto e convertito solo quando si cambia esplicitamente il toggle.
+
+Onboarding gated completo: persona,valuta,regola,previsto,inizio periodo,stipendio già incluso sì/no,saldo di oggi,capitale facoltativo,categorie,scadenze,altre impostazioni e profilo. L'applica salva un solo aggiornamento impostazioni senza movimento; non si reinizializzano archivi con transazioni. Skip/avanti bloccati fino a saldo/piano confermati; un backup storico già popolato può terminare senza essere riscritto. Regola scelta prima della ripartizione iniziale. Se lo stipendio è già nel saldo, previsto aggiuntivo0 per il periodo iniziale e normale dal successivo. Se deve arrivare, previsto già nel periodo iniziale. EUR/JPY/KWD usano allocate; algoritmo cumulativo della #19 invariato.
+
+Lo snapshot include i flussi bancari antecedenti balanceDate: restano nei dati/esportazioni con data originale, con avviso nella riga, ma non si sottraggono una seconda volta. firstMonth non si allarga automaticamente nei documenti con snapshot; un import più vecchio non sposta il saldo iniziale. Gli automatismi anteriori alla fotografia non vengono rigenerati. Pagamenti validi dopo la fotografia, anche per scadenze precedenti, continuano a contare. P1-01/P1-02 e mapping per competenza della #19 preservati.
+
+Conta nel mese riguarda gli automatismi; il calendario conserva obblighi e promemoria. Off aggiunge un intervallo dalla data corrente; on lo chiude senza eliminare il passato. Pagamenti manuali collegati continuano a contare una volta, con importo vero; eliminare o invalidare il link conserva la regola #19 e il calendario non viene marcato falsamente pagato. Durante il nuovo percorso niente proiezioni a ritmo in Home, Adesso, Calendario, Analisi Mese e Consigli. Testi IT/EN/FR/ES; campi e intervalli hanno etichette nei conflitti CAS. Backup vecchi senza nuovi campi conservano il comportamento precedente; nuovi contratti non validi vengono respinti.
+
+Compatibilità fra dispositivi: i nuovi client dichiarano monthly-plan-v1. La Function Pages impedisce a vecchi client di leggere o scrivere documenti snapshot/intervalli che interpreterebbero male (426 ALPHA_CLIENT_UPDATE_REQUIRED), lasciando intatti archivi offline e documenti legacy. Deploy della Function aggiornata prima di qualsiasi attivazione Piano; aggiornare i client, mai cancellare storage/outbox. È una protezione di compatibilità, non un nuovo metodo di autenticazione. CAS rimane invariato. La build release rifiuta monthly-plan senza ALPHA_MONTHLY_PLAN_APPROVED=1; non impostarlo prima della conferma congiunta. Build diagnostiche locali con fixture possono provarlo.
+
+## Notizie: sicurezza e preparazione
+
+RLS authenticated read-only, anon senza grant, service_role limitato dal gate alle due tabelle news; privilegio server già previsto e testato localmente. La fonte deve avere rights_reference e approved_by per diventare active; nessun seed approvato inventato. Manifest parametrizzato supabase/alpha-news/sources.example.json vuoto. node tools/news/prepare-alpha.mjs manifest.json output-dir produce seed SEMPRE inattivo e config con entrambi i flag0; nessuna connessione o scrittura cloud. Contratto manifesto: approvedBy; sources[{id,name,kind,feed HTTPS,site HTTPS,lang it/en/fr/es,trust1..5,rights:{titleAllowed:true,reference}}]. SQL quoting testato. Carlo deve fornire questi dati e autorizzazioni verificabili; immagini/estratti restano vietati.
+
+Feed e link articolo HTTPS su host pubblici esatti approvati; nessuna credenziale URL, porta alternativa, IP letterale, dominio locale/interno. Redirect rifiutati. XML deve avere radice RSS/Atom/RDF, niente DOCTYPE/ENTITY; streaming limitato1MB e9s. Feed massimo4x25 contenuti per invocazione, dedup canonico/upsert idempotente, retention14giorni, errori e tentativi fonti visibili. Due ore UTC nel template cron, nessun job attivato. Allowlist è di host DNS affidabili: prima dell'attivazione verificare proprietà del publisher e risoluzione pubblica; non è un sistema che autorizza domini arbitrari né una prova contro la compromissione DNS di un host già approvato. Nessun fetch locale usa fonti reali.
+
+Restano necessari soltanto fuori dal repository: Carlo approva fonti/diritti; Federico autorizza applicazione schema/gateway Alpha aggiornati, Function alpha-news-ingest, secret server/Vault, cron e una ingestione controllata. Poi prova RLS/gateway/retention sul vero Alpha e solo dopo ALPHA_NEWS_ENABLED=1 e buildnews con ALPHA_NEWS_BACKEND_READY=1. Nessuna operazione di questo elenco è stata eseguita in2I.
+
+## Scheda decisionale ETF/azioni
+
+| Tema | Proposta | Decisione richiesta |
+|---|---|---|
+| Identità | ISIN o ticker+MIC, valuta; mai quantità/saldi | Carlo: mercati EU/US e UCITS richiesti |
+| Prezzo | timestamp, valuta, ritardo, exchange, split/dividendi dichiarati | Carlo: fine giornata o ritardo intraday accettabile |
+| Licenza | diritto esplicito di redistribuzione a tester/utenti e cache | Carlo: verifica contratto del fornitore |
+| Costo | nessun abbonamento scelto; richiedere preventivo per volume strumenti/utenti | Federico: tetto e autorizzazione eventuale spesa |
+| Cache | server per strumento/valuta; TTL coerente con contratto; cache account locale | Approvare limiti provider; mai prezzi automatici nel documento CAS |
+| Chiave | solo adapter server, secret separato ruotabile, mai nel bundle | Federico: autorizzare provisioning solo dopo scelta |
+
+Dopo la scelta si implementa un adapter al contratto quotazioni già predisposto e si testa con risposte sintetiche/sandbox autorizzata. Nessun account fornitore o piano pagato creato. Investimenti2H non reintegrato e permessi invariati.
