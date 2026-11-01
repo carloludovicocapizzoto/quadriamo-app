@@ -55,3 +55,5 @@ it('opening boundary preserves P1-02 and a December/January custom period',()=>{
 })
 
 it('malformed unvalidated stored metadata never suppresses a cost or crashes the financial engine',()=>{expect(countsInPlan({planExclusions:{} as never,planOffFrom:'bad'},'2026-11-01')).toBe(true);expect(countsInPlan({planExclusions:[null] as never},'2026-11-01')).toBe(true);const s={...base(),incomePlans:{} as never};const r=computeMonth(s.firstMonth,[],s,'2026-11-02');expect(monthPlanning(r,s,'2026-11-02')).toBeNull()})
+
+it('an unversioned legacy backup does not partially activate the opening snapshot rules',()=>{const s=base();const e={id:'legacy',title:'Synthetic',kind:'payment' as const,category:'fixedCosts',amount:50,date:'2026-11-01',repeat:null,until:null,done:[],active:true};const t={id:'income',date:'2026-11-03',description:'synthetic',category:'salary',amount:100};const old={...s,events:[e]};expect(computeMonth(s.firstMonth,[t],{...old,balanceDate:'2026-11-02'},'2026-11-05').spent).toBe(computeMonth(s.firstMonth,[t],old,'2026-11-05').spent)})

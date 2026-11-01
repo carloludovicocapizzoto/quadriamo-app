@@ -118,7 +118,7 @@ export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, t
   if (s.planVersion === 1 && compareYm(ym, s.firstMonth) < 0) return []
   if (!manual.some(t => t.amount != null) && s.planVersion !== 1) return []
   const { start, end } = periodOf(ym, s.monthStartDay)
-  const from = compareYm(ym,s.firstMonth)===0 && s.balanceDate && s.balanceDate > start ? s.balanceDate : start
+  const from = s.planVersion === 1 && compareYm(ym,s.firstMonth)===0 && s.balanceDate && s.balanceDate > start ? s.balanceDate : start
   return budgetEvents(s).flatMap(e => occurrences(e, from, end).filter(date => countsInPlan(e,date) && !linked.has(occurrenceKey(e.id, date))).map(date => {
     const due = date <= today
     return {
