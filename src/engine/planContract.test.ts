@@ -34,7 +34,7 @@ it('income revisions keep previous planning periods, extras and banking data sep
  const s=initializePlan({...base(),events:[]},{today:'2026-11-02',expected:1000,payday:1,received:false,balance:100})
  const revised=setExpectedIncome(s,'2026-12',1200)
  const tx=[{id:'a',date:'2026-11-03',description:'a',category:'salary',amount:600},{id:'b',date:'2026-11-04',description:'b',category:'salary',amount:500}]
- const r=computeMonth(s.firstMonth,tx,revised,'2026-11-10');expect(monthPlanning(r,revised,'2026-11-10')).toMatchObject({expected:1000,received:1100,extra:100,missing:0})
+ const r=computeMonth(s.firstMonth,tx,revised,'2026-11-10');expect(monthPlanning(r,revised,'2026-11-10')).toMatchObject({expected:1000,received:1000,receivedTotal:1100,extra:100,missing:0})
  expect(safeToSpend(r,revised,'2026-11-10')).toEqual(safeToSpend(r,{...revised,expectedIncome:9000},'2026-11-10'))
  const doc={version:1 as const,settings:revised,transactions:tx},copy=parseBackup(JSON.stringify(doc));expect(copy.settings.incomePlans).toEqual(revised.incomePlans)
  const a=structuredClone(doc),b=structuredClone(doc);a.settings=setExpectedIncome(a.settings,'2026-12',1300);b.settings=setExpectedIncome(b.settings,'2026-12',1400)

@@ -1,6 +1,13 @@
 import type { Dict } from './en'
 
 const fr: Dict = {
+  'plan.available': "Disponible dans les parts de dépenses",
+  'plan.notBank': "Calculé à partir des données enregistrées, engagements déduits : pas un solde bancaire certifié.",
+  'plan.shortfall': "Le plan restant dépasse les fonds et recettes encore prévus pour les dépenses. Manque :",
+  'plan.awaiting': "Le plan nécessite aussi des revenus prévus non encore enregistrés. Leur réception n’est pas garantie.",
+  'plan.plannedExpenses': "Dépenses prévues aux échéances",
+  'plan.recordedExpenses': "Dépenses enregistrées par mouvement",
+  'plan.commitments': "Les engagements automatiques ne certifient pas un paiement bancaire.",
   'plan.history': "Historique avant le solde initial",
   'plan.beforeSnapshot': "Déjà compris dans le solde initial : pas de double comptage.",
   'plan.payday': "Début de période / paie",
@@ -17,8 +24,8 @@ const fr: Dict = {
   'plan.expected': "Revenu prévu",
   'plan.actual': "Disponibilité quotidienne effective",
   'plan.target': "Objectif quotidien prévu",
-  'plan.received': "Revenu reçu",
-  'plan.warning': "La planification inclut des revenus pas encore reçus. Le chiffre principal repose sur les fonds réels.",
+  'plan.received': "Revenu prévu déjà reçu",
+  'plan.warning': "Le chiffre principal est un objectif planifié sur le revenu prévu. La disponibilité enregistrée est séparée.",
   'cloud.pilotWait': 'La synchronisation sécurisée n’est pas encore activée pour ce compte. Vos modifications restent sur cet appareil et peuvent être exportées. Contactez l’assistance pour participer au pilote.',
   'auth.localSession': 'Votre session a expiré. Vous utilisez uniquement la copie de cet appareil. Renouvelez votre session avant de synchroniser.',
   'auth.localLogout': 'Vous êtes déconnecté sur cet appareil. Vos archives hors ligne sont conservées. Les sessions distantes n’ont pas été révoquées.',
@@ -1544,6 +1551,8 @@ const fr: Dict = {
   'cat.ai': "IA",
   'cat.startup': "Startups",
   'cat.crypto': "Crypto",
+  'news.imageRights': 'Droits sur l’image',
+  'news.titleRights': 'Droits sur le titre',
   'news.offHint': "Une connexion est nécessaire : réessayez dès qu’elle revient.",
   'alpha.notYetTitle': "Pas encore disponible dans cette Alpha",
   'alpha.notYetText': "Cette fonction arrivera dans une version ultérieure. Le reste de l’app fonctionne normalement.",

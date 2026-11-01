@@ -38,3 +38,5 @@ it('the optional gateway keeps signed user reads and restricts the private inges
 })
 
 it('activating a source without approval provenance is rejected by the database',async()=>{await expect(db.exec("update public.news_sources set active=true where id='b'")).rejects.toThrow()})
+
+it('image authorization is required separately from the headline approval',async()=>{await expect(db.exec("update public.news_sources set images=true where id='a'")).rejects.toThrow();expect((await db.query("select images from public.news_sources where id='a'")).rows).toEqual([{images:false}])})

@@ -88,7 +88,7 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
     case 'forecast': {
       if (ENV.flags.monthlyPlan) {
         const plan = monthPlanning(c.r, s, c.today)
-        return box(<><p>{t('plan.title')}</p><p className="w-note">{t('plan.warning')}</p>{plan ? <><p>{t('plan.actual')} <Money value={plan.actualDaily} currency={cur} /></p><p>{t('plan.target')} <Money value={plan.plannedDaily} currency={cur} /></p><p>{t('plan.extra')} <Money value={plan.extra} currency={cur} /></p><p>{t('plan.received')} <Money value={plan.received} currency={cur} /> / <Money value={plan.expected} currency={cur} /></p></> : <p>{t('plan.expected')}</p>}</>)
+        return box(<><p>{t('plan.title')}</p><p className="w-note">{t('plan.warning')}</p>{plan ? <><p>{t('plan.available')} <Money value={plan.actualAvailable} currency={cur} /></p><p>{t('plan.target')} <Money value={plan.plannedDaily} currency={cur} /></p><p>{t('plan.expected')} <Money value={plan.expected} currency={cur}/></p><p>{t('plan.plannedExpenses')} <Money value={plan.plannedExpenses} currency={cur}/></p><p>{t('plan.recordedExpenses')} <Money value={plan.recordedExpenses} currency={cur}/></p><p className="w-note">{t('plan.commitments')}</p><p>{t('plan.extra')} <Money value={plan.extra} currency={cur} /></p><p>{t('plan.received')} <Money value={plan.received} currency={cur} /> / <Money value={plan.expected} currency={cur} /></p></> : <p>{t('plan.expected')}</p>}</>)
       }
       // come finisce il mese: la spesa fin qui (linea) e la proiezione a questo ritmo (tratteggio)
       const f = forecastMonth(c.r, c.today)

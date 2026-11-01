@@ -1,9 +1,10 @@
 // Da un contenuto letto dal feed a una riga di news_items: cosa entra, con quali categorie, livello, immagine e punteggio.
 // Una funzione sola per news-ingest (Deno) e per lo script di prova su feed veri (Node), così fanno la stessa cosa.
+import type { ImageRights } from './alpha-news-policy.ts'
 import type { Raw } from './news-feed.ts'
 import { SAME_EVENT, canonical, categorize, cleanTitle, clickbait, isJunk, keywords, level, relevance, score, similarity } from './news-rules.ts'
 
-export interface Source { id: string; name: string; kind: string; format: string; feed: string; lang: string; trust: number; topics: string[]; images: boolean }
+export interface Source extends ImageRights { id: string; name: string; kind: string; format: string; feed: string; lang: string; trust: number; topics: string[]; images: boolean }
 /** Contenuti delle ultime 48 ore: servono a riconoscere la stessa notizia arrivata prima da un'altra fonte. */
 export interface Recent { id: string; source: string; words: string[]; cluster: string }
 

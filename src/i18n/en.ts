@@ -1,6 +1,13 @@
 // Dizionario di riferimento: le altre lingue devono avere esattamente le stesse chiavi (lo controllano TypeScript e i test).
 // {n}, {name}… sono segnaposto sostituiti da t(key, { n: 3 }).
 const en = {
+  'plan.available': "Available in spending parts",
+  'plan.notBank': "Calculated from recorded data, after commitments: not a certified bank balance.",
+  'plan.shortfall': "The remaining plan exceeds spending funds plus expected outstanding income. Gap:",
+  'plan.awaiting': "The plan also needs expected income not yet recorded. Receipt is not guaranteed.",
+  'plan.plannedExpenses': "Planned scheduled expenses",
+  'plan.recordedExpenses': "Expenses recorded as transactions",
+  'plan.commitments': "Automatic budget commitments do not certify bank payments.",
   'plan.history': "History before the opening balance",
   'plan.beforeSnapshot': "Already included in the opening balance: not counted again in the budget.",
   'plan.payday': "Period start / payday",
@@ -17,8 +24,8 @@ const en = {
   'plan.expected': "Expected income",
   'plan.actual': "Actual daily availability",
   'plan.target': "Planned daily target",
-  'plan.received': "Income received",
-  'plan.warning': "Planning includes income not yet received. The main number remains based on actual funds.",
+  'plan.received': "Expected income already received",
+  'plan.warning': "The main number is a planned target based on expected income. Recorded availability is shown separately.",
   'cloud.pilotWait': 'Secure synchronization is not yet enabled for this account. Your changes stay on this device and can be exported. Contact support to join the pilot.',
   'auth.localSession': 'Your session has expired. You are using only this device’s copy. Renew your session before synchronizing.',
   'auth.localLogout': 'You have signed out on this device. Your offline archives are preserved. Remote sessions have not been revoked.',
@@ -1544,6 +1551,8 @@ const en = {
   'cat.ai': "AI",
   'cat.startup': "Startups",
   'cat.crypto': "Crypto",
+  'news.imageRights': 'Image rights',
+  'news.titleRights': 'Headline rights',
   'news.offHint': "You need a connection: try again as soon as it’s back.",
   'alpha.notYetTitle': "Not available in this Alpha yet",
   'alpha.notYetText': "This feature will come in a later version. The rest of the app works normally.",

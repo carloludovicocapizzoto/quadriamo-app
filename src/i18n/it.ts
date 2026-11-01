@@ -1,6 +1,13 @@
 import type { Dict } from './en'
 
 const it: Dict = {
+  'plan.available': "Disponibilità nelle parti di spesa",
+  'plan.notBank': "Calcolata dai dati registrati, al netto degli impegni: non è un saldo bancario certificato.",
+  'plan.shortfall': "Il residuo del piano supera i fondi e le entrate ancora previste per le parti di spesa. Mancano:",
+  'plan.awaiting': "Per sostenere il piano servono anche entrate previste non ancora registrate. Il loro incasso non è garantito.",
+  'plan.plannedExpenses': "Spese previste dalle scadenze",
+  'plan.recordedExpenses': "Spese registrate con movimento",
+  'plan.commitments': "Le spese automatiche impegnate nel budget non attestano un pagamento bancario.",
   'plan.history': "Cronologia precedente al saldo iniziale",
   'plan.beforeSnapshot': "Già compreso nel saldo iniziale: non si conta di nuovo nel budget.",
   'plan.payday': "Inizio periodo / stipendio",
@@ -17,8 +24,8 @@ const it: Dict = {
   'plan.expected': "Reddito previsto",
   'plan.actual': "Disponibilità giornaliera effettiva",
   'plan.target': "Obiettivo giornaliero pianificato",
-  'plan.received': "Reddito ricevuto",
-  'plan.warning': "La pianificazione include reddito non ancora ricevuto. Il numero principale resta basato sui fondi effettivi.",
+  'plan.received': "Reddito previsto già ricevuto",
+  'plan.warning': "Il numero principale è un obiettivo pianificato sul reddito previsto. La disponibilità registrata è indicata separatamente.",
   'cloud.pilotWait': 'La sincronizzazione sicura non è ancora abilitata per questo account. Le modifiche restano su questo dispositivo e puoi esportarle. Contatta l’assistenza per partecipare al pilota.',
   'auth.localSession': 'La sessione è scaduta. Stai usando soltanto la copia di questo dispositivo. Prima di sincronizzare occorre rinnovare l’accesso.',
   'auth.localLogout': 'Sei uscito da questo dispositivo. Gli archivi offline sono conservati. Le sessioni remote non sono state revocate.',
@@ -1544,6 +1551,8 @@ const it: Dict = {
   'cat.ai': "AI",
   'cat.startup': "Startup",
   'cat.crypto': "Cripto",
+  'news.imageRights': 'Diritti immagine',
+  'news.titleRights': 'Diritti sul titolo',
   'news.offHint': "Serve la connessione: riprova appena torna.",
   'alpha.notYetTitle': "Non ancora disponibile in questa Alpha",
   'alpha.notYetText': "Questa funzione arriverà in una versione successiva. Il resto dell'app funziona normalmente.",

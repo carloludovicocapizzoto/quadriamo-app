@@ -2,7 +2,7 @@
 // (tabella news_sources), toglie doppioni e titoli senza sostanza, classifica con regole, riconosce la stessa notizia
 // raccontata da più fonti e salva in news_items solo titolo, estratto del feed, link, data e l'indirizzo dell'immagine del feed.
 // Alpha opzionale: solo metadati, nessuna fonte attivata automaticamente, retention 14 giorni.
-import { approvedUrl, validFeedXml } from '../_shared/alpha-news-policy.ts'
+import { approvedImage, approvedUrl, validFeedXml } from '../_shared/alpha-news-policy.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { parse, type Raw } from '../_shared/news-feed.ts'
 import { canonical, keywords } from '../_shared/news-rules.ts'
@@ -68,7 +68,7 @@ Deno.serve(async req => {
       if (seen.has(id)) continue
       seen.add(id)
       const out = toItem(src, r, id, now, pool)
-      if ('row' in out) rows.push({ ...out.row, excerpt: null, thumb: null })
+      if ('row' in out) rows.push({ ...out.row, excerpt: null, thumb: approvedImage(r.thumb, src) })
     }
   }
   for (let i = 0; i < rows.length; i += 200) {

@@ -10,6 +10,9 @@ import { AREAS, EMPTY, LANGS, SOURCES, TOPICS, TYPES, activeCount, applyFilter, 
 import { Icon } from '../Icon'
 import { tap } from '../kit/motion'
 import { Sheet } from '../kit/Sheet'
+import { ENV } from '../../env'
+import { approvedImage, publicHttps } from '../../../supabase/functions/_shared/alpha-news-policy'
+import { NewsCover } from '../NewsCover'
 import { cloudFeature } from '../../features'
 
 
@@ -170,17 +173,11 @@ function StoryList({ stories, now, onOpen, lead = false }: { stories: Story[]; n
       {stories.map(s => (
         <li key={s.lead.id}><button className="story" onClick={() => onOpen(s)}>
           <span className="story-text"><span className="story-title">{s.lead.title}</span><Meta s={s} now={now} /></span>
-          {s.lead.thumb && <Thumb src={s.lead.thumb} className={`story-thumb ${s.lead.format}`} />}
+          <NewsCover key={s.lead.thumb} item={s.lead} className={`story-thumb ${s.lead.format}`} />
         </button></li>
       ))}
     </ul>
   )
-}
-
-/** L'immagine che la fonte mette nel feed, caricata dal suo sito. Se non arriva, non resta un buco. */
-function Thumb({ src, className }: { src: string; className: string }) {
-  const [ok, setOk] = useState(true)
-  return ok ? <img className={className} src={src} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setOk(false)} /> : null
 }
 
 /** Il dettaglio: l'estratto della fonte, le altre fonti sulla stessa notizia, e il link all'originale. */
@@ -193,7 +190,9 @@ function StoryDetail({ story, now }: { story: Story; now: number }) {
     <article className="story-detail">
       <Meta s={story} now={now} />
       <h2>{it.title}</h2>
-      {it.thumb && <Thumb src={it.thumb} className={`story-hero ${it.format}`} />}
+      <NewsCover key={it.thumb} item={it} className={`story-hero ${it.format}`} />
+      {ENV.name==='alpha' && approvedImage(it.thumb,it.source) && <p className="small muted news-credit">{it.source.image_attribution} · <a href={it.source.image_rights_reference!} target="_blank" rel="noopener noreferrer">{t('news.imageRights')}</a></p>}
+      {ENV.name==='alpha' && publicHttps(it.source.rights_reference??'') && <p className="small muted"><a href={it.source.rights_reference!} target="_blank" rel="noopener noreferrer">{it.source.name} · {t('news.titleRights')}</a></p>}
       {it.excerpt && <><p className="group-title">{t('news.fromSource')}</p><p className="story-excerpt">{it.excerpt}</p></>}
       <a className="btn primary wide" href={it.link} target="_blank" rel="noopener noreferrer" onClick={() => tap()}>{cta}<Icon name="external" size={16} /></a>
       {story.others.length > 0 && <>

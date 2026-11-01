@@ -1,9 +1,10 @@
 // Planning is deliberately independent of the cash/budget engine approved in #19.
-import { allocate } from './month'
+import { allocate, recurringOf } from './month'
 import { minorDigits } from './bankNumbers'
 import { isPlanMonth, planningValid } from './planContract'
 import { ymKey } from './dates'
 import { safeToSpend } from './spend'
+import { SPLIT } from './types'
 import type { Bucket, MonthResult, Settings } from './types'
 export function monthPlanning(r: MonthResult, s: Settings, today: string) {
   if(!planningValid(s))return null
@@ -17,7 +18,21 @@ export function monthPlanning(r: MonthResult, s: Settings, today: string) {
   const parts = allocate(Math.max(0, base), s.buckets.map(b => b.share), minorDigits(s.currency))
   if (parts.length) parts[0] += Math.min(0, base)
   const planned = safeToSpend({ ...r, buckets: r.buckets.map(b => ({ ...b, remaining: b.remaining - b.fromIncome + (parts[s.buckets.findIndex(x => x.id === b.bucket.id)] ?? 0) })) }, s, today)
-  return { expected: n, received: r.income, missing: Math.max(0, n - r.income), extra: Math.max(0, r.income - n), actualDaily: real.reduce((a,b)=>a+b.perDay,0), plannedDaily: planned.reduce((a,b)=>a+b.perDay,0) }
+  const sumFree=(xs:typeof real)=>xs.reduce((a,b)=>a+b.free,0)
+  const remainingPlan=planned.reduce((a,b)=>a+Math.max(0,b.free),0), actualAvailable=sumFree(real)
+  const explicitExtra=r.transactions.filter(t=>t.type==='income'&&t.category==='extraIncome').reduce((a,t)=>a+(t.amountIn??0),0)
+  const regularIncome=r.income-explicitExtra
+  const missing=Math.max(0,n-regularIncome), weights=s.buckets.map(b=>b.share),digits=minorDigits(s.currency)
+  // Expected future receipts follow the rule, including recovery of any FIRST deficit.
+  // This is funding capacity for a warning, never a ledger entry or a modified balance.
+  const ruledReceived=r.transactions.filter(t=>t.type==='income'&&t.bucket===SPLIT&&!t.split).reduce((a,t)=>a+(t.amountIn??0),0)
+  const share=(income:number)=>{const b=income-r.paidFirst,a=allocate(Math.max(0,b),weights,digits);if(a.length)a[0]+=Math.min(0,b);return a}
+  const before=share(ruledReceived),after=share(ruledReceived+missing),spending=new Set(real.map(b=>b.bucketId))
+  const pendingSpendingIncome=s.buckets.reduce((a,b,i)=>a+(spending.has(b.id)?after[i]-before[i]:0),0)
+  const shortfall=Math.max(0,remainingPlan-actualAvailable-pendingSpendingIncome)
+  const recordedExpenses=r.transactions.filter(t=>t.type==='expense'&&!t.recurring).reduce((a,t)=>a+(t.amountIn??0),0)
+  const plannedExpenses=recurringOf(r.ym,r.transactions,s,today).filter(t=>t.type==='expense').reduce((a,t)=>a+(t.planned??0),0)
+  return { actualAvailable, remainingPlan, pendingSpendingIncome, shortfall:shortfall>10**(-digits)*s.buckets.length?shortfall:0, cashGap:Math.max(0,remainingPlan-actualAvailable), recordedExpenses, plannedExpenses, budgetExpenses:r.spent, expected: n, received: Math.min(n,regularIncome), receivedTotal: r.income, missing, extra: explicitExtra + Math.max(0, regularIncome - n), actualDaily: real.reduce((a,b)=>a+b.perDay,0), plannedDaily: planned.reduce((a,b)=>a+b.perDay,0) }
 }
 export function splitOpeningBalance(buckets: Bucket[], amount: number, currency: string): Bucket[] {
   if(!Number.isFinite(amount))throw Error('invalid opening balance')
