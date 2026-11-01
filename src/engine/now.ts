@@ -31,6 +31,7 @@ export const isActionable = (x: NowItem) => x.type === 'late' || x.type === 'doc
 
 export interface NowInput {
   events: CalEvent[]
+  paid?: Set<string>               // volte pagate da un movimento collegato (month.linkedOccurrences): non sono «da fare»
   goals?: Goal[]
   today: string
   hour: number                     // ora locale (per il promemoria serale)
@@ -44,7 +45,7 @@ export function nowItems(i: NowInput): NowItem[] {
   const { today } = i
   const out: NowItem[] = []
   const active = i.events.filter(e => e.active)
-  const outs = (from: string, to: string) => agenda(active, from, to).filter(x => KIND_SIDE[x.event.kind] === 'out' && !x.done)
+  const outs = (from: string, to: string) => agenda(active, from, to, i.paid).filter(x => KIND_SIDE[x.event.kind] === 'out' && !x.done)
 
   for (const x of outs(addDays(today, -7), addDays(today, -1)).filter(x => x.event.nag))
     out.push({ type: 'late', event: x.event, date: x.date, days: daysBetween(x.date, today) })
@@ -71,7 +72,7 @@ export function nowItems(i: NowInput): NowItem[] {
   const big = (i.changes ?? []).find(c => c.pct != null && c.pct >= 50 && c.diff >= 20)
   if (big) out.push({ type: 'category', change: big })
 
-  const income = agenda(active, today, addDays(today, 14)).find(x => KIND_SIDE[x.event.kind] === 'in' && !x.done)
+  const income = agenda(active, today, addDays(today, 14), i.paid).find(x => KIND_SIDE[x.event.kind] === 'in' && !x.done)
   if (income) out.push({ type: 'nextIn', event: income.event, date: income.date, days: daysBetween(today, income.date) })
 
   if (!i.loggedToday && i.hour >= 18) out.push({ type: 'log' })

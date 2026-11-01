@@ -116,3 +116,5 @@
 /* importazione: le righe escluse, una per riga con il motivo, sotto il riepilogo */
 .import-skipped { list-style: none; margin: var(--s2) 0 0; padding: 0; display: grid; gap: 2px; color: var(--muted); }
 .import-review .group:first-child { margin-top: 0; }
+/* collegamento a una spesa fissa: la domanda e il pulsante sulla stessa riga */
+.txs-link .link-btn { min-height: 0; padding: 0; font-size: inherit; }

@@ -145,7 +145,8 @@ function Version({ document, other, path }: { document: AppData | null; other: A
     amount: t('cloud.amount'), description: t('cloud.description'), date: t('cloud.date'), category: t('cloud.category'),
     buckets: t('cloud.buckets'), categories: t('cloud.categories'), events: t('cloud.events'), share: t('cloud.share'),
     startingBalance: t('cloud.startingBalance'), name: t('cloud.name'), firstMonth: t('cloud.firstMonth'), year: t('cloud.year'), month: t('cloud.month'),
-    paidFrom: t('cloud.paidFrom'), split: t('cloud.split'), fxRate: t('cloud.exchangeRate'), updatedAt: t('cloud.changedAt') }
+    paidFrom: t('cloud.paidFrom'), split: t('cloud.split'), fxRate: t('cloud.exchangeRate'), updatedAt: t('cloud.changedAt'),
+    occurrence: t('cloud.occurrence'), eventId: t('cloud.event') }
   const configuration = (d: AppData | null) => Object.fromEntries(Object.entries(d ?? {}).filter(([key]) => !['transactions', 'deleted', 'activity', 'version'].includes(key) && !key.endsWith('UpdatedAt')))
   if (path === '/document') return <>
     <p>{t('cloud.transactionCount', { count: document.transactions.length })}</p>

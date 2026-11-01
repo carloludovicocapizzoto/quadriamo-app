@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { SPLIT, applyPersona, daysBetween, defaultPolicy, mainIncome, monthOf, periodOf, todayIso, updateCapital, type CapitalKind, type Persona } from '../engine'
+import { SPLIT, allocate, applyPersona, daysBetween, minorDigits, defaultPolicy, mainIncome, monthOf, periodOf, todayIso, updateCapital, type CapitalKind, type Persona } from '../engine'
 import { useStore } from '../store/context'
 import { newId } from '../store/state'
 import { parseAmount } from './kit/amount'
@@ -137,6 +137,7 @@ function SalaryStep() {
   const [raw, setRaw] = useState(already?.amount ? amountText(already.amount, lang) : '')
   const amount = parseAmount(raw, lang) ?? 0
   const days = Math.max(1, daysBetween(today, period.end) + 1)
+  const parts = allocate(amount, data.settings.buckets.map(b => b.share), minorDigits(data.settings.currency))
   const cur = data.settings.currency
   const save = (v: string) => {
     setRaw(v)
@@ -155,17 +156,18 @@ function SalaryStep() {
         <small className="muted">{t('setup.rentHint')}</small></label>}
       {amount > 0 && (
         <div className="salary-preview" key={Math.round(amount)}>
+          {/* le stesse quote al centesimo del mese (engine/month, allocate): sommano esattamente allo stipendio */}
           <ul>
             {data.settings.buckets.map((b, i) => (
               <li key={b.id}><i style={{ background: BUCKET_COLORS[i] }} /><span>{bucketName(b, t)}</span>
-                <b>{money(amount * b.share, cur)}</b></li>
+                <b>{money(parts[i], cur)}</b></li>
             ))}
           </ul>
           <div className="salary-today">
             <span className="muted small">{t('setup.salaryToday')}</span>
             {data.settings.buckets.slice(0, 2).map((b, i) => (
               <div key={b.id} className="salary-day"><span className="small"><i style={{ background: BUCKET_COLORS[i] }} />{bucketName(b, t)}</span>
-                <strong>{t('safe.perDay', { amount: money((amount * b.share) / days, cur) })}</strong></div>
+                <strong>{t('safe.perDay', { amount: money(parts[i] / days, cur) })}</strong></div>
             ))}
             <span className="muted small">{t('setup.salaryHint', { days })}</span>
           </div>

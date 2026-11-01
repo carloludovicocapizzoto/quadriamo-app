@@ -41,16 +41,19 @@ function contentSecurityPolicy(mode: string): Plugin {
 // Le guide Alpha viene corretto dopo che Vite ha scritto i file e prima che Workbox generi la cache offline.
 function alphaGuideBuild(mode: string): Plugin {
   let prepared = false
+  // la cartella vera della build: il deploy usa dist-alpha, l'e2e Alpha dist-alpha-e2e (prima era fissa e l'e2e falliva)
+  let outDir = 'dist-alpha'
   return {
     name: 'quadriamo-alpha-guides',
     apply: 'build',
+    configResolved(config) { outDir = config.build.outDir },
     writeBundle: {
       order: 'pre',
       sequential: true,
       handler() {
         if (mode !== 'alpha' || prepared) return
         prepared = true
-        const run = spawnSync(process.execPath, ['tools/alpha/prepare-guides.mjs', 'dist-alpha'], {
+        const run = spawnSync(process.execPath, ['tools/alpha/prepare-guides.mjs', outDir], {
           stdio: 'inherit', windowsHide: true,
         })
         if (run.error) throw run.error
