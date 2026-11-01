@@ -26,6 +26,7 @@ export function planningValid(s: Settings) {
  if(s.expectedIncome!=null&&(!Number.isFinite(s.expectedIncome)||s.expectedIncome<0))return false
  if(s.expectedFrom!=null&&!isPlanMonth(s.expectedFrom))return false
  if(s.planVersion!=null&&s.planVersion!==1)return false
+ if(s.openingIncomeReceived!=null&&(s.planVersion!==1||!Number.isFinite(s.openingIncomeReceived)||s.openingIncomeReceived<0))return false
  if(s.balanceDate!=null&&(!isIsoDate(s.balanceDate)||ymKey(monthOf(s.balanceDate,s.monthStartDay))!==ymKey(s.firstMonth)))return false
  if(s.planVersion===1&&(!s.balanceDate||s.buckets.some(b=>!Number.isFinite(b.startingBalance))))return false
  const xs=s.incomePlans
@@ -33,6 +34,10 @@ export function planningValid(s: Settings) {
 }
 export function setExpectedIncome(s: Settings, from: string, amount: number): Settings {
  if(!isPlanMonth(from)||!Number.isFinite(amount)||amount<0)throw Error('invalid expected income')
+ // Canonicalize the old zero-plan snapshot BEFORE revising its budget, so the
+ // previously received amount is retained independently of the new expectation.
+ const first=ymKey(s.firstMonth)
+ if(s.planVersion===1&&s.openingIncomeReceived==null&&(s.expectedIncome??0)>0&&s.incomePlans?.some(x=>x.from===first&&x.amount===0))s={...s,openingIncomeReceived:s.expectedIncome!,incomePlans:s.incomePlans.map(x=>x.from===first?{...x,amount:s.expectedIncome!}:x)}
  const xs=[...(s.incomePlans??[])].filter(x=>x.from<from)
  if(!xs.length&&s.expectedIncome!=null&&(s.expectedFrom??ymKey(s.firstMonth))<from)xs.push({from:s.expectedFrom??ymKey(s.firstMonth),amount:s.expectedIncome})
  return {...s,incomePlans:[...xs.filter(x=>x.from!==from),{from,amount}].sort((a,b)=>a.from.localeCompare(b.from))}

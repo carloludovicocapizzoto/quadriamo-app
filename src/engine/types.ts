@@ -31,6 +31,7 @@ export interface Recurring {
 export interface Settings {
   planVersion?: 1
   balanceDate?: string // opening snapshot date, first period only
+  openingIncomeReceived?: number // regular income already included in the first snapshot; not a ledger entry
   incomePlans?: import('./planContract').IncomePlan[]
   expectedIncome?: number | null // planning only; never credited to the financial balances
   expectedFrom?: string | null // YYYY-MM; optional first planning period

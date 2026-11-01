@@ -12,7 +12,7 @@ it.each(['EUR','JPY','KWD'])('opening snapshot is actual money, never income; %s
  const s=initializePlan({...base(),currency,events:[]},{today:'2026-11-15',expected:1000,payday:1,received:true,balance:1000})
  expect(validateSettings(s)).toEqual([])
  const r=computeMonth(s.firstMonth,[],s,'2026-11-15');expect(r.income).toBe(0);expect(r.buckets.reduce((a,b)=>a+b.remaining,0)).toBe(1000)
- expect(monthPlanning(r,s,'2026-11-15')?.expected).toBe(0)
+ expect(monthPlanning(r,s,'2026-11-15')).toMatchObject({expected:1000,missing:0,received:1000})
  const old={id:'old',date:'2026-10-30',description:'historic',category:'groceries',amount:400}
  expect(widenFirstMonth(s,old)).toBe(s)
  const withOld=computeMonth(s.firstMonth,[old,{...old,id:'pre',date:'2026-11-01'}],s,'2026-11-15');expect(withOld.buckets.reduce((a,b)=>a+b.remaining,0)).toBe(1000)
