@@ -54,5 +54,7 @@ it.each(['EUR','JPY','KWD'])('B: boundaries, received snapshot, zero budget and 
  expect(monthPlanning(computeMonth(s.firstMonth,[],revised,'2027-01-01'),revised,'2027-01-01')).toMatchObject({expected:1800,received:1500,missing:300})
  const zero=setExpectedIncome(s,'2027-01',0)
  expect(monthPlanning(computeMonth(s.firstMonth,[],zero,'2027-01-01'),zero,'2027-01-01')!.plannedDaily).toBe(0)
+ const explicitLegacyZero={...legacy,incomePlans:[{from:'2027-01',amount:0}]}
+ expect(monthPlanning(computeMonth(s.firstMonth,[],explicitLegacyZero,'2027-01-01'),explicitLegacyZero,'2027-01-01')!.expected).toBe(0)
  const noPlan={...base(currency),expectedIncome:null};expect(monthPlanning(computeMonth(ym,[],noPlan,today),noPlan,today)).toBeNull()
 })

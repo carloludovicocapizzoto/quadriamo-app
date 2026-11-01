@@ -6,6 +6,8 @@ Il budget del Piano usa il reddito abituale previsto del periodo, al netto delle
 
 Il rilevamento centralizzato di capacità intercetta anche campi parziali/nulli e intervalli vuoti, proteggendo lettura e scrittura senza bloccare archivi privi di pianificazione. Il 426 conserva documenti e outbox; l’interfaccia usa lo stato aggiornamento richiesto. Pubblicare la Function prima di abilitare il Piano rimane un gate obbligatorio.
 
+La compatibilità del vecchio snapshot riconosce soltanto la firma dell’onboarding: primo periodo a zero e periodo successivo al reddito abituale. Uno zero esplicito salvato dalle impostazioni (senza quel secondo elemento) resta un budget zero; le successive revisioni conservano separatamente la quota già ricevuta.
+
 ## Copertine Alpha: solo fallback
 
 Nessuna immagine esterna viene caricata dalla UI Alpha, anche con metadati di diritti approvati. Produzione storica invariata. Attribuzioni, filtri e sezioni restano disponibili.

@@ -1,7 +1,7 @@
 // Planning is deliberately independent of the cash/budget engine approved in #19.
 import { allocate, recurringOf } from './month'
 import { minorDigits } from './bankNumbers'
-import { isPlanMonth, planningValid } from './planContract'
+import { isPlanMonth, planningValid, legacyOpeningIncome } from './planContract'
 import { ymKey } from './dates'
 import { safeToSpend } from './spend'
 import { SPLIT } from './types'
@@ -12,7 +12,7 @@ export function monthPlanning(r: MonthResult, s: Settings, today: string) {
   const scheduled=s.incomePlans?.filter(x=>x.from<=key).at(-1)
   // Initial 2I backups encoded an already-received salary as a zero first plan.
   // Read that representation without mutating the restored document or its balances.
-  const legacyOpening=s.planVersion===1&&s.openingIncomeReceived==null&&key===ymKey(s.firstMonth)&&scheduled?.from===key&&scheduled.amount===0&&(s.expectedIncome??0)>0
+  const legacyOpening=key===ymKey(s.firstMonth)&&legacyOpeningIncome(s)>0
   const n = legacyOpening ? s.expectedIncome : scheduled?.amount ?? s.expectedIncome
   if (n == null || !Number.isFinite(n) || n < 0 || (!scheduled && s.expectedFrom && (!isPlanMonth(s.expectedFrom) || key < s.expectedFrom))) return null
   const real = safeToSpend(r, s, today)

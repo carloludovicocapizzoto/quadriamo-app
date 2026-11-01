@@ -1,8 +1,15 @@
-import { isIsoDate, monthOf, ymKey } from './dates'
+import { isIsoDate, monthOf, nextMonth, ymKey } from './dates'
 import type { Settings } from './types'
 import type { CalEvent } from './calendar'
 export interface PlanInterval { from: string; until: string | null }
 export interface IncomePlan { from: string; amount: number }
+/** Only the exact old onboarding signature means salary already in snapshot.
+ * A single explicit zero budget written from Settings must remain zero.
+ */
+export function legacyOpeningIncome(s:Settings):number {
+ const xs=s.incomePlans,n=s.expectedIncome??0
+ return s.planVersion===1&&s.openingIncomeReceived==null&&n>0&&xs?.[0]?.from===ymKey(s.firstMonth)&&xs[0].amount===0&&xs[1]?.from===ymKey(nextMonth(s.firstMonth))&&xs[1].amount===n?n:0
+}
 export const isPlanMonth = (s: string) => /^\d{4}-(0[1-9]|1[0-2])$/.test(s)
 export function intervalsValid(xs: PlanInterval[]) {
  return Array.isArray(xs) && xs.every((x,i)=>x && isIsoDate(x.from) && (x.until===null || (isIsoDate(x.until)&&x.until>=x.from)) && (!i || (xs[i-1].until!==null && xs[i-1].until!<=x.from)))
@@ -37,7 +44,8 @@ export function setExpectedIncome(s: Settings, from: string, amount: number): Se
  // Canonicalize the old zero-plan snapshot BEFORE revising its budget, so the
  // previously received amount is retained independently of the new expectation.
  const first=ymKey(s.firstMonth)
- if(s.planVersion===1&&s.openingIncomeReceived==null&&(s.expectedIncome??0)>0&&s.incomePlans?.some(x=>x.from===first&&x.amount===0))s={...s,openingIncomeReceived:s.expectedIncome!,incomePlans:s.incomePlans.map(x=>x.from===first?{...x,amount:s.expectedIncome!}:x)}
+ const opening=legacyOpeningIncome(s)
+ if(opening>0)s={...s,openingIncomeReceived:opening,incomePlans:s.incomePlans!.map(x=>x.from===first?{...x,amount:opening}:x)}
  const xs=[...(s.incomePlans??[])].filter(x=>x.from<from)
  if(!xs.length&&s.expectedIncome!=null&&(s.expectedFrom??ymKey(s.firstMonth))<from)xs.push({from:s.expectedFrom??ymKey(s.firstMonth),amount:s.expectedIncome})
  return {...s,incomePlans:[...xs.filter(x=>x.from!==from),{from,amount}].sort((a,b)=>a.from.localeCompare(b.from))}
