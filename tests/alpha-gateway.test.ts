@@ -60,10 +60,16 @@ it('news stays disabled by default; enabled news is authenticated read-only thro
  expect((await onRequest({request:new Request(get.url),env:{...env,ALPHA_NEWS_ENABLED:'1'}})).status).toBe(401)
 })
 
-it('an older client cannot read or write planning documents it would misinterpret',async()=>{
- const document={settings:{planVersion:1}},remote=vi.fn(async url=>new Response(JSON.stringify(String(url).endsWith('rpc/alpha_admit_request')?{allowed:true}:{document})))
+it.each([{planVersion:1},{incomePlans:[{from:'2026-11',amount:1500}]},{expectedIncome:1500},{expectedFrom:'2026-11'},{openingIncomeReceived:1500},{events:[{planExclusions:[]}]}])('an older client cannot read or write planning documents it would misinterpret: %j',async settings=>{
+ const document={settings},remote=vi.fn(async url=>new Response(JSON.stringify(String(url).endsWith('rpc/alpha_admit_request')?{allowed:true}:{document})))
  vi.stubGlobal('fetch',remote)
  expect((await onRequest({request:request('rpc/qsync_read'),env})).status).toBe(426)
  const modern=request('rpc/qsync_read');modern.headers.set('x-quadriamo-capabilities','monthly-plan-v1');expect((await onRequest({request:modern,env})).status).toBe(200)
  remote.mockClear();expect((await onRequest({request:request('rpc/qsync_write_v2',JSON.stringify({p_document_json:JSON.stringify(document)})),env})).status).toBe(426);expect(remote).toHaveBeenCalledTimes(1)
+ const modernWrite=request('rpc/qsync_write_v2',JSON.stringify({p_document_json:JSON.stringify(document)}));modernWrite.headers.set('x-quadriamo-capabilities','monthly-plan-v1');expect((await onRequest({request:modernWrite,env})).status).toBe(200)
+})
+it('legacy archives with no planning metadata remain accessible to older clients',async()=>{
+ vi.stubGlobal('fetch',vi.fn(async url=>new Response(JSON.stringify(String(url).endsWith('/rpc/alpha_admit_request')?{allowed:true}:{document:{settings:{events:[]}}}))))
+ expect((await onRequest({request:request('rpc/qsync_read'),env})).status).toBe(200)
+ expect((await onRequest({request:request('rpc/qsync_write_v2',JSON.stringify({p_document_json:JSON.stringify({settings:{events:[]}})})),env})).status).toBe(200)
 })

@@ -47,7 +47,8 @@ function userIdFromJwt(authorization) {
   } catch { return null }
 }
 
-const needsPlanClient = d => d?.settings?.planVersion === 1 || !!d?.settings?.balanceDate || d?.settings?.events?.some(e => e.planExclusions?.length || e.planOffFrom)
+// Shared capability detection includes partial/legacy planning metadata, not just snapshots.
+import { needsPlanClient } from '../../../src/engine/planCompatibility.ts'
 
 export async function onRequest({ request, env }) {
   const incoming = new URL(request.url)

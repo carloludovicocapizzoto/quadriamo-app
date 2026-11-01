@@ -150,7 +150,7 @@ export async function runSync({ lease, storage, read, write, sleep }: SyncJob): 
         })
         return storage.getSnapshot().cloud?.status ?? 'pending'
       }
-      if (error.code === 'PGRST202' || /UPGRADE|UNSUPPORTED|NOT_ACTIVATED|PAUSED/.test(error.code + ' ' + error.message)) {
+      if (error.code === 'PGRST202' || error.code === 'ALPHA_CLIENT_UPDATE_REQUIRED' || /UPGRADE|UNSUPPORTED|NOT_ACTIVATED|PAUSED/.test(error.code + ' ' + error.message)) {
         const status = /PAUSED/.test(error.message ?? '') ? 'paused' : 'upgrade'
         await storage.updateCloud(lease, ({ data, cloud }) => ({ data, cloud: { ...cloud, status, available: false } })); return status
       }
