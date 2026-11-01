@@ -1,6 +1,12 @@
 import type { Dict } from './en'
 
 const it: Dict = {
+  'plan.title': "Budget del mese",
+  'plan.expected': "Reddito previsto",
+  'plan.actual': "Disponibilità giornaliera effettiva",
+  'plan.target': "Obiettivo giornaliero pianificato",
+  'plan.received': "Reddito ricevuto",
+  'plan.warning': "La pianificazione include reddito non ancora ricevuto. Il numero principale resta basato sui fondi effettivi.",
   'cloud.pilotWait': 'La sincronizzazione sicura non è ancora abilitata per questo account. Le modifiche restano su questo dispositivo e puoi esportarle. Contatta l’assistenza per partecipare al pilota.',
   'auth.localSession': 'La sessione è scaduta. Stai usando soltanto la copia di questo dispositivo. Prima di sincronizzare occorre rinnovare l’accesso.',
   'auth.localLogout': 'Sei uscito da questo dispositivo. Gli archivi offline sono conservati. Le sessioni remote non sono state revocate.',

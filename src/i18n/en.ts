@@ -1,6 +1,12 @@
 // Dizionario di riferimento: le altre lingue devono avere esattamente le stesse chiavi (lo controllano TypeScript e i test).
 // {n}, {name}… sono segnaposto sostituiti da t(key, { n: 3 }).
 const en = {
+  'plan.title': "Monthly budget",
+  'plan.expected': "Expected income",
+  'plan.actual': "Actual daily availability",
+  'plan.target': "Planned daily target",
+  'plan.received': "Income received",
+  'plan.warning': "Planning includes income not yet received. The main number remains based on actual funds.",
   'cloud.pilotWait': 'Secure synchronization is not yet enabled for this account. Your changes stay on this device and can be exported. Contact support to join the pilot.',
   'auth.localSession': 'Your session has expired. You are using only this device’s copy. Renew your session before synchronizing.',
   'auth.localLogout': 'You have signed out on this device. Your offline archives are preserved. Remote sessions have not been revoked.',

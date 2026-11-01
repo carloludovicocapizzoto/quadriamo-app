@@ -1,6 +1,12 @@
 import type { Dict } from './en'
 
 const fr: Dict = {
+  'plan.title': "Budget du mois",
+  'plan.expected': "Revenu prévu",
+  'plan.actual': "Disponibilité quotidienne effective",
+  'plan.target': "Objectif quotidien prévu",
+  'plan.received': "Revenu reçu",
+  'plan.warning': "La planification inclut des revenus pas encore reçus. Le chiffre principal repose sur les fonds réels.",
   'cloud.pilotWait': 'La synchronisation sécurisée n’est pas encore activée pour ce compte. Vos modifications restent sur cet appareil et peuvent être exportées. Contactez l’assistance pour participer au pilote.',
   'auth.localSession': 'Votre session a expiré. Vous utilisez uniquement la copie de cet appareil. Renouvelez votre session avant de synchroniser.',
   'auth.localLogout': 'Vous êtes déconnecté sur cet appareil. Vos archives hors ligne sont conservées. Les sessions distantes n’ont pas été révoquées.',

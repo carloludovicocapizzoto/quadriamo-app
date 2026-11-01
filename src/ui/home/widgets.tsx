@@ -1,5 +1,7 @@
 // I widget della Home: le cose che si guardano appena si apre l'app. Ognuno dice una cosa sola, con un mini grafico
 // o un indicatore che informa (non decora). L'utente sceglie quali vedere, in che ordine e di che dimensione.
+import { ENV } from '../../env'
+import { monthPlanning } from '../../engine/monthPlanning'
 import type { ReactNode } from 'react'
 import { capitalAdvice, capitalSummary, dailySpending, forecastMonth, goalStatus, investmentsWithLive, lastDays, missions, portfolioSummary,
   type ClassifiedTx, type MonthResult, type Streak, KIND_SIDE, addDays, agenda, daysBetween, linkedOccurrences } from '../../engine'
@@ -84,6 +86,10 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
     }
 
     case 'forecast': {
+      if (ENV.flags.monthlyPlan) {
+        const plan = monthPlanning(c.r, s, c.today)
+        return box(<><p>{t('plan.title')}</p><p className="w-note">{t('plan.warning')}</p>{plan ? <><p>{t('plan.actual')} <Money value={plan.actualDaily} currency={cur} /></p><p>{t('plan.target')} <Money value={plan.plannedDaily} currency={cur} /></p><p>{t('plan.received')} <Money value={plan.received} currency={cur} /> / <Money value={plan.expected} currency={cur} /></p></> : <p>{t('plan.expected')}</p>}</>)
+      }
       // come finisce il mese: la spesa fin qui (linea) e la proiezione a questo ritmo (tratteggio)
       const f = forecastMonth(c.r, c.today)
       if (!f || c.r.income <= 0) return null

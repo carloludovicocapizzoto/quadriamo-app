@@ -29,6 +29,8 @@ export interface Recurring {
 }
 
 export interface Settings {
+  expectedIncome?: number | null // planning only; never credited to the financial balances
+  expectedFrom?: string | null // YYYY-MM; optional first planning period
   currency: string                  // valuta dell'utente, es. "EUR"
   monthStartDay: number             // 1..28: il periodo "maggio" va dal giorno X di aprile al giorno X-1 di maggio
   firstMonth: YearMonth             // primo mese tracciato: qui si applicano i saldi iniziali
