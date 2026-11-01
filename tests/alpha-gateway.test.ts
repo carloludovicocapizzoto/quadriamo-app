@@ -48,3 +48,14 @@ it('forwards only a signed allowlisted request after admission', async () => {
   expect(url).toBe('https://new-alpha.invalid/rest/v1/rpc/qsync_read')
   expect(options.headers['x-alpha-signature']).toMatch(/^[0-9a-f]{64}$/)
 })
+
+it('news stays disabled by default; enabled news is authenticated read-only through admission', async()=>{
+ const remote=vi.fn(async url=>new Response(JSON.stringify(String(url).endsWith('rpc/alpha_admit_request')?{allowed:true}:[])))
+ vi.stubGlobal('fetch',remote)
+ const get=new Request('https://alpha.invalid/api/rest/news_items?select=id',{headers:{authorization:'Bearer '+jwt,'cf-connecting-ip':'203.0.113.1'}})
+ expect((await onRequest({request:get,env})).status).toBe(404)
+ expect((await onRequest({request:new Request(get),env:{...env,ALPHA_NEWS_ENABLED:'1'}})).status).toBe(200)
+ expect(remote).toHaveBeenCalledTimes(2)
+ expect((await onRequest({request:request('news_items'),env:{...env,ALPHA_NEWS_ENABLED:'1'}})).status).toBe(404)
+ expect((await onRequest({request:new Request(get.url),env:{...env,ALPHA_NEWS_ENABLED:'1'}})).status).toBe(401)
+})

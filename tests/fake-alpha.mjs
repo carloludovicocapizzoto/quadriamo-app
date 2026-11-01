@@ -33,7 +33,7 @@ export const HOST = '127.0.0.1'
  * `fixtures`: le sole cartelle che il server può servire, per nome ({ v1: '…/dist-alpha-e2e', v2: … }); la prima è
  * quella di partenza. Ognuna deve esistere ed essere una cartella: il suo percorso reale fa da confine.
  */
-export function startFakeAlpha({ port = 4192, fixtures }) {
+export function startFakeAlpha({ port = 4192, fixtures, news = false, newsItems = [] }) {
   const roots = Object.fromEntries(Object.entries(fixtures ?? {}).map(([name, dir]) => {
     if (!/^[a-z0-9-]+$/i.test(name) || !isAbsolute(dir) || !statSync(dir).isDirectory()) throw Error(`fixture non valida: ${name}`)
     return [name, realpathSync(dir)]
@@ -104,11 +104,13 @@ export function startFakeAlpha({ port = 4192, fixtures }) {
   }
 
   async function rest(req, res, route) {
-    if (!Object.hasOwn(ROUTES, route) || !ROUTES[route].includes(req.method)) {
+    const newsRead = news && ['news_items', 'news_sources'].includes(route) && ['GET','HEAD'].includes(req.method)
+    if (!newsRead && (!Object.hasOwn(ROUTES, route) || !ROUTES[route].includes(req.method))) {
       state.denied.push(`${req.method} ${route}`); return gatewayError(res, 404, 'ALPHA_ROUTE_DENIED')
     }
     const id = caller(req)
     if (!id) return gatewayError(res, 401, 'ALPHA_AUTH_REQUIRED')
+    if (newsRead) return send(res, 200, route === 'news_items' ? newsItems : [])
     const raw = await body(req)
     if (Buffer.byteLength(raw) > 2 * 1024 * 1024) return gatewayError(res, 413, 'ALPHA_BODY_TOO_LARGE')
     const f = fault(route)

@@ -32,8 +32,10 @@ const CLOUD = ['news']
 const cloud = (process.env.ALPHA_CLOUD_FEATURES ?? '').split(',').map(f => f.trim()).filter(Boolean)
 for (const f of cloud) if (!CLOUD.includes(f)) throw Error(`ALPHA_CLOUD_FEATURES: ${f} cannot be switched on in the Alpha`)
 
+if (cloud.includes('news') && process.env.ALPHA_NEWS_BACKEND_READY !== '1') throw Error('News requires an explicitly verified Alpha backend')
+
 const env = { ...process.env, BASE_PATH: '/', VITE_SUPABASE_URL: url.origin,
-  VITE_SUPABASE_PUBLISHABLE_KEY: key, VITE_SUPABASE_ANON_KEY: '', VITE_FLAGS: cloud.map(f => `cloud:${f}`).join(','), VITE_VAPID_PUBLIC_KEY: '' }
+  VITE_SUPABASE_PUBLISHABLE_KEY: key, VITE_SUPABASE_ANON_KEY: '', VITE_FLAGS: [...(process.env.VITE_FLAGS ?? '').split(',').filter(f => f && !f.startsWith('cloud:')), ...cloud.map(f => `cloud:${f}`)].join(','), VITE_VAPID_PUBLIC_KEY: '' }
 for (const args of [
   ['node_modules/typescript/bin/tsc', '-b'],
   ['node_modules/vite/bin/vite.js', 'build', '--mode', 'alpha', '--outDir', 'dist-alpha'],
