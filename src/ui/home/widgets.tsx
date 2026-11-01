@@ -57,7 +57,7 @@ function TrendTag({ delta, base, goodWhenDown }: { delta: number; base: number; 
 }
 
 export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
-  const { t, money, date } = useI18n()
+  const { t, money, date, lang } = useI18n()
   const s = c.data.settings, cur = s.currency
   const box = (body: ReactNode, more?: () => void, attention = false) => (
     <section className={`widget w-${id}${attention ? ' attention' : ''}`}>
@@ -138,7 +138,9 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
       if (s.capital?.parts.length) for (const a of capitalAdvice(s.capital, end, essentialsMonth(c))) {
         out.push(a.id === 'cover' ? t('cap.adv.cover', { deficit: money(a.deficit, cur), part: a.part, available: money(a.available, cur) })
           : a.id === 'protectedOnly' ? t('cap.adv.protectedOnly', { deficit: money(a.deficit, cur), usable: money(a.usable, cur) })
-          : a.id === 'emergencyLow' ? t('cap.adv.emergencyLow', { months: String(a.months).replace('.', ',') }) : t('cap.adv.used', { pct: a.pct }))
+          // un mese al singolare; i decimali come li scrive la lingua (1,5 in italiano, 1.5 in inglese)
+          : a.id === 'emergencyLow' ? t(a.months === 1 ? 'cap.adv.emergencyLowOne' : 'cap.adv.emergencyLow', { months: new Intl.NumberFormat(lang, { maximumFractionDigits: 1 }).format(a.months) })
+          : t('cap.adv.used', { pct: a.pct }))
       } else if (end != null && end < 0) out.push(t('tip.overMonth', { amount: money(-end, cur) }))
       if (!(c.data.goals ?? []).some(g => !g.removed)) out.push(t('tip.noGoal'))
       if (!out.length) return null
@@ -181,7 +183,7 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
       if (!amount || !month) return null
       const months = amount / month
       return box(<>
-        <p className="w-big">{t('hw.emergencyMonths', { n: months.toFixed(1).replace('.', ',') })}</p>
+        <p className="w-big">{t('hw.emergencyMonths', { n: new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(months) })}</p>
         <Meter value={months / 3} color={months < 3 ? 'var(--b2)' : 'var(--good)'} label={t('hw.emergency')} />
         <p className="w-note">{t('hw.emergencyText', { amount: money(amount, cur) })}</p>
       </>, () => navigate({ tab: 'profile', page: 'capital' }), months < 1)

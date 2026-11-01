@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { amountChars, blockLayout } from './blockLayout'
 import { daysBetween, todayBudget, type BucketRow, type ClassifiedTx, type MonthResult, type Streak } from '../../engine'
 import { useI18n } from '../../i18n/core'
 import type { AppData } from '../../store/state'
@@ -26,7 +27,7 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
   data: AppData; r: MonthResult; today: string; streak: Streak | null
   onAdd: (kind: 'expense' | 'income') => void; onOpen: (tx: ClassifiedTx) => void; onAll: () => void
 }) {
-  const { t, date } = useI18n()
+  const { t, date, lang } = useI18n()
   const s = data.settings, cur = s.currency
   const budget = useMemo(() => todayBudget(r, s, today), [r, s, today])
   const [part, setPart] = useState<BucketRow | null>(null)
@@ -52,16 +53,33 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
   const hasPlan = budget.parts.length > 0 && r.income > 0
   const day = date(today, { weekday: 'long', day: 'numeric', month: 'long' })
 
-  // i quattro blocchi: vivono qui perché aprono il dettaglio della parte
+  // i quattro blocchi: vivono qui perché aprono il dettaglio della parte.
+  // Gli importi hanno tutti la stessa misura, decisa dal più lungo: se non ci sta, si rimpiccioliscono insieme
+  const sizes = r.buckets.map(b => amountChars(b.remaining, cur, lang))
+  const longest = Math.max(...sizes.map(x => x.full)), digits = Math.max(...sizes.map(x => x.digits))
+  // la larghezza vera della fila (cambia con lo schermo, la barra laterale, il testo più grande): decide colonne e misura
+  const row = useRef<HTMLDivElement>(null)
+  const [rowWidth, setRowWidth] = useState(0)
+  useLayoutEffect(() => {
+    const el = row.current
+    if (!el) return
+    setRowWidth(el.clientWidth)
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => setRowWidth(el.clientWidth))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [hasPlan])
+  const layout = rowWidth ? blockLayout(rowWidth, longest, digits) : null
   const blocks = (
-    <div className="blocks">
+    <div ref={row} className={`blocks${layout?.cols === 2 ? ' two' : layout?.cols === 1 ? ' one' : ''}${layout?.split ? ' split' : ''}`}
+         style={{ ['--amount-len' as string]: longest, ...(layout ? { ['--block-font' as string]: `${layout.font}px` } : {}) }}>
         {r.buckets.map((b, i) => {
           const rest = b.available > 0 ? Math.max(0, Math.min(1, b.remaining / b.available)) : 0
           return (
             <button key={b.bucket.id} className={`block${b.remaining < 0 ? ' over' : ''}`} style={{ ['--bc' as string]: BUCKET_COLORS[i] }}
                     onClick={() => { tap(); setPart(b) }}>
               <span className="block-shape" aria-hidden="true"><span style={{ transform: `scaleY(${rest})` }} /></span>
-              <Money className="block-amount" value={b.remaining} currency={cur} bare />
+              <Money className="block-amount" value={b.remaining} currency={cur} />
               <span className="block-name">{bucketName(b.bucket, t)}</span>
             </button>
           )
@@ -88,7 +106,8 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
 
       {/* senza entrate non c'è niente da dividere: solo il primo passo, niente blocchi vuoti e zeri */}
       {!hasPlan ? <Empty title={t('home.emptyTitle')} text={t('home.noSalary')} action={{ label: t('home.addSalary'), onClick: () => onAdd('income') }} />
-      : <section className="hero" aria-live="polite">
+      // come l'importo di Analisi: un numero lungo («73,520 KWD», testo grande) si rimpicciolisce invece di uscire dallo schermo
+      : <section className="hero" aria-live="polite" style={{ ['--amount-len' as string]: amountChars(left, cur, lang).full }}>
         <Money className="hero-amount" value={left} currency={cur} />
         <p className="hero-sub">{daysLeft > 1 ? t('home.heroSub', { n: daysLeft }) : t('home.heroLast')}</p>
       </section>}

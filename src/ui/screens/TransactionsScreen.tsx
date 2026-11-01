@@ -7,6 +7,7 @@ import type { AppData } from '../../store/state'
 import { parseAmount } from '../kit/amount'
 import { Icon } from '../Icon'
 import { tap } from '../kit/motion'
+import { Segmented } from '../kit/Segmented'
 import { Sheet } from '../kit/Sheet'
 import { MonthNav } from '../MonthNav'
 import { Swipe } from '../kit/Swipe'
@@ -59,16 +60,18 @@ export function TransactionsScreen({ data, current, result, today, onMonth, onOp
   return (
     <div className={embedded ? '' : 'screen'}>
       {!embedded && <h1 className="screen-title">{t('nav.transactions')}</h1>}
+      {/* una riga sola, come in Notizie: la ricerca e, a destra, i filtri (con quanti sono attivi); sotto, il periodo */}
+      <div className="tools">
       <div className="search">
         <Icon name="search" size={19} />
         <input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder={t('srch.placeholder')} aria-label={t('srch.placeholder')} enterKeyHint="search" />
         {q && <button className="search-x" onClick={() => setQ('')} aria-label={t('srch.clearSearch')}><Icon name="close" size={16} /></button>}
       </div>
-      <div className="filter-row">
-        <button className={`fchip filter-btn${nFilters ? ' on' : ''}`} onClick={() => { tap(); setOpen(true) }}>
-          <Icon name="filter" size={16} />{t('srch.filters')}{nFilters > 0 && <em>{nFilters}</em>}</button>
-        {PERIODS.map(p => <button key={p} className={`fchip${eff === p ? ' on' : ''}`} onClick={() => { tap(); setPeriod(p) }}>{t(`per.${p}` as keyof Dict)}</button>)}
+        <button className={`filter-btn${nFilters ? ' on' : ''}`} onClick={() => { tap(); setOpen(true) }} aria-haspopup="dialog">
+          <Icon name="filter" size={18} />{nFilters ? t('srch.filtersN', { n: nFilters }) : t('srch.filters')}</button>
       </div>
+      <Segmented role="radiogroup" label={t('per.label')} value={eff} onChange={setPeriod}
+        options={PERIODS.map(p => ({ id: p, label: t(`per.${p}` as keyof Dict) }))} />
       {pills.length > 0 && <div className="pill-row">
         {pills.map(p => <button key={p.key} className="apill" onClick={p.drop}>{p.text}<Icon name="close" size={13} /></button>)}
         <button className="link-btn" onClick={() => setF(EMPTY_FILTER)}>{t('srch.clear')}</button>

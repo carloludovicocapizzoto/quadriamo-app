@@ -1,9 +1,4 @@
 /* Notizie: si legge, si scopre, si impara. Niente riquadri: storie come righe, i filtri scorrono in orizzontale. */
-.news-tools { display: flex; gap: var(--s2); align-items: center; margin: 0 0 var(--s3); }
-.news-tools .news-search { flex: 1; margin: 0; }
-.news-filter-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 1.5px solid transparent;
-  border-radius: var(--r-md); background: var(--fill); color: var(--text); font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; }
-.news-filter-btn.on { background: var(--accent); color: var(--on-accent); }
 /* pannello dei filtri: gruppi con un titolo e opzioni che vanno a capo */
 .nf-group { margin-top: var(--s4); }
 .nf-options { margin-top: var(--s2); }

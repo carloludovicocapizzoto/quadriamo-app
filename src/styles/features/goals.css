@@ -4,7 +4,6 @@
 .goal-line { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s3); }
 .goal-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .goal-amt { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; }
-.goal-amt .cur { color: var(--muted); font-weight: 400; }
 .goal-done { display: flex; align-items: center; gap: 4px; }
 .goal-detail { display: grid; }
 .gd-head { display: grid; gap: var(--s2); padding: var(--s2) 0 var(--s5); }
