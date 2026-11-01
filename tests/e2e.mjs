@@ -22,7 +22,7 @@ const fixtureDir = mkdtempSync(join(tmpdir(), 'quadriamo-xlsx-test-'))
 let chrome
 const done = async code => {
   await chrome?.close()
-  if (server) try { process.kill(-server.pid) } catch { /* già chiuso */ }
+  if (server) try { if (process.platform === 'win32') server.kill(); else process.kill(-server.pid) } catch { /* già chiuso */ }
   rmSync(fixtureDir, { recursive: true, force: true })
   process.exit(code)
 }
@@ -33,7 +33,7 @@ const onEvent = m => {
   quoteRequests.push(m.params.request.url)
   // lo stesso prezzo in ogni valuta chiesta (la valuta dipende dalla configurazione scelta)
   const vs = new URL(m.params.request.url).searchParams.get('vs_currencies')?.split(',') ?? []
-  const body = Buffer.from(JSON.stringify({ bitcoin: Object.fromEntries(vs.flatMap(v => [[v, 60000], [`${v}_24h_change`, 2.5]])) })).toString('base64')
+  const body = Buffer.from(JSON.stringify({ bitcoin: { ...Object.fromEntries(vs.flatMap(v => [[v, 60000], [`${v}_24h_change`, 2.5]])), last_updated_at: Math.floor(Date.now()/1000) } })).toString('base64')
   void chrome.cdp('Fetch.fulfillRequest', { requestId: m.params.requestId, responseCode: 200, body,
     responseHeaders: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Access-Control-Allow-Origin', value: '*' }] })
 }
@@ -160,7 +160,7 @@ const hub = [
 const newsBtn = `document.querySelector('.news2 [aria-haspopup=dialog]')`
 const loadedThumbs = sel => `[...document.querySelectorAll('${sel}')].filter(i => i.complete && i.naturalWidth > 0).length`
 await step('Notizie: le sezioni (Oggi, Video, Podcast, Nuove ricerche)', async () => {
-  await js(`localStorage.setItem('q.hub', ${JSON.stringify(JSON.stringify({ lang: 'it', at: Date.now(), items: hub }))}); localStorage.removeItem('q.newsFilter'); location.hash = '#/'`)
+  await js(`localStorage.setItem('q.v2/' + encodeURIComponent(JSON.stringify(['production', location.origin + '/', 'local', null])) + '/q.hub', ${JSON.stringify(JSON.stringify({ lang: 'it', at: Date.now(), items: hub }))}); localStorage.removeItem('q.newsFilter'); location.hash = '#/'`)
   await sleep(300); await js(`location.hash = '#/news'`)
 }, `(() => { const t = [...document.querySelectorAll('.news-section .sec-title')].map(h => h.textContent.trim()); return ['Oggi', 'Video', 'Podcast', 'Nuove ricerche'].every(x => t.includes(x)) })()`)
 await step('Notizie: le immagini delle fonti si vedono', null, `${loadedThumbs('.news2 img.story-thumb')} >= 4`)
@@ -181,7 +181,7 @@ await step('Notizie: una storia apre il dettaglio con immagine, estratto e link 
   && /Estratto di prova oggi1/.test(d.innerText) && d.querySelector('a.btn')?.getAttribute('href') === 'https://example.test/oggi1' })()`)
 await step('Notizie: chiudo il dettaglio e tolgo i contenuti di prova', async () => {
   await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }); await sleep(500)
-  await js(`['q.hub', 'q.newsFilter', 'q.interests'].forEach(k => localStorage.removeItem(k))`)
+  await js(`['q.v2/' + encodeURIComponent(JSON.stringify(['production', location.origin + '/', 'local', null])) + '/q.hub', 'q.newsFilter', 'q.interests'].forEach(k => localStorage.removeItem(k))`)
 }, `!document.querySelector('.story-detail')`)
 await step('Profilo → Capitale: inserisco 2.000 €', async () => {
   await js(`location.hash = '#/profile/capital'`); await sleep(800)
@@ -207,7 +207,7 @@ await step('aggiungo 0,5 Bitcoin: il prezzo arriva da solo, con la variazione de
   `/30\\.000,00/.test(document.querySelector('.inv-items')?.innerText ?? '') && /24 ore \\+2,5/.test(document.querySelector('.inv-items')?.innerText ?? '')
    && /Nelle ultime 24 ore \\+731,71/.test(document.querySelector('[data-testid=inv-move]')?.innerText ?? '') && !!document.querySelector('[data-testid=inv-live-at]')`)
 n++
-if (quoteRequests.length && quoteRequests.every(u => /^https:\/\/api\.coingecko\.com\/api\/v3\/simple\/price\?ids=bitcoin&vs_currencies=[a-z]{3}&include_24hr_change=true$/.test(u))) {
+if (quoteRequests.length && quoteRequests.every(u => /^https:\/\/api\.coingecko\.com\/api\/v3\/simple\/price\?ids=bitcoin&vs_currencies=[a-z]{3}&include_24hr_change=true&include_last_updated_at=true$/.test(u))) {
   console.log(`  ✓ ${n}. a CoinGecko arrivano solo moneta e valuta, mai le quote`)
 } else { console.error(`  ✗ ${n}. richieste a CoinGecko inattese: ${JSON.stringify(quoteRequests)}`); await done(1) }
 await step('un ETF con il prezzo scritto a mano: valore subito, nessuna variazione inventata', () => fillHolding('ETF di prova', 'etf', 'TEST', '10', '100', '100'),

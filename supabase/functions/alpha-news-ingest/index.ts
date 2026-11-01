@@ -1,7 +1,7 @@
 // Supabase Edge Function "news-ingest": ogni 2 ore (pg_cron, serve CRON_SECRET) legge i feed delle fonti approvate
 // (tabella news_sources), toglie doppioni e titoli senza sostanza, classifica con regole, riconosce la stessa notizia
 // raccontata da più fonti e salva in news_items solo titolo, estratto del feed, link, data e l'indirizzo dell'immagine del feed.
-// Toglie i contenuti più vecchi di 60 giorni. Vedi docs/NEWS-HUB.md.
+// Alpha opzionale: solo metadati, nessuna fonte attivata automaticamente, retention 14 giorni.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { parse, type Raw } from '../_shared/news-feed.ts'
 import { canonical, keywords } from '../_shared/news-rules.ts'
@@ -19,6 +19,9 @@ async function sha(s: string) {
 async function read(src: Source): Promise<{ src: Source; raw: Raw[]; error?: string }> {
   const url = src.format === 'youtube' ? `https://www.youtube.com/feeds/videos.xml?channel_id=${src.feed}` : src.feed
   try {
+    const target = new URL(url)
+    const allowed = env('NEWS_ALLOWED_HOSTS').split(',').map(host => host.trim())
+    if (target.protocol !== 'https:' || target.username || target.password || (target.port && target.port !== '443') || !allowed.includes(target.hostname)) throw Error('source host not approved')
     const res = await fetch(url, { headers: { 'User-Agent': 'QuadriamoAlphaNews/1.0 (+https://quadriamo-alpha.pages.dev)' },
       redirect: 'error', signal: AbortSignal.timeout(9000) })
     if (!res.ok) return { src, raw: [], error: `HTTP ${res.status}` }

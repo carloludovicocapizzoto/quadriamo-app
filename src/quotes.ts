@@ -32,7 +32,7 @@ export function quoteRequest(holdings: Holding[], currency: string) {
 export async function fetchCryptoQuotes(holdings: Holding[], currency: string, now = new Date()): Promise<Record<string, LiveQuote>> {
   const q = quoteRequest(holdings, currency)
   if (!q.coins.length) return {}
-  const res = await fetch(`${API}?ids=${q.coins.join(',')}&vs_currencies=${q.vs.join(',')}&include_24hr_change=true`, { signal: AbortSignal.timeout(15_000), credentials: 'omit', referrerPolicy: 'no-referrer' })
+  const res = await fetch(`${API}?ids=${q.coins.join(',')}&vs_currencies=${q.vs.join(',')}&include_24hr_change=true&include_last_updated_at=true`, { signal: AbortSignal.timeout(15_000), credentials: 'omit', referrerPolicy: 'no-referrer' })
   if (!res.ok) throw new Error(`quotes ${res.status}`)
   return parseQuotes(await res.json() as unknown, q.coins, q.vs, now.toISOString())
 }
@@ -43,8 +43,10 @@ export function parseQuotes(json: unknown, coins: string[], vs: string[], at: st
   for (const coin of coins) for (const v of vs) {
     const row = (json as Record<string, Record<string, unknown> | undefined>)[coin]
     const price = row?.[v], change = row?.[`${v}_24h_change`]
+    const stamp = row?.last_updated_at, now = Date.parse(at)
+    if (typeof stamp !== 'number' || !Number.isFinite(stamp) || !Number.isFinite(now) || stamp * 1000 > now + 60_000 || now - stamp * 1000 > 86400000) continue
     if (typeof price !== 'number' || !Number.isFinite(price) || !(price > 0)) continue
-    out[`${coin}:${v}`] = { price, change: typeof change === 'number' && Number.isFinite(change) ? change / 100 : null, at }
+    out[`${coin}:${v}`] = { price, change: typeof change === 'number' && Number.isFinite(change) ? change / 100 : null, at: new Date(stamp * 1000).toISOString() }
   }
   return out
 }

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Holding } from './engine'
 import { coinId, fetchCryptoQuotes, parseQuotes, quoteRequest, quotesFor } from './quotes'
 
+const AT = '2026-10-29T10:00:00.000Z', STAMP = Date.parse(AT) / 1000
 const h = (id: string, ticker: string, type = 'crypto', currency: string | null = null): Holding =>
   ({ id, name: id, type, ticker, currency, units: 1, avgPrice: 1 })
 
@@ -24,13 +25,13 @@ describe('monete', () => {
 describe('risposta di CoinGecko', () => {
   const coins = ['bitcoin', 'ethereum', 'nope']
   it('prezzi e variazioni in frazione; i dati strani si scartano', () => {
-    const out = parseQuotes({ bitcoin: { eur: 60000, eur_24h_change: 2.5 }, ethereum: { eur: 'x' } }, coins, ['eur'], 'T')
-    expect(out).toEqual({ 'bitcoin:eur': { price: 60000, change: 0.025, at: 'T' } })
-    expect(parseQuotes(null, coins, ['eur'], 'T')).toEqual({})
-    expect(parseQuotes({ bitcoin: { eur: 1, eur_24h_change: null } }, coins, ['eur'], 'T')['bitcoin:eur'].change).toBeNull()
+    const out = parseQuotes({ bitcoin: { eur: 60000, eur_24h_change: 2.5, last_updated_at: STAMP }, ethereum: { eur: 'x' } }, coins, ['eur'], AT)
+    expect(out).toEqual({ 'bitcoin:eur': { price: 60000, change: 0.025, at: AT } })
+    expect(parseQuotes(null, coins, ['eur'], AT)).toEqual({})
+    expect(parseQuotes({ bitcoin: { eur: 1, eur_24h_change: null, last_updated_at: STAMP } }, coins, ['eur'], AT)['bitcoin:eur'].change).toBeNull()
   })
   it('lo stesso prezzo a tutti i titoli della stessa moneta e valuta', () => {
-    const live = { 'bitcoin:eur': { price: 1, change: null, at: 'T' } }
+    const live = { 'bitcoin:eur': { price: 1, change: null, at: AT } }
     expect(Object.keys(quotesFor([h('a', 'BTC'), h('b', 'bitcoin'), h('c', 'BTC', 'crypto', 'USD')], 'EUR', live))).toEqual(['a', 'b'])
   })
 })
@@ -38,12 +39,12 @@ describe('risposta di CoinGecko', () => {
 describe('richiesta', () => {
   afterEach(() => vi.unstubAllGlobals())
   it('manda solo monete e valute, mai le quote', async () => {
-    const fetch = vi.fn(async () => new Response(JSON.stringify({ bitcoin: { eur: 50000, eur_24h_change: -1 } })))
+    const fetch = vi.fn(async () => new Response(JSON.stringify({ bitcoin: { eur: 50000, eur_24h_change: -1, last_updated_at: STAMP } })))
     vi.stubGlobal('fetch', fetch)
     const out = await fetchCryptoQuotes([{ ...h('a', 'BTC'), units: 0.123 }], 'EUR', new Date('2026-10-29T10:00:00Z'))
     expect(out['bitcoin:eur']).toEqual({ price: 50000, change: -0.01, at: '2026-10-29T10:00:00.000Z' })
     const url = String((fetch.mock.calls[0] as unknown[])[0])
-    expect(url).toBe('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur&include_24hr_change=true')
+    expect(url).toBe('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur&include_24hr_change=true&include_last_updated_at=true')
     expect(url).not.toContain('0.123')
   })
   it('senza crypto non chiama nessuno; un errore del servizio si propaga', async () => {
@@ -56,3 +57,5 @@ describe('richiesta', () => {
 })
 
 it('nonfinite remote prices are never treated as market values',()=>{expect(parseQuotes({bitcoin:{eur:Infinity}},['bitcoin'],['eur'],'2026-11-01')).toEqual({})})
+
+it('missing, stale and future provider timestamps never appear as current prices',()=>{for(const t of [undefined,STAMP-86401,STAMP+61,Infinity]) expect(parseQuotes({bitcoin:{eur:12,last_updated_at:t}},['bitcoin'],['eur'],AT)).toEqual({})})
