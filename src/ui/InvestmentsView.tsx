@@ -3,7 +3,7 @@ import { navigate } from '../app/router'
 import { Icon } from './Icon'
 import {
   capitalSummary,
-  computeYear, emptyInvestments, pacFutureValue, pacProjection, pacTracker, portfolioSummary,
+  computeYear, emptyInvestments, holdingMove, investmentsWithLive, pacFutureValue, pacProjection, pacTracker, portfolioMove, portfolioSummary,
   type Investments, type Settings, type Transaction,
 } from '../engine'
 import { useI18n } from '../i18n/core'
@@ -16,13 +16,14 @@ import { AmountInput } from './kit/AmountInput'
 import { Money } from './kit/Money'
 import { Outcome } from './Outcome'
 import { Empty } from './kit/Empty'
+import { useLivePrices } from './livePrices'
 
 const TYPES = ['etf', 'stock', 'bond', 'fund', 'crypto', 'other'] as const
 
 export function InvestmentsView({ settings, transactions, today, year, onYear }: {
   settings: Settings; transactions: Transaction[]; today: string; year: number; onYear: (y: number) => void
 }) {
-  const { t, money, lang } = useI18n()
+  const { t, money, lang, date } = useI18n()
   const num = (v: number | null | undefined) => decimalText(v, lang)
   const { state, dispatch } = useStore()
   const inv: Investments = state.data?.investments ?? emptyInvestments()
@@ -30,7 +31,15 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
   const pct = (n: number | null) => n == null ? '—' : new Intl.NumberFormat(lang, { style: 'percent', maximumFractionDigits: 1 }).format(n)
   const save = (fn: (x: Investments) => void) => { const next = structuredClone(inv); fn(next); dispatch({ type: 'setInvestments', investments: next }) }
 
-  const o = portfolioSummary(inv, settings, today)
+  // prezzi automatici (crypto) e prezzi a mano precedenti: solo su questo dispositivo, mai nei dati sincronizzati
+  const prices = useLivePrices(inv, settings, today)
+  const o = portfolioSummary(investmentsWithLive(inv, prices.byHolding), settings, today)
+  const move = portfolioMove(inv, settings, prices.byHolding, prices.days)
+  const signed = (n: number) => `${n > 0 ? '+' : n < 0 ? '−' : ''}${money(Math.abs(n), cur)}`
+  const signedPct = (n: number | null) => n == null ? '' : new Intl.NumberFormat(lang, { style: 'percent', maximumFractionDigits: 1, signDisplay: 'exceptZero' }).format(n)
+  const day = (iso: string) => date(iso, { day: 'numeric', month: 'short' })
+  const liveTimes = Object.values(prices.byHolding).map(q => q.at).sort()
+  const liveAt = liveTimes.length ? new Intl.DateTimeFormat(lang, { hour: '2-digit', minute: '2-digit' }).format(new Date(liveTimes[0])) : null
   const proj = pacProjection(inv.pac)
   const months = useMemo(() => computeYear(year, transactions, settings, today).months, [year, transactions, settings, today])
   const tracker = pacTracker(months, inv.pac, inv.portfolioValues)
@@ -42,7 +51,11 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
       {/* senza titoli né conti: cosa si fa qui, al posto di un valore a zero */}
       {o.holdings.length || inv.deposits.length
         ? <Outcome value={o.value} currency={cur} label={t('inv.valueToday')} detail={o.value == null || o.invested == null ? t('inv.incomplete') : undefined}
-            totals={[{ label: t('inv.invested'), value: o.invested }, { label: t('inv.gain'), value: o.gain }, { label: t('inv.return'), value: pct(o.return) }]} />
+            totals={[{ label: t('inv.invested'), value: o.invested }, { label: t('inv.gain'), value: o.gain }, { label: t('inv.return'), value: pct(o.return) }]}>
+            {/* come si è mosso il mercato per te: 24 ore per i prezzi automatici, dall'ultimo prezzo scritto per gli altri */}
+            {move && <p className={`inv-move${move.amount < 0 ? ' bad-text' : ''}`} data-testid="inv-move">
+              {t(move.since ? 'inv.moveSince' : 'inv.moveToday', { date: move.since ? day(move.since) : '', amount: signed(move.amount), pct: signedPct(move.pct) })}</p>}
+          </Outcome>
         : <Empty title={t('inv.emptyTitle')} text={t('inv.emptyText')} />}
 
       {/* il capitale di partenza, accanto agli investimenti: il patrimonio in un colpo d'occhio */}
@@ -54,11 +67,13 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
       {/* titoli: una riga ciascuno; i campi si aprono toccandola */}
       <h2 className="sec-title">{t('inv.holdings')}</h2>
       <ul className="group-list inv-items">
-        {o.holdings.map(({ holding: h, invested, value, gain, return: r, missingValue, price, rate }, i) => (
-          <li key={h.id}><details open={!h.name}>
+        {o.holdings.map(({ holding: h, invested, value, gain, return: r, missingValue, price, rate }, i) => {
+          const m = holdingMove(h, settings, prices.byHolding[h.id], prices.days[h.id])
+          return <li key={h.id}><details open={!h.name}>
             <summary className="row">
               <span className="row-main"><span>{h.name || t('inv.newHolding')}</span>
-                <small>{t(`inv.t.${h.type ?? 'etf'}` as 'inv.t.etf')}{r != null ? ` · ${pct(r)}` : ''}{missingValue && price == null ? ` · ${t('inv.noValue')}` : ''}</small></span>
+                <small>{t(`inv.t.${h.type ?? 'etf'}` as 'inv.t.etf')}{r != null ? ` · ${pct(r)}` : ''}{missingValue && price == null ? ` · ${t('inv.noValue')}` : ''}
+                {m && <> · <span className={m.pct < 0 ? 'bad-text' : ''}>{t(m.since ? 'inv.rowSince' : 'inv.rowToday', { date: m.since ? day(m.since) : '', pct: signedPct(m.pct) })}</span></>}</small></span>
               <span className={`row-value${(gain ?? 0) < 0 ? ' bad-text' : ''}`}>{value != null ? money(value, cur) : '—'}</span>
             </summary>
             <div className="inv-grid">
@@ -69,7 +84,7 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
                   {TYPES.map(ty => <option key={ty} value={ty}>{t(`inv.t.${ty}`)}</option>)}
                 </select></label>
               <label className="field"><span>{t('inv.ticker')}</span>
-                <input defaultValue={h.ticker ?? ''} onChange={e => save(x => { x.holdings[i].ticker = e.target.value })} /></label>
+                <input defaultValue={h.ticker ?? ''} placeholder={h.type === 'crypto' ? 'BTC' : undefined} onChange={e => save(x => { x.holdings[i].ticker = e.target.value })} /></label>
               <label className="field"><span>{t('inv.currency')}</span>
                 <select value={h.currency || cur} onChange={e => save(x => { x.holdings[i].currency = e.target.value === cur ? null : e.target.value })}>
                   {[...new Set([cur, ...CURRENCIES])].map(c => <option key={c}>{c}</option>)}
@@ -86,12 +101,13 @@ export function InvestmentsView({ settings, transactions, today, year, onYear }:
             {rate == null && h.currency && <p className="bad-text small">{t('inv.missingRate', { cur: h.currency })}</p>}
             <button className="link-btn danger-link" onClick={() => save(x => { x.holdings.splice(i, 1) })}>{t('action.delete')}</button>
           </details></li>
-        ))}
+        })}
       </ul>
       <button className="link-btn inv-add" onClick={() => save(x => {
         x.holdings.push({ id: newId(), name: '', type: 'etf', currency: null, units: null, avgPrice: null, manualPrice: null })
       })}>+ {t('inv.addHolding')}</button>
       <p className="group-foot">{t('inv.holdingsHint')}</p>
+      {liveAt && <p className="group-foot" data-testid="inv-live-at">{t('inv.liveAt', { time: liveAt })}</p>}
 
       <h2 className="sec-title">{t('inv.deposits')}</h2>
       <ul className="group-list inv-items">

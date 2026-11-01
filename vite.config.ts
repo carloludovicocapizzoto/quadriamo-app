@@ -19,7 +19,7 @@ function designSystemForSite(): Plugin {
 }
 
 // Content Security Policy per le pagine con codice (app, admin, notizie): script solo dal sito, dati solo dal sito,
-// da Supabase dell'ambiente e dai cambi BCE; immagini e audio delle notizie da qualsiasi indirizzo https.
+// da Supabase dell'ambiente, dai cambi BCE e dai prezzi crypto di CoinGecko; immagini e audio delle notizie da qualsiasi indirizzo https.
 // Se un testo esterno (una notizia, un feed) contenesse codice, il browser non lo eseguirebbe. Solo nella build:
 // in sviluppo Vite ha bisogno di script in linea. GitHub Pages non manda intestazioni: la regola va nella pagina.
 function contentSecurityPolicy(mode: string): Plugin {
@@ -28,7 +28,7 @@ function contentSecurityPolicy(mode: string): Plugin {
   const csp = [
     "default-src 'self'", "script-src 'self'", "style-src 'self' 'unsafe-inline'", "font-src 'self'",
     "img-src 'self' data: blob: https:", "media-src 'self' blob: https:",
-    `connect-src 'self' ${api} https://api.frankfurter.dev`.replace(/\s+/g, ' '),
+    `connect-src 'self' ${api} https://api.frankfurter.dev https://api.coingecko.com`.replace(/\s+/g, ' '),
     "worker-src 'self'", "manifest-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'self'",
   ].join('; ')
   return {

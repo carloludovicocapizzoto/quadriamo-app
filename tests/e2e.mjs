@@ -26,8 +26,20 @@ const done = async code => {
   rmSync(fixtureDir, { recursive: true, force: true })
   process.exit(code)
 }
-try { chrome = await openChrome({ port: 9444, args: ['--lang=it-IT'], waitMs: 45_000, onError: e => errors.push(e) }) } catch (e) { console.error(e.message); await done(1) }
+// i prezzi crypto non vanno sulla rete vera: CoinGecko risponde con un prezzo sintetico, e si ricorda cosa è stato chiesto
+const quoteRequests = []
+const onEvent = m => {
+  if (m.method !== 'Fetch.requestPaused') return
+  quoteRequests.push(m.params.request.url)
+  // lo stesso prezzo in ogni valuta chiesta (la valuta dipende dalla configurazione scelta)
+  const vs = new URL(m.params.request.url).searchParams.get('vs_currencies')?.split(',') ?? []
+  const body = Buffer.from(JSON.stringify({ bitcoin: Object.fromEntries(vs.flatMap(v => [[v, 60000], [`${v}_24h_change`, 2.5]])) })).toString('base64')
+  void chrome.cdp('Fetch.fulfillRequest', { requestId: m.params.requestId, responseCode: 200, body,
+    responseHeaders: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Access-Control-Allow-Origin', value: '*' }] })
+}
+try { chrome = await openChrome({ port: 9444, args: ['--lang=it-IT'], waitMs: 45_000, onError: e => errors.push(e), onEvent }) } catch (e) { console.error(e.message); await done(1) }
 const { cdp, js } = chrome
+await cdp('Fetch.enable', { patterns: [{ urlPattern: 'https://api.coingecko.com/*' }] })
 const type = async text => { for (const ch of text) await cdp('Input.insertText', { text: ch }) }
 
 // un passo del percorso: fa qualcosa e aspetta che la condizione diventi vera (al massimo 6 secondi)
@@ -138,6 +150,41 @@ await step('Profilo → Capitale: inserisco 2.000 €', async () => {
   await click(byText('/Salva il saldo/'))
 }, has('/2\\.000,00/', '.outcome'))
 await step('il capitale compare in Analisi → Investi', () => js(`location.hash = '#/analysis/investments'`), `/2\\.000,00/.test(document.querySelector('.cap-line')?.innerText ?? '')`)
+// un titolo appena aggiunto: i campi in ordine (nome, tipo, ticker, valuta, quote, prezzo medio, prezzo attuale)
+const newHolding = `[...document.querySelectorAll('.inv-items details[open] .inv-grid')].at(-1)`
+const fillHolding = async (name, kind, ticker, units, avg, price) => {
+  await click(byText('/Aggiungi titolo/')); await sleep(400)
+  const field = i => `${newHolding}?.querySelectorAll('input, select')[${i}]`
+  const write = async (i, text) => { await js(`${field(i)}?.focus()`); await type(text); await sleep(100) }
+  await js(`(() => { const s = ${field(1)}; Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(s, '${kind}'); s.dispatchEvent(new Event('change', { bubbles: true })) })()`)
+  await sleep(100)
+  await write(2, ticker); await write(4, units); await write(5, avg); if (price) await write(6, price)
+  // il nome per ultimo e tutto insieme: con il nome la riga si chiude
+  await js(`${field(0)}?.focus()`); await cdp('Input.insertText', { text: name }); await sleep(300)
+}
+await step('aggiungo 0,5 Bitcoin: il prezzo arriva da solo, con la variazione delle 24 ore', () => fillHolding('Bitcoin di prova', 'crypto', 'BTC', '0,5', '40000'),
+  `/30\\.000,00/.test(document.querySelector('.inv-items')?.innerText ?? '') && /24 ore \\+2,5/.test(document.querySelector('.inv-items')?.innerText ?? '')
+   && /Nelle ultime 24 ore \\+731,71/.test(document.querySelector('[data-testid=inv-move]')?.innerText ?? '') && !!document.querySelector('[data-testid=inv-live-at]')`)
+n++
+if (quoteRequests.length && quoteRequests.every(u => /^https:\/\/api\.coingecko\.com\/api\/v3\/simple\/price\?ids=bitcoin&vs_currencies=[a-z]{3}&include_24hr_change=true$/.test(u))) {
+  console.log(`  ✓ ${n}. a CoinGecko arrivano solo moneta e valuta, mai le quote`)
+} else { console.error(`  ✗ ${n}. richieste a CoinGecko inattese: ${JSON.stringify(quoteRequests)}`); await done(1) }
+await step('un ETF con il prezzo scritto a mano: valore subito, nessuna variazione inventata', () => fillHolding('ETF di prova', 'etf', 'TEST', '10', '100', '100'),
+  `/1\\.000,00/.test(document.querySelector('.inv-items')?.innerText ?? '') && !/dal /.test(document.querySelector('.inv-items')?.innerText ?? '')`)
+await step('il giorno dopo cambio il prezzo dell’ETF: vedo la variazione da quel giorno', async () => {
+  // il prezzo di ieri: si sposta indietro la data nella memoria del dispositivo, poi si riapre Investi
+  await js(`(() => { const k = Object.keys(localStorage).find(k => k.includes('quadriamo.prices')); const p = JSON.parse(localStorage.getItem(k))
+    for (const d of Object.values(p.days)) for (const x of d) x.date = '2026-01-05'; localStorage.setItem(k, JSON.stringify(p)) })()`)
+  await js(`location.hash = '#/analysis/month'`); await sleep(500); await js(`location.hash = '#/analysis/investments'`); await sleep(800)
+  await click(`[...document.querySelectorAll('.inv-items summary')].find(s => /ETF di prova/.test(s.textContent))`); await sleep(300)
+  const price = `[...document.querySelectorAll('.inv-items details[open] .inv-grid')].find(g => g.querySelector('input')?.value === 'ETF di prova')?.querySelectorAll('input, select')[6]`
+  await js(`(() => { const i = ${price}; i.focus(); i.select() })()`); await type('110')
+}, `/dal 5 gen \\+10/.test(document.querySelector('.inv-items')?.innerText ?? '') && /Dal 5 gen \\+831,71/.test(document.querySelector('[data-testid=inv-move]')?.innerText ?? '')`)
+if (screenshotDir) {
+  await js(`window.scrollTo(0, 0)`); await sleep(300)
+  const shot = await cdp('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
+  writeFileSync(join(screenshotDir, 'investments-moves.png'), Buffer.from(shot.result.data, 'base64'))
+}
 
 console.log('Calendario')
 await step('Analisi → Calendario: creo una bolletta mensile', async () => {

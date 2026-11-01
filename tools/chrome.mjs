@@ -17,7 +17,7 @@ export const sleep = ms => new Promise(r => setTimeout(r, ms))
  * Apre Chrome e si collega alla prima pagina. `onError` riceve gli errori della pagina (prima riga).
  * Sui server di GitHub Chrome gira senza sandbox e può metterci un po' a partire: si aspetta fino a `waitMs`.
  */
-export async function openChrome({ port = 9333, args = [], waitMs = 10_000, onError = () => {} } = {}) {
+export async function openChrome({ port = 9333, args = [], waitMs = 10_000, onError = () => {}, onEvent = () => {} } = {}) {
   const profile = mkdtempSync(join(tmpdir(), 'qshot-'))
   const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check',
     ...(process.env.CI ? ['--no-sandbox', '--disable-dev-shm-usage'] : []), ...args, 'about:blank'], { stdio: 'ignore' })
@@ -43,6 +43,7 @@ export async function openChrome({ port = 9333, args = [], waitMs = 10_000, onEr
     const m = JSON.parse(e.data)
     if (m.method === 'Runtime.exceptionThrown') onError(m.params.exceptionDetails.exception?.description?.split('\n')[0] ?? 'errore')
     if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id) }
+    else if (m.method) onEvent(m)
   })
   const cdp = (method, params = {}) => new Promise(r => { const id = ++seq; pending.set(id, r); ws.send(JSON.stringify({ id, method, params })) })
   const js = async expr => (await cdp('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true })).result?.result?.value
