@@ -398,6 +398,70 @@ await step(N, 'scelta la password, si configura il budget', async () => {
   await N.click(`document.querySelector('form .btn.primary')`)
 }, `!!document.querySelector('.onboarding')`, 12)
 
+console.log('Accesso: rinnovi del token e notifiche (avviso GoTrueClient duplicati, QA 29/10)')
+// L'app crea un client Auth temporaneo per ogni comando (authCommand) e ne sostituisce uno nuovo quando cambia la sessione:
+// stessa chiave di salvataggio, quindi l'avviso «Multiple GoTrueClient instances». Il finto server accetta ogni token di
+// rinnovo una volta sola e conta i riusi (rejectedRefreshes): un rinnovo concorrente fra due client si vedrebbe qui.
+// Le letture della sincronizzazione (reads) contano le notifiche d'accesso doppie che rifarebbero lo scaricamento.
+const B = await device('telefono B', 9464)
+const authCounts = async () => ({ rejected: server.state.rejectedRefreshes, attempts: server.state.refreshAttemptsByUser.get(USERS.B.id) ?? 0,
+  reads: (await remote('B')).reads.length })
+let authBefore = null, loginReads = 0
+await step(B, 'accesso: nessun rinnovo rifiutato', async () => {
+  authBefore = await authCounts()
+  await signIn(B, 'B')
+  // B può avere già un budget sul cloud (passi d'isolamento precedenti): entra nella Home, altrimenti si configura
+  if (!await until(B, `!!document.querySelector('.onboarding') || ${appReady}`, 12000)) throw Error('accesso di B non completato')
+  if (await B.js(`!!document.querySelector('.onboarding')`)) await finishSetup(B)
+  await sleep(3000)
+}, async () => { const now = await authCounts(); loginReads = now.reads - authBefore.reads
+  return (await B.js(appReady)) && now.rejected === authBefore.rejected }, 20)
+// SyncProvider legge all'avvio e di nuovo 1,5 s dopo che i dati cambiano (lo scaricamento li cambia): due letture sono il
+// funzionamento normale. Una notifica d'accesso doppia ne aggiungerebbe: l'accesso non deve leggere più di una ricarica.
+await step(B, 'l\'accesso non legge più di una normale riapertura dell\'app (nessuna notifica d\'accesso doppia)', async () => {
+  authBefore = await authCounts(); await B.reload(); await sleep(3000)
+}, async () => { const reload = (await authCounts()).reads - authBefore.reads
+  console.log(`      letture della sincronizzazione: accesso ${loginReads}, riapertura ${reload}`)
+  return loginReads > 0 && loginReads <= reload }, 12)
+await step(B, 'token in scadenza e cambio del nome subito dopo l\'apertura: nessun token di rinnovo usato due volte, la sessione resta', async () => {
+  // token veri da un'ora: con token più corti del margine di 90 s del client Supabase ogni lettura rinnova (artefatto, vedi passo 34).
+  // La scadenza si accorcia solo nella copia salvata: alla riapertura il client principale rinnova, e nello stesso momento
+  // il comando del nome (client temporaneo, authCommand) legge la stessa sessione: è il caso dei due client concorrenti.
+  const ok = await B.js(`(() => { const k = Object.keys(localStorage).find(x => x.startsWith('q.auth.v1/')); const record = k && JSON.parse(localStorage.getItem(k))
+    const v = record?.session ? JSON.parse(record.session) : null; if (!v?.refresh_token) return false
+    v.expires_at = Math.floor(Date.now() / 1000) + 1; v.expires_in = 1; record.session = JSON.stringify(v); localStorage.setItem(k, JSON.stringify(record)); return true })()`)
+  if (!ok) throw Error('sessione sintetica di B non trovata')
+  await sleep(1500)
+  authBefore = await authCounts()
+  await B.cdp('Page.navigate', { url: `${ORIGIN}/app/#/profile/personal` })
+  if (!await until(B, `${appReady} && !!document.querySelector('.txs-row input, form input')`, 12000)) throw Error('Dati personali non aperti')
+  await B.js(`(() => { const row = [...document.querySelectorAll('.txs-row, label')].find(r => /^\\s*Nome/.test(r.textContent)); const el = row?.querySelector('input');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, 'Bea'); el.dispatchEvent(new Event('input', { bubbles: true })) })()`)
+  await B.click(byText('/^Salva$/')); await sleep(4000)
+}, async () => { const now = await authCounts(); console.log(`      rinnovo concorrente: ${JSON.stringify({ rifiutati: now.rejected - authBefore.rejected, rinnovi: now.attempts - authBefore.attempts })}`)
+  return now.rejected === authBefore.rejected && now.attempts - authBefore.attempts <= 3
+    && (await B.js(`${appReady} && !/La sessione è terminata/.test(document.body.innerText)`)) && await B.js(`/Salvato/.test(document.body.innerText)`) }, 20)
+// RISULTATO NOTO (31/10, non corretto: in questa fase l'Auth non si modifica): due schede che si aprono insieme sulla sessione
+// in scadenza mandano lo stesso token di rinnovo due volte; questo finto server accetta il primo e rifiuta il secondo. Il vero
+// GoTrue accetta il riuso entro il suo intervallo (10 s di default), quindi l'effetto reale non è dimostrato qui. Il passo
+// controlla le garanzie che contano (nessuna disconnessione, sessione valida sul server, nessun ciclo) e tiene il rifiuto
+// a uno solo: se diventasse un ciclo o una disconnessione, fallisce.
+await step(B, 'due schede aperte insieme sulla sessione in scadenza: al più un rinnovo rifiutato, nessun ciclo, la sessione resta', async () => {
+  // due client principali (uno per scheda) con la stessa chiave
+  const ok = await B.js(`(() => { const k = Object.keys(localStorage).find(x => x.startsWith('q.auth.v1/')); const record = k && JSON.parse(localStorage.getItem(k))
+    const v = record?.session ? JSON.parse(record.session) : null; if (!v?.refresh_token) return false
+    v.expires_at = Math.floor(Date.now() / 1000) + 1; v.expires_in = 1; record.session = JSON.stringify(v); localStorage.setItem(k, JSON.stringify(record)); return true })()`)
+  if (!ok) throw Error('sessione sintetica di B non trovata')
+  await B.cdp('Page.navigate', { url: 'about:blank' }); await sleep(1500)
+  authBefore = await authCounts()
+  const other = await B.cdp('Target.createTarget', { url: `${ORIGIN}/app/` })
+  await B.cdp('Page.navigate', { url: `${ORIGIN}/app/` }); await sleep(8000)
+  await B.cdp('Target.closeTarget', { targetId: other.result.targetId })
+}, async () => { const now = await authCounts(); console.log(`      due schede: ${JSON.stringify({ rifiutati: now.rejected - authBefore.rejected, rinnovi: now.attempts - authBefore.attempts })}`)
+  return now.rejected - authBefore.rejected <= 1 && now.attempts - authBefore.attempts <= 2 && [...server.state.refresh.values()].includes(USERS.B.id)
+    && await B.js(`${appReady} && !/La sessione è terminata/.test(document.body.innerText)`) }, 20)
+await api('tokens', { seconds: 3600 })
+
 console.log('App installabile e aggiornamento')
 await step(A1, 'il service worker controlla la pagina', () => A1.reload(), `!!navigator.serviceWorker.controller`, 12)
 await step(A1, 'senza rete l\'app si apre lo stesso, con i dati', async () => { await A1.offline(true); await A1.reload(); await toList(A1) }, `${appReady} && /12,50/.test(document.body.innerText)`, 12)
@@ -412,6 +476,6 @@ const denied = [...new Set((await remote('A')).denied)].filter(r => !r.includes(
 if (denied.length) { console.error(`\nChiamate rifiutate dal gateway Alpha: ${denied.join(', ')}`); failed = true }
 else console.log('\nNessuna chiamata dell\'app rifiutata dal gateway Alpha.')
 const pageErrors = devices.flatMap(d => d.errors ?? [])
-for (const d of [A1, A2, N]) if (d.errors.length) { console.error(`\nErrori nella pagina (${d.name}):\n  ${d.errors.join('\n  ')}`); failed = true }
+for (const d of [A1, A2, N, B]) if (d.errors.length) { console.error(`\nErrori nella pagina (${d.name}):\n  ${d.errors.join('\n  ')}`); failed = true }
 if (!failed && !pageErrors.length) console.log(`\nTutti i ${n} passi Alpha sono andati bene (backend simulato).`)
 await done(failed ? 1 : 0)

@@ -65,7 +65,11 @@ export interface Transaction {
   split?: Record<string, number> | null   // quote per bucket quando paidFrom è CUSTOM (somma 1)
   updatedAt?: string                // ISO, ultima modifica: serve alla sincronizzazione tra dispositivi
   fxRate?: number | null            // cambio del giorno in cui è stato registrato (1 unità = fxRate della tua valuta)
+  occurrence?: Occurrence | null    // la volta di una spesa fissa che questo movimento paga: quella automatica non conta più
 }
+
+/** Una volta di un evento del calendario (la spesa fissa di un giorno). */
+export interface Occurrence { eventId: string; date: string }
 
 export interface YearMonth { year: number; month: number }   // month 1..12
 
@@ -80,6 +84,7 @@ export interface ClassifiedTx extends Transaction {
   upcoming?: boolean                // non ancora arrivato al suo giorno: l'importo non conta ancora
   planned?: number                  // l'importo previsto dall'evento (anche quando è ancora in arrivo)
   eventId?: string                  // l'evento del calendario da cui viene
+  confirmed?: boolean               // la volta è segnata come fatta nel calendario: pagata davvero, non solo impegnata
 }
 
 export type CheckKind =
@@ -95,6 +100,9 @@ export interface BucketRow {
   available: number
 }
 
+/** Totali cumulati delle entrate divise: con la regola, e «a modo mio» per ogni combinazione di quote. */
+export interface Divided { ruled: number; custom: Record<string, number> }
+
 export interface MonthResult {
   ym: YearMonth
   period: { start: string; end: string }
@@ -104,6 +112,7 @@ export interface MonthResult {
   saved: number
   leftOver: number
   paidFirst: number                 // spese "prima delle parti" del mese (quelle in arrivo contano già): si tolgono dalle entrate da dividere
+  divided?: Divided                 // entrate divise dal primo mese fino a questo compreso (month.ts): ogni mese prende la differenza
   buckets: BucketRow[]
   byCategory: { category: Category; amount: number; share: number }[]
   checks: Record<CheckKind, number>

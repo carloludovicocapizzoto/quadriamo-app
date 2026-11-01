@@ -63,6 +63,17 @@ export function detectDecimalMark(raws: string[]): { mark: DecimalMark | null; a
   return { mark: null, ambiguous: ambiguous.length > 0, conflicting: false, samples: ambiguous }
 }
 
+/**
+ * L'importo come si mostra: arrotondato alle cifre della valuta (a metà, lontano dallo zero, come Intl) e senza segno
+ * quando arrotondato è zero. Così un residuo di −0,001 € non diventa «−0,00 €» (P3); un importo vero, anche −0,01, resta.
+ */
+export function shownAmount(n: number, currency: string | null | undefined): number {
+  if (!Number.isFinite(n)) return n
+  const scale = 10 ** minorDigits(currency)
+  const r = Math.sign(n) * Math.round(Math.abs(n) * scale) / scale
+  return r === 0 ? 0 : r
+}
+
 /** Cifre decimali della valuta (EUR 2, JPY 0, KWD 3); sconosciuta: 2. */
 export function minorDigits(currency: string | null | undefined): number {
   if (!currency || !/^[A-Z]{3}$/.test(currency)) return 2

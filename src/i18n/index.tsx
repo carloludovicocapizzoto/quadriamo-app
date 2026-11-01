@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { I18nContext, LANG_KEY, loadDict, type I18n, type I18nStart } from './core'
 import { local } from '../storage'
+import { shownAmount } from '../engine/bankNumbers'
 
 export function I18nProvider({ start, children }: { start: I18nStart; children: ReactNode }) {
   const [{ lang, dict }, setCurrent] = useState(start)
@@ -17,9 +18,9 @@ export function I18nProvider({ start, children }: { start: I18nStart; children: 
       return s
     },
     // separatore delle migliaia anche a 4 cifre (1.330,11 €), come nelle app delle banche
-    // il meno è quello tipografico (−), come nei movimenti e nei testi, non il trattino di Intl
+    // il meno è quello tipografico (−), come nei movimenti e nei testi, non il trattino di Intl; zero è sempre zero, mai «−0,00 €»
     money: (n, currency) => new Intl.NumberFormat(lang, { style: 'currency', currency, useGrouping: 'always' as unknown as boolean })
-      .formatToParts(n).map(p => p.type === 'minusSign' ? '−' : p.value).join(''),
+      .formatToParts(shownAmount(n, currency)).map(p => p.type === 'minusSign' ? '−' : p.value).join(''),
     date: (iso, opts = { day: 'numeric', month: 'short' }) =>
       new Intl.DateTimeFormat(lang, { ...opts, timeZone: 'UTC' }).format(new Date(iso + 'T00:00:00Z')),
   }), [lang, dict])
