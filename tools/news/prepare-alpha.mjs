@@ -7,7 +7,7 @@ const m=JSON.parse(readFileSync(input,'utf8'));if(!Array.isArray(m.sources))thro
 const ids=new Set(),hosts=new Set(),rows=[];const q=s=>"'"+String(s).replaceAll("'","''")+"'"
 for(const x of m.sources){
  const feed=publicHttps(x.feed),site=publicHttps(x.site)
- if(!/^[a-z0-9-]{1,64}$/.test(x.id)||ids.has(x.id)||!feed||!site||!['it','en','fr','es'].includes(x.lang)||!['press','independent','research','institution','video','podcast'].includes(x.kind)||!Number.isInteger(x.trust)||x.trust<1||x.trust>5||!x.name?.trim()||!m.approvedBy?.trim()||x.rights?.titleAllowed!==true||!x.rights?.reference?.trim())throw Error('approved source contract invalid: '+(x.id??'unnamed'))
+ if(!/^[a-z0-9-]{1,64}$/.test(x.id)||ids.has(x.id)||!feed||!site||!['it','en','fr','es'].includes(x.lang)||!['press','independent','research','institution','video','podcast'].includes(x.kind)||!Number.isInteger(x.trust)||x.trust<1||x.trust>5||!x.name?.trim()||x.name.length>120||x.feed.length>2048||x.site.length>2048||!m.approvedBy?.trim()||x.rights?.titleAllowed!==true||!x.rights?.reference?.trim())throw Error('approved source contract invalid: '+(x.id??'unnamed'))
  ids.add(x.id);hosts.add(feed.hostname);hosts.add(site.hostname)
  rows.push('('+[x.id,x.name,x.kind,'rss',feed.href,site.href,x.lang].map(q).join(',')+','+x.trust+',false,false,'+q(x.rights.reference)+','+q(m.approvedBy)+')')
 }

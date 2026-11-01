@@ -28,7 +28,7 @@ async function read(src: Source): Promise<{ src: Source; raw: Raw[]; error?: str
     if (!res.ok) return { src, raw: [], error: `HTTP ${res.status}` }
     const xml=await readFeed(res)
     if(!validFeedXml(xml))throw Error('invalid or unsafe feed XML')
-    const raw=parse(xml).filter(item=>approvedUrl(item.link,allowed)).slice(0,25)
+    const raw=parse(xml).filter(item=>approvedUrl(item.link,allowed) && item.link.length<=2048 && item.title.length<=500).slice(0,25)
     return {src,raw}
   } catch (e) { return { src, raw: [], error: (e as Error).message.slice(0, 120) } }
 }
