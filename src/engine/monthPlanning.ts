@@ -1,11 +1,12 @@
 // Planning is deliberately independent of the cash/budget engine approved in #19.
 import { allocate } from './month'
 import { minorDigits } from './bankNumbers'
-import { isPlanMonth } from './planContract'
+import { isPlanMonth, planningValid } from './planContract'
 import { ymKey } from './dates'
 import { safeToSpend } from './spend'
 import type { Bucket, MonthResult, Settings } from './types'
 export function monthPlanning(r: MonthResult, s: Settings, today: string) {
+  if(!planningValid(s))return null
   const key=ymKey(r.ym)
   const scheduled=s.incomePlans?.filter(x=>x.from<=key).at(-1)
   const n = scheduled?.amount ?? s.expectedIncome

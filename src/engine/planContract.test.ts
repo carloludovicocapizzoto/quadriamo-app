@@ -52,3 +52,5 @@ it('opening boundary preserves P1-02 and a December/January custom period',()=>{
  const pay={...tx,date:'2027-01-02',occurrence:{eventId:event.id,date:'2026-12-27'}}
  expect(validLink(pay,custom)).not.toBeNull();expect(computeMonth(custom.firstMonth,[pay],custom,'2027-01-05').buckets.reduce((a,b)=>a+b.remaining,0)).toBe(600)
 })
+
+it('malformed unvalidated stored metadata never suppresses a cost or crashes the financial engine',()=>{expect(countsInPlan({planExclusions:{} as never,planOffFrom:'bad'},'2026-11-01')).toBe(true);expect(countsInPlan({planExclusions:[null] as never},'2026-11-01')).toBe(true);const s={...base(),incomePlans:{} as never};const r=computeMonth(s.firstMonth,[],s,'2026-11-02');expect(monthPlanning(r,s,'2026-11-02')).toBeNull()})

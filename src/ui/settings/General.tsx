@@ -32,7 +32,7 @@ export function GeneralSection({ d: { draft, edit, errors }, wizard }: { d: Sett
                  aria-invalid={errors.includes('startDay')}
                  onChange={e => edit(s => { s.monthStartDay = Number(e.target.value) })} />
         </label></li>
-        {ENV.flags.monthlyPlan && !wizard && <li><label className="row"><span className="row-main"><span>{t('plan.expected')}</span><small>{t('plan.warning')}</small></span><AmountInput className="row-input row-num" defaultValue={draft.incomePlans?.filter(x=>x.from<=ymKey(monthOf(todayIso(),draft.monthStartDay))).at(-1)?.amount ?? draft.expectedIncome} onValue={n => { if (n == null || (Number.isFinite(n) && n >= 0)) edit(s=>Object.assign(s,setExpectedIncome(s,ymKey(monthOf(todayIso(),s.monthStartDay)),n??0))) }} /></label></li>}
+        {ENV.flags.monthlyPlan && !wizard && <li><label className="row"><span className="row-main"><span>{t('plan.expected')}</span><small>{t('plan.warning')}</small></span><AmountInput className="row-input row-num" defaultValue={(Array.isArray(draft.incomePlans)?draft.incomePlans:[]).filter(x=>x&&x.from<=ymKey(monthOf(todayIso(),draft.monthStartDay))).at(-1)?.amount ?? draft.expectedIncome} onValue={n => { if (n == null || (Number.isFinite(n) && n >= 0)) edit(s=>Object.assign(s,setExpectedIncome(s,ymKey(monthOf(todayIso(),s.monthStartDay)),n??0))) }} /></label></li>}
       </ul>
     </section>
   )

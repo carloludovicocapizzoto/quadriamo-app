@@ -8,7 +8,9 @@ export function intervalsValid(xs: PlanInterval[]) {
  return Array.isArray(xs) && xs.every((x,i)=>x && isIsoDate(x.from) && (x.until===null || (isIsoDate(x.until)&&x.until>=x.from)) && (!i || (xs[i-1].until!==null && xs[i-1].until!<=x.from)))
 }
 export function countsInPlan(e: Pick<CalEvent,'planExclusions'|'planOffFrom'>, date: string) {
- return !(e.planOffFrom && date>=e.planOffFrom) && !(e.planExclusions??[]).some(x=>date>=x.from&&(x.until===null||date<x.until))
+ const legacy=typeof e.planOffFrom==='string'&&isIsoDate(e.planOffFrom)?e.planOffFrom:null
+ const xs=Array.isArray(e.planExclusions)?e.planExclusions:[]
+ return !(legacy && date>=legacy) && !xs.some(x=>x&&isIsoDate(x.from)&&(x.until===null||(isIsoDate(x.until)&&x.until>=x.from))&&date>=x.from&&(x.until===null||date<x.until))
 }
 export function togglePlan(e: CalEvent, today: string, enabled: boolean): CalEvent {
  if (!isIsoDate(today)) throw Error('invalid planning date')
