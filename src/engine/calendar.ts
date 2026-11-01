@@ -27,6 +27,8 @@ export const REPEAT_PRESETS = {
 export type RepeatPreset = keyof typeof REPEAT_PRESETS
 
 export interface CalEvent {
+  planExclusions?: import('./planContract').PlanInterval[]
+  planOffFrom?: string | null // legacy #16 backups, read without rewriting history
   id: string
   kind: EventKind
   title: string

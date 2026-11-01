@@ -1,3 +1,4 @@
+import { ENV } from '../env'
 import { useContext, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Segmented } from './kit/Segmented'
 import { CUSTOM, FIRST, SPLIT, addDays, budgetEvents, daysBetween, linkedOccurrences, monthOf, nextMonth, occurrenceKey, occurrences, periodOf, prevMonth, linkTarget, validLink,
@@ -270,6 +271,7 @@ export function TxForm({ settings, initial, prefill, defaultDate, onSave, onDele
             </select>
           </label>}
         </div>
+        {ENV.flags.monthlyPlan && isIncome && <p className="small muted">{t('plan.extraHint')}</p>}
         {isIncome && incomeTo === CUSTOM && <SplitEditor key={category} buckets={settings.buckets} value={incomeSplit} onChange={setSplit} />}
 
         {errors.length > 0 && <ul className="errors" role="alert">{errors.map(e => <li key={e}>{e}</li>)}</ul>}

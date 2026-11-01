@@ -1,6 +1,17 @@
 // Dizionario di riferimento: le altre lingue devono avere esattamente le stesse chiavi (lo controllano TypeScript e i test).
 // {n}, {name}… sono segnaposto sostituiti da t(key, { n: 3 }).
 const en = {
+  'plan.beforeSnapshot': "Already included in the opening balance: not counted again in the budget.",
+  'plan.payday': "Period start / payday",
+  'plan.already': "Pay already included in the balance",
+  'plan.opening': "Available balance today",
+  'plan.snapshot': "Today’s snapshot includes money already received and spent. No income is created.",
+  'plan.apply': "Confirm balance and plan",
+  'plan.invalid': "Check amounts, dates and intervals. Do not reinitialize an existing archive.",
+  'plan.count': "Count in month",
+  'plan.countHint': "Excludes automatic budget entries, never real payments. Re-enabling preserves the past.",
+  'plan.extra': "Extra received",
+  'plan.extraHint': "Extras go to the chosen parts: availability changes, the planned target does not.",
   'plan.title': "Monthly budget",
   'plan.expected': "Expected income",
   'plan.actual': "Actual daily availability",

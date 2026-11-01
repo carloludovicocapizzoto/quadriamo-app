@@ -1,3 +1,4 @@
+import { ENV } from '../../env'
 // Analisi → Calendario: quello che succederà ai tuoi soldi, da capire in pochi secondi. Nel mese: il riepilogo (quanto resta
 // a fine mese, entrate, uscite, già pagato, da pagare), la griglia con un punto per tipo (uscite, entrate, risparmi,
 // promemoria) e i giorni più pesanti in evidenza, poi la settimana del giorno scelto come timeline. Le altre viste
@@ -93,7 +94,7 @@ export function CalendarView({ settings, today, current }: { settings: Settings;
   const monthItems = items.filter(x => x.date.slice(0, 7) === day.slice(0, 7))
   const sum = periodSummary(mode === 'month' ? monthItems : items, today)
   const viewed = monthOf(day, settings.monthStartDay)
-  const leftOver = viewed.year === current.ym.year && viewed.month === current.ym.month ? forecastMonth(current, today)?.projectedLeftOver ?? null : null
+  const leftOver = !ENV.flags.monthlyPlan && viewed.year === current.ym.year && viewed.month === current.ym.month ? forecastMonth(current, today)?.projectedLeftOver ?? null : null
   const heavy = new Set(sum.heavy)
   return (
     <div className="calendar">

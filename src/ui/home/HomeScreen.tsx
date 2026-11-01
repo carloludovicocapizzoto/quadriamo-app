@@ -50,7 +50,7 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
   }
   const left = useCountUp(budget.left)
   const daysLeft = daysBetween(today, r.period.end) + 1
-  const hasPlan = budget.parts.length > 0 && r.income > 0
+  const hasPlan = budget.parts.length > 0 && (r.income > 0 || s.planVersion===1)
   const day = date(today, { weekday: 'long', day: 'numeric', month: 'long' })
 
   // i quattro blocchi: vivono qui perché aprono il dettaglio della parte.

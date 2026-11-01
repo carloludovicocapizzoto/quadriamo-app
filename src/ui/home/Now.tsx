@@ -1,3 +1,4 @@
+import { ENV } from '../../env'
 // Home → "Adesso": risponde a "cosa devo fare oggi?" come un assistente discreto. Una superficie in vetro sotto il numero
 // del giorno (una delle poche: Costituzione, 17/10), un titolo che dice quante cose chiedono un'azione, le prime tre voci
 // (engine/now, solo regole) e le altre a richiesta, che si aprono con un'espansione naturale. Ogni voce porta dove serve.
@@ -29,7 +30,7 @@ export function Now({ data, r, today, hasPlan, onLog }: { data: AppData; r: Mont
   const items = useMemo(() => nowItems({
     events: s.events, paid: linkedOccurrences(data.transactions, s), goals: data.goals, today, hour, changes,
     loggedToday: data.transactions.some(x => x.date === today),
-    leftOver: hasPlan ? forecastMonth(r, today)?.projectedLeftOver ?? null : null,
+    leftOver: hasPlan && !ENV.flags.monthlyPlan ? forecastMonth(r, today)?.projectedLeftOver ?? null : null,
     // nei primi 5 giorni del mese: la ricevuta di quello appena finito, se ha movimenti
     receipt: daysBetween(r.period.start, today) < 5 && data.transactions.some(x => x.date && x.date < r.period.start && x.date >= periodOf(prevMonth(r.ym), s.monthStartDay).start) ? prevMonth(r.ym) : null,
   }), [s, data.goals, data.transactions, today, hour, changes, hasPlan, r])

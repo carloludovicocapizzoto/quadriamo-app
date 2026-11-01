@@ -1,4 +1,6 @@
 // Backup (JSON) e esportazione dei movimenti (CSV).
+import { planningValid, intervalsValid } from '../engine/planContract'
+import { isIsoDate } from '../engine/dates'
 import type { Transaction } from '../engine'
 import type { AppData } from './types'
 
@@ -10,6 +12,7 @@ export function parseBackup(text: string): AppData {
     typeof d.settings.currency === 'string' && d.settings.firstMonth &&
     d.transactions.every((t: Transaction) => typeof t.id === 'string' && typeof t.description === 'string')
   if (!ok) throw new Error('invalid backup')
+  if (!planningValid(d.settings) || (d.settings.events??[]).some((e: import('../engine/calendar').CalEvent)=>e.planExclusions!=null&&!intervalsValid(e.planExclusions)||e.planOffFrom!=null&&!isIsoDate(e.planOffFrom))) throw new Error('invalid planning contract')
   return { version: 1, settings: { fxRates: {}, ...d.settings }, transactions: d.transactions,
            ...(d.demo === true ? { demo: true } : {}),
            deleted: d.deleted ?? {}, settingsUpdatedAt: d.settingsUpdatedAt,

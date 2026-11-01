@@ -7,7 +7,7 @@ export const newId = () =>
 
 /** Se un movimento è più vecchio del primo mese tracciato, il primo mese si sposta indietro. */
 export function widenFirstMonth(s: Settings, tx: Transaction): Settings {
-  if (!tx.date) return s
+  if (!tx.date || s.planVersion === 1) return s // an opening snapshot cannot move backwards with an import
   const ym = monthOf(tx.date, s.monthStartDay)
   return compareYm(ym, s.firstMonth) < 0 ? { ...s, firstMonth: ym } : s
 }

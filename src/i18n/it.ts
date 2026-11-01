@@ -1,6 +1,17 @@
 import type { Dict } from './en'
 
 const it: Dict = {
+  'plan.beforeSnapshot': "Già compreso nel saldo iniziale: non si conta di nuovo nel budget.",
+  'plan.payday': "Inizio periodo / stipendio",
+  'plan.already': "Stipendio già incluso nel saldo",
+  'plan.opening': "Saldo disponibile oggi",
+  'plan.snapshot': "Saldo di oggi: include quanto già ricevuto e speso. Non crea entrate.",
+  'plan.apply': "Conferma saldo e piano",
+  'plan.invalid': "Controlla importi, date e intervalli. Non reinizializzare un archivio esistente.",
+  'plan.count': "Conta nel mese",
+  'plan.countHint': "Esclude gli automatismi del budget, mai i pagamenti reali. Riattivare non modifica il passato.",
+  'plan.extra': "Extra ricevuti",
+  'plan.extraHint': "Gli extra vanno alle parti scelte: cambiano la disponibilità, non l’obiettivo pianificato.",
   'plan.title': "Budget del mese",
   'plan.expected': "Reddito previsto",
   'plan.actual': "Disponibilità giornaliera effettiva",

@@ -1,12 +1,15 @@
 // Planning is deliberately independent of the cash/budget engine approved in #19.
 import { allocate } from './month'
 import { minorDigits } from './bankNumbers'
+import { isPlanMonth } from './planContract'
 import { ymKey } from './dates'
 import { safeToSpend } from './spend'
 import type { Bucket, MonthResult, Settings } from './types'
 export function monthPlanning(r: MonthResult, s: Settings, today: string) {
-  const n = s.expectedIncome
-  if (n == null || !Number.isFinite(n) || n <= 0 || (s.expectedFrom && (!/^\d{4}-\d{2}$/.test(s.expectedFrom) || ymKey(r.ym) < s.expectedFrom))) return null
+  const key=ymKey(r.ym)
+  const scheduled=s.incomePlans?.filter(x=>x.from<=key).at(-1)
+  const n = scheduled?.amount ?? s.expectedIncome
+  if (n == null || !Number.isFinite(n) || n < 0 || (!scheduled && s.expectedFrom && (!isPlanMonth(s.expectedFrom) || key < s.expectedFrom))) return null
   const real = safeToSpend(r, s, today)
   if (!real.length) return null
   const base = n - r.paidFirst
@@ -16,6 +19,7 @@ export function monthPlanning(r: MonthResult, s: Settings, today: string) {
   return { expected: n, received: r.income, missing: Math.max(0, n - r.income), extra: Math.max(0, r.income - n), actualDaily: real.reduce((a,b)=>a+b.perDay,0), plannedDaily: planned.reduce((a,b)=>a+b.perDay,0) }
 }
 export function splitOpeningBalance(buckets: Bucket[], amount: number, currency: string): Bucket[] {
+  if(!Number.isFinite(amount))throw Error('invalid opening balance')
   const parts = allocate(amount, buckets.map(b=>b.share), minorDigits(currency))
   return buckets.map((b,i)=>({...b,startingBalance:parts[i]}))
 }

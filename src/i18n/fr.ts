@@ -1,6 +1,17 @@
 import type { Dict } from './en'
 
 const fr: Dict = {
+  'plan.beforeSnapshot': "Déjà compris dans le solde initial : pas de double comptage.",
+  'plan.payday': "Début de période / paie",
+  'plan.already': "Paie déjà comprise dans le solde",
+  'plan.opening': "Solde disponible aujourd’hui",
+  'plan.snapshot': "Le solde inclut les recettes et dépenses passées. Aucun revenu créé.",
+  'plan.apply': "Confirmer solde et plan",
+  'plan.invalid': "Vérifiez montants, dates et intervalles. Ne réinitialisez pas un historique existant.",
+  'plan.count': "Compter dans le mois",
+  'plan.countHint': "Exclut les écritures automatiques, jamais les paiements réels. Réactiver préserve le passé.",
+  'plan.extra': "Revenus supplémentaires",
+  'plan.extraHint': "Le surplus va aux parts choisies : la disponibilité change, pas l’objectif prévu.",
   'plan.title': "Budget du mois",
   'plan.expected': "Revenu prévu",
   'plan.actual': "Disponibilité quotidienne effective",

@@ -1,6 +1,7 @@
 // Calcolo di un mese: è la traduzione delle formule dei fogli mese dell'Excel di Quadriamo.
 import { compareYm, monthOf, periodOf, prevMonth, ymKey } from './dates'
 import { budgetEvents, occurrenceKey, occurrences } from './calendar'
+import { countsInPlan } from './planContract'
 import { minorDigits } from './bankNumbers'
 import {
   CUSTOM, FIRST, SPLIT,
@@ -87,6 +88,7 @@ export function validLink(t: Transaction, s: Settings): Occurrence | null {
 function transactionsOf(ym: YearMonth, all: Transaction[], s: Settings): Transaction[] {
   const key = ymKey(ym)
   return all.filter(t => {
+    if(s.planVersion===1 && s.balanceDate && t.date && t.date<s.balanceDate) return false // already included in the opening cash snapshot
     const date = validLink(t, s)?.date ?? t.date
     return date && ymKey(monthOf(date, s.monthStartDay)) === key
   })
@@ -113,9 +115,10 @@ export function linkedOccurrences(all: Transaction[], s: Settings): Set<string> 
  * nemmeno prima della scadenza; resta il movimento, con il suo importo vero.
  */
 export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, today: string, linked: Set<string> = new Set()): ClassifiedTx[] {
-  if (!manual.some(t => t.amount != null)) return []
+  if (!manual.some(t => t.amount != null) && s.planVersion !== 1) return []
   const { start, end } = periodOf(ym, s.monthStartDay)
-  return budgetEvents(s).flatMap(e => occurrences(e, start, end).filter(date => !linked.has(occurrenceKey(e.id, date))).map(date => {
+  const from = compareYm(ym,s.firstMonth)===0 && s.balanceDate && s.balanceDate > start ? s.balanceDate : start
+  return budgetEvents(s).flatMap(e => occurrences(e, from, end).filter(date => countsInPlan(e,date) && !linked.has(occurrenceKey(e.id, date))).map(date => {
     const due = date <= today
     return {
       ...classify({ id: `ev-${e.id}-${date}`, date, description: e.title, category: e.category, amount: due ? e.amount : null }, s),
@@ -175,7 +178,7 @@ export function rowIssues(t: ClassifiedTx, s: Settings, all?: Transaction[]): Ch
   // un movimento collegato a una volta è quella volta, non un doppione; lo è il secondo collegato alla stessa volta
   const link = validLink(t, s)
   if (link ? !!all?.some(x => x.id !== t.id && x.id < t.id && validLink(x, s) && x.occurrence!.eventId === link.eventId && x.occurrence!.date === link.date)
-      : t.category && t.amount != null && budgetEvents(s).some(e => e.category === t.category && e.amount === t.amount)) out.push('recurringDuplicate')
+      : t.category && t.amount != null && budgetEvents(s).some(e => e.category === t.category && e.amount === t.amount && (!t.date || countsInPlan(e,t.date)))) out.push('recurringDuplicate')
   return out
 }
 

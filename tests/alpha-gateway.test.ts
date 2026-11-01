@@ -59,3 +59,11 @@ it('news stays disabled by default; enabled news is authenticated read-only thro
  expect((await onRequest({request:request('news_items'),env:{...env,ALPHA_NEWS_ENABLED:'1'}})).status).toBe(404)
  expect((await onRequest({request:new Request(get.url),env:{...env,ALPHA_NEWS_ENABLED:'1'}})).status).toBe(401)
 })
+
+it('an older client cannot read or write planning documents it would misinterpret',async()=>{
+ const document={settings:{planVersion:1}},remote=vi.fn(async url=>new Response(JSON.stringify(String(url).endsWith('rpc/alpha_admit_request')?{allowed:true}:{document})))
+ vi.stubGlobal('fetch',remote)
+ expect((await onRequest({request:request('rpc/qsync_read'),env})).status).toBe(426)
+ const modern=request('rpc/qsync_read');modern.headers.set('x-quadriamo-capabilities','monthly-plan-v1');expect((await onRequest({request:modern,env})).status).toBe(200)
+ remote.mockClear();expect((await onRequest({request:request('rpc/qsync_write_v2',JSON.stringify({p_document_json:JSON.stringify(document)})),env})).status).toBe(426);expect(remote).toHaveBeenCalledTimes(1)
+})

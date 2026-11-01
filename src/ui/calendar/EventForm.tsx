@@ -1,3 +1,5 @@
+import { ENV } from '../../env'
+import { countsInPlan, togglePlan } from '../../engine/planContract'
 // Nuovo evento o modifica: tipo, nome, importo e categoria (per i pagamenti che entrano nel budget), prima data,
 // ripetizione (le più comuni con un nome, oppure "ogni N giorni/settimane/mesi/anni") e fine (mai, dopo N volte, in una data).
 // Per gli abbonamenti: mentre scrivi il nome arrivano i servizi del catalogo (monogramma e ripetizione giusta), e come lo paghi.
@@ -121,6 +123,7 @@ export function EventForm({ event, settings, today, focusAmount, onSave, onDelet
         <label className="txs-row"><span>{e.repeat ? t('ev.first') : t('ev.date')}</span>
           <input type="date" value={e.date} onChange={x => set({ date: x.target.value || today })} /></label>
       </div>
+      {ENV.flags.monthlyPlan && side === 'out' && e.category && <label className="check wrap-text"><input type="checkbox" checked={countsInPlan(e,today)} onChange={x=>{try{setE(togglePlan(e,today,x.target.checked));setErr('')}catch{setErr(t('plan.invalid'))}}}/><span>{t('plan.count')}<br/><small>{t('plan.countHint')}</small></span></label>}
       {e.kind === 'subscription' && e.service && serviceById(e.service)?.category === 'ai' &&
         <p className="small muted">{t('sub.planHint')}</p>}
       {e.kind === 'bill' && <p className="small muted">{t('ev.estimateHint')}</p>}

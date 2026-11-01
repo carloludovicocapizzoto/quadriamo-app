@@ -29,6 +29,9 @@ export interface Recurring {
 }
 
 export interface Settings {
+  planVersion?: 1
+  balanceDate?: string // opening snapshot date, first period only
+  incomePlans?: import('./planContract').IncomePlan[]
   expectedIncome?: number | null // planning only; never credited to the financial balances
   expectedFrom?: string | null // YYYY-MM; optional first planning period
   currency: string                  // valuta dell'utente, es. "EUR"
