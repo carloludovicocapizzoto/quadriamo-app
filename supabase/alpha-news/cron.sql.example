@@ -1,0 +1,8 @@
+-- TEMPLATE ONLY: do not execute without explicit Alpha authorization and approved source seed.
+-- Store alpha_news_ingest_url and alpha_news_cron_secret in Vault; never inline values.
+-- Deploy alpha-news-ingest with JWT verification OFF only because it requires x-cron-secret itself.
+-- select cron.schedule('alpha-news-every-two-hours','0 */2 * * *', $job$
+-- select net.http_post(url := (select decrypted_secret from vault.decrypted_secrets where name='alpha_news_ingest_url'),
+-- headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select decrypted_secret from vault.decrypted_secrets where name='alpha_news_cron_secret')),
+-- body := '{}'::jsonb, timeout_milliseconds := 30000);
+-- $job$);

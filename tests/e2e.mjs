@@ -14,7 +14,7 @@ if (screenshotDir) mkdirSync(screenshotDir, { recursive: true })
 
 // il server con l'app costruita (npm run e2e la costruisce in dist-e2e), se non ne è stato indicato un altro
 const server = process.env.E2E_URL ? null
-  : spawn('npx', ['vite', 'preview', '--outDir', 'dist-e2e', '--port', '4180', '--strictPort'], { stdio: 'ignore', detached: true })
+  : spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--outDir', 'dist-e2e', '--port', '4180', '--strictPort'], { stdio: 'ignore', detached: true })
 for (let i = 0; i < 120; i++) { try { if ((await fetch(URL_APP)).ok) break } catch { /* non ancora */ } await sleep(250) }
 
 const errors = []

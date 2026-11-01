@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { recordPrice, type Investments, type LiveQuote, type PriceDays, type Settings } from '../engine'
 import { fetchCryptoQuotes, quoteRequest, quotesFor } from '../quotes'
+import { useStore } from '../store/context'
 import { personal } from '../storage'
-import { currentScope, onScopeChange, type ScopeLease } from '../store/scope'
+import { currentScope, type ScopeLease } from '../store/scope'
 
 // I prezzi restano su questo dispositivo, fuori dai dati sincronizzati: gli investimenti si uniscono tra dispositivi
 // in blocco, e un aggiornamento automatico dei prezzi potrebbe cancellare le quote appena cambiate su un altro telefono.
@@ -38,16 +39,19 @@ export function rememberManual(p: StoredPrices, inv: Investments, today: string)
 
 /** Prezzi automatici delle crypto e variazioni dei prezzi a mano, finché la schermata è aperta. */
 export function useLivePrices(inv: Investments, settings: Settings, today: string) {
-  const scopeId = useSyncExternalStore(onScopeChange, () => currentScope().id)
+  const { lease: owner } = useStore()
+  const ownerLease = owner ?? currentScope()
+  const scopeId = ownerLease.id
   const [snapshot, setSnapshot] = useState(() => ({ scopeId, prices: readPrices() }))
   const stored = snapshot.scopeId === scopeId ? snapshot.prices : readPrices()
   // i prezzi a mano di oggi si calcolano qui e si salvano dopo: il disegno non aspetta la memoria del browser
   const days = rememberManual(stored, inv, today).days
 
   useEffect(() => {
+    if (!ownerLease.current()) return
     const now = readPrices()
     if (JSON.stringify(now.days) !== JSON.stringify(days)) personal.setJson(KEY, { ...now, days })
-  }, [days])
+  }, [days, ownerLease])
 
   const holdings = useRef(inv.holdings)
   useEffect(() => { holdings.current = inv.holdings })
@@ -55,12 +59,13 @@ export function useLivePrices(inv: Investments, settings: Settings, today: strin
   const key = q.coins.length ? `${q.coins.join(',')}|${q.vs.join(',')}` : ''
   useEffect(() => {
     if (!key) return
-    const lease = currentScope()
+    const lease = ownerLease
     let alive = true
     let pending = false
     let attempted = 0
     const check = () => {
       const p = readPrices()
+      if (alive && lease.current()) setSnapshot({ scopeId, prices: p })
       if (!alive || !lease.current() || pending || Date.now() - attempted < EVERY || !navigator.onLine || (p.key === key && p.checked && Date.now() - Date.parse(p.checked) < EVERY)) return
       pending = true
       attempted = Date.now()
@@ -74,7 +79,8 @@ export function useLivePrices(inv: Investments, settings: Settings, today: strin
     const id = setInterval(check, EVERY)
     return () => { alive = false; clearInterval(id) }
     // la richiesta dipende solo da monete e valute (key), non da ogni modifica dei titoli
-  }, [key, settings.currency, scopeId])
+  }, [key, settings.currency, scopeId, ownerLease])
 
+  if (!ownerLease.current()) return { live: {}, days: {}, byHolding: {} }
   return { live: stored.live, days, byHolding: quotesFor(inv.holdings, settings.currency, stored.live) }
 }

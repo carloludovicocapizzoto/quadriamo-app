@@ -23,7 +23,7 @@ export function coinId(h: Pick<Holding, 'type' | 'ticker'>): string | null {
 
 /** Che cosa chiedere per un portafoglio: monete e valute, in ordine (così la stessa richiesta dà la stessa chiave). */
 export function quoteRequest(holdings: Holding[], currency: string) {
-  const want = holdings.map(h => ({ id: h.id, coin: coinId(h), vs: (h.currency || currency).toLowerCase() })).filter(x => x.coin)
+  const want = holdings.map(h => ({ id: h.id, coin: coinId(h), vs: (h.currency || currency).toLowerCase() })).filter(x => x.coin && /^[a-z]{3}$/.test(x.vs))
   return { want: want as { id: string; coin: string; vs: string }[], coins: [...new Set(want.map(x => x.coin!))].sort(),
            vs: [...new Set(want.map(x => x.vs))].sort() }
 }
