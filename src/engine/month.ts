@@ -115,6 +115,7 @@ export function linkedOccurrences(all: Transaction[], s: Settings): Set<string> 
  * nemmeno prima della scadenza; resta il movimento, con il suo importo vero.
  */
 export function recurringOf(ym: YearMonth, manual: Transaction[], s: Settings, today: string, linked: Set<string> = new Set()): ClassifiedTx[] {
+  if (s.planVersion === 1 && compareYm(ym, s.firstMonth) < 0) return []
   if (!manual.some(t => t.amount != null) && s.planVersion !== 1) return []
   const { start, end } = periodOf(ym, s.monthStartDay)
   const from = compareYm(ym,s.firstMonth)===0 && s.balanceDate && s.balanceDate > start ? s.balanceDate : start
@@ -220,7 +221,7 @@ export function computeMonth(
   let before: Divided = { ruled: 0, custom: {} }
   if (!carriedOver) {
     if (compareYm(ym, s.firstMonth) <= 0) {
-      carriedOver = Object.fromEntries(s.buckets.map(b => [b.id, b.startingBalance]))
+      carriedOver = Object.fromEntries(s.buckets.map(b => [b.id, s.planVersion === 1 && compareYm(ym,s.firstMonth)<0 ? 0 : b.startingBalance]))
     } else {
       const prev = computeMonth(prevMonth(ym), all, s, today, undefined, cache)
       carriedOver = Object.fromEntries(prev.buckets.map(r => [r.bucket.id, r.remaining]))

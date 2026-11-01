@@ -17,6 +17,7 @@ it.each(['EUR','JPY','KWD'])('opening snapshot is actual money, never income; %s
  expect(widenFirstMonth(s,old)).toBe(s)
  const withOld=computeMonth(s.firstMonth,[old,{...old,id:'pre',date:'2026-11-01'}],s,'2026-11-15');expect(withOld.buckets.reduce((a,b)=>a+b.remaining,0)).toBe(1000)
  expect(old.date).toBe('2026-10-30')
+ expect(computeMonth({year:2026,month:10},[old],s,'2026-11-15').buckets.reduce((a,b)=>a+b.remaining,0)).toBe(0)
  const next=computeMonth({year:2026,month:12},[],s,'2026-12-01');expect(monthPlanning(next,s,'2026-12-01')?.expected).toBe(1000)
 })
 it('nonretroactive toggles preserve already counted due dates, while real linked payments always count',()=>{
