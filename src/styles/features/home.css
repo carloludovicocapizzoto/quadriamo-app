@@ -2,12 +2,16 @@
 .home-date { margin: 0; font-size: var(--t-h2); font-weight: 600; letter-spacing: -.02em; }
 
 /* il numero del giorno: il protagonista, senza riquadro */
-.hero { margin: var(--s8) 0 var(--s12); }
-.hero-amount { display: block; font-size: var(--t-hero); font-weight: 600; letter-spacing: -.045em; line-height: 1; }
+.hero { margin: var(--s8) 0 var(--s12); container-type: inline-size; }
+.hero-amount { display: block; font-size: min(var(--t-hero), calc(100cqi / (var(--amount-len, 9) * .5))); font-weight: 600; letter-spacing: -.045em; line-height: 1; }
 .hero-sub { margin: var(--s3) 0 0; color: var(--muted); font-size: 15px; }
 
 /* i quattro blocchi: ognuno si svuota dall'alto mentre spendi; il colore è la parte */
 .blocks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); }
+/* se gli importi a quattro colonne sarebbero troppo piccoli: due per riga (ui/home/blockLayout); la valuta a capo se serve */
+.blocks.two { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--s4); }
+.blocks.one { grid-template-columns: minmax(0, 1fr); row-gap: var(--s4); }
+.blocks.split .block-amount .cur { display: block; }
 .block { display: grid; gap: 2px; min-width: 0; padding: 0; border: 0; container-type: inline-size; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
   -webkit-tap-highlight-color: transparent; }
 .block-shape { position: relative; height: 64px; border-radius: var(--r-sm); overflow: hidden; margin-bottom: var(--s2);
@@ -17,15 +21,15 @@
 .block:active .block-shape { transform: scale(.96); }
 .block.over .block-shape { background: none; box-shadow: inset 0 0 0 1.5px var(--bad); }
 .block-name { font-size: var(--t-cap); line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; hyphens: auto; }
-/* 15 px finché ci sta l'importo più lungo dei quattro (circa .6 em a carattere), poi più piccolo: mai fuori dalla colonna */
-.block-amount { font-size: min(15px, calc(100cqi / (var(--amount-len, 9) * .6))); font-weight: 600; letter-spacing: -.01em; white-space: nowrap; }
+/* la misura la decide ui/home/blockLayout (almeno 14 px, 15 di regola); prima della misura, come prima: mai fuori dalla colonna */
+.block-amount { font-size: var(--block-font, min(15px, calc(100cqi / (var(--amount-len, 9) * .6)))); font-weight: 600; letter-spacing: -.01em; white-space: nowrap; }
 .block.over .block-amount { color: var(--bad); }
 
 /* oggi */
 .today .tx-list { margin: 0; }
 
 @media (min-width: 720px) {
-  .hero-amount { font-size: 84px; }
+  .hero-amount { font-size: min(84px, calc(100cqi / (var(--amount-len, 9) * .5))); }
   .block-shape { height: 88px; }
 }
 
