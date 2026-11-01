@@ -140,6 +140,6 @@ export function portfolioMove(inv: Investments, s: Settings, live: Record<string
 }
 
 /** Il titolo con il prezzo automatico del dispositivo, per i calcoli di sempre (il prezzo a mano continua a vincere). */
-export const withLive = (h: Holding, live: Record<string, LiveQuote>): Holding => live[h.id] ? { ...h, livePrice: live[h.id].price } : h
+export const withLive = (h: Holding, live: Record<string, LiveQuote>): Holding => ({ ...h, livePrice: live[h.id]?.price ?? null })
 export const investmentsWithLive = (inv: Investments, live: Record<string, LiveQuote>): Investments =>
   ({ ...inv, holdings: inv.holdings.map(h => withLive(h, live)) })

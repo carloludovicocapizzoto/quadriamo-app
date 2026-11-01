@@ -62,3 +62,5 @@ describe('movimento del portafoglio', () => {
     expect(portfolioMove(inv, s, {}, {})).toBeNull()
   })
 })
+
+it('an old saved livePrice is not a fallback for missing provider data; original data stays intact',async()=>{const {withLive,valueHolding,defaultSettings}=await import('.');const h={id:'a',name:'a',units:1,avgPrice:10,livePrice:999};expect(valueHolding(withLive(h,{}),defaultSettings({firstMonth:{year:2026,month:11}})).value).toBeNull();expect(h.livePrice).toBe(999);expect(valueHolding(withLive({...h,manualPrice:12},{}),defaultSettings({firstMonth:{year:2026,month:11}})).value).toBe(12)})
