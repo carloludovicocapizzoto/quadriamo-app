@@ -17,3 +17,13 @@ export function approvedImage(raw:string|null|undefined,source:ImageRights):stri
  if(source.image_rights_scope!=='feed'&&!(source.image_rights_scope==='approved-urls'&&Array.isArray(source.image_approved_urls)&&source.image_approved_urls.includes(raw)))return null
  return raw
 }
+
+/** Per-source scope: when prefixes are configured, only article paths under them enter (e.g. ISTAT press releases only). */
+export function allowedPath(raw:string,prefixes:string[]|null|undefined):boolean {
+ if(!Array.isArray(prefixes)||!prefixes.length)return true
+ try {const path=new URL(raw).pathname.replace(/\/{2,}/g,'/');return prefixes.some(p=>typeof p==='string'&&p.startsWith('/')&&path.startsWith(p))}catch{return false}
+}
+/** Some feeds (ECB) publish links with a doubled slash: same page, one canonical address. */
+export function tidyLink(raw:string):string {
+ try {const u=new URL(raw);u.pathname=u.pathname.replace(/\/{2,}/g,'/');return u.toString()}catch{return raw}
+}

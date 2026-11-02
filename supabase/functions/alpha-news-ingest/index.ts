@@ -2,7 +2,7 @@
 // (tabella news_sources), toglie doppioni e titoli senza sostanza, classifica con regole, riconosce la stessa notizia
 // raccontata da più fonti e salva in news_items solo titolo, estratto del feed, link, data e l'indirizzo dell'immagine del feed.
 // Alpha opzionale: solo metadati, nessuna fonte attivata automaticamente, retention 14 giorni.
-import { approvedImage, approvedUrl, validFeedXml } from '../_shared/alpha-news-policy.ts'
+import { allowedPath, approvedImage, approvedUrl, tidyLink, validFeedXml } from '../_shared/alpha-news-policy.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { parse, type Raw } from '../_shared/news-feed.ts'
 import { canonical, keywords } from '../_shared/news-rules.ts'
@@ -28,7 +28,7 @@ async function read(src: Source): Promise<{ src: Source; raw: Raw[]; error?: str
     if (!res.ok) return { src, raw: [], error: `HTTP ${res.status}` }
     const xml=await readFeed(res)
     if(!validFeedXml(xml))throw Error('invalid or unsafe feed XML')
-    const raw=parse(xml).filter(item=>approvedUrl(item.link,allowed) && item.link.length<=2048 && item.title.length<=500).slice(0,25)
+    const raw=parse(xml).map(item=>({...item,link:tidyLink(item.link)})).filter(item=>approvedUrl(item.link,allowed) && allowedPath(item.link,src.link_prefixes) && item.link.length<=2048 && item.title.length<=500).slice(0,25)
     return {src,raw}
   } catch (e) { return { src, raw: [], error: (e as Error).message.slice(0, 120) } }
 }
@@ -68,7 +68,9 @@ Deno.serve(async req => {
       if (seen.has(id)) continue
       seen.add(id)
       const out = toItem(src, r, id, now, pool)
-      if ('row' in out) rows.push({ ...out.row, excerpt: null, thumb: approvedImage(r.thumb, src) })
+      // Alpha: headline exactly as published (no rewriting), and nothing older than the retention window,
+      // otherwise it would be deleted and re-inserted at every run.
+      if ('row' in out && now - Date.parse(out.row.published as string) <= KEEP_DAYS * 864e5) rows.push({ ...out.row, title: r.title.trim(), excerpt: null, thumb: approvedImage(r.thumb, src) })
     }
   }
   for (let i = 0; i < rows.length; i += 200) {

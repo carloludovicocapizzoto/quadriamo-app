@@ -1,0 +1,73 @@
+{
+  "purpose": "Primo rilascio Notizie Alpha: BCE, ISTAT, Eurostat. Solo titoli originali e link, nessuna immagine. INATTIVO: approvedBy vuoto finché Carlo non approva le condizioni; tools/news/prepare-alpha.mjs rifiuta il manifesto senza approvazione e genera comunque righe active=false.",
+  "reviewedAt": "2026-11-02",
+  "approvedBy": "",
+  "sources": [
+    {
+      "id": "ecb-press",
+      "name": "BCE",
+      "kind": "institution",
+      "feed": "https://www.ecb.europa.eu/rss/press.html",
+      "site": "https://www.ecb.europa.eu/",
+      "lang": "en",
+      "trust": 5,
+      "linkPrefixes": ["/press/pr/", "/press/govcdec/"],
+      "rights": {
+        "titleAllowed": true,
+        "reference": "https://www.ecb.europa.eu/services/disclaimer/html/index.en.html",
+        "attribution": "Fonte: BCE",
+        "conditions": "Uso libero se accurato e con la BCE citata come fonte; dichiarare modifiche; nessun frame (link a finestra intera). Esclusi documenti firmati (Working/Occasional Papers): discorsi e interviste fuori dal perimetro."
+      }
+    },
+    {
+      "id": "ecb-stats",
+      "name": "BCE · Statistiche",
+      "kind": "institution",
+      "feed": "https://www.ecb.europa.eu/rss/statpress.html",
+      "site": "https://www.ecb.europa.eu/",
+      "lang": "en",
+      "trust": 5,
+      "linkPrefixes": ["/press/stats/"],
+      "rights": {
+        "titleAllowed": true,
+        "reference": "https://www.ecb.europa.eu/services/disclaimer/html/index.en.html",
+        "attribution": "Fonte: BCE",
+        "conditions": "Come ecb-press."
+      }
+    },
+    {
+      "id": "istat",
+      "name": "Istat",
+      "kind": "institution",
+      "feed": "https://www.istat.it/feed/",
+      "site": "https://www.istat.it/",
+      "lang": "it",
+      "trust": 5,
+      "linkPrefixes": ["/comunicato-stampa/"],
+      "rights": {
+        "titleAllowed": true,
+        "reference": "https://www.istat.it/note-legali/",
+        "attribution": "Fonte: Istat – CC BY 4.0",
+        "licence": "https://creativecommons.org/licenses/by/4.0/deed.it",
+        "conditions": "CC BY 4.0 salvo diversa indicazione, anche commerciale; attribuzione, link alla licenza, indicare modifiche, nessuna approvazione implicita. Loghi e contenuti di terzi esclusi. Il feed generale mescola eventi e newsletter: solo comunicati stampa."
+      }
+    },
+    {
+      "id": "eurostat",
+      "name": "Eurostat",
+      "kind": "institution",
+      "feed": "https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL",
+      "site": "https://ec.europa.eu/eurostat/",
+      "lang": "en",
+      "trust": 5,
+      "linkPrefixes": [],
+      "rights": {
+        "titleAllowed": true,
+        "reference": "https://ec.europa.eu/eurostat/help/copyright-notice",
+        "attribution": "Fonte: Eurostat – CC BY 4.0",
+        "licence": "https://creativecommons.org/licenses/by/4.0/",
+        "conditions": "CC BY 4.0 per i contenuti editoriali UE (Decisione 2011/833/UE), anche commerciale; dichiarare modifiche. Esclusi foto/illustrazioni di terzi e loghi. linkPrefixes da fissare dopo aver letto il feed dall'ambiente Alpha."
+      }
+    }
+  ]
+}
