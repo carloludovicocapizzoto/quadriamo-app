@@ -1,8 +1,19 @@
--- TEMPLATE ONLY: do not execute without explicit Alpha authorization and approved source seed.
--- Store alpha_news_ingest_url and alpha_news_cron_secret in Vault; never inline values.
--- Deploy alpha-news-ingest with JWT verification OFF only because it requires x-cron-secret itself.
+-- TEMPLATE ONLY: do not execute without explicit Alpha authorization and completed source/security gates.
+-- Preconditions: pg_cron, pg_net and Vault available; ALPHA_NEWS_INGEST_ENABLED=1 only for the authorized run.
+-- Keep Edge Function JWT verification ON. Store the function URL, a non-privileged project anon JWT,
+-- and alpha_news_cron_secret in Vault. Never use a service-role JWT as the caller and never inline values.
+-- Before scheduling, confirm no row named alpha-news-every-two-hours exists; do not create a duplicate.
+-- select jobid, jobname, schedule from cron.job where jobname='alpha-news-every-two-hours';
 -- select cron.schedule('alpha-news-every-two-hours','0 */2 * * *', $job$
--- select net.http_post(url := (select decrypted_secret from vault.decrypted_secrets where name='alpha_news_ingest_url'),
--- headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select decrypted_secret from vault.decrypted_secrets where name='alpha_news_cron_secret')),
--- body := '{}'::jsonb, timeout_milliseconds := 30000);
+-- select net.http_post(
+--   url := (select decrypted_secret from vault.decrypted_secrets where name='alpha_news_ingest_url'),
+--   headers := jsonb_build_object(
+--     'Content-Type','application/json',
+--     'Authorization','Bearer '||(select decrypted_secret from vault.decrypted_secrets where name='alpha_news_invoker_jwt'),
+--     'x-cron-secret',(select decrypted_secret from vault.decrypted_secrets where name='alpha_news_cron_secret')
+--   ),
+--   body := '{}'::jsonb,
+--   timeout_milliseconds := 30000
+-- );
 -- $job$);
+-- If the non-privileged JWT cannot pass the deployed gateway, stop and resolve auth separately; do not disable verify_jwt.

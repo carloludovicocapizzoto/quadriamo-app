@@ -20,6 +20,21 @@ it('source scope keeps only configured article paths and tidies doubled slashes'
   expect(policy.tidyLink('https://www.ecb.europa.eu//press/pr/x.en.html')).toBe('https://www.ecb.europa.eu/press/pr/x.en.html')
 })
 
+it('Eurostat Atom manifest is scoped, parseable, and remains excluded until Alpha egress is approved', () => {
+  const manifest = JSON.parse(readFileSync('supabase/alpha-news/sources.first-release.json', 'utf8'))
+  const source = manifest.sources.find((s: { id: string }) => s.id === 'eurostat')
+  expect(source).toMatchObject({ hold: true, linkPrefixes: ['/eurostat/product'], rights: { titleAllowed: true, licenceName: 'CC BY 4.0', attribution: 'Eurostat' } })
+  const atom = '<feed><entry><title>Inflation update</title><updated>2026-11-02T10:00:00Z</updated><link rel="alternate" href="https://ec.europa.eu/eurostat/product?code=synthetic"/></entry></feed>'
+  const [item] = feed.parse(atom)
+  expect(item.link).toBe('https://ec.europa.eu/eurostat/product?code=synthetic')
+  expect(policy.approvedUrl(source.feed, ['ec.europa.eu'])).toBe(true)
+  expect(policy.approvedUrl(item.link, ['ec.europa.eu'])).toBe(true)
+  expect(policy.allowedPath(item.link, source.linkPrefixes)).toBe(true)
+  expect(policy.allowedPath('https://ec.europa.eu/eurostat/en/unrelated', source.linkPrefixes)).toBe(false)
+  expect(rules.canonical(item.link)).toContain('?code=synthetic')
+  expect(policy.approvedImage('https://ec.europa.eu/eurostat/image.png', { images: false })).toBeNull()
+})
+
 it('SIMULATED ingest stores original headlines inside the source scope and skips items older than retention', async () => {
   const env: Record<string, string> = { ALPHA_NEWS_INGEST_ENABLED: '1', CRON_SECRET: 'synthetic', SUPABASE_URL: 'https://djkoxecmobafenfazcum.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'synthetic-server-key', NEWS_ALLOWED_HOSTS: 'feed.example.com,source.example.com' }
   const src = { id: 'scoped', name: 'Synthetic', kind: 'institution', format: 'rss', feed: 'https://feed.example.com/rss', lang: 'it', trust: 5, topics: ['economy'], images: false, link_prefixes: ['/comunicato-stampa/'] }

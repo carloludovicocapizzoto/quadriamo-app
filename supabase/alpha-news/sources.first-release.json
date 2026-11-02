@@ -1,5 +1,5 @@
 {
-  "purpose": "Primo rilascio Notizie Alpha. Condizioni d'uso approvate il 02/11/2026 per BCE e ISTAT nel perimetro documentato (solo titoli originali e link, nessuna immagine); Eurostat sospesa (hold) finché feed, link e affidabilità non sono verificati dal backend Alpha. Il seed generato resta sempre active=false: l'attivazione è un passo separato e autorizzato.",
+  "purpose": "Primo rilascio Notizie Alpha. Condizioni d'uso approvate il 02/11/2026 per BCE e ISTAT nel perimetro documentato (solo titoli originali e link, nessuna immagine). Eurostat: feed Atom ufficiale, host, percorso e CC BY 4.0 verificati localmente il 02/11/2026; resta hold perché l'uscita HTTPS dal backend Alpha non è stata provata e la fonte non è stata attivata. Il seed genera sempre active=false; l'attivazione resta separata e autorizzata.",
   "reviewedAt": "2026-11-02",
   "approvedBy": "Federico Santoro e Carlo Capizzoto, 02/11/2026 (condizioni BCE e ISTAT)",
   "sources": [
@@ -65,17 +65,20 @@
       "name": "Eurostat",
       "kind": "institution",
       "hold": true,
+      "holdReason": "Richiede una prova di egress dal backend Alpha per ec.europa.eu e autorizzazione esplicita prima dell'attivazione; NEWS_ALLOWED_HOSTS cloud non include ancora ec.europa.eu.",
       "feed": "https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL",
       "site": "https://ec.europa.eu/eurostat/",
       "lang": "en",
       "trust": 5,
-      "linkPrefixes": [],
+      "linkPrefixes": [
+        "/eurostat/product"
+      ],
       "rights": {
         "titleAllowed": true,
         "reference": "https://ec.europa.eu/eurostat/help/copyright-notice",
         "attribution": "Eurostat",
         "licence": "https://creativecommons.org/licenses/by/4.0/",
-        "conditions": "CC BY 4.0 per i contenuti editoriali UE (Decisione 2011/833/UE), anche commerciale; dichiarare modifiche. Esclusi foto/illustrazioni di terzi e loghi. linkPrefixes da fissare dopo aver letto il feed dall'ambiente Alpha.",
+        "conditions": "CC BY 4.0 per i contenuti editoriali UE (Decisione 2011/833/UE), anche commerciale; attribuire Eurostat, collegare licenza e articolo, indicare eventuali modifiche. Esclusi foto/illustrazioni di terzi e loghi. Perimetro osservato: /eurostat/product. Nessun estratto o immagine previsto.",
         "licenceName": "CC BY 4.0"
       }
     }

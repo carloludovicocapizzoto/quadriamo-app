@@ -4,7 +4,7 @@ Preparato il 02/11/2026 sul branch `claude/alpha-news-sources`, che parte da `88
 
 Nessun deploy, nessuna migrazione, nessun flag attivato, nessuna modifica cloud.
 
-**Condizioni d'uso approvate il 02/11/2026** da Federico e Carlo per BCE e ISTAT, nel perimetro indicato sotto. È un'approvazione delle condizioni, non un'autorizzazione a modificare il cloud. Eurostat resta nel manifesto ma sospesa (`hold`), finché feed, link e affidabilità non sono verificati dal backend Alpha. Il seed genera sempre fonti `active=false`.
+**Condizioni d'uso approvate il 02/11/2026** da Federico e Carlo per BCE e ISTAT, nel perimetro indicato sotto. È un'approvazione delle condizioni, non un'autorizzazione a modificare il cloud. Il feed, il percorso dei link e la licenza editoriale Eurostat sono stati verificati localmente il 02/11; Eurostat resta nel manifesto ma sospesa (`hold`) finché non è provata l'uscita HTTPS dal backend Alpha e non viene autorizzata l'attivazione. Il seed genera sempre fonti `active=false`.
 
 ## 1. Fonti e condizioni
 
@@ -15,7 +15,7 @@ Si mostrano soltanto il titolo originale, il nome della fonte e il link all'arti
 | BCE (`ecb-press`) | https://www.ecb.europa.eu/rss/press.html | `/press/pr/`, `/press/govcdec/` | [Disclaimer & copyright](https://www.ecb.europa.eu/services/disclaimer/html/index.en.html): uso libero se le informazioni sono riportate con accuratezza e la BCE è citata come fonte; le modifiche vanno dichiarate; dai siti commerciali il sito BCE si apre a finestra intera, senza frame. Per i documenti firmati dagli autori serve un'autorizzazione scritta | «Fonte: BCE · Condizioni d'uso» (link alle condizioni) | Pagina letta il 02/11. Feed: RSS, 200, nessuna immagine |
 | BCE statistiche (`ecb-stats`) | https://www.ecb.europa.eu/rss/statpress.html | `/press/stats/` | Come sopra | «Fonte: BCE · Condizioni d'uso» | Feed: RSS, 200, nessuna immagine |
 | Istat (`istat`) | https://www.istat.it/feed/ | `/comunicato-stampa/` | [Note legali](https://www.istat.it/note-legali/): CC BY 4.0 salvo diversa indicazione, anche per fini commerciali; immagini, loghi e contenuti di terzi esclusi; il logo richiede un'autorizzazione | «Fonte: Istat · CC BY 4.0», con link alla licenza, e il pulsante all'articolo originale | Pagina letta il 02/11. Il feed mescola comunicati, eventi, newsletter e microdati: 5 voci su 10 sono comunicati |
-| Eurostat (`eurostat`) | Atom dei comunicati stampa (`CAT_PREREL`, URL completo nel manifesto) | Da fissare | [Copyright notice](https://ec.europa.eu/eurostat/help/copyright-notice): CC BY 4.0 per i contenuti editoriali UE (Decisione 2011/833/UE), anche commerciale; foto e loghi di terzi esclusi | «Fonte: Eurostat · CC BY 4.0» (sospesa) | Feed visto rispondere 200 il 02/11. Poco dopo ec.europa.eu ha chiuso le connessioni (reset): pagina non riletta di persona |
+| Eurostat (`eurostat`) | Atom ufficiale dei comunicati stampa (`CAT_PREREL`, URL completo nel manifesto), 200 e 11 entry osservati da rete locale | `/eurostat/product` (link con codice stabile; un redirect d'esempio resta su `ec.europa.eu`) | [Copyright notice](https://ec.europa.eu/eurostat/help/copyright-notice): CC BY 4.0 per contenuti editoriali UE anche commerciali; attribuzione e indicazione di modifiche. Foto, illustrazioni di terzi e loghi esclusi | «Fonte: Eurostat · CC BY 4.0», link alla licenza e all'articolo; solo titolo originale, nessun estratto/immagine | Feed e link verificati localmente il 02/11; **non** verificati dall'Edge Function Alpha. Host non ancora ammesso in `NEWS_ALLOWED_HOSTS`, quindi resta `hold` e inattiva |
 
 Il manifesto è in `supabase/alpha-news/sources.first-release.json`. `approvedBy` è compilato. `tools/news/prepare-alpha.mjs` salta le fonti `hold`, richiede per ogni fonte l'attribuzione (e il nome con il link HTTPS della licenza, se c'è) e genera righe `active=false`.
 
@@ -24,7 +24,7 @@ Il manifesto è in `supabase/alpha-news/sources.first-release.json`. `approvedBy
 1. **BCE.** Comunicati, decisioni del Consiglio direttivo e statistiche, con attribuzione esplicita e link diretto. Se le Notizie entrano in un piano a pagamento, va mostrato che le informazioni sono gratuite sul sito BCE: è un gate prima di qualunque offerta a pagamento delle Notizie.
 2. **ISTAT.** La dicitura «Fonte: Istat · CC BY 4.0» compare nel dettaglio della notizia, con il link alla licenza e il pulsante all'articolo originale. Sulle schede dell'elenco resta il nome della fonte.
 3. **Lingua.** I titoli originali in inglese di BCE ed Eurostat restano, senza traduzioni.
-4. **Eurostat.** È sospesa: si attiva solo dopo una lettura dal backend Alpha che fissi `linkPrefixes` e dimostri che il server non viene bloccato.
+4. **Eurostat.** Perimetro `linkPrefixes` fissato a `/eurostat/product` dopo aver letto il feed ufficiale; il parser comune supporta Atom. Resta sospesa finché un test controllato dal backend Alpha non dimostra l'egress HTTPS consentito e il proprietario non autorizza l'attivazione. Le sole URL RSS/Atom non conferiscono diritti: il perimetro è limitato a titoli originali, attribuzione, link all'articolo e alla licenza; nessun estratto, immagine o logo.
 
 ## 2. Cosa c'è già (2I) e cosa aggiunge questo branch
 
@@ -55,43 +55,32 @@ Aggiunte in questo branch:
   - un errore nell'aggiornare lo stato di una fonte non viene più ignorato: la risposta è 500 con `statusFailed`.
 - Test: `tests/alpha-news-first-release.test.ts` (perimetro, titolo originale, conservazione, manifesto, riga di credito, segreto, errori di stato). L'e2e del Piano e delle Notizie controlla la riga di credito nel dettaglio.
 
-### Cosa manca, in ordine
+### Stato del backend Alpha e gate residui (02/11/2026)
 
-1. ~~Approvazione delle condizioni~~: fatta il 02/11 per BCE e ISTAT.
-2. Autorizzazione di Federico per Supabase Alpha.
-3. Il **preflight dello schema**: verificare se l'Alpha ha già tabelle `news_*`. `001` usa `alter table … add column` senza `if not exists`, quindi su tabelle già esistenti si ferma con un errore. È un errore sicuro, perché la transazione viene annullata, ma blocca l'attivazione.
-4. Applicare `001`, `002` e `003`; poi il seed inattivo.
-5. Secret della Function: `CRON_SECRET` (nuovo, casuale), `NEWS_ALLOWED_HOSTS`, `ALPHA_NEWS_INGEST_ENABLED`. `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` li fornisce la piattaforma. Il deploy va fatto con verifica JWT spenta, perché la Function controlla da sé `x-cron-secret`.
-6. Vault (`alpha_news_ingest_url`, `alpha_news_cron_secret`), pg_cron e pg_net per il job ogni 2 ore, partendo da `cron.sql.example`.
-7. **Ordine obbligatorio:** il client Alpha di questo branch chiede le colonne di attribuzione. `003` va quindi applicato prima di accendere le Notizie nell'app; altrimenti la lettura fallisce e la scheda mostra solo i consigli.
-8. Collaudo sul vero Alpha: RLS (`anon` negato, `authenticated` vede solo le fonti attive), gateway, deduplica, conservazione e perimetro. Poi Pages con `ALPHA_NEWS_ENABLED=1` e la build con `cloud:news` e `ALPHA_NEWS_BACKEND_READY=1`.
+- `001_schema.sql`, `002_gateway.sql` e `003_source_scope.sql` risultano applicati; schema, policy e privilegi sono stati ispezionati in sola lettura.
+- Sono presenti le tre fonti BCE comunicati, BCE statistiche e ISTAT, tutte `active=false`, `images=false`. L'ingestione manuale ha salvato 7, 4 e 5 titoli rispettivamente; la seconda esecuzione è stata idempotente. I 16 record non hanno estratti né immagini.
+- La Edge Function `alpha-news-ingest` è distribuita e il percorso manuale protetto è stato verificato. `ALPHA_NEWS_INGEST_ENABLED=0`; il feed pubblico resta OFF. Il test anonimo alle tabelle è stato negato (`401`, `42501`). L'ispezione della policy non sostituisce ancora una lettura con JWT di un utente autenticato.
+- Eurostat non è stata seminata: il feed Atom, il prefisso `/eurostat/product` e la licenza editoriale sono verificati localmente, ma non l'uscita dal runtime Supabase. L'allowlist corrente contiene solo `www.ecb.europa.eu,www.istat.it`.
+- Non risultano job `alpha-news-*`; `pg_net` non è installato. Non è stato creato o attivato alcun cron.
+- La Function Alpha ha la verifica JWT attiva. Il vecchio `cron.sql.example`, che ipotizzava JWT OFF e solo `x-cron-secret`, non è eseguibile in questa configurazione: il template sotto mantiene JWT ON e richiede un JWT non privilegiato in Vault oltre al segreto applicativo. Se non è disponibile un token compatibile, fermarsi; non disattivare la verifica JWT come scorciatoia.
+
+I gate residui sono: un test RLS di lettura con JWT utente reale; per Eurostat, aggiunta autorizzata di `ec.europa.eu` all'allowlist e una prova manuale/di idempotenza dalla Function prima di qualunque attivazione; per lo scheduler, disponibilità/approvazione di `pg_cron`, `pg_net`, Vault e JWT invoker. Nessun gate richiede una nuova migrazione per aggiungere la sola riga Eurostat.
 
 ## 3. Procedura di attivazione
 
 Ogni passo si fa solo con l'autorizzazione esplicita di Federico, e ci si ferma al primo esito diverso da quello atteso.
 
-1. **Preflight, sola lettura:** controllare `to_regclass('public.news_sources')` e `public.news_items` e le colonne presenti; `select count(*) from cron.job where jobname like 'alpha-news%'` deve dare 0.
-2. **Schema:** `001`, `002`, `003`, ciascuno nella propria transazione.
-3. **Verifica dei permessi:**
+1. **Preflight, sola lettura:** confermare il progetto Alpha, le colonne attuali e che non esista `alpha-news-every-two-hours`; confrontare lo schema prima di qualunque migrazione.
+2. **Verifica dei permessi:**
    - `anon`: nessun accesso alle due tabelle;
    - `authenticated`: 0 righe finché tutte le fonti sono inattive;
    - un insert con `active=true` senza `rights_reference` o `approved_by` deve fallire.
-4. **Seed:** generare l'SQL dal manifesto approvato con `node tools/news/prepare-alpha.mjs <manifesto> <dir>`, rileggerlo e applicarlo. Le fonti restano `active=false`.
-5. **Function:** impostare i secret, con `ALPHA_NEWS_INGEST_ENABLED=0`, e fare il deploy. Una POST senza segreto deve rispondere 503, cioè ingestione spenta.
-6. **Ingestione controllata:**
-   - attivare **una** fonte, ISTAT:
-     ```sql
-     update news_sources set active=true where id='istat'
-     ```
-   - impostare `ALPHA_NEWS_INGEST_ENABLED=1` e fare una sola POST manuale con il segreto;
-   - controllare:
-     - `saved` è al massimo 25 e `failed` è vuoto;
-     - i link stanno tutti sotto `/comunicato-stampa/`;
-     - i titoli sono identici al feed, `excerpt` e `thumb` sono null;
-     - una seconda POST salva 0 voci nuove, cioè niente doppioni.
-7. Ripetere il passo 6 per `ecb-press` ed `ecb-stats`. Eurostat non entra nel seed finché è `hold`.
-8. **Cron:** creare il job dal template, con i secret in Vault, e verificare la prima esecuzione automatica.
-9. **App:** Pages con `ALPHA_NEWS_ENABLED=1`, poi la build con `cloud:news` e `ALPHA_NEWS_BACKEND_READY=1`. Collaudo della scheda Notizie su telefono, iPad e computer.
+3. **Seed:** generare l'SQL dal manifesto approvato con `node tools/news/prepare-alpha.mjs <manifesto> <dir>`, rileggerlo e applicarlo. Le fonti restano `active=false`.
+4. **Function:** la Function è già distribuita. Prima di qualsiasi nuova invocazione, verificare che `ALPHA_NEWS_INGEST_ENABLED=0`; non ruotare o cambiare segreti in questa procedura.
+5. **Ingestione controllata BCE/ISTAT:** solo con autorizzazione, attivare una fonte alla volta e confrontare titolo/link, `excerpt=null`, `thumb=null`; ripetere per verificare idempotenza. I risultati già registrati non vanno ripetuti senza motivo.
+6. **Eurostat:** resta fuori dal seed finché è `hold`. Per provarla serve autorizzare l'allowlist `ec.europa.eu`, verificare la Function dal server e controllare una seconda ingestione senza duplicati. Nessuna immagine o estratto.
+7. **Scheduler scelto:** Supabase Cron (`pg_cron`) ogni due ore con `pg_net` e Vault, in un solo job `alpha-news-every-two-hours`. Mantenere JWT verification ON e inviare un JWT invoker non privilegiato da Vault più `x-cron-secret`. La Function usa la service role solo server-side. Nessun retry aggressivo: un errore di feed resta nel suo stato, l'idempotenza rende sicuro il giro successivo. Attivare solo dopo disponibilità e preflight delle estensioni/Vault; nessun job duplicato.
+8. **App pubblica:** mantenere `ALPHA_NEWS_ENABLED=0` e non compilare `cloud:news` finché schema, JWT/RLS utente, fonti autorizzate, ingestione e scheduler non hanno superato i rispettivi gate.
 
 ## 4. Rollback, dal più leggero
 
