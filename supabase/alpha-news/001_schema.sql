@@ -59,4 +59,19 @@ alter table public.news_sources add column images boolean not null default false
 alter table public.news_sources add column last_attempt timestamptz;
 revoke all on public.news_items, public.news_sources from anon;
 grant all on public.news_items, public.news_sources to service_role;
+alter table public.news_sources add column rights_reference text;
+alter table public.news_sources add column approved_by text;
+alter table public.news_sources add constraint active_source_approval check (not active or (length(trim(coalesce(rights_reference,'')))>0 and length(trim(coalesce(approved_by,'')))>0));
+alter table public.news_items add constraint alpha_news_metadata_bounds check (length(title) between 1 and 500 and length(link)<=2048);
+-- Image permissions are independent of the headline permission. No image is enabled by default.
+alter table public.news_sources add column image_rights_reference text;
+alter table public.news_sources add column image_attribution text;
+alter table public.news_sources add column image_attribution_required boolean not null default true;
+alter table public.news_sources add column image_hosts text[] not null default '{}';
+alter table public.news_sources add column image_rights_scope text not null default 'none' check (image_rights_scope in ('none','approved-urls','feed'));
+alter table public.news_sources add column image_approved_urls text[] not null default '{}';
+alter table public.news_sources add constraint image_source_approval check (not images or (
+ length(trim(coalesce(image_rights_reference,'')))>0 and cardinality(image_hosts)>0
+ and (not image_attribution_required or length(trim(coalesce(image_attribution,'')))>0)
+ and (image_rights_scope='feed' or (image_rights_scope='approved-urls' and cardinality(image_approved_urls)>0))));
 commit;

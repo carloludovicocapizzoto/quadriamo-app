@@ -65,7 +65,7 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
   const s = c.data.settings, cur = s.currency
   const box = (body: ReactNode, more?: () => void, attention = false) => (
     <section className={`widget w-${id}${attention ? ' attention' : ''}`}>
-      <h2 className="w-title">{t(k(`hw.${id}`))}{more && <button className="w-more" onClick={more} aria-label={t('hw.more')}><Icon name="chevron" size={16} /></button>}</h2>
+      <h2 className="w-title">{t(ENV.flags.monthlyPlan && id==='forecast'?'plan.title':k(`hw.${id}`))}{more && <button className="w-more" onClick={more} aria-label={t('hw.more')}><Icon name="chevron" size={16} /></button>}</h2>
       {body}
     </section>
   )
@@ -88,7 +88,13 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
     case 'forecast': {
       if (ENV.flags.monthlyPlan) {
         const plan = monthPlanning(c.r, s, c.today)
-        return box(<><p>{t('plan.title')}</p><p className="w-note">{t('plan.warning')}</p>{plan ? <><p>{t('plan.actual')} <Money value={plan.actualDaily} currency={cur} /></p><p>{t('plan.target')} <Money value={plan.plannedDaily} currency={cur} /></p><p>{t('plan.received')} <Money value={plan.received} currency={cur} /> / <Money value={plan.expected} currency={cur} /></p></> : <p>{t('plan.expected')}</p>}</>)
+        if (!plan) return null
+        return box(<dl className="plan-budget">
+          <div className="plan-budget-row"><dt>{t('plan.expected')}</dt><dd><Money value={plan.expected} currency={cur}/></dd></div>
+          <div className="plan-budget-row"><dt>{t('plan.receivedShort')}</dt><dd><Money value={plan.received} currency={cur}/> / <Money value={plan.expected} currency={cur}/></dd></div>
+          <div className="plan-budget-row"><dt>{t('plan.plannedExpensesShort')}</dt><dd><Money value={plan.plannedExpenses} currency={cur}/></dd></div>
+          <div className="plan-budget-row"><dt>{t('plan.extraShort')}</dt><dd><Money value={plan.extra} currency={cur}/></dd></div>
+        </dl>)
       }
       // come finisce il mese: la spesa fin qui (linea) e la proiezione a questo ritmo (tratteggio)
       const f = forecastMonth(c.r, c.today)
@@ -141,7 +147,7 @@ export function Widget({ id, c }: { id: WidgetId; c: WidgetCtx }) {
     }
 
     case 'tips': {
-      const end = forecastMonth(c.r, c.today)?.projectedLeftOver ?? null
+      const end = ENV.flags.monthlyPlan ? null : forecastMonth(c.r, c.today)?.projectedLeftOver ?? null
       const out: string[] = []
       if (s.capital?.parts.length) for (const a of capitalAdvice(s.capital, end, essentialsMonth(c))) {
         out.push(a.id === 'cover' ? t('cap.adv.cover', { deficit: money(a.deficit, cur), part: a.part, available: money(a.available, cur) })

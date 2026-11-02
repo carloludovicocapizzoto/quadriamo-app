@@ -29,6 +29,7 @@ export function TxRow({ tx, settings, onOpen }: { tx: ClassifiedTx; settings: Se
             {tx.category ? categoryName(cat, t) : t('check.missingCategory')}
             {tx.bucket === SPLIT ? ` · ${t('tx.split')}` : ''}
             {/* spesa fissa: prevista (in arrivo), impegnata (dal suo giorno conta nel budget, ma nessuno l'ha confermata) o pagata */}
+            {settings.planVersion===1 && settings.balanceDate && tx.date && tx.date<settings.balanceDate && <em className="tag">{t('plan.beforeSnapshot')}</em>}
             {otherPeriod && <em className="tag">{t('tx.forDue', { date: date(link.date) })}</em>}
             {tx.recurring && <em className="tag">{tx.upcoming ? t('tx.upcoming') : tx.confirmed ? t('tx.paidTag') : t('tx.committed')}</em>}
           </span>

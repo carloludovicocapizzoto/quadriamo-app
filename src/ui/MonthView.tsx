@@ -1,3 +1,4 @@
+import { ENV } from '../env'
 import { useState } from 'react'
 import { FIRST, forecastMonth, paydayPlan, ymKey, type ClassifiedTx, type MonthResult, type Settings } from '../engine'
 import { useStore } from '../store/context'
@@ -57,7 +58,7 @@ function MonthOutcome({ r, settings, today }: { r: MonthResult; settings: Settin
   const { t, money } = useI18n()
   const plan = usePlan()
   const cur = settings.currency
-  const f = plan.pro ? forecastMonth(r, today) : null
+  const f = !ENV.flags.monthlyPlan && plan.pro ? forecastMonth(r, today) : null
   const now = today >= r.period.start && today <= r.period.end
   const value = f ? f.projectedLeftOver : r.leftOver
   const label = f ? (value < 0 ? t('ana.endOver') : t('ana.endLeft'))

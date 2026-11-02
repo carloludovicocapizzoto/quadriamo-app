@@ -1,3 +1,5 @@
+import { ENV } from '../../env'
+import { monthPlanning } from '../../engine/monthPlanning'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { amountChars, blockLayout } from './blockLayout'
 import { daysBetween, todayBudget, type BucketRow, type ClassifiedTx, type MonthResult, type Streak } from '../../engine'
@@ -48,9 +50,10 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
     list.splice(list.indexOf(target), 0, from)
     tap(); dispatch({ type: 'setSettings', settings: { ...s, homeWidgets: list } })
   }
-  const left = useCountUp(budget.left)
+  const plan = useMemo(()=>ENV.flags.monthlyPlan?monthPlanning(r,s,today):null,[r,s,today])
+  const left = useCountUp(ENV.flags.monthlyPlan ? plan?.plannedDaily ?? 0 : budget.left)
   const daysLeft = daysBetween(today, r.period.end) + 1
-  const hasPlan = budget.parts.length > 0 && r.income > 0
+  const hasPlan = ENV.flags.monthlyPlan ? !!plan : budget.parts.length > 0 && (r.income > 0 || s.planVersion===1)
   const day = date(today, { weekday: 'long', day: 'numeric', month: 'long' })
 
   // i quattro blocchi: vivono qui perché aprono il dettaglio della parte.
@@ -108,8 +111,14 @@ export function HomeScreen({ data, r, today, streak, onAdd, onOpen, onAll }: {
       {!hasPlan ? <Empty title={t('home.emptyTitle')} text={t('home.noSalary')} action={{ label: t('home.addSalary'), onClick: () => onAdd('income') }} />
       // come l'importo di Analisi: un numero lungo («73,520 KWD», testo grande) si rimpicciolisce invece di uscire dallo schermo
       : <section className="hero" aria-live="polite" style={{ ['--amount-len' as string]: amountChars(left, cur, lang).full }}>
+        {plan && <p className="hero-sub">{t('plan.target')}</p>}
         <Money className="hero-amount" value={left} currency={cur} />
-        <p className="hero-sub">{daysLeft > 1 ? t('home.heroSub', { n: daysLeft }) : t('home.heroLast')}</p>
+        {plan
+          ? <div className="plan-availability" data-testid="plan-availability">
+              <p className="plan-availability-line"><span>{t('plan.availableShort')}</span> <Money value={plan.actualAvailable} currency={cur}/></p>
+              {plan.shortfall > 0 && <p role="alert" data-testid="plan-alert" className="bad-text">{t('plan.shortfall')} <Money value={plan.shortfall} currency={cur}/></p>}
+            </div>
+          : <p className="hero-sub">{daysLeft > 1 ? t('home.heroSub', { n: daysLeft }) : t('home.heroLast')}</p>}
       </section>}
 
       {/* Adesso: cosa conta oggi, prima dei widget */}

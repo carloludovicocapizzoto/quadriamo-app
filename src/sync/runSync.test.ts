@@ -251,11 +251,23 @@ describe('durable conditional synchronization in the product', () => {
     expect(await runSync(f.job)).toBe('ok'); expect(seen).toHaveLength(2); expect(seen[0]).toBe(seen[1])
   })
   it('keeps data on server pause, unsupported version, authentication and invalid ACK', async () => {
-    for (const code of ['QSYNC_PAUSED', 'QSYNC_UPGRADE_REQUIRED', 'PGRST202']) {
+    for (const code of ['QSYNC_PAUSED', 'QSYNC_UPGRADE_REQUIRED', 'PGRST202', 'ALPHA_CLIENT_UPDATE_REQUIRED']) {
       db.values.clear(); const f = await fixture(); await add(f.storage, code)
       f.job.write = async () => { throw new ProtocolError(code, code, 409) }
       expect(await runSync(f.job)).toBe(code.includes('PAUSED') ? 'paused' : 'upgrade'); expect(f.storage.getSnapshot().cloud?.pending).toBeTruthy()
     }
+  })
+  it.each(['read','write'])('426 on %s preserves offline edits/outbox and resumes after client update',async phase=>{
+    const f=await fixture();await add(f.storage,'offline-plan')
+    const fail=vi.fn(async()=>{throw new ProtocolError('ALPHA_CLIENT_UPDATE_REQUIRED','ALPHA_CLIENT_UPDATE_REQUIRED',426)})
+    const job=phase==='read'?{...f.job,read:fail}:{...f.job,write:fail}
+    expect(await runSync(job)).toBe('upgrade');expect(fail).toHaveBeenCalledTimes(1)
+    const before=clone(f.storage.getSnapshot());expect(before.state.data?.transactions.some(t=>t.id==='offline-plan')).toBe(true)
+    if(phase==='write')expect(before.cloud?.pending).toBeTruthy()
+    const reopened=new AccountStore(scope);await reopened.ready
+    expect(reopened.getSnapshot().state.data).toEqual(before.state.data);expect(reopened.getSnapshot().cloud?.pending).toEqual(before.cloud?.pending)
+    expect(await runSync({...f.job,storage:reopened})).toBe('ok')
+    expect(f.remote().document?.transactions.some(t=>t.id==='offline-plan')).toBe(true)
   })
   it('records both versions before explicit conflict resolution and synchronizes after reload', async () => {
     const f = await fixture(); await add(f.storage, 'one'); await runSync(f.job)

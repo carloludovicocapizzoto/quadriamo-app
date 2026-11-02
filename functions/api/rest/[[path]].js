@@ -47,6 +47,9 @@ function userIdFromJwt(authorization) {
   } catch { return null }
 }
 
+// Shared capability detection includes partial/legacy planning metadata, not just snapshots.
+import { needsPlanClient } from '../../../src/engine/planCompatibility.ts'
+
 export async function onRequest({ request, env }) {
   const incoming = new URL(request.url)
   const route = incoming.pathname.startsWith('/api/rest/') ? incoming.pathname.slice('/api/rest/'.length) : ''
@@ -100,6 +103,10 @@ export async function onRequest({ request, env }) {
   }
   if (request.method === 'POST' && body.byteLength === 0) return response(400, 'ALPHA_JSON_REQUIRED')
 
+  const planClient = request.headers.get('x-quadriamo-capabilities')?.split(',').includes('monthly-plan-v1')
+  if(!planClient && route==='rpc/qsync_write_v2') {
+    try { const args=JSON.parse(new TextDecoder().decode(body)); if(needsPlanClient(JSON.parse(args.p_document_json))) return response(426,'ALPHA_CLIENT_UPDATE_REQUIRED') } catch { /* malformed documents remain subject to the database validator */ }
+  }
   const headers = await signedHeaders(request.method, route, body.byteLength)
   if (body.byteLength) headers['content-type'] = 'application/json'
   const prefer = request.headers.get('prefer')
@@ -114,6 +121,9 @@ export async function onRequest({ request, env }) {
   for (const name of ['content-type', 'content-range', 'retry-after']) {
     const value = upstream.headers.get(name)
     if (value) outgoing.set(name, value)
+  }
+  if(!planClient && route==='rpc/qsync_read' && upstream.ok) {
+    try { const raw=await upstream.text(); if(needsPlanClient(JSON.parse(raw)?.document)) return response(426,'ALPHA_CLIENT_UPDATE_REQUIRED'); return new Response(raw,{status:upstream.status,headers:outgoing}) } catch {return response(503,'ALPHA_DATA_API_UNAVAILABLE')}
   }
   return new Response(upstream.body, { status: upstream.status, headers: outgoing })
 }

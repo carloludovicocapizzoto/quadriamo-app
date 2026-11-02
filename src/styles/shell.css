@@ -25,8 +25,9 @@
   border-radius: 28px; background: var(--glass); border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
   -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
 .tabbar::-webkit-scrollbar { display: none; }
-.tabbar > button { flex: 1 0 64px; scroll-snap-align: center; height: 100%; border: 0; background: none; display: grid; justify-items: center; align-content: center; gap: 1px;
+.tabbar > button { flex: 1 1 0; min-width: 0; scroll-snap-align: center; height: 100%; border: 0; background: none; display: grid; justify-items: center; align-content: center; gap: 1px;
   cursor: pointer; color: var(--muted); font: inherit; font-size: 11px; font-weight: 500; letter-spacing: .01em; -webkit-tap-highlight-color: transparent; transition: color var(--d-fast); }
+.tabbar .nav-label { white-space: nowrap; }
 .tabbar > button.on { color: var(--text); }
 /* la voce attiva ha una pillola chiara dietro (non il + , che è già un blocco) */
 .tabbar > button { position: relative; }

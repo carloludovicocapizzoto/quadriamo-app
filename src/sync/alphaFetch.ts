@@ -10,7 +10,9 @@ export const alphaFetch: typeof fetch = async (input, init) => {
   const direct = ENV.supabase?.url.replace(/\/$/, '') + '/rest/v1/'
   if (ENV.name !== 'alpha' || !ENV.supabase || !request.url.startsWith(direct)) return fetch(request)
   const path = request.url.slice(direct.length)
+  const headers = new Headers(request.headers)
+  headers.set('x-quadriamo-capabilities','monthly-plan-v1')
   const body = request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.arrayBuffer()
-  return fetch(`${location.origin}${ENV.base}api/rest/${path}`, { method: request.method, headers: request.headers, body, signal: request.signal,
+  return fetch(`${location.origin}${ENV.base}api/rest/${path}`, { method: request.method, headers, body, signal: request.signal,
     credentials: request.credentials, cache: request.cache, redirect: request.redirect, referrerPolicy: request.referrerPolicy, keepalive: request.keepalive })
 }

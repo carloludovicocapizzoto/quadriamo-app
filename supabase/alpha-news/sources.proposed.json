@@ -1,0 +1,264 @@
+{
+  "reviewedAt": "2026-11-01",
+  "purpose": "PROPOSAL ONLY. Not a seed approved for execution.",
+  "approvedBy": "",
+  "sources": [
+    {
+      "id": "banca-italia",
+      "name": "Banca d’Italia",
+      "kind": "institution",
+      "format": "rss",
+      "site": "https://www.bancaditalia.it/",
+      "feed": "https://www.bancaditalia.it/util/index.rss.html?lingua=it",
+      "lang": "it",
+      "trust": 4,
+      "active": false,
+      "verification": {
+        "institution": "verified-official-site",
+        "feed": "verified-live-HTTP200-XML",
+        "feedReference": "https://alert.bancaditalia.it/webApp/rss?LANGUAGE=it",
+        "titleRights": "verified-restrictive",
+        "imageRights": "not-verified",
+        "note": "Autorizzazione scritta per ripubblicare contenuti; eccezione CC BY 4.0 limitata agli open data, non al feed notizie.",
+        "live": {
+          "status": 200,
+          "format": "text/xml;charset=UTF-8",
+          "items": 60
+        }
+      },
+      "rights": {
+        "titleAllowed": false,
+        "reference": "https://www.bancaditalia.it/footer/copyright/",
+        "attribution": "Banca d’Italia"
+      },
+      "imageRights": {
+        "allowed": false,
+        "reference": null,
+        "attribution": null,
+        "attributionRequired": true,
+        "hosts": [],
+        "scope": "none",
+        "approvedUrls": []
+      }
+    },
+    {
+      "id": "ecb",
+      "name": "BCE",
+      "kind": "institution",
+      "format": "rss",
+      "site": "https://www.ecb.europa.eu/",
+      "feed": "https://www.ecb.europa.eu/rss/press.html",
+      "lang": "en",
+      "trust": 4,
+      "active": false,
+      "verification": {
+        "institution": "verified-official-site",
+        "feed": "verified-live-HTTP200-XML",
+        "feedReference": "https://www.ecb.europa.eu/home/html/rss.en.html",
+        "titleRights": "verified-conditional",
+        "imageRights": "not-verified",
+        "note": "Attribuire BCE, conservare accuratezza e dichiarare modifiche. Eccezione per documenti firmati: selezionare comunicati e verificare il singolo contenuto.",
+        "live": {
+          "status": 200,
+          "format": "application/rss+xml",
+          "items": 15
+        }
+      },
+      "rights": {
+        "titleAllowed": false,
+        "reference": "https://www.ecb.europa.eu/services/using-our-site/disclaimer/html/index.en.html",
+        "attribution": "BCE"
+      },
+      "imageRights": {
+        "allowed": false,
+        "reference": null,
+        "attribution": null,
+        "attributionRequired": true,
+        "hosts": [],
+        "scope": "none",
+        "approvedUrls": []
+      }
+    },
+    {
+      "id": "consob",
+      "name": "Consob",
+      "kind": "institution",
+      "format": null,
+      "site": "https://www.consob.it/",
+      "feed": null,
+      "lang": "it",
+      "trust": 4,
+      "active": false,
+      "verification": {
+        "institution": "identified-access-blocked",
+        "feed": "not-verified",
+        "feedReference": null,
+        "titleRights": "unverified",
+        "imageRights": "not-verified",
+        "note": "Accesso automatico bloccato (Radware/timeout). Carlo deve fornire pagina RSS e condizioni ufficiali: nessun URL feed dedotto."
+      },
+      "rights": {
+        "titleAllowed": false,
+        "reference": null,
+        "attribution": "Consob"
+      },
+      "imageRights": {
+        "allowed": false,
+        "reference": null,
+        "attribution": null,
+        "attributionRequired": true,
+        "hosts": [],
+        "scope": "none",
+        "approvedUrls": []
+      }
+    },
+    {
+      "id": "istat",
+      "name": "ISTAT",
+      "kind": "institution",
+      "format": "rss",
+      "site": "https://www.istat.it/",
+      "feed": "https://www.istat.it/feed/",
+      "lang": "it",
+      "trust": 4,
+      "active": false,
+      "verification": {
+        "institution": "verified-official-site",
+        "feed": "verified-live-HTTP200-XML",
+        "feedReference": "https://www.istat.it/altri-servizi/feed-rss/",
+        "titleRights": "verified-conditional",
+        "imageRights": "not-verified",
+        "note": "CC BY 4.0 salvo diversa indicazione; attribuzione, link licenza, modifiche. Immagini e opere di terzi escluse senza consenso.",
+        "live": {
+          "status": 200,
+          "format": "application/rss+xml; charset=UTF-8",
+          "items": 10
+        }
+      },
+      "rights": {
+        "titleAllowed": false,
+        "reference": "https://www.istat.it/note-legali/",
+        "attribution": "ISTAT"
+      },
+      "imageRights": {
+        "allowed": false,
+        "reference": null,
+        "attribution": null,
+        "attributionRequired": true,
+        "hosts": [],
+        "scope": "none",
+        "approvedUrls": []
+      }
+    },
+    {
+      "id": "mef",
+      "name": "MEF",
+      "kind": "institution",
+      "format": "rss",
+      "site": "https://www.mef.gov.it/",
+      "feed": "https://www.mef.gov.it/rss/rss.asp?t=4",
+      "lang": "it",
+      "trust": 4,
+      "active": false,
+      "verification": {
+        "institution": "verified-official-site",
+        "feed": "verified-live-HTTP200-XML",
+        "feedReference": "https://www.mef.gov.it/comunica-con-noi/seguici/social-mef.html",
+        "titleRights": "unverified",
+        "imageRights": "not-verified",
+        "note": "RSS comunicati verificato. Condizioni di riuso da ottenere: il footer Note legali usa un controllo dinamico, nessuna licenza dedotta dal feed.",
+        "live": {
+          "status": 200,
+          "format": "application/rss+xml;charset=UTF-8",
+          "items": 10
+        }
+      },
+      "rights": {
+        "titleAllowed": false,
+        "reference": null,
+        "attribution": "MEF"
+      },
+      "imageRights": {
+        "allowed": false,
+        "reference": null,
+        "attribution": null,
+        "attributionRequired": true,
+        "hosts": [],
+        "scope": "none",
+        "approvedUrls": []
+      }
+    },
+    {
+      "id": "agenzia-entrate",
+      "name": "Agenzia delle Entrate",
+      "kind": "institution",
+      "format": null,
+      "site": "https://www.agenziaentrate.gov.it/",
+      "feed": null,
+      "lang": "it",
+      "trust": 4,
+      "active": false,
+      "verification": {
+        "institution": "verified-official-site",
+        "feed": "not-verified",
+        "feedReference": null,
+        "titleRights": "unverified",
+        "imageRights": "not-verified",
+        "note": "Portale istituzionale accessibile; feed e condizioni non verificati. Non sostituire con Agenzia Entrate-Riscossione, ente distinto."
+      },
+      "rights": {
+        "titleAllowed": false,
+        "reference": null,
+        "attribution": "Agenzia delle Entrate"
+      },
+      "imageRights": {
+        "allowed": false,
+        "reference": null,
+        "attribution": null,
+        "attributionRequired": true,
+        "hosts": [],
+        "scope": "none",
+        "approvedUrls": []
+      }
+    },
+    {
+      "id": "eurostat",
+      "name": "Eurostat",
+      "kind": "institution",
+      "format": "rss",
+      "site": "https://ec.europa.eu/eurostat/",
+      "feed": "https://ec.europa.eu/eurostat/api/dissemination/catalogue/rss/en/statistics-update.rss",
+      "lang": "en",
+      "trust": 4,
+      "active": false,
+      "verification": {
+        "institution": "verified-official-site",
+        "feed": "verified-live-HTTP200-XML",
+        "feedReference": "https://ec.europa.eu/eurostat/web/user-guides/data-browser/api-data-access/api-detailed-guidelines/catalogue-api/rss",
+        "titleRights": "verified-conditional",
+        "imageRights": "not-verified",
+        "note": "CC BY 4.0 per editoriale UE; attribuzione, modifiche, eccezioni individuali/terzi. Questo RSS annuncia dataset, non articoli: Carlo deve approvare pertinenza e volume.",
+        "live": {
+          "status": 200,
+          "format": "application/xml",
+          "items": 1980,
+          "bytes": 635020
+        }
+      },
+      "rights": {
+        "titleAllowed": false,
+        "reference": "https://ec.europa.eu/eurostat/help/copyright-notice",
+        "attribution": "Eurostat"
+      },
+      "imageRights": {
+        "allowed": false,
+        "reference": null,
+        "attribution": null,
+        "attributionRequired": true,
+        "hosts": [],
+        "scope": "none",
+        "approvedUrls": []
+      }
+    }
+  ]
+}

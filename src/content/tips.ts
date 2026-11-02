@@ -1,3 +1,4 @@
+import { ENV } from '../env'
 // "Il consiglio di oggi": piccoli consigli pratici per usare bene il metodo (uno al giorno, a rotazione).
 // action: cosa apre il pulsante sotto il consiglio.
 export type TipAction = 'add' | 'goals' | 'analysis' | 'import' | 'shared' | 'recurring' | null
@@ -78,6 +79,6 @@ const META: [Tip['id'], Tip['icon'], TipAction][] = [
 
 export function tips(lang: string): Tip[] {
   const t = T[(lang in T ? lang : 'en') as L]
-  return META.map(([id, icon, action], i) => ({ id, icon, action, title: t[i][0], text: t[i][1] }))
+  return META.map(([id, icon, action], i) => ({ id, icon, action, title: t[i][0], text: t[i][1] })).filter(x=>!ENV.flags.monthlyPlan||x.id!=='forecast')
 }
 

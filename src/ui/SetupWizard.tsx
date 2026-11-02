@@ -1,3 +1,5 @@
+import { ENV } from '../env'
+import { PlanOpeningStep } from './PlanOpeningStep'
 import { useState, type FormEvent } from 'react'
 import { SPLIT, allocate, applyPersona, daysBetween, minorDigits, defaultPolicy, mainIncome, monthOf, periodOf, todayIso, updateCapital, type CapitalKind, type Persona } from '../engine'
 import { useStore } from '../store/context'
@@ -33,15 +35,17 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState(1)
   const [ready, setReady] = useState(false)
   // fine della configurazione: un attimo di "Tutto pronto!", poi si entra nell'app
-  const finish = () => { setReady(true); window.scrollTo(0, 0); setTimeout(onDone, 1600) }
+  const finish = () => { if (ENV.flags.monthlyPlan && !planReady) return; setReady(true); window.scrollTo(0, 0); setTimeout(onDone, 1600) }
   const { state } = useStore()
+  const planReady = !ENV.flags.monthlyPlan || state.data?.settings.planVersion === 1 || !!state.data?.transactions.length
   const student = state.data?.settings.persona === 'student'
   const steps: Kind[] = [
     { kind: 'persona' },
     // subito dopo valuta e giorno: lo stipendio, per vedere il proprio numero del giorno prima ancora di registrare una spesa
     ...STEPS.flatMap(([section, title]) => section === 'general'
-      ? [{ kind: 'settings', section, title } as Kind, { kind: 'salary' } as Kind, { kind: 'capital' } as Kind]
+      ? [{ kind: 'settings', section, title } as Kind, ...(!ENV.flags.monthlyPlan ? [{kind:'salary'} as Kind,{kind:'capital'} as Kind] : [])]
       // dopo le categorie, i pagamenti che si ripetono (affitto, bollette, abbonamenti): gli stessi del calendario
+      : ENV.flags.monthlyPlan && section === 'rule' ? [{kind:'settings',section,title} as Kind,{kind:'salary'} as Kind,{kind:'capital'} as Kind]
       : section === 'categories' ? [{ kind: 'settings', section, title } as Kind, { kind: 'recurring' } as Kind]
       : [{ kind: 'settings', section, title } as Kind]),
     ...(sync.user ? [{ kind: 'profile' } as Kind] : []),
@@ -74,15 +78,15 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
         {cur.kind === 'persona' && <PersonaStep onPick={() => { window.scrollTo(0, 0); setStep(step + 1) }} />}
         {cur.kind === 'settings' && <SettingsView only={[cur.section]} wizard />}
         {cur.kind === 'recurring' && <RecurringList />}
-        {cur.kind === 'salary' && <SalaryStep />}
+        {cur.kind === 'salary' && (ENV.flags.monthlyPlan ? <PlanOpeningStep/> : <SalaryStep />)}
         {cur.kind === 'capital' && <CapitalStep />}
         {cur.kind === 'profile' && <ProfileForm withShares={false} onDone={finish} />}
       </div>
       {cur.kind !== 'profile' && (
         <form onSubmit={next}>
-          <StepNav onBack={step > 1 ? () => setStep(step - 1) : undefined}
+          <StepNav busy={ENV.flags.monthlyPlan && cur.kind==='salary' && !planReady} onBack={step > 1 ? () => setStep(step - 1) : undefined}
             next={step < total ? `${t('step.next')}` : t('setup.finish')}
-            extra={<button type="button" className="link-btn" onClick={finish}>{t('setup.skip')}</button>} />
+            extra={planReady && <button type="button" className="link-btn" onClick={finish}>{t('setup.skip')}</button>} />
         </form>
       )}
     </section>

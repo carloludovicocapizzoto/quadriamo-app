@@ -1,7 +1,8 @@
 // Controllo delle impostazioni prima di salvarle.
+import { intervalsValid, planningValid } from '../engine/planContract'
 import { CUSTOM, isIsoDate, splitOk, type Settings } from '../engine'
 
-export type SettingsError = 'sharesNot100' | 'bucketName' | 'startDay' | 'categoryName' | 'categorySplit' | 'event'
+export type SettingsError = 'sharesNot100' | 'bucketName' | 'startDay' | 'categoryName' | 'categorySplit' | 'event' | 'monthlyPlan'
 
 export function validateSettings(s: Settings): SettingsError[] {
   const out: SettingsError[] = []
@@ -14,5 +15,6 @@ export function validateSettings(s: Settings): SettingsError[] {
   // un evento ha un titolo; se entra nel budget (ha una categoria) ha anche un importo e la categoria esiste
   if (s.events.some(e => !e.title.trim() || !isIsoDate(e.date) || (e.repeat && (!Number.isInteger(e.repeat.every) || e.repeat.every < 1)) ||
                          (e.category != null && (!(Number(e.amount) > 0) || !s.categories.some(c => c.id === e.category))))) out.push('event')
+  if (!planningValid(s) || s.events.some(e=>e.planExclusions!=null&&!intervalsValid(e.planExclusions) || e.planOffFrom!=null&&!isIsoDate(e.planOffFrom))) out.push('monthlyPlan')
   return out
 }

@@ -34,6 +34,8 @@ for (const f of cloud) if (!CLOUD.includes(f)) throw Error(`ALPHA_CLOUD_FEATURES
 
 if (cloud.includes('news') && process.env.ALPHA_NEWS_BACKEND_READY !== '1') throw Error('News requires an explicitly verified Alpha backend')
 
+if ((process.env.VITE_FLAGS ?? '').split(',').includes('monthly-plan') && process.env.ALPHA_MONTHLY_PLAN_APPROVED !== '1') throw Error('Monthly plan requires joint product approval before a release build')
+
 const env = { ...process.env, BASE_PATH: '/', VITE_SUPABASE_URL: url.origin,
   VITE_SUPABASE_PUBLISHABLE_KEY: key, VITE_SUPABASE_ANON_KEY: '', VITE_FLAGS: [...(process.env.VITE_FLAGS ?? '').split(',').filter(f => f && !f.startsWith('cloud:')), ...cloud.map(f => `cloud:${f}`)].join(','), VITE_VAPID_PUBLIC_KEY: '' }
 for (const args of [

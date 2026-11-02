@@ -173,3 +173,12 @@
 .wg-fav.on { color: var(--b1); }
 .wg-fav.on svg { fill: currentColor; }
 .wg-fav:active { transform: scale(.85); transition: transform var(--d-fast) var(--ease); }
+
+.plan-availability { max-width: 38rem; margin: var(--s3) auto 0; font-size: 1rem; line-height: 1.45; }
+.plan-availability-line { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 6px; margin: 0; }
+.plan-availability [role="alert"] { max-width: 42rem; margin: var(--s3) auto 0; padding: var(--s2) var(--s3); border: 2px solid currentColor; border-radius: var(--r-sm); font-size: var(--t-sm); font-weight: 600; }
+.widget.w-forecast { container: plan-budget-widget / inline-size; }
+.plan-budget { display: grid; gap: var(--s2); margin: 0; font-size: var(--t-sm); line-height: 1.4; }
+.plan-budget-row { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--s3); row-gap: 2px; min-width: 0; }
+.plan-budget-row dt { flex: 1 1 max-content; min-width: 0; color: var(--muted); }
+.plan-budget-row dd { flex: 0 1 max-content; min-width: 0; margin: 0 0 0 auto; text-align: right; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
