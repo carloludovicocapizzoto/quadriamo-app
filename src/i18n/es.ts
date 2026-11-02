@@ -1556,6 +1556,8 @@ const es: Dict = {
   'cat.startup': "Startups",
   'cat.crypto': "Cripto",
   'news.imageRights': 'Derechos de imagen',
+  'news.credit': 'Fuente: {name}',
+  'news.terms': 'Condiciones de uso',
   'news.titleRights': 'Derechos del titular',
   'news.offHint': "Hace falta conexión: vuelve a intentarlo en cuanto vuelva.",
   'alpha.notYetTitle': "Aún no disponible en esta Alpha",

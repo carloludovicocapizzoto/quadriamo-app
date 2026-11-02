@@ -1556,6 +1556,8 @@ const en = {
   'cat.startup': "Startups",
   'cat.crypto': "Crypto",
   'news.imageRights': 'Image rights',
+  'news.credit': 'Source: {name}',
+  'news.terms': 'Terms of use',
   'news.titleRights': 'Headline rights',
   'news.offHint': "You need a connection: try again as soon as it’s back.",
   'alpha.notYetTitle': "Not available in this Alpha yet",

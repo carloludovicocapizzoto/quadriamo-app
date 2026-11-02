@@ -191,7 +191,7 @@ function StoryDetail({ story, now }: { story: Story; now: number }) {
       <Meta s={story} now={now} />
       <h2>{it.title}</h2>
       <NewsCover key={it.thumb} item={it} className={`story-hero ${it.format}`} />
-      {ENV.name==='alpha' && publicHttps(it.source.rights_reference??'') && <p className="small muted"><a href={it.source.rights_reference!} target="_blank" rel="noopener noreferrer">{it.source.name} · {t('news.titleRights')}</a></p>}
+      {ENV.name==='alpha' && <Credit source={it.source} />}
       {it.excerpt && <><p className="group-title">{t('news.fromSource')}</p><p className="story-excerpt">{it.excerpt}</p></>}
       <a className="btn primary wide" href={it.link} target="_blank" rel="noopener noreferrer" onClick={() => tap()}>{cta}<Icon name="external" size={16} /></a>
       {story.others.length > 0 && <>
@@ -203,6 +203,19 @@ function StoryDetail({ story, now }: { story: Story; now: number }) {
       </>}
     </article>
   )
+}
+
+/** Alpha: chi pubblica il titolo e a quali condizioni. «Fonte: Istat · CC BY 4.0» con la licenza, oppure le condizioni d'uso. */
+export function Credit({ source }: { source: HubItem['source'] }) {
+  const { t } = useI18n()
+  const name = source.attribution?.trim()
+  const licence = source.licence_name?.trim() && publicHttps(source.licence_url ?? '') ? source.licence_url! : null
+  const terms = publicHttps(source.rights_reference ?? '') ? source.rights_reference! : null
+  // fonti approvate prima dell'attribuzione: il nome con il link ai diritti, come nella 2I
+  if (!name) return terms ? <p className="small muted"><a href={terms} target="_blank" rel="noopener noreferrer">{source.name} · {t('news.titleRights')}</a></p> : null
+  return <p className="small muted source-credit" data-testid="source-credit">{t('news.credit', { name })}
+    {licence ? <> · <a href={licence} target="_blank" rel="noopener noreferrer license">{source.licence_name}</a></>
+      : terms ? <> · <a href={terms} target="_blank" rel="noopener noreferrer">{t('news.terms')}</a></> : null}</p>
 }
 
 /** I titoli delle testate, come prima: finché la raccolta del Knowledge Hub non è attiva sul server. */

@@ -17,10 +17,17 @@ async function sha(s: string) {
   return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 24)
 }
 
+// Constant-time comparison: both values are hashed first, so length and content leak nothing through timing.
+async function sameSecret(given: string, expected: string) {
+  const [a, b] = await Promise.all([given, expected].map(v => crypto.subtle.digest('SHA-256', new TextEncoder().encode(v))))
+  const x = new Uint8Array(a), y = new Uint8Array(b); let diff = 0
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i]
+  return diff === 0
+}
+
 async function read(src: Source): Promise<{ src: Source; raw: Raw[]; error?: string }> {
   const url = src.format === 'youtube' ? `https://www.youtube.com/feeds/videos.xml?channel_id=${src.feed}` : src.feed
   try {
-    const target = new URL(url)
     const allowed = env('NEWS_ALLOWED_HOSTS').split(',').map(host => host.trim())
     if (!approvedUrl(url,allowed)) throw Error('source host not approved')
     const res = await fetch(url, { headers: { 'User-Agent': 'QuadriamoAlphaNews/1.0 (+https://quadriamo-alpha.pages.dev)' },
@@ -43,7 +50,7 @@ async function readFeed(res: Response) {
 Deno.serve(async req => {
   if (env('ALPHA_NEWS_INGEST_ENABLED') !== '1') return json({ error: 'disabled' }, 503)
   if (req.method !== 'POST') return json({ error: 'method' }, 405)
-  if (!env('CRON_SECRET') || (req.headers.get('x-cron-secret') ?? '').trim() !== env('CRON_SECRET')) return json({ error: 'forbidden' }, 403)
+  if (!env('CRON_SECRET') || !await sameSecret((req.headers.get('x-cron-secret') ?? '').trim(), env('CRON_SECRET'))) return json({ error: 'forbidden' }, 403)
   if (env('SUPABASE_URL') !== 'https://djkoxecmobafenfazcum.supabase.co' || !env('SUPABASE_SERVICE_ROLE_KEY') || !env('NEWS_ALLOWED_HOSTS')) return json({error:'Alpha configuration required'},503)
   const db = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'))
 
@@ -81,8 +88,13 @@ Deno.serve(async req => {
   const { error: cleanupError } = await db.from('news_items').delete().lt('published', new Date(now - KEEP_DAYS * 864e5).toISOString())
   if (cleanupError) return json({error:'retention cleanup failed'},500)
   // salute delle fonti: l'area admin mostra quali feed non rispondono
+  // a source whose status cannot be recorded would look healthy (or never be retried first): report it, never hide it
+  const statusFailed: string[] = []
   for (const { src, raw, error: e } of results) {
     const { error: statusError } = await db.from('news_sources').update(e ? { last_error: e, last_attempt: new Date().toISOString() } : { last_attempt: new Date().toISOString(), last_ok: new Date().toISOString(), last_count: raw.length, last_error: null }).eq('id', src.id)
+    if (statusError) statusFailed.push(src.id)
   }
-  return json({ sources: results.length, failed: results.filter(r => r.error).map(r => `${r.src.id}: ${r.error}`), saved: rows.length })
+  const report = { sources: results.length, failed: results.filter(r => r.error).map(r => `${r.src.id}: ${r.error}`), saved: rows.length }
+  if (statusFailed.length) return json({ ...report, error: 'source status update failed', statusFailed }, 500)
+  return json(report)
 })

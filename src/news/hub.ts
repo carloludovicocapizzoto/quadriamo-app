@@ -11,7 +11,7 @@ export type Level = 'beginner' | 'intermediate' | 'advanced'
 export interface HubItem {
   id: string; title: string; excerpt: string | null; link: string; thumb: string | null; published: string; lang: string
   format: Format; categories: string[]; level: Level; minutes: number | null; relevance: number; cluster: string | null; crypto: boolean
-  source: ImageRights & { rights_reference?: string | null; name: string; kind: string; paywall: boolean; trust: number; country?: string | null }
+  source: ImageRights & { rights_reference?: string | null; attribution?: string | null; licence_name?: string | null; licence_url?: string | null; name: string; kind: string; paywall: boolean; trust: number; country?: string | null }
 }
 const KEY = 'q.hub'
 const FRESH_MS = 20 * 60e3
@@ -25,7 +25,7 @@ export async function loadHub(lang: string, force = false): Promise<HubItem[] | 
     // tutte le lingue, ultimi 45 giorni: quali mostrare lo decidono i filtri (di partenza la propria lingua e l'inglese)
     const since = new Date(Date.now() - 45 * 864e5).toISOString()
     const { data, error } = await supabase.from('news_items')
-      .select('id, title, excerpt, link, thumb, published, lang, format, categories, level, minutes, relevance, cluster, crypto, source:news_sources(name, kind, paywall, trust, country' + (ENV.name === 'alpha' ? ', rights_reference, images, image_rights_reference, image_attribution, image_attribution_required, image_hosts, image_rights_scope, image_approved_urls' : '') + ')')
+      .select('id, title, excerpt, link, thumb, published, lang, format, categories, level, minutes, relevance, cluster, crypto, source:news_sources(name, kind, paywall, trust, country' + (ENV.name === 'alpha' ? ', rights_reference, attribution, licence_name, licence_url, images, image_rights_reference, image_attribution, image_attribution_required, image_hosts, image_rights_scope, image_approved_urls' : '') + ')')
       .gte('published', since).order('published', { ascending: false }).limit(1200)
     if (error || !data?.length) return cached?.lang === lang ? cached.items : null
     const items = data as unknown as HubItem[]

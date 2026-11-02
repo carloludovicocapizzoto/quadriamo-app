@@ -49,3 +49,4 @@
 .news-cover-art { font-size: 2rem; color: var(--muted); }
 .story-hero.news-cover { display: flex; }
 .news-credit { overflow-wrap: anywhere; }
+.source-credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }

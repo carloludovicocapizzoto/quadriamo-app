@@ -2,7 +2,9 @@
 
 Preparato il 02/11/2026 sul branch `claude/alpha-news-sources`, che parte da `88cde4b3` (#21). Il branch non tocca #20, #21 né il branch di rilascio.
 
-Nessun deploy, nessuna migrazione, nessun flag attivato, nessuna modifica cloud. Le fonti restano **inattive** finché Carlo non approva le condizioni e Federico non autorizza il backend.
+Nessun deploy, nessuna migrazione, nessun flag attivato, nessuna modifica cloud.
+
+**Condizioni d'uso approvate il 02/11/2026** da Federico e Carlo per BCE e ISTAT, nel perimetro indicato sotto. È un'approvazione delle condizioni, non un'autorizzazione a modificare il cloud. Eurostat resta nel manifesto ma sospesa (`hold`), finché feed, link e affidabilità non sono verificati dal backend Alpha. Il seed genera sempre fonti `active=false`.
 
 ## 1. Fonti e condizioni
 
@@ -10,20 +12,19 @@ Si mostrano soltanto il titolo originale, il nome della fonte e il link all'arti
 
 | Fonte (id) | Feed | Perimetro (`linkPrefixes`) | Condizioni ufficiali | Attribuzione | Stato della verifica |
 |---|---|---|---|---|---|
-| BCE (`ecb-press`) | https://www.ecb.europa.eu/rss/press.html | `/press/pr/`, `/press/govcdec/` | [Disclaimer & copyright](https://www.ecb.europa.eu/services/disclaimer/html/index.en.html): uso libero se le informazioni sono riportate con accuratezza e la BCE è citata come fonte; le modifiche vanno dichiarate; dai siti commerciali il sito BCE si apre a finestra intera, senza frame. Per i documenti firmati dagli autori serve un'autorizzazione scritta | «Fonte: BCE» | Pagina letta il 02/11. Feed: RSS, 200, nessuna immagine |
-| BCE statistiche (`ecb-stats`) | https://www.ecb.europa.eu/rss/statpress.html | `/press/stats/` | Come sopra | «Fonte: BCE» | Feed: RSS, 200, nessuna immagine |
-| Istat (`istat`) | https://www.istat.it/feed/ | `/comunicato-stampa/` | [Note legali](https://www.istat.it/note-legali/): CC BY 4.0 salvo diversa indicazione, anche per fini commerciali; immagini, loghi e contenuti di terzi esclusi; il logo richiede un'autorizzazione | «Fonte: Istat – CC BY 4.0», con link alla licenza | Pagina letta il 02/11. Il feed mescola comunicati, eventi, newsletter e microdati: 5 voci su 10 sono comunicati |
-| Eurostat (`eurostat`) | Atom dei comunicati stampa (`CAT_PREREL`, URL completo nel manifesto) | Da fissare | [Copyright notice](https://ec.europa.eu/eurostat/help/copyright-notice): CC BY 4.0 per i contenuti editoriali UE (Decisione 2011/833/UE), anche commerciale; foto e loghi di terzi esclusi | «Fonte: Eurostat – CC BY 4.0» | Feed visto rispondere 200 il 02/11. Poco dopo ec.europa.eu ha chiuso le connessioni (reset): pagina non riletta di persona |
+| BCE (`ecb-press`) | https://www.ecb.europa.eu/rss/press.html | `/press/pr/`, `/press/govcdec/` | [Disclaimer & copyright](https://www.ecb.europa.eu/services/disclaimer/html/index.en.html): uso libero se le informazioni sono riportate con accuratezza e la BCE è citata come fonte; le modifiche vanno dichiarate; dai siti commerciali il sito BCE si apre a finestra intera, senza frame. Per i documenti firmati dagli autori serve un'autorizzazione scritta | «Fonte: BCE · Condizioni d'uso» (link alle condizioni) | Pagina letta il 02/11. Feed: RSS, 200, nessuna immagine |
+| BCE statistiche (`ecb-stats`) | https://www.ecb.europa.eu/rss/statpress.html | `/press/stats/` | Come sopra | «Fonte: BCE · Condizioni d'uso» | Feed: RSS, 200, nessuna immagine |
+| Istat (`istat`) | https://www.istat.it/feed/ | `/comunicato-stampa/` | [Note legali](https://www.istat.it/note-legali/): CC BY 4.0 salvo diversa indicazione, anche per fini commerciali; immagini, loghi e contenuti di terzi esclusi; il logo richiede un'autorizzazione | «Fonte: Istat · CC BY 4.0», con link alla licenza, e il pulsante all'articolo originale | Pagina letta il 02/11. Il feed mescola comunicati, eventi, newsletter e microdati: 5 voci su 10 sono comunicati |
+| Eurostat (`eurostat`) | Atom dei comunicati stampa (`CAT_PREREL`, URL completo nel manifesto) | Da fissare | [Copyright notice](https://ec.europa.eu/eurostat/help/copyright-notice): CC BY 4.0 per i contenuti editoriali UE (Decisione 2011/833/UE), anche commerciale; foto e loghi di terzi esclusi | «Fonte: Eurostat · CC BY 4.0» (sospesa) | Feed visto rispondere 200 il 02/11. Poco dopo ec.europa.eu ha chiuso le connessioni (reset): pagina non riletta di persona |
 
-Il manifesto è in `supabase/alpha-news/sources.first-release.json`. Ha `approvedBy` vuoto, quindi `tools/news/prepare-alpha.mjs` lo rifiuta. Anche dopo l'approvazione genera solo righe `active=false`.
+Il manifesto è in `supabase/alpha-news/sources.first-release.json`. `approvedBy` è compilato. `tools/news/prepare-alpha.mjs` salta le fonti `hold`, richiede per ogni fonte l'attribuzione (e il nome con il link HTTPS della licenza, se c'è) e genera righe `active=false`.
 
-### Decisioni per Carlo, o per un legale
+### Decisioni prese il 02/11
 
-1. **Uso commerciale.** BCE, ISTAT ed Eurostat lo permettono. Per la BCE, nel caso di un piano a pagamento, va detto agli utenti che le informazioni sono gratuite sul sito della BCE: con titolo e link il caso non si presenta, ma va tenuto presente.
-2. **Attribuzione CC BY.** Oggi l'interfaccia Alpha mostra il nome della fonte su ogni scheda e, nel dettaglio, il link «Diritti sul titolo» alla pagina delle condizioni. Bisogna decidere se basta, o se serve la formula completa con la licenza («Fonte: Istat – CC BY 4.0»). In quel caso servono una colonna `attribution` e una piccola modifica all'interfaccia.
-3. **Lingua.** I titoli di BCE ed Eurostat sono in inglese. Non si traducono: una traduzione è una modifica da dichiarare.
-4. **Perimetro BCE.** Restano fuori discorsi, interviste e pubblicazioni firmate. Va confermato che bastano comunicati stampa e decisioni del Consiglio direttivo.
-5. **Eurostat.** Va attivata solo dopo una lettura del feed dall'ambiente Alpha, che fissi `linkPrefixes` e confermi che il server non viene bloccato.
+1. **BCE.** Comunicati, decisioni del Consiglio direttivo e statistiche, con attribuzione esplicita e link diretto. Se le Notizie entrano in un piano a pagamento, va mostrato che le informazioni sono gratuite sul sito BCE: è un gate prima di qualunque offerta a pagamento delle Notizie.
+2. **ISTAT.** La dicitura «Fonte: Istat · CC BY 4.0» compare nel dettaglio della notizia, con il link alla licenza e il pulsante all'articolo originale. Sulle schede dell'elenco resta il nome della fonte.
+3. **Lingua.** I titoli originali in inglese di BCE ed Eurostat restano, senza traduzioni.
+4. **Eurostat.** È sospesa: si attiva solo dopo una lettura dal backend Alpha che fissi `linkPrefixes` e dimostri che il server non viene bloccato.
 
 ## 2. Cosa c'è già (2I) e cosa aggiunge questo branch
 
@@ -46,20 +47,23 @@ Aggiunte in questo branch:
   - normalizza i link con la doppia barra della BCE;
   - salva il **titolo originale**, senza la pulizia di `cleanTitle`;
   - scarta le voci più vecchie della conservazione. Senza questo, i comunicati tra 14 e 45 giorni sarebbero cancellati e reinseriti a ogni esecuzione.
-- `prepare-alpha.mjs`: legge e valida `linkPrefixes` e li scrive nel seed.
-- Test: `tests/alpha-news-first-release.test.ts` (perimetro, titolo originale, conservazione, manifesto inattivo).
+- `003_source_scope.sql` aggiunge anche `attribution`, `licence_name` e `licence_url`, con vincoli: lunghezze, licenza solo HTTPS, nome e link sempre insieme, nessuna fonte attiva senza attribuzione.
+- `prepare-alpha.mjs` legge e valida `linkPrefixes`, attribuzione e licenza, e salta le fonti `hold`.
+- App Alpha: legge `attribution`, `licence_name` e `licence_url` e mostra la riga di credito nel dettaglio. Le fonti senza attribuzione mantengono il link «Diritti sul titolo» della 2I.
+- Sicurezza dell'ingestione:
+  - `x-cron-secret` è confrontato a tempo costante (SHA-256 di entrambi i valori);
+  - un errore nell'aggiornare lo stato di una fonte non viene più ignorato: la risposta è 500 con `statusFailed`.
+- Test: `tests/alpha-news-first-release.test.ts` (perimetro, titolo originale, conservazione, manifesto, riga di credito, segreto, errori di stato). L'e2e del Piano e delle Notizie controlla la riga di credito nel dettaglio.
 
 ### Cosa manca, in ordine
 
-1. Approvazione di Carlo delle condizioni (sezione 1), e `approvedBy` compilato nel manifesto.
+1. ~~Approvazione delle condizioni~~: fatta il 02/11 per BCE e ISTAT.
 2. Autorizzazione di Federico per Supabase Alpha.
 3. Il **preflight dello schema**: verificare se l'Alpha ha già tabelle `news_*`. `001` usa `alter table … add column` senza `if not exists`, quindi su tabelle già esistenti si ferma con un errore. È un errore sicuro, perché la transazione viene annullata, ma blocca l'attivazione.
 4. Applicare `001`, `002` e `003`; poi il seed inattivo.
 5. Secret della Function: `CRON_SECRET` (nuovo, casuale), `NEWS_ALLOWED_HOSTS`, `ALPHA_NEWS_INGEST_ENABLED`. `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` li fornisce la piattaforma. Il deploy va fatto con verifica JWT spenta, perché la Function controlla da sé `x-cron-secret`.
 6. Vault (`alpha_news_ingest_url`, `alpha_news_cron_secret`), pg_cron e pg_net per il job ogni 2 ore, partendo da `cron.sql.example`.
-7. Due punti dell'ingestione da migliorare, che non bloccano:
-   - gli errori nell'aggiornare lo stato delle fonti (`statusError`) vengono ignorati;
-   - il confronto di `x-cron-secret` non è a tempo costante.
+7. **Ordine obbligatorio:** il client Alpha di questo branch chiede le colonne di attribuzione. `003` va quindi applicato prima di accendere le Notizie nell'app; altrimenti la lettura fallisce e la scheda mostra solo i consigli.
 8. Collaudo sul vero Alpha: RLS (`anon` negato, `authenticated` vede solo le fonti attive), gateway, deduplica, conservazione e perimetro. Poi Pages con `ALPHA_NEWS_ENABLED=1` e la build con `cloud:news` e `ALPHA_NEWS_BACKEND_READY=1`.
 
 ## 3. Procedura di attivazione
@@ -85,7 +89,7 @@ Ogni passo si fa solo con l'autorizzazione esplicita di Federico, e ci si ferma 
      - i link stanno tutti sotto `/comunicato-stampa/`;
      - i titoli sono identici al feed, `excerpt` e `thumb` sono null;
      - una seconda POST salva 0 voci nuove, cioè niente doppioni.
-7. Ripetere il passo 6 per `ecb-press`, `ecb-stats` ed `eurostat`. Eurostat va attivata solo se la lettura dal server riesce e dopo aver fissato `linkPrefixes`.
+7. Ripetere il passo 6 per `ecb-press` ed `ecb-stats`. Eurostat non entra nel seed finché è `hold`.
 8. **Cron:** creare il job dal template, con i secret in Vault, e verificare la prima esecuzione automatica.
 9. **App:** Pages con `ALPHA_NEWS_ENABLED=1`, poi la build con `cloud:news` e `ALPHA_NEWS_BACKEND_READY=1`. Collaudo della scheda Notizie su telefono, iPad e computer.
 
