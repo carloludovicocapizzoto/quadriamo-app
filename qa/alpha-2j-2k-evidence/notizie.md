@@ -5,7 +5,7 @@
 - Commit sorgente News già pubblico: `56dd86996d2a96372272ec9ffb0f24ec67a15854` (`claude/alpha-news-sources`).
 - Candidato locale di consolidamento: `4701c884a76540ea01b5a243ddfa9542b5c4f2d2`, parent diretto `56dd869`; `88cde4b3` è un antenato.
 - Il delta `56dd869..4701c884` modifica quattro file: documentazione News, esempio cron, manifesto fonti e test. Nessuna modifica a dati Cloudflare/Supabase. `git diff --check` PASS.
-- Il candidato non è stato pubblicato in questa consegna; branch remoto proposto: `integration/alpha-final-candidate`. Nessuna PR o deploy aperti.
+- Pubblicato senza merge il 2026-11-03 su `integration/alpha-final-candidate` (SHA `4701c884a76540ea01b5a243ddfa9542b5c4f2d2`). Nessuna PR o deploy creati.
 
 ## Backend Alpha secondo il checkpoint operativo
 
